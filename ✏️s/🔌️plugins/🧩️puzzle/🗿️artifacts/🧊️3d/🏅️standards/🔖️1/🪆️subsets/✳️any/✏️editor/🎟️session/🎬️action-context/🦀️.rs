@@ -12,9 +12,9 @@ pub struct Puzzle3dActionCtx<'a> {
     /// 🧠️ The document instance's retained operation owner — the brush suggestions link lives there. `None` on
     /// the unstaged adapter paths that run outside an admitted instance.
     pub instance_owner: Option<&'a ArtifactInstanceOperationOwnerHandle>,
-    /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::tool_run`) — the
+    /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::original_tool_run`) — the
     /// identity a run action this arm dispatches targets. `None` on paths admitted without it.
-    pub tool_run: Option<&'a semio_plugin::ToolRunView>,
+    pub tool_run: Option<semio_plugin::OriginalToolRunView<'a>>,
     pub scene: &'a mut Puzzle3dScene,
     /// 🪟️ The window instance this action targets (already defaulted to the main window).
     pub window_id: &'a str,

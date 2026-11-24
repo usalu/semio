@@ -113,7 +113,7 @@ pub(super) fn pile_group_plan(ctx: &Ctx, focus: Option<&str>) -> Vec<Diagram2d> 
                 let ring: Vec<Vec2> = (0..=16).map(|i| { let a = std::f64::consts::TAU * i as f64 / 16.0; Vec2::new(p.0 + 0.5 * diameter * a.cos(), p.1 + 0.5 * diameter * a.sin()) }).collect();
                 series.push(Series::Polygon { id: format!("{}:pile{}", g.id, k + 1), label: loc(&format!("Pile {}", k + 1), &format!("Pfahl {}", k + 1)), ring, fill: Fill { tone: utilisation_tone(ratio), opacity: 0.45 }, hatch: None });
             }
-            markers.push(ratio_marker(format!("{}:pile{}", g.id, k + 1), [p.0, p.1], MarkerShape::Circle, ratio, loc(&format!("Pile {}: N = {:.0} kN, {}", k + 1, reaction / 1000.0, words(ratio).0), &format!("Pfahl {}: N = {:.0} kN, {}", k + 1, reaction / 1000.0, words(ratio).1)), ctx.binding(&g.id, &[]).map(|b| b.check_id)));
+            markers.push(ratio_marker(format!("{}:reaction{}", g.id, k + 1), [p.0, p.1], MarkerShape::Circle, ratio, loc(&format!("Pile {}: N = {:.0} kN, {}", k + 1, reaction / 1000.0, words(ratio).0), &format!("Pfahl {}: N = {:.0} kN, {}", k + 1, reaction / 1000.0, words(ratio).1)), ctx.binding(&g.id, &[]).map(|b| b.check_id)));
             for (column, value) in twin.iter_mut().zip([(k + 1) as f64, p.0, p.1, reaction / 1000.0, ratio]) {
                 column.push(value);
             }

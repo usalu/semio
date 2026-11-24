@@ -1,0 +1,7 @@
+humans	seated-guitarist	1:100 elevation Hausdorff: expected 0.03181980515339464 to be less than or equal to 0.03
+humans	seated-office-worker	1:500 elevation Hausdorff: expected 0.22095815878741354 to be less than or equal to 0.15
+humans	skateboarder	1:200 elevation: expected 0.91575146682714 to be greater than or equal to 0.92
+humans	tour-guide	1:100 front Hausdorff: expected 0.034573291714848325 to be less than or equal to 0.03
+humans	wheelchair-user	1:200 elevation Hausdorff: expected 0.11250302930060767 to be less than or equal to 0.06
+humans	worker-carrying-box	1:50 elevation Hausdorff: expected 0.10744911586420801 to be less than or equal to 0.015
+humans	worker-with-pallet-jack	1:50 elevation Hausdorff: expected 0.01590990257669732 to be less than or equal to 0.015

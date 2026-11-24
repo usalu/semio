@@ -101,7 +101,7 @@ impl ErasedSnapshotRetirement for CanvasStrokeRetirement {
 }
 
 impl Drop for CanvasStrokeRetirement {
-    fn drop(&mut self) { assert!(self.terminal_is_empty(), "Canvas Stroke cursor dropped before funded original closure"); }
+    fn drop(&mut self) { assert!(std::thread::panicking()||(self.terminal_is_empty()), "Canvas Stroke cursor dropped before funded original closure"); }
 }
 
 #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]

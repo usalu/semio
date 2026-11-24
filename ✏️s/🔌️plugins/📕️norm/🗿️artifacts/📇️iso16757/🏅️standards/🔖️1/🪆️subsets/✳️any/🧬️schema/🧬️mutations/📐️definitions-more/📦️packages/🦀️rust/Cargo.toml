@@ -26,6 +26,9 @@ semio-s-artifact-norm-iso16757-diff = { workspace = true }
 semio-s-artifact-norm-iso16757-model = { workspace = true }
 serde = { workspace = true, optional = true }
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-iso16757-diff/test-support", "semio-s-artifact-norm-iso16757-model/test-support"]
+
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde = { workspace = true }

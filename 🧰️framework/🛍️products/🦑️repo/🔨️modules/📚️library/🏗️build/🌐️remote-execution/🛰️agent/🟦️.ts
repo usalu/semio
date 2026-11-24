@@ -1,9 +1,10 @@
 import {platform as osPlatform} from "node:os";
 import type {HostCapacityPolicyV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
-import {admitRemoteExecutionActionV1,buildRemoteExecutionLoadReportV1,readRemoteExecutionCountersV1,readRemoteExecutionHostViewV1,readRemoteExecutionToolchainV1,remoteExecutionOriginV1,remoteExecutionPlatformIdentityV1,runRemoteExecutionReporterV1,type RemoteExecutionAdmissionV1,type RemoteExecutionHostViewV1,type RemoteExecutionLoadReportV1,type RemoteExecutionReporterEventV1,type RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
+import {admitRemoteExecutionActionV1,evaluateRemoteExecutionAdmissionV1,buildRemoteExecutionLoadReportV1,REMOTE_EXECUTION_ADMISSION_POLICY_V1,remoteExecutionActionMegabytesV1,readRemoteExecutionCountersV1,readRemoteExecutionHostViewV1,readRemoteExecutionToolchainV1,remoteExecutionOriginV1,remoteExecutionPlatformIdentityV1,runRemoteExecutionReporterV1,type RemoteExecutionAdmissionV1,type RemoteExecutionHostViewV1,type RemoteExecutionLoadReportV1,type RemoteExecutionReporterEventV1,type RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
 import {remoteExecutionWorkerWhyOfMessageV1,remoteExecutionWorkerWhyV1,type RemoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
-import {runRemoteExecutionWorkerV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../👷️worker/🟦️.ts";
-import {remoteExecutionHostPropertiesV1,type RemoteExecutionPropertyV1} from "../🟦️.ts";
+import {runRemoteExecutionWorkerV1,type RemoteExecutionThreadsAskV1,type RemoteExecutionUnitAskV1,type RemoteExecutionWorkerEventV1,type RemoteExecutionWorkerOptionsV1} from "../👷️worker/🟦️.ts";
+import {readRemoteExecutionPolicyV1,remoteExecutionHostPropertiesV1,type RemoteExecutionPropertyV1} from "../🟦️.ts";
+import {remoteExecutionCodegenThreadsV1} from "../👷️worker/🧵️codegen/🟦️.ts";
 import {OFFLOAD_POLICY_V1} from "../🚀️offload/📐️policy/🟦️.ts";
 import {remoteExecutionDiskSlotsV1,remoteExecutionFreeBytesV1,type RemoteExecutionWorkerDiskV1} from "./💽️disk/🟦️.ts";
 
@@ -38,16 +39,24 @@ export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOpti
   return fresh;
  };
  let draining=false;
- const admit=async(running:number):Promise<RemoteExecutionAdmissionV1>=>{
+ let held:readonly number[]=[];
+ const unitsOf=(peaks:readonly number[]):readonly number[]=>peaks.map(peak=>peak>0?peak:remoteExecutionActionMegabytesV1(options.policy));
+ const admit=async(running:number,unit:RemoteExecutionUnitAskV1):Promise<RemoteExecutionAdmissionV1>=>{
+  held=unitsOf(unit.held);
   if(draining)return {admit:false,reason:"draining"};
   if(options.ready!==undefined&&!options.ready())return {admit:false,reason:"not-ready"};
   const space=options.disk===undefined?undefined:remoteExecutionDiskSlotsV1({freeBytes:(options.freeBytes??(()=>remoteExecutionFreeBytesV1(options.directory)))(),hostFreeBytes:(options.hostFreeBytes??(()=>remoteExecutionFreeBytesV1(options.root)))(),concurrency:options.concurrency,disk:options.disk});
   diskWhy=space!==undefined&&running>=space.slots?remoteExecutionWorkerWhyV1("disk-full","",{free:((space.freeBytes??0)/2**30).toFixed(1),path:(space.volume==="host"?options.root:options.directory).split(/[\\/]/u).filter(Boolean).slice(-3).join("/"),slots:space.slots,concurrency:options.concurrency,oneAction:(space.oneActionBytes/2**30).toFixed(1)}):undefined;
   if(diskWhy!==undefined)return {admit:false,reason:"disk"};
-  return admitRemoteExecutionActionV1({view:await view(),running,concurrency:options.concurrency,nowMs:now(),...options.policy?{policy:options.policy}:{}});
+  return admitRemoteExecutionActionV1({view:await view(),running,concurrency:options.concurrency,nowMs:now(),megabytes:unit.stage==="task"&&unit.megabytes>0?unit.megabytes:unit.stage==="poll"?REMOTE_EXECUTION_ADMISSION_POLICY_V1.smallestMegabytes:remoteExecutionActionMegabytesV1(options.policy),held,...options.policy?{policy:options.policy}:{}});
+ };
+ const threads=async(ask:RemoteExecutionThreadsAskV1):Promise<number>=>{
+  const current=await view(),peak=ask.peakMegabytes>0?ask.peakMegabytes:remoteExecutionActionMegabytesV1(options.policy);
+  const {spareMegabytes}=evaluateRemoteExecutionAdmissionV1({view:current,running:ask.held.length,concurrency:options.concurrency,nowMs:now(),megabytes:peak,held:unitsOf(ask.held),...options.policy?{policy:options.policy}:{}});
+  return remoteExecutionCodegenThreadsV1({cores:current.host.cores,load:current.host.load,others:ask.others,spareMegabytes,peakMegabytes:peak},readRemoteExecutionPolicyV1().worker.codegen);
  };
  const report=async():Promise<RemoteExecutionLoadReportV1>=>{
-  const built=buildRemoteExecutionLoadReportV1({origin,identity,view:await view(),worker:why!==undefined&&state.state==="absent"?{...state,why}:state,counters:readRemoteExecutionCountersV1(options.root),nowMs:now(),...options.policy?{policy:options.policy}:{}});
+  const built=buildRemoteExecutionLoadReportV1({origin,identity,view:await view(),worker:why!==undefined&&state.state==="absent"?{...state,why}:state,counters:readRemoteExecutionCountersV1(options.root),nowMs:now(),...held.length===state.running?{held}:{},...options.policy?{policy:options.policy}:{}});
   if(options.ready!==undefined&&!options.ready())return workerEnabled?{...built,headroom:false,worker:{...built.worker,...built.worker.state==="idle"||built.worker.state==="busy"?{state:"refusing" as const}:{},why:remoteExecutionWorkerWhyV1("no-toolchain","the compiler of the offer is gone or has no target")}}:{...built,headroom:false};
   return diskWhy!==undefined&&state.state==="refusing"?{...built,headroom:false,worker:{...built.worker,state:"refusing",why:diskWhy}}:built;
  };
@@ -66,7 +75,7 @@ export async function runRemoteExecutionAgentV1(options:RemoteExecutionAgentOpti
  };
  const runWorker=async():Promise<void>=>{
   for(;;){
-   try{await runRemoteExecutionWorkerV1({...options,origin,properties,signal:controller.signal,admit,observe:remember,onEvent,...capacity?{capacity}:{}});return;}
+   try{await runRemoteExecutionWorkerV1({threads,...options,origin,properties,signal:controller.signal,admit,observe:remember,onEvent,...capacity?{capacity}:{}});return;}
    catch(error){
     if(options.retryWorkerSeconds===undefined||controller.signal.aborted){controller.abort();throw error;}
     why=remoteExecutionWorkerWhyOfMessageV1((error as Error).message);state={...state,state:"absent",running:0};

@@ -47,16 +47,6 @@ pub mod standards {
                             pub mod append_page_content;
                         }
                     }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../🚪️io/💾️binary/🧬️mutations/➕️append-page-content/🦀️.rs"]
-                            pub mod append_page_content;
-                            #[path = "../../../../🚪️io/💾️binary/🧬️mutations/🔧️set-object-value/🦀️.rs"]
-                            pub mod set_object_value;
-                        }
-                    }
                 }
             }
             #[path = "."]
@@ -123,16 +113,6 @@ pub mod standards {
                             #[path = "../../../../../⚕️h/🚪️io/📝️text/🧬️mutations/🏷️set-info-title/🦀️.rs"]
                             pub mod set_info_title;
                             #[path = "../../../../../⚕️h/🚪️io/📝️text/🧬️mutations/👤️set-info-author/🦀️.rs"]
-                            pub mod set_info_author;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🏷️set-info-title/🦀️.rs"]
-                            pub mod set_info_title;
-                            #[path = "../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/👤️set-info-author/🦀️.rs"]
                             pub mod set_info_author;
                         }
                     }

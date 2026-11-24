@@ -51,7 +51,8 @@ function nearBoundary(ring: readonly Point[], p: Point): boolean {
   return false;
 }
 
-function onEdge(ring: readonly Point[], p: Point): { readonly dx: number; readonly dy: number } | undefined {
+/** 🛤️ The edge of a ring a whole piece lies on: its two ends and its middle within {@link SAME_M} of one edge. The middle alone does not say it: a piece shorter than a micrometre that crosses an edge at an angle has its middle on that edge and is still a piece of the boundary. */
+function onEdge(ring: readonly Point[], points: readonly Point[]): { readonly dx: number; readonly dy: number } | undefined {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i]!;
     const b = ring[(i + 1) % ring.length]!;
@@ -59,11 +60,48 @@ function onEdge(ring: readonly Point[], p: Point): { readonly dx: number; readon
     const dy = b.y - a.y;
     const length = portable.hypot(dx, dy);
     if (length < EPS) continue;
-    const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length);
-    if (t < -EPS || t > 1 + EPS) continue;
-    if (portable.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y) < SAME_M) return { dx, dy };
+    const slack = SAME_M / length;
+    const lies = (p: Point): boolean => {
+      const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length);
+      return t >= -slack && t <= 1 + slack && portable.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y) < SAME_M;
+    };
+    if (points.every(lies)) return { dx, dy };
   }
   return undefined;
+}
+
+/** 🧲️ The polygons with every vertex that lies within {@link SAME_M} of another polygon moved onto it: onto the nearest vertex of another polygon, else onto the nearest point of one of its edges. The vertices are moved one after the other, each against the positions the earlier ones already took (two rounds), so two vertices that nearly meet end in one point instead of changing places. Edges that are coincident for the resolution of the union (0.3 micrometres) then are coincident in their coordinates, and no piece shorter than the resolution is left between a vertex and the edge it nearly touches; a vertex moves by less than {@link SAME_M} per round, a third of the thinnest polygon the union keeps. */
+function snapped(polygons: readonly (readonly Point[])[]): Point[][] {
+  const rings = polygons.map((ring) => [...ring]);
+  for (let round = 0; round < 2; round++)
+    rings.forEach((ring, owner) =>
+      ring.forEach((p, at) => {
+        let best: Point | undefined;
+        let nearest = SAME_M;
+        const take = (q: Point): void => {
+          const d = portable.hypot(q.x - p.x, q.y - p.y);
+          if (d < nearest) [best, nearest] = [q, d];
+        };
+        rings.forEach((other, index) => {
+          if (index !== owner) other.forEach(take);
+        });
+        if (best === undefined)
+          rings.forEach((other, index) => {
+            if (index === owner) return;
+            other.forEach((a, i) => {
+              const b = other[(i + 1) % other.length]!;
+              const dx = b.x - a.x;
+              const dy = b.y - a.y;
+              const length2 = dx * dx + dy * dy;
+              if (length2 < EPS * EPS) return;
+              const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / length2;
+              if (t > 0 && t < 1) take({ x: a.x + dx * t, y: a.y + dy * t });
+            });
+          });
+        if (best !== undefined) ring[at] = best;
+      }),
+    );
+  return rings.map(distinct).filter((ring) => ring.length >= 3 && solid(ring)).map((ring) => (area(ring) < 0 ? ring.reverse() : ring));
 }
 
 function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }[], cell = 1e-7): { readonly rings: Point[][]; readonly closed: boolean } {
@@ -167,7 +205,7 @@ function primaryUnion(polygons: Point[][]): Point[][] {
     for (let index = 0; index < polygons.length; index++) {
       const box = boxes[index]!;
       if (index === piece.owner || mid.x < box.minX - SAME_M || mid.x > box.maxX + SAME_M || mid.y < box.minY - SAME_M || mid.y > box.maxY + SAME_M) continue;
-      const edge = onEdge(polygons[index]!, mid);
+      const edge = onEdge(polygons[index]!, [piece.from, mid, piece.to]);
       if (edge !== undefined) {
         if (edge.dx * direction.x + edge.dy * direction.y < 0) return false;
         if (index < piece.owner) return false;
@@ -265,7 +303,7 @@ const totalArea = (rings: readonly (readonly Point[])[]): number => rings.reduce
 /** 🧹️ The ring without the vertices that lie within {@link SAME_M} of the last kept one: a curve flattened into steps of nanometres (the stroke of a path of a hair-thin leaf) has no vertex the union could tell apart from its neighbour. */
 const distinct = (ring: readonly Point[]): Point[] => ring.reduce<Point[]>((kept, p) => (kept.length === 0 || portable.hypot(p.x - kept[kept.length - 1]!.x, p.y - kept[kept.length - 1]!.y) > SAME_M ? [...kept, p] : kept), []);
 
-/** 🌟️ The union of simple polygons (each at least three points, any orientation) as the rings of its boundary; polygons without area, or slivers thinner than a micrometre, are ignored (an empty result then means no polygon had area) and a single polygon is returned as it is (counter-clockwise, collinear points removed). Consecutive duplicate points are removed first, and a polygon that lies inside another one up to 10 micrometres is dropped. The fast edge-splitting union is checked against what a union can be (not smaller than its largest polygon, not larger than the sum); when it fails the check, the exact slab union takes over, and if that cannot close a boundary either a {@link PolygonUnionError} is thrown: polygons with area never silently produce nothing. */
+/** 🌟️ The union of simple polygons (each at least three points, any orientation) as the rings of its boundary; polygons without area, or slivers thinner than a micrometre, are ignored (an empty result then means no polygon had area) and a single polygon is returned as it is (counter-clockwise, collinear points removed). Consecutive duplicate points are removed first, and a polygon that lies inside another one up to 10 micrometres is dropped. The fast edge-splitting union is checked against what a union can be (not smaller than its largest polygon, not larger than the sum); when it fails the check, it is repeated on the polygons whose nearly touching vertices and edges are joined ({@link snapped}), then the exact slab union takes over (on the polygons as given, then on the joined ones), and if that cannot close a boundary either a {@link PolygonUnionError} is thrown: polygons with area never silently produce nothing. */
 export function unionPolygons(input: readonly (readonly Point[])[]): Point[][] {
   const clean = input.map(distinct).map((ring) => (ring.length > 1 && portable.hypot(ring[0]!.x - ring[ring.length - 1]!.x, ring[0]!.y - ring[ring.length - 1]!.y) <= SAME_M ? ring.slice(0, -1) : ring));
   const all = clean.filter((ring) => ring.length >= 3 && solid(ring)).map((ring) => (area(ring) < 0 ? [...ring].reverse() : [...ring]));
@@ -280,7 +318,12 @@ export function unionPolygons(input: readonly (readonly Point[])[]): Point[][] {
   };
   const fast = primaryUnion(polygons);
   if (coherent(fast)) return fast;
-  const exact = slabUnion(polygons);
-  if (exact.rings.length > 0 && Math.abs(totalArea(exact.rings) - exact.area) <= 1e-4 * exact.area + 1e-9) return exact.rings;
+  const near = snapped(polygons);
+  const joined = primaryUnion(near);
+  if (coherent(joined)) return joined;
+  for (const candidate of [polygons, near]) {
+    const exact = slabUnion(candidate);
+    if (exact.rings.length > 0 && Math.abs(totalArea(exact.rings) - exact.area) <= 1e-4 * exact.area + 1e-9) return exact.rings;
+  }
   throw new PolygonUnionError(polygons.length, "neither the edge-splitting nor the slab union closed a boundary of the expected area", polygons);
 }

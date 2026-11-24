@@ -45,12 +45,14 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     }
 
     /// 🎰️ Whether every fixed typed-operation and segmented-output authority owns nothing in this one
-    /// residue class of `id % ARTIFACT_LIVE_OUTPUT_SLOTS`.
+    /// residue class of `id % ARTIFACT_LIVE_OUTPUT_SLOTS` — including a queued reserved commit, whose keyed
+    /// cancellation scope holds the class in the direct-mapped lease table until its paid retirement.
     pub fn typed_operation_slot_is_vacant(&self, pending: &PendingReserved<A>, tools: &ToolOperations<A>, slot: usize) -> bool {
         tools.tool_operations.slot_is_vacant(slot)
             && tools.typed_operation_reservations[slot].is_none()
             && tools.latest_wins_commands.slot_is_vacant(slot)
             && pending.pending_reserved.slot_is_vacant(slot)
+            && pending.reserved_commits.iter().all(|commit| commit.permit.operation.operation.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS != slot)
             && self.segmented_downloads.slot_is_vacant(slot)
             && self.segmented_closures.slot_is_vacant(slot)
     }

@@ -147,13 +147,29 @@ pub struct ColdPairDocumentLoad {
     pub archive: Box<store::DocumentArchivePack>,
     pub admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
     pub admitted: bool,
+    observed: Option<(u64, u64)>,
+    idle_polls: u32,
 }
+
+/// 🌀️ Consecutive polls that may leave a cold pair's archive load status unmoved before the load is declared stalled and faulted. A host re-polls a `MoreWork` guest back to back, so an unbounded wait is an unbounded turn storm; every turn of it costs retained guest memory, and the load only ever ends in a `rust_oom` trap instead of a typed fault (ticket 26/09/01/SOURCING-END-TO-END, `🧠️guest-memory.md`).
+pub const COLD_PAIR_LOAD_IDLE_POLL_CEILING: u32 = 4096;
 
 impl ColdPairDocumentLoad {
     pub fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
         let files = load.files();
         let archive = Box::new(store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() });
-        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false, archive, admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false }
+        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false, archive, admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false, observed: None, idle_polls: 0 }
+    }
+
+    /// 🌀️ Records one poll's progress reading and answers whether the load has now sat unmoved for [`COLD_PAIR_LOAD_IDLE_POLL_CEILING`] polls.
+    pub fn observe_progress(&mut self, completed: u64, total: u64) -> bool {
+        if self.observed == Some((completed, total)) {
+            self.idle_polls = self.idle_polls.saturating_add(1);
+        } else {
+            self.observed = Some((completed, total));
+            self.idle_polls = 0;
+        }
+        self.idle_polls >= COLD_PAIR_LOAD_IDLE_POLL_CEILING
     }
 
 }
@@ -444,7 +460,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
 
 impl<const N: usize> Drop for ColdDocumentPairIngressRegistry<N> {
     fn drop(&mut self) {
-        assert!(self.slots.iter().all(Option::is_none) && self.closes.iter().all(Option::is_none) && self.reserved_bytes == 0 && self.reserved_pages == 0, "cold pair ingress requires bounded terminal close before teardown");
+        assert!(std::thread::panicking()||(self.slots.iter().all(Option::is_none) && self.closes.iter().all(Option::is_none) && self.reserved_bytes == 0 && self.reserved_pages == 0), "cold pair ingress requires bounded terminal close before teardown");
     }
 }
 

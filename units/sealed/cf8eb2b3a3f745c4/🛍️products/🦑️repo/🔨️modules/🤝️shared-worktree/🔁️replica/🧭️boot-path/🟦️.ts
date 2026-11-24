@@ -1,2 +1,0 @@
-/** 🧭️ Where the module lives below the repository root, the stable default of every worktree. The boot supervisor is a standalone file that is staged outside the worktree and so keeps its own copy of this value (`../🛟️supervisor/🟦️.ts`); every other module reads it here, so none of them pulls the supervisor, a module that decides by itself whether it is the process entry, into its closure. `./🧪️tests/🟦️.ts` keeps both equal. */
-export const bootModuleRelativeV1="🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree";

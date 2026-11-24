@@ -48,7 +48,21 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "simplySupported": {
+            "en": "Simply supported",
+            "de": "Einfeldträger"
+          },
+          "continuous": {
+            "en": "Continuous",
+            "de": "Durchlaufträger"
+          },
+          "cantilever": {
+            "en": "Cantilever",
+            "de": "Kragarm"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1999_model::SupportCondition"

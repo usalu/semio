@@ -8,7 +8,8 @@ import {fileURLToPath} from "node:url";
 import {BUILD_HOST_CAPACITY_POLICY_V1} from "../../../../🌡️host-capacity/🎛️control/🟦️.ts";
 import {wrapRustcV1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
 import {startClusterV1,eventuallyV1,type ClusterV1} from "../../../🧪️tests/🧰️cluster/🟦️.ts";
-import {writeUnitCostV1} from "../../🚦️admission/🟦️.ts";
+import {readOffloadOverheadV1,writeUnitCostV1} from "../../🚦️admission/🟦️.ts";
+import {OFFLOAD_POLICY_V1} from "../../📐️policy/🟦️.ts";
 import {createTestCheckoutV1,externHash,testHostProbeV1,testRustEnvironmentV1,type TestCheckoutV1} from "../🧰️workspace/🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),entry=fileURLToPath(new URL("../../../🏃️entry/🟦️.ts",import.meta.url)),wrapper=fileURLToPath(new URL("../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts",import.meta.url));
@@ -89,7 +90,7 @@ test("with the local host forced to wait, a crate compiles entirely on another m
  let status:number;try{status=await wrapRustcV1(["rustc",...outputs],environment,checkout.root,{admission:{probe}});}finally{process.chdir(previous);}
  expect(status,JSON.stringify(events(root))+progress(root)).toBe(0);
  expect(callsOf(join(root,"rustc-calls.log")),"the local machine spawned no rustc "+JSON.stringify(events(root))+progress(root)+JSON.stringify(cluster.events.slice(-6))).toBe(0);
- const artifacts=readdirSync(checkout.deps).filter(name=>name.includes(`-${externHash("c")}`)).sort();
+ const artifacts=readdirSync(checkout.deps).filter(name=>name.includes(`-${externHash("c")}`)&&!name.endsWith(".semio-key")).sort();
  expect(artifacts).toEqual([`c-${externHash("c")}.d`,`libc-${externHash("c")}.rlib`,`libc-${externHash("c")}.rmeta`,`libc-${externHash("c")}.rmeta.semio-deps`]);
  expect(progress(root)).toMatch(/offloaded to w[AB]/u);expect(progress(root)).toMatch(/auf w[AB] ausgelagert/u);
  expect(events(root).map(row=>row.kind)).toEqual(["offload-run"]);
@@ -152,6 +153,43 @@ test("with a calm local host a unit worth a round trip still goes to the fleet w
  const run=await runWrapper(second,"c",["b"],never,{SEMIO_OFFLOAD:"never"});
  expect(run.status).toBe(0);expect(callsOf(join(never,"rustc-calls.log"))).toBe(1);expect(events(never)).toEqual([]);
 },stretchedBudgetMillisecondsV1(180000));
+
+test("local first: a unit takes a free local slot at once, only a unit worth a round trip that would wait for a slot goes to a worker, a cheap one waits here, so a local and a remote unit are in flight at the same time",async()=>{
+ const checkout=checkoutWith("first","pub fn c()->u32{b::b()+20}\n");checkout.crate("d","pub fn d()->u32{b::b()+21}\n");checkout.crate("e","pub fn e()->u32{b::b()+22}\n");
+ const root=join(scratch,"unit-first");mkdirSync(root,{recursive:true});
+ const slow=join(root,"slow-rustc.sh"),log=join(root,"rustc-calls.log");
+ writeFileSync(slow,`#!/bin/sh\ncase " $* " in *" --crate-name "*) echo "$*" | sed 's/.*--crate-name \\([a-z]*\\).*/\\1/' >> '${log}';; esac\ncase " $* " in *" --crate-name c "*) sleep 8;; esac\nexec rustc "$@"\n`);chmodSync(slow,0o755);
+ writeUnitCostV1(root,"c",60000);writeUnitCostV1(root,"d",60000);writeUnitCostV1(root,"e",10);
+ const extra={SEMIO_OFFLOAD:"distribute",SEMIO_UNIT_CACHE_INNER:JSON.stringify([slow]),SEMIO_UNIT_CACHE_SLOTS:"1",SEMIO_UNIT_CACHE_LIGHT_SLOTS:"4"};
+ const local=runWrapper(checkout,"c",["b"],root,extra),localStarted=Date.now();
+ await eventuallyV1(async()=>existsSync(log)&&readFileSync(log,"utf8").includes("c"),30000,"unit c holds the only local slot");
+ const remote=await runWrapper(checkout,"d",["b"],root,extra),remoteEnded=Date.now();
+ expect(remote.status,remote.stderr+JSON.stringify(events(root))).toBe(0);
+ expect(events(root).filter(row=>row.kind==="offload-run").map(row=>row.crate),"the unit that would have waited went to a worker "+JSON.stringify(events(root))).toEqual(["d"]);
+ const moved=events(root).find(row=>row.kind==="offload-run")!;
+ expect(String(moved.detail),"the round trip reports what the worker did and what it did not").toMatch(/worker fetch \d+ ms, run \d+ ms, upload \d+ ms, away from it \d+ ms of which token wait \d+ ms/u);
+ expect(readOffloadOverheadV1(root),"the overhead of the round trip is learned").not.toBe(OFFLOAD_POLICY_V1.limits.roundTripMilliseconds);
+ const cheap=runWrapper(checkout,"e",["b"],root,extra);
+ const first=await local;expect(first.status,first.stderr).toBe(0);
+ expect(remoteEnded,"the remote unit finished while the local one still compiled").toBeLessThan(localStarted+8000);
+ const last=await cheap;expect(last.status,last.stderr).toBe(0);
+ expect(readFileSync(log,"utf8").split("\n").filter(Boolean),"c and the cheap e compiled here, d did not").toEqual(["c","e"]);
+ expect(events(root).filter(row=>row.kind==="offload-run").map(row=>row.crate)).toEqual(["d"]);
+},stretchedBudgetMillisecondsV1(240000));
+
+test("an expensive unit goes to a worker that has room although a local slot is free, and a cheap unit takes the free slot and compiles here",async()=>{
+ const checkout=checkoutWith("expensive","pub fn c()->u32{b::b()+30}\n");checkout.crate("d","pub fn d()->u32{b::b()+31}\n");
+ const root=join(scratch,"unit-expensive");mkdirSync(root,{recursive:true});
+ writeUnitCostV1(root,"c",OFFLOAD_POLICY_V1.finals.minimumMilliseconds);writeUnitCostV1(root,"d",10);
+ const extra={SEMIO_OFFLOAD:"distribute",SEMIO_UNIT_CACHE_SLOTS:"4",SEMIO_UNIT_CACHE_LIGHT_SLOTS:"4",SEMIO_REMOTE_EXECUTION_SCHEDULER:cluster.server.workerUrl,SEMIO_WORKSPACE_ROOT:root,SEMIO_FLEET_ORIGIN:"requester"};
+ const expensive=await runWrapper(checkout,"c",["b"],root,extra);
+ expect(expensive.status,expensive.stderr+JSON.stringify(events(root))).toBe(0);
+ expect(events(root).filter(row=>row.kind==="offload-run").map(row=>row.crate),"the expensive unit went to a worker with every local slot free "+JSON.stringify(events(root))).toEqual(["c"]);
+ const cheap=await runWrapper(checkout,"d",["b"],root,extra);
+ expect(cheap.status,cheap.stderr).toBe(0);
+ expect(events(root).filter(row=>row.kind==="offload-run").map(row=>row.crate),"the cheap unit stayed here").toEqual(["c"]);
+ expect(callsOf(join(root,"rustc-calls.log")),"the expensive unit spawned no local rustc, the cheap one exactly one").toBe(1);
+},stretchedBudgetMillisecondsV1(240000));
 
 test("a pinned build compiles every unit on the pinned worker and on no other, reports a pin nobody offers as a fall-back with its reason, and still builds the unit here",async()=>{
  for(const target of ["wA","wB"]){

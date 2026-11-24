@@ -174,6 +174,7 @@ export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly P
     moduleUrl: catalog.extensionModuleUrl(target.pluginId),
     contributes: target.contributes,
     consumes: target.consumes,
+    activationEvents: target.activationEvents,
     dependencies: dependsOnToPluginDependencies(target.dependsOn),
   }));
 }

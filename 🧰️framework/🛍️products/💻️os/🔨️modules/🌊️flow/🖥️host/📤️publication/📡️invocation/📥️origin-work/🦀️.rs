@@ -72,5 +72,5 @@ impl FlowInvocationOriginWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.dependency.is_none()&&self.fields.is_none()&&self.retirement.is_none()}
 }
-impl Drop for FlowInvocationOriginWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original invocation origin requires explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for FlowInvocationOriginWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original invocation origin requires explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 

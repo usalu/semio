@@ -1,0 +1,285 @@
+--- a/job-slots-schema.json
++++ b/job-slots-schema.json
+@@ -12,7 +12,11 @@
+         "componentJobsMaximum": 6,
+         "componentJobResidueMegabytes": 256,
+         "reserveMegabytes": 2048,
+-        "pressureWarnDivisor": 2
++        "pressureWarnDivisor": 2,
++        "localJobsMaximum": 3,
++        "localJobsPollMilliseconds": 5000,
++        "localJobsProgressMilliseconds": 60000,
++        "unmeasuredQuantile": 0.9
+       }
+     },
+     "Pressure": {
+@@ -31,6 +35,225 @@
+         "jobs-pressure"
+       ]
+     },
++    "LocalJobReason": {
++      "enum": [
++        "local-first",
++        "local-fits",
++        "local-all",
++        "local-cap",
++        "local-grant",
++        "local-memory",
++        "local-pressure",
++        "local-unknown"
++      ]
++    },
++    "LocalJobsHost": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "tokens",
++        "availableMegabytes",
++        "floorMegabytes",
++        "pressure",
++        "peaksMegabytes"
++      ],
++      "properties": {
++        "tokens": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        },
++        "availableMegabytes": {
++          "type": [
++            "integer",
++            "null"
++          ],
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "floorMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "pressure": {
++          "anyOf": [
++            {
++              "$ref": "#/definitions/Pressure"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "peaksMegabytes": {
++          "type": "array",
++          "minItems": 1,
++          "maxItems": 4096,
++          "items": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 1048576
++          }
++        }
++      }
++    },
++    "LocalJobsDecision": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "jobs",
++        "reason"
++      ],
++      "properties": {
++        "jobs": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        },
++        "reason": {
++          "$ref": "#/definitions/LocalJobReason"
++        }
++      }
++    },
++    "LocalJobAdmitHost": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "running",
++        "maximum",
++        "availableMegabytes",
++        "ownedMegabytes",
++        "reservedMegabytes",
++        "floorMegabytes",
++        "pressure",
++        "peakMegabytes"
++      ],
++      "properties": {
++        "running": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1024
++        },
++        "maximum": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        },
++        "availableMegabytes": {
++          "type": [
++            "integer",
++            "null"
++          ],
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "ownedMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "reservedMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 4194304
++        },
++        "floorMegabytes": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 1048576
++        },
++        "pressure": {
++          "anyOf": [
++            {
++              "$ref": "#/definitions/Pressure"
++            },
++            {
++              "type": "null"
++            }
++          ]
++        },
++        "peakMegabytes": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1048576
++        }
++      }
++    },
++    "LocalJobAdmitDecision": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "admit",
++        "reason",
++        "freeMegabytes"
++      ],
++      "properties": {
++        "admit": {
++          "type": "boolean"
++        },
++        "reason": {
++          "$ref": "#/definitions/LocalJobReason"
++        },
++        "freeMegabytes": {
++          "type": "integer",
++          "minimum": -4194304,
++          "maximum": 1048576
++        }
++      }
++    },
++    "ComponentJobSlotsHost": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "fleetJobs",
++        "tokens",
++        "wanted"
++      ],
++      "properties": {
++        "fleetJobs": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 65536
++        },
++        "tokens": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        },
++        "wanted": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        }
++      }
++    },
++    "ComponentJobSlotsDecision": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "jobs",
++        "light",
++        "local"
++      ],
++      "properties": {
++        "jobs": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 65536
++        },
++        "light": {
++          "type": "integer",
++          "minimum": 0,
++          "maximum": 65536
++        },
++        "local": {
++          "type": "integer",
++          "minimum": 1,
++          "maximum": 1024
++        }
++      }
++    },
+     "ComponentJobsHost": {
+       "type": "object",
+       "additionalProperties": false,
+@@ -121,6 +344,21 @@
+             "jobs-memory": "the free memory here carries fewer remote jobs",
+             "jobs-pressure": "memory pressure is raised, so fewer remote jobs wait here"
+           },
++          "local": {
++            "plan": "[component-jobs] {operation}: {jobs} component job(s) may hold a local reservation at once ({reason}); {available} MB free, {floor} MB kept free, the next finals counted at {peak} MB",
++            "waiting": "[component-jobs] {pass} waits for memory beside {running} running final(s): it needs {peak} MB, {free} MB are free above the {floor} MB floor ({reason})",
++            "started": "[component-jobs] {pass} starts beside {running} running final(s) and reserves {peak} MB ({reason})",
++            "reasons": {
++              "local-first": "nothing else runs here, so the first job always starts",
++              "local-fits": "the reservation fits the free memory above the floor",
++              "local-all": "every listed final fits the free memory above the floor",
++              "local-cap": "the authored local job cap is reached",
++              "local-grant": "the local compile grant bounds the local jobs",
++              "local-memory": "the free memory above the floor does not carry another final",
++              "local-pressure": "memory pressure is raised, so no further local final starts",
++              "local-unknown": "the free memory of this machine cannot be read, so only one job runs here"
++            }
++          },
+           "errors": {
+             "definitionRequired": "Closed compile units value required: {detail}"
+           }
+@@ -134,6 +372,21 @@
+             "jobs-memory": "der freie Speicher hier trägt weniger entfernte Jobs",
+             "jobs-pressure": "der Speicherdruck ist erhöht, daher warten weniger entfernte Jobs hier"
+           },
++          "local": {
++            "plan": "[component-jobs] {operation}: {jobs} Komponenten-Job(s) dürfen gleichzeitig eine lokale Reservierung halten ({reason}); {available} MB frei, {floor} MB bleiben frei, die nächsten Endstücke zählen mit {peak} MB",
++            "waiting": "[component-jobs] {pass} wartet auf Speicher neben {running} laufenden Endstück(en): es braucht {peak} MB, über der Untergrenze von {floor} MB sind {free} MB frei ({reason})",
++            "started": "[component-jobs] {pass} startet neben {running} laufenden Endstück(en) und reserviert {peak} MB ({reason})",
++            "reasons": {
++              "local-first": "sonst läuft hier nichts, daher startet der erste Job immer",
++              "local-fits": "die Reservierung passt in den freien Speicher über der Untergrenze",
++              "local-all": "jedes aufgeführte Endstück passt in den freien Speicher über der Untergrenze",
++              "local-cap": "die festgelegte Obergrenze lokaler Jobs ist erreicht",
++              "local-grant": "die lokale Compile-Zuteilung begrenzt die lokalen Jobs",
++              "local-memory": "der freie Speicher über der Untergrenze trägt kein weiteres Endstück",
++              "local-pressure": "der Speicherdruck ist erhöht, daher startet kein weiteres lokales Endstück",
++              "local-unknown": "der freie Speicher dieser Maschine ist nicht lesbar, daher läuft hier nur ein Job"
++            }
++          },
+           "errors": {
+             "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}"
+           }

@@ -1,6 +1,6 @@
 //! 🏷️ EN 1998 FieldSpec lookup for the structured Inputs editor (B2 hook).
 
-use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, FieldSpec, UnitId};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, FieldSpec, FieldKind, UnitId};
 
 /// 🏷️ Family field-metadata table — wire values keep codes; labels are localized prose.
 fn describe_en1998_field(path: &str) -> Option<FieldSpec> {
@@ -87,11 +87,17 @@ macro_rules! m {
     ($en:expr, $de:expr) => {
         FieldSpec::new($en, $de)
     };
-    ($en:expr, $de:expr, $u:expr) => {
-        FieldSpec::quantity($en, $de, $u)
+    ($en:expr, $de:expr, ratio) => {
+        FieldSpec { kind: FieldKind::Ratio, ..FieldSpec::new($en, $de) }
+    };
+    ($en:expr, $de:expr, int) => {
+        FieldSpec { kind: FieldKind::Int, ..FieldSpec::new($en, $de) }
     };
     ($en:expr, $de:expr, choices $c:expr) => {
         FieldSpec::choice($en, $de, $c)
+    };
+    ($en:expr, $de:expr, $u:expr) => {
+        FieldSpec::quantity($en, $de, $u)
     };
 }
 
@@ -165,23 +171,23 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("buildings[].nu", m!("Reduction factor ν", "Abminderungsfaktor ν")),
     ("buildings[].multipleResistingSystems", m!("Multiple resisting systems", "Mehrere Aussteifungssysteme", choices BOOL)),
     ("buildings[].claimsSimpleMasonry", m!("Claims simple masonry rules", "Einfache Mauerwerksregeln", choices BOOL)),
-    ("buildings[].masonryWallAreaRatio", m!("Masonry wall area ratio", "Mauerwerks-Wandflächenanteil")),
-    ("buildings[].accidentalEccentricityRatio", m!("Accidental eccentricity ratio", "Zufällige Exzentrizität")),
-    ("buildings[].setbackRatio", m!("Largest set-back as share of the plan dimension below", "Größter Rücksprung als Anteil der darunterliegenden Grundrissabmessung")),
-    ("buildings[].planEnvelopeGapRatio", m!("Area between plan outline and convex envelope per floor area", "Fläche zwischen Grundriss und konvexer Hülle je Geschossfläche")),
-    ("buildings[].jointGapM", m!("Seismic joint gap to the next building (0 = none)", "Erdbebenfuge zum nächsten Gebäude (0 = keine)")),
-    ("buildings[].nonstructuralWeightN", m!("Non-structural element weight W_a", "Gewicht des nichttragenden Bauteils W_a")),
-    ("buildings[].nonstructuralHeightM", m!("Non-structural element height z above the base", "Höhe z des nichttragenden Bauteils über dem Fußpunkt")),
-    ("buildings[].nonstructuralPeriodS", m!("Non-structural element period T_a", "Eigenperiode des nichttragenden Bauteils T_a")),
-    ("buildings[].nonstructuralQ", m!("Non-structural element behaviour factor q_a", "Verhaltensbeiwert des nichttragenden Bauteils q_a")),
-    ("buildings[].nonstructuralResistanceN", m!("Non-structural element anchorage resistance", "Verankerungswiderstand des nichttragenden Bauteils")),
-    ("buildings[].columnMomentSumNm", m!("Sum of column design resistances at the governing joint", "Summe der Stützenwiderstände am maßgebenden Knoten")),
-    ("buildings[].beamMomentSumNm", m!("Sum of beam design resistances at the governing joint", "Summe der Balkenwiderstände am maßgebenden Knoten")),
-    ("buildings[].overturningBaseXM", m!("Base width in x for the overturning check (0 = plan width)", "Fundamentbreite in x für den Kippnachweis (0 = Grundrissbreite)")),
-    ("buildings[].overturningBaseYM", m!("Base width in y for the overturning check (0 = plan length)", "Fundamentbreite in y für den Kippnachweis (0 = Grundrisslänge)")),
-    ("buildings[].tieDownMomentNm", m!("Stabilising moment of tie-downs and anchors about the overturning edge", "Rückhaltemoment von Zugankern und Verankerungen um die Kippkante")),
+    ("buildings[].masonryWallAreaRatio", m!("Masonry wall area ratio", "Mauerwerks-Wandflächenanteil", ratio)),
+    ("buildings[].accidentalEccentricityRatio", m!("Accidental eccentricity ratio", "Zufällige Exzentrizität", ratio)),
+    ("buildings[].setbackRatio", m!("Largest set-back as share of the plan dimension below", "Größter Rücksprung als Anteil der darunterliegenden Grundrissabmessung", ratio)),
+    ("buildings[].planEnvelopeGapRatio", m!("Area between plan outline and convex envelope per floor area", "Fläche zwischen Grundriss und konvexer Hülle je Geschossfläche", ratio)),
+    ("buildings[].jointGapM", m!("Seismic joint gap to the next building (0 = none)", "Erdbebenfuge zum nächsten Gebäude (0 = keine)", UnitId::Metre)),
+    ("buildings[].nonstructuralWeightN", m!("Non-structural element weight W_a", "Gewicht des nichttragenden Bauteils W_a", UnitId::Newton)),
+    ("buildings[].nonstructuralHeightM", m!("Non-structural element height z above the base", "Höhe z des nichttragenden Bauteils über dem Fußpunkt", UnitId::Metre)),
+    ("buildings[].nonstructuralPeriodS", m!("Non-structural element period T_a", "Eigenperiode des nichttragenden Bauteils T_a", UnitId::Second)),
+    ("buildings[].nonstructuralQ", m!("Non-structural element behaviour factor q_a", "Verhaltensbeiwert des nichttragenden Bauteils q_a", UnitId::One)),
+    ("buildings[].nonstructuralResistanceN", m!("Non-structural element anchorage resistance", "Verankerungswiderstand des nichttragenden Bauteils", UnitId::Newton)),
+    ("buildings[].columnMomentSumNm", m!("Sum of column design resistances at the governing joint", "Summe der Stützenwiderstände am maßgebenden Knoten", UnitId::NewtonMetre)),
+    ("buildings[].beamMomentSumNm", m!("Sum of beam design resistances at the governing joint", "Summe der Balkenwiderstände am maßgebenden Knoten", UnitId::NewtonMetre)),
+    ("buildings[].overturningBaseXM", m!("Base width in x for the overturning check (0 = plan width)", "Fundamentbreite in x für den Kippnachweis (0 = Grundrissbreite)", UnitId::Metre)),
+    ("buildings[].overturningBaseYM", m!("Base width in y for the overturning check (0 = plan length)", "Fundamentbreite in y für den Kippnachweis (0 = Grundrisslänge)", UnitId::Metre)),
+    ("buildings[].tieDownMomentNm", m!("Stabilising moment of tie-downs and anchors about the overturning edge", "Rückhaltemoment von Zugankern und Verankerungen um die Kippkante", UnitId::NewtonMetre)),
     ("buildings[].storeyStiffnessBasis", m!("Stiffness basis of the entered gross storey stiffnesses (EN 1998-1 4.3.1(6))", "Steifigkeitsbasis der eingegebenen Brutto-Geschosssteifigkeiten (EN 1998-1 4.3.1(6))", choices BASIS)),
-    ("buildings[].storeyStiffnessRatio", m!("Declared effective share of the entered gross storey stiffnesses (EN 1998-1 4.3.1(6)), used only when the basis is declared; 0 < ratio <= 1 (1 = entered values are already effective)", "Angegebener wirksamer Anteil der eingegebenen Brutto-Geschosssteifigkeiten (EN 1998-1 4.3.1(6)), nur bei Basis angegeben verwendet; 0 < Anteil <= 1 (1 = eingegebene Werte sind bereits wirksam)")),
+    ("buildings[].storeyStiffnessRatio", m!("Declared effective share of the entered gross storey stiffnesses (EN 1998-1 4.3.1(6)), used only when the basis is declared; 0 < ratio <= 1 (1 = entered values are already effective)", "Angegebener wirksamer Anteil der eingegebenen Brutto-Geschosssteifigkeiten (EN 1998-1 4.3.1(6)), nur bei Basis angegeben verwendet; 0 < Anteil <= 1 (1 = eingegebene Werte sind bereits wirksam)", ratio)),
     ("buildings[].systems", m!("Structural systems", "Aussteifungssysteme")),
     ("buildings[].systems[].id", m!("System id", "System-ID")),
     ("buildings[].systems[].direction", m!("Direction", "Richtung", choices DIR)),
@@ -189,7 +195,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("buildings[].systems[].material", m!("Material", "Baustoff", choices MAT)),
     ("buildings[].systems[].ductilityClass", m!("Ductility class", "Duktilitätsklasse", choices DC)),
     ("buildings[].systems[].q0", m!("Basic behaviour factor q₀", "Grundwert Verhaltensbeiwert q₀")),
-    ("buildings[].systems[].alphaUOverAlpha1", m!("αu/α1", "αu/α1")),
+    ("buildings[].systems[].alphaUOverAlpha1", m!("αu/α1", "αu/α1", UnitId::One)),
     ("buildings[].systems[].kW", m!("Wall factor kw", "Wandfaktor kw")),
     ("buildings[].systems[].baseShearResistanceN", m!("Base shear resistance VRd", "Querkrafttragfähigkeit VRd", UnitId::Newton)),
     ("buildings[].storeys", m!("Storeys", "Geschosse")),
@@ -233,7 +239,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("buildings[].members[].effectiveStiffnessBasis", m!("Stiffness basis of the gross wall stiffness (EN 1998-1 4.3.1(6))", "Steifigkeitsbasis der Brutto-Wandsteifigkeit (EN 1998-1 4.3.1(6))", choices BASIS)),
     ("buildings[].members[].effectiveStiffnessRatio", m!("Declared effective share of the gross wall stiffness (EN 1998-1 4.3.1(6)), used only when the basis is declared; 0 < ratio <= 1 (1 = uncracked)", "Angegebener wirksamer Anteil der Brutto-Wandsteifigkeit (EN 1998-1 4.3.1(6)), nur bei Basis angegeben verwendet; 0 < Anteil <= 1 (1 = ungerissen)")),
     ("bridges[].id", m!("Bridge id", "Brücken-ID")),
-    ("bridges[].periodRatio", m!("Isolation period ratio", "Isolations-Periodenverhältnis")),
+    ("bridges[].periodRatio", m!("Isolation period ratio", "Isolations-Periodenverhältnis", UnitId::One)),
     ("bridges[].fundamentalPeriodS", m!("Fundamental period T", "Eigenperiode T", UnitId::Second)),
     ("bridges[].vRdN", m!("Shear resistance", "Querkrafttragfähigkeit", UnitId::Newton)),
     ("bridges[].bearingDRdM", m!("Bearing displacement capacity", "Lagerverschiebungskapazität", UnitId::Metre)),
@@ -244,10 +250,10 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("bridges[].pierMomentRdNm", m!("Pier plastic hinge moment resistance M_Rd", "Plastisches Gelenkmoment des Pfeilers M_Rd")),
     ("bridges[].pierShearRdN", m!("Pier shear resistance V_Rd", "Pfeilerquerkrafttragfähigkeit V_Rd")),
     ("bridges[].deckLengthM", m!("Deck length for the lumped mass model (0 = span of the supports)", "Überbaulänge für das Punktmassenmodell (0 = Spannweite der Auflager)", UnitId::Metre)),
-    ("bridges[].deckEiNm2", m!("Transverse bending stiffness EI of the deck in N·m² (0 = rigid deck)", "Biegesteifigkeit EI des Überbaus quer in N·m² (0 = starrer Überbau)")),
-    ("bridges[].importanceClass", m!("Importance class of the bridge for γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)", "Bedeutungsklasse der Brücke für γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)")),
+    ("bridges[].deckEiNm2", m!("Transverse bending stiffness EI of the deck in N·m² (0 = rigid deck)", "Biegesteifigkeit EI des Überbaus quer in N·m² (0 = starrer Überbau)", UnitId::One)),
+    ("bridges[].importanceClass", m!("Importance class of the bridge for γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)", "Bedeutungsklasse der Brücke für γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)", int)),
     ("bridges[].verticalPeriodS", m!("Fundamental period T_v of the deck in the vertical direction (0 = no vertical action; EN 1998-2 3.2)", "Grundschwingzeit T_v des Überbaus in vertikaler Richtung (0 = keine Vertikalwirkung; EN 1998-2 3.2)", UnitId::Second)),
-    ("bridges[].pierCrackedInertiaRatio", m!("Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1, declared from the cracked section analysis)", "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1, aus der Berechnung des gerissenen Querschnitts angegeben)")),
+    ("bridges[].pierCrackedInertiaRatio", m!("Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1, declared from the cracked section analysis)", "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1, aus der Berechnung des gerissenen Querschnitts angegeben)", ratio)),
     ("bridges[].variables[].id", m!("Variable action id", "Veränderliche-Einwirkung-ID")),
     ("bridges[].variables[].category", m!("Imposed-load category", "Nutzlastkategorie", choices IMPOSED_CAT)),
     ("bridges[].variables[].qkN", m!("Variable action Q_k", "Veränderliche Einwirkung Q_k", UnitId::Newton)),
@@ -257,7 +263,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("assessments[].supportedBuildingId", m!("Supported building id", "Gestütztes Gebäude")),
     ("assessments[].rKN", m!("Characteristic resistance Rk", "Charakteristischer Widerstand Rk", UnitId::Newton)),
     ("assessments[].gammaEl", m!("γel", "γel")),
-    ("assessments[].chordRotationDemandRad", m!("Chord rotation demand θ_Ed", "Sehnendrehwinkel-Einwirkung θ_Ed")),
+    ("assessments[].chordRotationDemandRad", m!("Chord rotation demand θ_Ed", "Sehnendrehwinkel-Einwirkung θ_Ed", UnitId::Radian)),
     ("assessments[].chordRotationYieldRad", m!("Yield chord rotation θ_y", "Fließ-Sehnendrehwinkel θ_y")),
     ("assessments[].chordRotationUltimateRad", m!("Ultimate chord rotation θ_um", "Bruch-Sehnendrehwinkel θ_um")),
     ("assessments[].sectionDepthM", m!("Member section depth h (0 = give θ_y and θ_um directly)", "Querschnittshöhe h (0 = θ_y und θ_um direkt angeben)", UnitId::Metre)),
@@ -288,17 +294,17 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("silos[].permanentGkN", m!("Structure permanent ΣG_k", "Tragwerk ständige ΣG_k", UnitId::Newton)),
     ("silos[].contentQkN", m!("Content action Q_k (full)", "Füllgut-Einwirkung Q_k (voll)", UnitId::Newton)),
     ("silos[].contentCategory", m!("Content category", "Füllgutkategorie", choices IMPOSED_CAT)),
-    ("silos[].fillingRatio", m!("Filling ratio", "Füllgrad")),
+    ("silos[].fillingRatio", m!("Filling ratio", "Füllgrad", ratio)),
     ("silos[].nRdN", m!("Axial resistance", "Normalkrafttragfähigkeit", UnitId::Newton)),
     ("silos[].vRdN", m!("Shear / anchorage resistance", "Querkraft-/Verankerungstragfähigkeit", UnitId::Newton)),
-    ("silos[].qNominal", m!("Nominal q", "Nennwert q")),
+    ("silos[].qNominal", m!("Nominal q", "Nennwert q", UnitId::One)),
     ("tanks[].id", m!("Tank id", "Tank-ID")),
     ("tanks[].heightM", m!("Tank height", "Tankhöhe", UnitId::Metre)),
     ("tanks[].radiusM", m!("Tank radius", "Tankradius", UnitId::Metre)),
     ("tanks[].permanentGkN", m!("Structure permanent ΣG_k", "Tragwerk ständige ΣG_k", UnitId::Newton)),
     ("tanks[].contentQkN", m!("Content action Q_k (full)", "Füllgut-Einwirkung Q_k (voll)", UnitId::Newton)),
     ("tanks[].contentCategory", m!("Content category", "Füllgutkategorie", choices IMPOSED_CAT)),
-    ("tanks[].fillingRatio", m!("Filling ratio", "Füllgrad")),
+    ("tanks[].fillingRatio", m!("Filling ratio", "Füllgrad", ratio)),
     ("tanks[].vRdN", m!("Shear resistance", "Querkrafttragfähigkeit", UnitId::Newton)),
     ("tanks[].shellStrengthMpa", m!("Design strength of the shell wall in hoop tension (0 = not given)", "Bemessungsfestigkeit der Schalenwand in Ringzug (0 = nicht angegeben)", UnitId::Megapascal)),
     ("tanks[].shellThicknessM", m!("Shell wall thickness t for the hoop stress under hydrostatic and hydrodynamic pressure (0 = not given)", "Wanddicke t der Schale für die Ringspannung aus hydrostatischem und hydrodynamischem Druck (0 = nicht angegeben)", UnitId::Metre)),
@@ -307,14 +313,14 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("foundations[].areaM2", m!("Foundation area", "Gründungsfläche", UnitId::SquareMetre)),
     ("foundations[].pRdPa", m!("Bearing resistance", "Sohldruckwiderstand", UnitId::Pascal)),
     ("foundations[].passiveResistanceN", m!("Passive resistance", "Passiver Widerstand", UnitId::Newton)),
-    ("foundations[].kFoundation", m!("Foundation stiffness", "Gründungssteifigkeit")),
-    ("foundations[].kSoil", m!("Soil stiffness", "Bodensteifigkeit")),
-    ("foundations[].liqN160", m!("Corrected SPT blow count (N1)60 of the layer (0 = no liquefaction check)", "Korrigierte SPT-Schlagzahl (N1)60 der Schicht (0 = kein Verflüssigungsnachweis)")),
-    ("foundations[].liqFinesPercent", m!("Fines content of the layer", "Feinkornanteil der Schicht")),
+    ("foundations[].kFoundation", m!("Foundation stiffness", "Gründungssteifigkeit", UnitId::NewtonPerMetre)),
+    ("foundations[].kSoil", m!("Soil stiffness", "Bodensteifigkeit", UnitId::NewtonPerMetre)),
+    ("foundations[].liqN160", m!("Corrected SPT blow count (N1)60 of the layer (0 = no liquefaction check)", "Korrigierte SPT-Schlagzahl (N1)60 der Schicht (0 = kein Verflüssigungsnachweis)", UnitId::One)),
+    ("foundations[].liqFinesPercent", m!("Fines content of the layer", "Feinkornanteil der Schicht", UnitId::Percent)),
     ("foundations[].liqDepthM", m!("Depth of the layer below the surface", "Tiefe der Schicht unter der Oberfläche")),
-    ("foundations[].liqWaterDepthM", m!("Groundwater depth below the surface", "Grundwassertiefe unter der Oberfläche")),
-    ("foundations[].liqUnitWeightNM3", m!("Total unit weight of the soil above the layer", "Wichte des Bodens über der Schicht")),
-    ("foundations[].liqMagnitude", m!("Surface-wave magnitude Ms", "Oberflächenwellenmagnitude Ms")),
+    ("foundations[].liqWaterDepthM", m!("Groundwater depth below the surface", "Grundwassertiefe unter der Oberfläche", UnitId::Metre)),
+    ("foundations[].liqUnitWeightNM3", m!("Total unit weight of the soil above the layer", "Wichte des Bodens über der Schicht", UnitId::NewtonPerCubicMetre)),
+    ("foundations[].liqMagnitude", m!("Surface-wave magnitude Ms", "Oberflächenwellenmagnitude Ms", UnitId::One)),
     ("foundations[].liqLayerThicknessM", m!("Thickness of the liquefiable layer (0 = point value)", "Dicke der verflüssigungsfähigen Schicht (0 = Punktwert)", UnitId::Metre)),
     ("foundations[].footingWidthM", m!("Footing width B of the seismic bearing check (0 = no check)", "Fundamentbreite B für den Erdbebengrundbruch (0 = kein Nachweis)", UnitId::Metre)),
     ("foundations[].bearingAxialN", m!("Design axial force N_Ed of the footing", "Bemessungswert der Normalkraft N_Ed des Fundaments", UnitId::Newton)),
@@ -337,9 +343,9 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("foundations[].pileAxialLoadN", m!("Pile axial load N_Ed", "Pfahlnormalkraft N_Ed", UnitId::Newton)),
     ("retainingWalls[].id", m!("Wall id", "Wand-ID")),
     ("retainingWalls[].heightM", m!("Wall height", "Wandhöhe", UnitId::Metre)),
-    ("retainingWalls[].phiDeg", m!("Friction angle φ′", "Reibungswinkel φ′")),
-    ("retainingWalls[].soilGamma", m!("Soil unit weight", "Wichte Boden")),
-    ("retainingWalls[].r", m!("Reduction factor r", "Abminderungsfaktor r")),
+    ("retainingWalls[].phiDeg", m!("Friction angle φ′", "Reibungswinkel φ′", UnitId::Degree)),
+    ("retainingWalls[].soilGamma", m!("Soil unit weight", "Wichte Boden", UnitId::NewtonPerCubicMetre)),
+    ("retainingWalls[].r", m!("Reduction factor r", "Abminderungsfaktor r", UnitId::One)),
     ("retainingWalls[].hRdNPerM", m!("Thrust resistance", "Schubwiderstand", UnitId::NewtonPerMetre)),
     ("retainingWalls[].waterHeightM", m!("Height of the retained water above the wall base for the hydrostatic and hydrodynamic water pressure (0 = none)", "Höhe des angestauten Wassers über der Wandsohle für den hydrostatischen und hydrodynamischen Wasserdruck (0 = keines)", UnitId::Metre)),
     ("retainingWalls[].saturatedGamma", m!("Saturated unit weight γ_sat of the backfill below the water (0 = the soil unit weight γ)", "Wichte unter Wasser γ_sat der Hinterfüllung (0 = Wichte des Bodens γ)", UnitId::NewtonPerCubicMetre)),
@@ -362,8 +368,8 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("soilLayers[].thicknessM", m!("Layer thickness", "Schichtdicke", UnitId::Metre)),
     ("soilLayers[].unitWeightNM3", m!("Total unit weight", "Wichte", UnitId::NewtonPerCubicMetre)),
     ("soilLayers[].shearWaveVelocityMS", m!("Shear wave velocity v_s", "Scherwellengeschwindigkeit v_s", UnitId::MetrePerSecond)),
-    ("soilLayers[].n160", m!("Corrected SPT blow count (N1)60", "Korrigierte SPT-Schlagzahl (N1)60")),
-    ("soilLayers[].finesPercent", m!("Fines content", "Feinkornanteil")),
+    ("soilLayers[].n160", m!("Corrected SPT blow count (N1)60", "Korrigierte SPT-Schlagzahl (N1)60", UnitId::One)),
+    ("soilLayers[].finesPercent", m!("Fines content", "Feinkornanteil", UnitId::Percent)),
     ("diaphragms[].id", m!("Diaphragm id", "Scheiben-Id")),
     ("diaphragms[].buildingId", m!("Owning building", "Zugehöriges Gebäude")),
     ("diaphragms[].storeyId", m!("Storey of the diaphragm", "Geschoss der Scheibe")),
@@ -381,7 +387,7 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("accelerograms[].label", m!("Record label (event, station)", "Bezeichnung der Aufzeichnung (Ereignis, Station)")),
     ("accelerograms[].samples", m!("Ground acceleration samples in m/s² separated by blanks", "Bodenbeschleunigungswerte in m/s² durch Leerzeichen getrennt")),
     ("accelerograms[].dtS", m!("Sampling step", "Abtastschritt", UnitId::Second)),
-    ("accelerograms[].scaleFactor", m!("Scale factor applied to every sample", "Skalierungsfaktor für alle Werte")),
+    ("accelerograms[].scaleFactor", m!("Scale factor applied to every sample", "Skalierungsfaktor für alle Werte", UnitId::One)),
     ("piers[].id", m!("Pier id", "Pfeiler-Id")),
     ("piers[].bridgeId", m!("Owning bridge", "Zugehörige Brücke")),
     ("piers[].xM", m!("Position along the deck axis", "Lage entlang der Brückenachse", UnitId::Metre)),
@@ -391,10 +397,10 @@ const TABLE: &[(&str, FieldSpec)] = &[
     ("piers[].modulusMpa", m!("Effective elastic modulus of the pier (cracked section included)", "Wirksamer Elastizitätsmodul des Pfeilers (gerissener Querschnitt eingeschlossen)", UnitId::Megapascal)),
     ("piers[].momentRdNm", m!("Plastic hinge moment resistance M_Rd at the pier base", "Plastisches Gelenkmoment M_Rd am Pfeilerfuß", UnitId::NewtonMetre)),
     ("piers[].shearRdN", m!("Shear resistance V_Rd of the pier", "Querkrafttragfähigkeit V_Rd des Pfeilers", UnitId::Newton)),
-    ("piers[].reinforcementRatio", m!("Longitudinal reinforcement ratio A_s/(b h) (0 = not given)", "Längsbewehrungsgrad A_s/(b h) (0 = nicht angegeben)")),
+    ("piers[].reinforcementRatio", m!("Longitudinal reinforcement ratio A_s/(b h) (0 = not given)", "Längsbewehrungsgrad A_s/(b h) (0 = nicht angegeben)", ratio)),
     ("piers[].coverM", m!("Cover to bar centre d1 (0 = not given)", "Randabstand der Bewehrungsachse d1 (0 = nicht angegeben)", UnitId::Metre)),
-    ("piers[].concreteFckMpa", m!("Concrete characteristic strength f_ck (0 = not given)", "Charakteristische Betondruckfestigkeit f_ck (0 = nicht angegeben)")),
-    ("piers[].steelFykMpa", m!("Reinforcement yield strength f_yk (0 = not given)", "Streckgrenze des Bewehrungsstahls f_yk (0 = nicht angegeben)")),
+    ("piers[].concreteFckMpa", m!("Concrete characteristic strength f_ck (0 = not given)", "Charakteristische Betondruckfestigkeit f_ck (0 = nicht angegeben)", UnitId::Megapascal)),
+    ("piers[].steelFykMpa", m!("Reinforcement yield strength f_yk (0 = not given)", "Streckgrenze des Bewehrungsstahls f_yk (0 = nicht angegeben)", UnitId::Megapascal)),
     ("piers[].axialLoadN", m!("Pier axial load N (compression positive)", "Normalkraft des Pfeilers N (Druck positiv)", UnitId::Newton)),
     ("piers[].stiffnessBasis", m!("Stiffness basis (declared | computed)", "Steifigkeitsbasis (declared | computed)")),
     ("bearings[].id", m!("Bearing id", "Lager-Id")),

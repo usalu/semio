@@ -1,0 +1,519 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "description": "Splits one cache partition into several images, each at most the per-platform maximum, because macOS returns freed blocks of a mounted APFS image only for containers of at most 2^35 bytes (measured, see the ticket note `cache-image-space-return`). A shard is the image of one key, the child directory of a declared root (a Cargo lane below `u/l`), mounted at that very logical path inside the mount of the home image, so a consumer sees one tree and every path keeps its length. The home image keeps everything no root claims. A shard is born lazily when its key first needs it, at the capacity the cap and the host allow (a sparse backing costs nothing until written), and retired whole when its key goes away, which returns all of its blocks at once. Linux and Windows keep one image per partition for now (`unsupported`); their maxima are declared so the partition capacity stays checkable.",
+        "maximumImageBytes": {
+          "darwin": 34359738368,
+          "linux": 137438953472,
+          "windows": 68719476736
+        },
+        "minimumImageBytes": 1073741824,
+        "alignBytes": 1073741824,
+        "birthAllocationBytes": 134217728,
+        "maximumShards": 256,
+        "pathBudgetCharacters": 256,
+        "directory": "s",
+        "imageName": "fixed.dmg",
+        "receiptName": "shard.json",
+        "seedDirectory": "seed",
+        "ledgerFile": "shards.jsonl",
+        "mountDirectory": "m",
+        "leasePrefix": "native-fixed-image:",
+        "ledgerLockResource": "native-image-shards:",
+        "idPattern": "^[a-z0-9]{1,12}$",
+        "hashedIdPrefix": "x",
+        "hashedIdCharacters": 11,
+        "maximumLedgerLineBytes": 1024,
+        "maximumLedgerEvents": 65536,
+        "commandMilliseconds": 120000,
+        "volumeName": "semio",
+        "lifecycle": {
+          "darwin": {
+            "kind": "hdiutil-diskutil",
+            "createProgram": "/usr/bin/hdiutil",
+            "createArguments": [
+              "create",
+              "-size",
+              "<megabytes>m",
+              "-format",
+              "UDRW",
+              "-nospotlight",
+              "-fs",
+              "Case-sensitive APFS",
+              "-volname",
+              "<volumeName>",
+              "-srcfolder",
+              "<seed>",
+              "<image>"
+            ],
+            "attachProgram": "/usr/sbin/diskutil",
+            "attachArguments": [
+              "image",
+              "attach",
+              "--nobrowse",
+              "--mountOptions",
+              "owners",
+              "--mountPoint",
+              "<mountPoint>",
+              "<image>"
+            ],
+            "detachProgram": "/usr/bin/hdiutil",
+            "detachArguments": [
+              "detach",
+              "<mountPoint>"
+            ],
+            "forceDetachArguments": [
+              "detach",
+              "-force",
+              "<mountPoint>"
+            ]
+          },
+          "linux": {
+            "kind": "unsupported"
+          },
+          "windows": {
+            "kind": "unsupported"
+          }
+        },
+        "messages": {
+          "refused": {
+            "en": "No image can be born for {key}: the host volume of {partition} has {free} free, a shard needs {need}.",
+            "de": "Für {key} kann kein Image angelegt werden: das Hostvolume von {partition} hat {free} frei, ein Shard braucht {need}."
+          },
+          "partial": {
+            "en": "{failed} of {total} shards of {partition} failed ({ids}); the others were served.",
+            "de": "{failed} von {total} Shards von {partition} sind fehlgeschlagen ({ids}); die übrigen wurden bedient."
+          }
+        }
+      }
+    },
+    "Root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prefix",
+        "pattern",
+        "needBytes"
+      ],
+      "properties": {
+        "prefix": {
+          "description": "The logical directory below the mount of the home image whose children are the keys, relative, `/`-separated, empty for the mount root itself.",
+          "type": "string",
+          "maxLength": 100,
+          "pattern": "^([A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*)?$"
+        },
+        "pattern": {
+          "description": "The names a key may have; a child that does not match belongs to the home image.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "needBytes": {
+          "description": "The working set of one key, from which its image gets the headroom.",
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 137438953472
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "roots",
+        "headroomPercent",
+        "hostFreeReservePercent"
+      ],
+      "properties": {
+        "enabled": {
+          "description": "false keeps the partition as one image (the layout before the switchover).",
+          "type": "boolean"
+        },
+        "maximumImageBytes": {
+          "type": "integer",
+          "minimum": 1073741824,
+          "maximum": 137438953472
+        },
+        "headroomPercent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "hostFreeReservePercent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99
+        },
+        "roots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/definitions/Root"
+          }
+        }
+      }
+    },
+    "Event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "key",
+            "root",
+            "path",
+            "capacityBytes",
+            "atMs"
+          ],
+          "properties": {
+            "type": {
+              "const": "born"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{1,12}$"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "root": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 7
+            },
+            "capacityBytes": {
+              "type": "integer",
+              "minimum": 1073741824
+            },
+            "atMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id",
+            "atMs"
+          ],
+          "properties": {
+            "type": {
+              "const": "retired"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{1,12}$"
+            },
+            "atMs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "keys",
+        "capacity",
+        "selection",
+        "aggregate",
+        "admission",
+        "paths",
+        "reclaim"
+      ],
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "rule": {
+          "$ref": "#/definitions/Rule"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "root",
+              "key",
+              "id"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "root": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "capacity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "platform",
+              "need",
+              "hostFreeBytes",
+              "capacityBytes"
+            ],
+            "properties": {
+              "platform": {
+                "enum": [
+                  "darwin",
+                  "linux",
+                  "win32"
+                ]
+              },
+              "need": {
+                "type": "integer"
+              },
+              "hostFreeBytes": {
+                "type": "integer"
+              },
+              "capacityBytes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "platform",
+              "enabled",
+              "live",
+              "path",
+              "hostFreeBytes",
+              "decision"
+            ],
+            "properties": {
+              "platform": {
+                "enum": [
+                  "darwin",
+                  "linux",
+                  "win32"
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "live": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "key",
+                    "root",
+                    "capacityBytes"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "root": {
+                      "type": "integer"
+                    },
+                    "capacityBytes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "path": {
+                "type": "string"
+              },
+              "hostFreeBytes": {
+                "type": "integer"
+              },
+              "decision": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "aggregate": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "rows",
+              "total"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "total": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "admission": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "rows",
+              "reserveBytes",
+              "slackCreditBasisPoints",
+              "volumes",
+              "shortfallBytes"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "reserveBytes": {
+                "type": "integer"
+              },
+              "slackCreditBasisPoints": {
+                "type": "integer"
+              },
+              "volumes": {
+                "type": "object"
+              },
+              "shortfallBytes": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "flavor",
+              "directory",
+              "id",
+              "longest",
+              "maximumDirectoryCharacters",
+              "fits"
+            ],
+            "properties": {
+              "flavor": {
+                "enum": [
+                  "posix",
+                  "win32"
+                ]
+              },
+              "directory": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "longest": {
+                "type": "integer"
+              },
+              "maximumDirectoryCharacters": {
+                "type": "integer"
+              },
+              "fits": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "reclaim": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rule",
+              "facts",
+              "due"
+            ],
+            "properties": {
+              "rule": {
+                "type": "object"
+              },
+              "facts": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              },
+              "due": {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

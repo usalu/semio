@@ -8,74 +8,74 @@ pub fn edit_from_action(action: &str, args: Option<&semio_framework_value::DslVa
     if !is_page_action(action) {
         return Err(fault(format!("unknown pdf page action '{action}'")));
     }
-    let page_index = || req_index(args, "page");
+    let page_number = || req_page(args, "page").map(Some);
     let object_id = || req_text(args, "object");
     let text_value = || req_text(args, "text");
     let (page, object, text, extra, x, y, width, height, red, green, blue) = match action {
-        view if is_view_action(view) => (opt_index(args, "page"), String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "presence-pointer" => (opt_index(args, "page"), String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
-        "presence-caret" => (0, text_arg(args, "object"), String::new(), String::new(), opt_num(args, "offset", 0.0), opt_num(args, "anchor", opt_num(args, "offset", 0.0)), 0.0, 0.0, 0.0, 0.0, 0.0),
-        "presence-pointer-leave" | "presence-caret-clear" => (0, String::new(), String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "move-page" => (req_index(args, "page").or_else(|error| text_arg(args, "page").trim().parse().map_err(|_| error))?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-font-size" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, req_num(args, "size")?, 0.0, 0.0, 0.0),
-        "set-text" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "move" => (page_index()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "delete" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "remove-page" => (page_index()?, String::new(), String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "resize" => (page_index()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "insert-rectangle" | "insert-line" => (page_index()?, String::new(), String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "set-fill" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, req_num(args, "red")?, req_num(args, "green")?, req_num(args, "blue")?),
-        "set-stroke" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, req_num(args, "width")?, 0.0, req_num(args, "red")?, req_num(args, "green")?, req_num(args, "blue")?),
-        "insert-text" => (page_index()?, String::new(), text_value()?, String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, req_num(args, "height")?, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "insert-image" | "insert-page" | "set-page-size" => (page_index()?, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "set-info" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-annotation" => (page_index()?, object_id()?, text_value()?, String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "set-image" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "set-font" => (page_index()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-outline" => (page_index()?, String::new(), text_value()?, String::new(), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-page-rotation" | "set-page-user-unit" => (page_index()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-page-box" => (page_index()?, text_value()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
-        "set-language" | "set-page-layout" | "set-page-mode" | "set-metadata" => (0, String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-optional-content" => (0, object_id()?, text_value()?, String::new(), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-embedded-file" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "remove-embedded-file" | "remove-named-destination" => (0, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-named-destination" => (page_index()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-page-label" => (page_index()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-mark-info" => (0, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
-        "set-viewer-preferences" => (0, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-info-field" => (0, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-page-extra" => (page_index()?, text_arg(args, "object"), page_extra_text(args)?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-annotation-style" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "set-annotation-border" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", -1.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
-        "set-annotation-markup" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-form-settings" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-extra-entry" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-annotation-kind" => (page_index()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "set-field-data" => (0, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-resource-detail" => (0, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "set-encryption" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-output-intent" | "set-form-field" | "set-document-id" => (0, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-open-action" => (opt_index(args, "page"), text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-font-reference" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-graphics-state" => (0, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-pattern" => (0, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
-        "set-color-space" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-properties" => (0, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-font-metrics" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-image-mask" | "set-catalog-entry" | "set-trailer-entry" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-form-content" => (0, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
-        "set-page-transition" => (page_index()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-annotation-appearance" => (page_index()?, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-glyph" => (0, object_id()?, text_value()?, String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 10.0), opt_num(args, "height", 10.0), 0.0, 0.0, 0.0),
-        "set-indirect-object" => (0, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-mesh-reference" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "set-entry" => (0, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "create-annotation" => (page_index()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
-        "fill-form-field" => (0, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "replace-page" | "merge-document" => (page_index()?, String::new(), text_arg(args, "payload"), text_arg(args, "extra"), 0.0, 0.0, opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), 0.0, 0.0, 0.0),
-        "replace-page-pick" | "merge-pick" => (page_index()?, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "extract-pages" => (0, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (0, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        view if is_view_action(view) => (opt_page(args, "page"), String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-pointer" => (opt_page(args, "page"), String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-caret" => (None, text_arg(args, "object"), String::new(), String::new(), opt_num(args, "offset", 0.0), opt_num(args, "anchor", opt_num(args, "offset", 0.0)), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "presence-pointer-leave" | "presence-caret-clear" => (None, String::new(), String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "move-page" => (Some(req_page(args, "page").or_else(|error| text_arg(args, "page").trim().parse().map_err(|_| error))?), String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-font-size" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, req_num(args, "size")?, 0.0, 0.0, 0.0),
+        "set-text" => (page_number()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "move" => (page_number()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "delete" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "remove-page" => (page_number()?, String::new(), String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "resize" => (page_number()?, object_id()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
+        "insert-rectangle" | "insert-line" => (page_number()?, String::new(), String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-fill" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, req_num(args, "red")?, req_num(args, "green")?, req_num(args, "blue")?),
+        "set-stroke" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, req_num(args, "width")?, 0.0, req_num(args, "red")?, req_num(args, "green")?, req_num(args, "blue")?),
+        "insert-text" => (page_number()?, String::new(), text_value()?, String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, req_num(args, "height")?, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "insert-image" | "insert-page" | "set-page-size" => (page_number()?, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
+        "set-info" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation" => (page_number()?, object_id()?, text_value()?, String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
+        "set-image" => (page_number()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
+        "set-font" => (page_number()?, object_id()?, text_value()?, String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-outline" => (page_number()?, String::new(), text_value()?, String::new(), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-rotation" | "set-page-user-unit" => (page_number()?, String::new(), String::new(), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-box" => (page_number()?, text_value()?, String::new(), String::new(), req_num(args, "x")?, req_num(args, "y")?, req_num(args, "width")?, req_num(args, "height")?, 0.0, 0.0, 0.0),
+        "set-language" | "set-page-layout" | "set-page-mode" | "set-metadata" => (None, String::new(), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-optional-content" => (None, object_id()?, text_value()?, String::new(), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-embedded-file" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "remove-embedded-file" | "remove-named-destination" => (None, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-named-destination" => (page_number()?, object_id()?, String::new(), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-label" => (page_number()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-mark-info" => (None, String::new(), String::new(), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
+        "set-viewer-preferences" => (None, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-info-field" => (None, text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-page-extra" => (page_number()?, text_arg(args, "object"), page_extra_text(args)?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-style" => (page_number()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-annotation-border" => (page_number()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", -1.0), opt_num(args, "width", 0.0), 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-markup" => (page_number()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-form-settings" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-extra-entry" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-kind" => (page_number()?, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-field-data" => (None, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-resource-detail" => (None, object_id()?, text_value()?, text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "set-encryption" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-output-intent" | "set-form-field" | "set-document-id" => (None, text_arg(args, "object"), text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-open-action" => (opt_page(args, "page"), text_arg(args, "object"), text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-font-reference" => (None, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-graphics-state" => (None, object_id()?, text_arg(args, "text"), String::new(), req_num(args, "x")?, req_num(args, "y")?, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-pattern" => (None, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
+        "set-color-space" => (None, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-properties" => (None, object_id()?, text_value()?, text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-font-metrics" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", -1.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-image-mask" | "set-catalog-entry" | "set-trailer-entry" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-form-content" => (None, object_id()?, text_arg(args, "text"), String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 8.0), opt_num(args, "height", 8.0), 0.0, 0.0, 0.0),
+        "set-page-transition" => (page_number()?, String::new(), text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-annotation-appearance" => (page_number()?, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-glyph" => (None, object_id()?, text_value()?, String::new(), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 10.0), opt_num(args, "height", 10.0), 0.0, 0.0, 0.0),
+        "set-indirect-object" => (None, String::new(), text_arg(args, "text"), String::new(), req_num(args, "x")?, opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-mesh-reference" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "set-entry" => (None, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "create-annotation" => (page_number()?, object_id()?, text_arg(args, "text"), text_arg(args, "extra"), opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), opt_num(args, "red", 0.0), opt_num(args, "green", 0.0), opt_num(args, "blue", 0.0)),
+        "fill-form-field" => (None, object_id()?, text_arg(args, "text"), String::new(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "replace-page" | "merge-document" => (page_number()?, String::new(), text_arg(args, "payload"), text_arg(args, "extra"), 0.0, 0.0, opt_num(args, "width", 0.0), opt_num(args, "height", 0.0), 0.0, 0.0, 0.0),
+        "replace-page-pick" | "merge-pick" => (page_number()?, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "extract-pages" => (None, String::new(), String::new(), text_arg(args, "extra"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => (None, String::new(), String::new(), if pointer_extend(args) { "shift".into() } else { String::new() }, opt_num(args, "x", 0.0), opt_num(args, "y", 0.0), 0.0, 0.0, 0.0, 0.0, 0.0),
         _ => return Err(fault(format!("unknown pdf page action '{action}'"))),
     };
     Ok(payload_edit(action, page, object, text, extra, x, y, width, height, red, green, blue))
@@ -86,10 +86,18 @@ fn page_extra_text(args: Option<&semio_framework_value::DslValue>) -> Result<Str
     if text_arg(args, "object").starts_with("box.") { canonical_quad(&text, typed_locale(args, "text")) } else { Ok(text) }
 }
 
+/// 🧮 The page slots an action may address: every page, and one past the last where the action inserts pages.
+pub fn page_slots(snapshot: &PdfSnapshot, action: &str) -> usize {
+    snapshot.pages.len() + usize::from(matches!(action, "insert-page" | "merge-pick" | "merge-document"))
+}
+
 /// 🧬 Applies a replayable page edit to the typed document.
 pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Result<Vec<PdfMutation>, Fault> {
     let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
-    let page = value.get("page").and_then(Value::as_u64).unwrap_or(0) as usize;
+    let page = match value.get("page").and_then(Value::as_u64) {
+        Some(number) => resolve_page(page_slots(snapshot, action), number)?,
+        None => 0,
+    };
     let object = value.get("object").and_then(Value::as_str).unwrap_or("").to_string();
     let text = value.get("text").and_then(Value::as_str).unwrap_or("").to_string();
     let extra = value.get("extra").and_then(Value::as_str).unwrap_or("").to_string();
@@ -125,13 +133,13 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
             Ok(mutations)
         }
         "move-page" => {
-            let to = x.max(0.0) as usize;
+            let to = resolve_page(snapshot.pages.len(), x.max(0.0).round() as u64)?;
             let mut mutations = vec![PdfMutation::MovePage(MovePage { from: page, to })];
             mutations.extend(retarget_pages(snapshot, &move_page_map(page, to, snapshot.pages.len())));
             Ok(mutations)
         }
         "set-page-size" => {
-            let target = snapshot.pages.get(page).ok_or_else(|| fault(format!("pdf page {page} does not exist")))?;
+            let target = &snapshot.pages[page];
             let [left, bottom, ..] = target.media_box;
             let media_box = [left, bottom, left + width.max(1.0), bottom + height.max(1.0)];
             Ok(vec![PdfMutation::SetPageMediaBox(SetPageMediaBox { index: page, media_box })])
@@ -206,9 +214,10 @@ pub fn emit_page_edit(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Re
         }
         "replace-page-pick" | "merge-pick" => {
             let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
-            let page = value.get("page").and_then(Value::as_u64).unwrap_or(0) as usize;
+            let number = value.get("page").and_then(Value::as_u64).unwrap_or(0);
+            resolve_page(page_slots(snapshot, action), number)?;
             let selection = value.get("extra").and_then(Value::as_str).unwrap_or("");
-            Ok(semio_plugin::Emit { effects: vec![pick_source_effect(if action == "merge-pick" { "merge-document" } else { "replace-page" }, page, selection)], ..Default::default() })
+            Ok(semio_plugin::Emit { effects: vec![pick_source_effect(if action == "merge-pick" { "merge-document" } else { "replace-page" }, number, selection)], ..Default::default() })
         }
         "extract-pages" => {
             let value: Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;

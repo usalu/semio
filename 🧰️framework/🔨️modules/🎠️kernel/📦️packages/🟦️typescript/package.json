@@ -13,6 +13,7 @@
     "./descriptor/package": "./📇️descriptor/📦️package/🟦️.ts",
     "./merge-outcome": "./🔄️merge-outcome/🟦️.ts",
     "./notice-labels": "./🏷️notice-labels/🟦️.ts",
+    "./on-demand-activation": "./⏳️on-demand-activation/🟦️.ts",
     "./package-assets": "./📦️package-assets/🟦️.ts",
     "./playground-boot": "./🎮️playground-boot/🟦️.ts",
     "./plugin-catalog": "./📚️plugin-catalog/🟦️.ts",

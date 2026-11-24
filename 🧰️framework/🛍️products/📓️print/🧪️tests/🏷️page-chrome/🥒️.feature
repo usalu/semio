@@ -7,6 +7,7 @@ Feature: Unified page chrome chip borders
     Then its chips are anchored to the <side> shared rule inside the band
     And each chip draws only its inner edges and none on the shared rule
     And exactly one hairline closes the shared edge
+    And the band is a closed rectangle whose opposite rule and two side edges are shared by its chips
     And no gap, overlap or welded seam joins a chip to the rule
 
     Examples:

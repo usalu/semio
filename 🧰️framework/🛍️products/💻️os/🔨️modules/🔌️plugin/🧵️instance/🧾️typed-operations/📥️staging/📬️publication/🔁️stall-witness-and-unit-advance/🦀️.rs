@@ -1,6 +1,7 @@
 //! 🔁️ Stall witness and unit advance of the typed operation publication: the stall streak and the interaction write check, the advance of one publication unit and the window config refresh of a published receipt. See [`super`].
 
 use super::*;
+use semio_plugin_retained_command::typed_operation::note_publication_wait;
 
 /// 🕹️ Whether this operation's next publication unit is its [`InteractionWrite`] lane: every
 /// durable store lane of its emit is already drained (a selection may only name ids the
@@ -159,11 +160,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🪟️ Continues the window-config authority refresh of a published receipt; once it is complete the extensions are told
     /// before the retained receipt's result page is queued.
     pub(crate) fn advance_mounted_window_config_refresh(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained: RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        let op=mounted.operation.operation.0;
         let advanced = {
-            let Some(((advanced, work), _)) = cx.with_original_effect(retained, |_, effect| { let advanced = self.stores.advance_window_config_refresh(mounted, effect); (advanced, effect.performed_work()) })? else { return Ok(()) };
+            let Some(((advanced, work), _)) = cx.with_original_effect(retained, |_, effect| { let advanced = self.stores.advance_window_config_refresh(mounted, effect); (advanced, effect.performed_work()) })? else { note_publication_wait(op,"the window config refresh was not admitted (items, copy bytes, fuel)",[retained.maximum_items as u64,retained.maximum_copy_bytes as u64,cx.fuel_remaining()]);return Ok(()) };
             semio_framework_job::receive_original_retained_work(cx, semio_framework_value::RetainedWorkOutcome { result: Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work })?;
             advanced?
         };
+        if !advanced{note_publication_wait(op,"the window config refresh is still in progress (items, copy bytes, fuel)",[retained.maximum_items as u64,retained.maximum_copy_bytes as u64,cx.fuel_remaining()]);}
         if advanced {
             if mounted.publication_ownership_progress.is_some(){return Ok(())}
             let receipt=mounted.pending_window_config_receipt.ok_or_else(||plugin_sdk_fault("window config refresh lost its accepted receipt"))?;

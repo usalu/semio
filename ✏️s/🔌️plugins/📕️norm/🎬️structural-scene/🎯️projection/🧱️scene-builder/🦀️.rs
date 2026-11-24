@@ -19,6 +19,17 @@ pub struct Fragment {
     pub bounds: Option<Aabb>,
 }
 
+impl Fragment {
+    /// 🔏️ The seal violations of the fragment: entities whose content hash does not match their content.
+    pub fn seal_violations(&self) -> Vec<Violation> {
+        let mut out = Vec::new();
+        for (index, entity) in self.entities.iter().enumerate() {
+            entity.check_seal(&format!("$.entities[{index}]"), &mut out);
+        }
+        out
+    }
+}
+
 /// 🏗️ Collects one fragment: entities through drafts, annotations, legends and layers directly.
 #[derive(Debug, Default)]
 pub struct SceneBuilder {
@@ -297,6 +308,14 @@ pub fn assemble_with(fragments: &[Arc<Fragment>], revision: SceneRevision, ctx: 
     finish(&mut scene);
     apply_visibility(&mut scene, ctx);
     scene.validate().map(|()| scene)
+}
+
+/// 🎬️ [`assemble_with`] for fragments whose entities were seal-checked when they were built ([`Fragment::seal_violations`]): the validation skips the content hash of every entity, the one law that costs a canonical encoding of the whole scene per pass.
+pub fn assemble_sealed_with(fragments: &[Arc<Fragment>], revision: SceneRevision, ctx: &ProjectionContext, finish: impl FnOnce(&mut StructuralScene)) -> Result<StructuralScene, Vec<Violation>> {
+    let mut scene = merge(fragments, revision);
+    finish(&mut scene);
+    apply_visibility(&mut scene, ctx);
+    scene.validate_sealed().map(|()| scene)
 }
 
 /// 🎬️ Assembly with the neutral global parts only.

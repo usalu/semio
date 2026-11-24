@@ -45,5 +45,5 @@
   "sheetProfiles": null,
   "fireInsulations": null,
   "transverseStiffeners": null,
-  "reliabilityClass": "RC2"
+  "reliabilityClass": null
 }

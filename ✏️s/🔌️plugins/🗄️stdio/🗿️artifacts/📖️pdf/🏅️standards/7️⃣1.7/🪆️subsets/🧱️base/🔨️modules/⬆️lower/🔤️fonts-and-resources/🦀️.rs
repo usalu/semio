@@ -42,7 +42,7 @@ impl Lowering<'_> {
         crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;
         let mut object=self.artifacts.resolve(program.reference())?;
         let PdfObject::Stream {dict,data,filters}=&mut object else {return Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()));};
-        let key=match program {PdfFontProgram::Type1 {..}=>"FontFile",PdfFontProgram::TrueType {..}=>{if let (Some(glyphs),true)=(glyphs,self.options.subset_fonts) {*data=crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont::parse(data).map_err(PdfEngineError::Malformed)?.subset(glyphs);filters.clear();dict.retain(|entry|entry.key!="Length1");dict.push(entry("Length1",PdfObject::Int(data.len() as i64)));}"FontFile2"},_=>"FontFile3"};
+        let key=match program {PdfFontProgram::Type1 {..}=>"FontFile",PdfFontProgram::TrueType {..}=>{if let (Some(glyphs),true)=(glyphs,self.options.subset_fonts) {*data=crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont::parse(&data.to_vec_owner()).map_err(PdfEngineError::Malformed)?.subset(glyphs));filters.clear();dict.retain(|entry|entry.key!="Length1");dict.push(entry("Length1",PdfObject::Int(data.len() as i64)));}"FontFile2"},_=>"FontFile3"};
         Ok((key,PdfObject::Ref(self.add(object))))
     }
 

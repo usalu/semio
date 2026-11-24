@@ -453,5 +453,5 @@ fn scene_wire_placement_naming_overrides_brush_prefixes() {
 }
 
 #[cfg(test)]
-#[path="../../../../../../../../../../../../🔨️modules/🧵️job/🧪️testing/♻️close/🦀️.rs"]
+#[path="../../../../../../../../../../../../🔨️modules/🧵️job/🧪️tests/♻️close/🦀️.rs"]
 mod close_source;

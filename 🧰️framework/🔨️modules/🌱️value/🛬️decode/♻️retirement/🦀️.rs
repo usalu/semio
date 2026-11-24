@@ -159,7 +159,7 @@ struct RetirementEffectSpend<'turn,'operation,'decode>{loan:&'turn mut NativeRet
 impl Drop for RetirementEffectSpend<'_,'_,'_>{fn drop(&mut self){let admitted=self.loan.original.owned_bytes().checked_sub(self.before).expect("original cumulative cleanup admission regressed");self.loan.spent=self.loan.spent.max(self.initial_spent.checked_add(admitted).expect("original cleanup admission overflow"))}}
 struct RetirementRecipientLease<'turn,'decode>{original:&'turn mut NativeDecodeControl<'decode>,recipient:Option<&'decode mut super::NativeDecodeRetirementRecipient>}
 impl<'turn,'decode> RetirementRecipientLease<'turn,'decode>{fn new(original:&'turn mut NativeDecodeControl<'decode>)->Self{let recipient=original.retirement.take();Self{original,recipient}}}
-impl Drop for RetirementRecipientLease<'_,'_>{fn drop(&mut self){assert!(self.original.retirement.is_none(),"original retirement reference was replaced during funding");self.original.retirement=self.recipient.take()}}
+impl Drop for RetirementRecipientLease<'_,'_>{fn drop(&mut self){assert!(std::thread::panicking()||(self.original.retirement.is_none()),"original retirement reference was replaced during funding");self.original.retirement=self.recipient.take()}}
 struct RetirementFundingScope<'turn,'operation,'decode>{loan:NativeRetirementDecodeControl<'operation,'decode>,spent:&'turn mut usize}
 impl Drop for RetirementFundingScope<'_,'_,'_>{fn drop(&mut self){*self.spent=self.loan.spent}}
 struct RetirementEncodingSpend<'loan,'operation,'decode>{loan:&'loan mut NativeRetirementDecodeControl<'operation,'decode>,before:usize}

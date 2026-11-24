@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {"name": "no fleet answers: one job, the local grant", "host": {"local": 1, "fleetSlots": null, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-local-only"}},
+    {"name": "fleet down or no worker fits a wasm final: one job", "host": {"local": 1, "fleetSlots": 0, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-local-only"}},
+    {"name": "local grant 1 plus eleven fitting worker slots: twelve jobs", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 12, "local": 1, "remote": 11, "reason": "jobs-all"}},
+    {"name": "the authored cap bounds local plus remote", "host": {"local": 1, "fleetSlots": 100, "availableMegabytes": 64000, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 24, "local": 1, "remote": 23, "reason": "jobs-cap"}},
+    {"name": "a local grant at the cap leaves no remote job", "host": {"local": 24, "fleetSlots": 5, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 24, "local": 24, "remote": 0, "reason": "jobs-cap"}},
+    {"name": "coordinator memory carries two residues above the reserve and the local compile", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 3072, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 3, "local": 1, "remote": 2, "reason": "jobs-memory"}},
+    {"name": "no memory left above the reserve: no remote job", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 2500, "pressure": "normal", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-memory"}},
+    {"name": "unknown memory is no limit", "host": {"local": 1, "fleetSlots": 6, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}, "expect": {"jobs": 7, "local": 1, "remote": 6, "reason": "jobs-all"}},
+    {"name": "raised memory pressure halves the remote jobs", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 6, "local": 1, "remote": 5, "reason": "jobs-pressure"}},
+    {"name": "critical memory pressure keeps every remote job away", "host": {"local": 1, "fleetSlots": 11, "availableMegabytes": 64000, "pressure": "critical", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-pressure"}},
+    {"name": "one fitting slot under raised pressure is none", "host": {"local": 1, "fleetSlots": 1, "availableMegabytes": 64000, "pressure": "warn", "unitMegabytes": 512}, "expect": {"jobs": 1, "local": 1, "remote": 0, "reason": "jobs-pressure"}}
+  ],
+  "invalid": [
+    {"name": "no local slot", "host": {"local": 0, "fleetSlots": 3, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},
+    {"name": "negative worker slots", "host": {"local": 1, "fleetSlots": -1, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},
+    {"name": "unknown pressure", "host": {"local": 1, "fleetSlots": 3, "availableMegabytes": null, "pressure": "bogus", "unitMegabytes": 512}},
+    {"name": "fractional worker slots", "host": {"local": 1, "fleetSlots": 1.5, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}},
+    {"name": "the old fleet idle name is not a host fact", "host": {"local": 1, "fleetIdle": 3, "availableMegabytes": null, "pressure": null, "unitMegabytes": 512}}
+  ]
+}

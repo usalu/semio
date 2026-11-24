@@ -1,0 +1,1 @@
+[{"op": "shape-set", "scale": "50", "view": "front", "id": "shoe-rear-l", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": 0.03985, "z1": 0.13915}}}, {"op": "shape-set", "scale": "50", "view": "front", "id": "shoe-rear-r", "set": {"solid": {"kind": "extruded", "sweep": "w", "z0": -0.13915, "z1": -0.03985}}}]

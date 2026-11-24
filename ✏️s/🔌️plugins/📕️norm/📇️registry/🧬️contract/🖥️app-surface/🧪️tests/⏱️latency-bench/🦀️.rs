@@ -369,9 +369,21 @@ where
     assert!(!report.release || failures.is_empty(), "{variant}: {failures:?}");
 }
 
-/// 🧪️ Declares the `latency_bench` test module of an editor: `scene` is `fn(&Snapshot, &CheckReport) -> StructuralScene` (the incremental live scene), `full` the same from scratch. Run with the `:test` filter `latency_bench` on a release build; the report lands in the ticket's `🗑️generated/realtime-qa`.
+/// 🧪️ Declares the `latency_bench` test module of an editor (a trailing `release_only` ignores the test in debug builds, for an editor whose unoptimised projection of the scaled document takes hours): `scene` is `fn(&Snapshot, &CheckReport) -> StructuralScene` (the incremental live scene), `full` the same from scratch. Run with the `:test` filter `latency_bench` on a release build; the report lands in the ticket's `🗑️generated/realtime-qa`.
 #[macro_export]
 macro_rules! norm_latency_bench {
+    ($app:ty, variant = $variant:expr, seed = $seed:expr, scene = $scene:expr, full = $full:expr, release_only) => {
+        #[cfg(test)]
+        mod latency_bench {
+            use super::*;
+
+            #[test]
+            #[cfg_attr(debug_assertions, ignore = "the scaled-document bench gates the real-time budgets of a release build: its debug run projects every scene of a 200-entity document unoptimised and takes hours; run it in a release build or with --ignored")]
+            fn the_realtime_gates_hold_on_a_scaled_document_and_the_report_is_written() {
+                $crate::latency_bench::gate::<$app>($variant, &$seed, $scene, $full);
+            }
+        }
+    };
     ($app:ty, variant = $variant:expr, seed = $seed:expr, scene = $scene:expr, full = $full:expr) => {
         #[cfg(test)]
         mod latency_bench {

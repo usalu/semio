@@ -686,7 +686,7 @@ describe("root border compositor", () => {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }
   });
-  test("a borderless box draws nothing and owns no overlay until it is stated, then closes its full outline and releases the overlay again", () => {
+  test("a borderless box draws nothing at rest and adds no line on hover; keyboard focus closes its full outline and the overlay is released again", () => {
     const dom = new JSDOM('<div class="semio-scope"><button id="tab" data-shared-border-frame data-shared-border-edges=""></button></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
@@ -698,9 +698,14 @@ describe("root border compositor", () => {
       expect(tab.querySelector("svg")).toBeNull();
       expect(tab.style.position).toBe("");
       tab.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
-      expect([...tab.querySelectorAll('svg [data-shared-border-state="hover"]')].map(path => path.getAttribute("d")).sort()).toEqual(["M 1 1 L 1 19", "M 1 1 L 39 1", "M 1 19 L 39 19", "M 39 1 L 39 19"]);
-      expect(tab.querySelector<SVGSVGElement>("svg")!.style.zIndex).toBe("41");
+      expect(tab.querySelectorAll("svg [data-shared-border-state]")).toHaveLength(0);
       tab.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      expect(tab.querySelector("svg")).toBeNull();
+      tab.matches = (selector: string) => selector === ":focus-visible" || Element.prototype.matches.call(tab, selector);
+      tab.focus(); compositor.scheduleState();
+      expect([...tab.querySelectorAll('svg [data-shared-border-state="focus"]')].map(path => path.getAttribute("d")).sort()).toEqual(["M 1 1 L 1 19", "M 1 1 L 39 1", "M 1 19 L 39 19", "M 39 1 L 39 19"]);
+      expect(tab.querySelector<SVGSVGElement>("svg")!.style.zIndex).toBe("41");
+      tab.blur(); compositor.scheduleState();
       expect(tab.querySelector("svg")).toBeNull();
       expect(tab.style.position).toBe("");
     } finally {
@@ -738,29 +743,28 @@ describe("root border compositor", () => {
         h.compositor.schedule();
         expect(h.painted("normal")).toContain("M 49 1 L 49 19");
         h.hover("button");
-        const shared = h.painted("hover").filter(d => d?.match(/^M -?\d+ 1 L -?\d+ 19$/));
-        expect(shared).toEqual(["M -1 1 L -1 19", "M 49 1 L 49 19"]);
+        expect(h.painted("hover")).toEqual(["M -1 1 L -1 19"]);
         expect(h.painted("normal")).not.toContain("M 49 1 L 49 19");
       } finally { h.done(); }
     });
 
-    test("a cell inside a frame that is itself a cell is painted by the nearest owner with an overlay and stays closed without touching its ancestors", () => {
+    test("a cell inside a frame that is itself a cell is painted by the nearest owner with an overlay, and its hover emphasises its drawn divider alone", () => {
       const h = harness('<div class="semio-scope"><div id="controls" data-shared-border-group data-shared-border-cells><div id="group" data-shared-border-frame><button id="a" data-shared-border-cell></button><button id="b" data-shared-border-cell></button></div></div></div>', { controls: rect(0, 0, 100, 20), group: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
       try {
         h.compositor.schedule();
         expect(h.root.querySelector("#group > svg")).toBeNull();
         h.hover("a");
-        expect(h.painted("hover")).toEqual(closed(1, 50));
+        expect(h.painted("hover")).toEqual(["M 50 1 L 50 19"]);
         expect(h.root.querySelector("#controls > svg")).not.toBeNull();
       } finally { h.done(); }
     });
 
-    test("a cell below a plain wrapper is owned by the nearest ancestor owner, not by its parent element, and closes per tab", () => {
+    test("a cell below a plain wrapper is owned by the nearest ancestor owner, not by its parent element, and a hovered tab emphasises its divider and the frame line beneath it", () => {
       const h = harness('<div class="semio-scope"><div id="frame" data-shared-border-frame data-shared-border-edges="bottom"><div id="tabs" data-shared-border-group><span><button id="a" data-shared-border-cell></button></span><span><button id="b" data-shared-border-cell></button></span></div></div></div>', { frame: rect(0, 0, 100, 20), tabs: rect(0, 0, 100, 20), a: rect(0, 0, 50, 20), b: rect(50, 0, 50, 20) });
       try {
         h.compositor.schedule();
         h.hover("b");
-        expect(h.painted("hover")).toEqual(closed(50, 99));
+        expect(h.painted("hover")).toEqual(["M 50 1 L 50 19", "M 50 19 L 99 19"]);
         expect(h.painted("normal").every(d => !d?.startsWith("M 50 1 L 50"))).toBe(true);
       } finally { h.done(); }
     });
@@ -774,19 +778,19 @@ describe("root border compositor", () => {
       } finally { h.done(); }
     });
 
-    test("mode dock tabs are borderless boxes: a hovered tab closes itself and its chip stays normal", () => {
+    test("mode dock tabs are borderless boxes: a hovered tab emphasises the frame lines it lies on and adds none", () => {
       const h = harness('<div class="semio-scope"><div id="stack"><div id="chip" data-window-frame-chip><div role="tablist"><div id="tab" role="tab" data-slot="mode-dock-tab" tabindex="0"></div><div id="other" role="tab" data-slot="mode-dock-tab" tabindex="0"></div></div></div></div></div>', { stack: rect(0, 0, 100, 40), chip: rect(0, 0, 60, 20), tab: rect(0, 0, 30, 20), other: rect(30, 0, 30, 20) });
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: () => {} });
         h.compositor.schedule();
         expect(h.root.querySelector("#tab > svg")).toBeNull();
         h.hover("tab");
-        expect(h.painted("hover")).toEqual(closed(1, 29));
+        expect(h.painted("hover")).toEqual(["M 1 1 L 1 19", "M 1 1 L 29 1"]);
       } finally { h.done(); }
     });
 
     test("a chip hover emphasises its own edges and the full enclosing card frame", () => {
-      const h = harness('<div class="semio-scope"><section id="card" data-overview-card><div id="stack" data-shared-border-hover="frame"><div id="chip" data-window-frame-chip><button id="control"></button></div></div></section></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
+      const h = harness('<div class="semio-scope"><section id="card" data-overview-card><div id="stack" data-shared-border-hover><div id="chip" data-window-frame-chip><button id="control"></button></div></div></section></div>', { card: rect(0, 0, 100, 100), stack: rect(0, 0, 100, 100), chip: rect(0, 0, 40, 20), control: rect(0, 0, 40, 20) });
       const updates = new Map<string, readonly { d: string; state: string }[]>();
       try {
         h.compositor.windows.set("w", { element: h.root.querySelector<HTMLElement>("#stack")!, geometry, state: "normal", update: value => updates.set("w", value) });
@@ -862,7 +866,7 @@ describe("root border compositor", () => {
       } finally { h.done(); }
     });
   });
-  test("table rows and zero-width separators are boxes: the overlay is appended to the positioned row, and a 0 px handle paints its centre line only while stated", () => {
+  test("table rows and zero-width separators are boxes: the overlay is appended to the positioned row, a hover adds no line to either, and a 0 px handle paints its centre line only while focused", () => {
     const dom = new JSDOM('<div class="semio-scope"><table><tbody><tr id="row" tabindex="0" data-shared-border-frame data-shared-border-edges=""><td>a</td></tr></tbody></table><div id="handle" role="separator" tabindex="0" data-shared-border-frame data-shared-border-edges=""></div></div>');
     const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
     Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
@@ -875,14 +879,20 @@ describe("root border compositor", () => {
       compositor.schedule();
       expect(row.querySelector("svg")).toBeNull();
       expect(handle.querySelector("svg")).toBeNull();
+      const focus = (element: HTMLElement) => { element.matches = (selector: string) => selector === ":focus-visible" || Element.prototype.matches.call(element, selector); element.focus(); compositor.scheduleState(); };
       row.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
-      expect(row.querySelector(":scope > svg")).not.toBeNull();
-      expect(states(row)).toEqual(["hover M 1 1 L 1 19", "hover M 1 1 L 99 1", "hover M 1 19 L 99 19", "hover M 99 1 L 99 19"]);
+      expect(states(row)).toEqual([]);
       row.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      focus(row);
+      expect(row.querySelector(":scope > svg")).not.toBeNull();
+      expect(states(row)).toEqual(["focus M 1 1 L 1 19", "focus M 1 1 L 99 1", "focus M 1 19 L 99 19", "focus M 99 1 L 99 19"]);
       handle.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
-      expect(states(handle)).toEqual(["hover M 0 1 L 0 29"]);
-      expect(handle.querySelector("svg")!.hasAttribute("viewBox")).toBe(false);
+      expect(states(handle)).toEqual([]);
       handle.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
+      focus(handle);
+      expect(states(handle)).toEqual(["focus M 0 1 L 0 29"]);
+      expect(handle.querySelector("svg")!.hasAttribute("viewBox")).toBe(false);
+      handle.blur(); compositor.scheduleState();
       expect(handle.querySelector("svg")).toBeNull();
     } finally {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
@@ -935,15 +945,18 @@ describe("root border compositor", () => {
     field.getBoundingClientRect = () => ({ left: 10, top: 10, right: 60, bottom: 30, width: 50, height: 20 }) as DOMRect;
     picture.getBoundingClientRect = () => ({ left: 60, top: 10, right: 110, bottom: 30, width: 50, height: 20 }) as DOMRect;
     const compositor = new BorderCompositor(root);
-    const painted = () => [...wrap.querySelectorAll(':scope > svg [data-shared-border-state="hover"]')].map(path => path.getAttribute("d")).sort();
+    const painted = () => [...wrap.querySelectorAll(':scope > svg [data-shared-border-state="active"]')].map(path => path.getAttribute("d")).sort();
     try {
       compositor.schedule();
       expect(wrap.querySelector("svg")).toBeNull();
       expect(field.querySelector("svg")).toBeNull();
       field.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
-      expect(painted()).toEqual(["M 1 1 L 1 19", "M 1 1 L 49 1", "M 1 19 L 49 19", "M 49 1 L 49 19"]);
+      expect(wrap.querySelectorAll(":scope > svg [data-shared-border-state]")).toHaveLength(0);
       field.dispatchEvent(new dom.window.MouseEvent("pointerout", { bubbles: true, relatedTarget: root }));
-      picture.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
+      field.setAttribute("data-shared-border-state", "active"); compositor.scheduleState();
+      expect(painted()).toEqual(["M 1 1 L 1 19", "M 1 1 L 49 1", "M 1 19 L 49 19", "M 49 1 L 49 19"]);
+      field.removeAttribute("data-shared-border-state");
+      picture.setAttribute("data-shared-border-state", "active"); compositor.scheduleState();
       expect(painted()).toEqual(["M 51 1 L 51 19", "M 51 1 L 99 1", "M 51 19 L 99 19", "M 99 1 L 99 19"]);
       expect(picture.querySelector("svg")).toBeNull();
     } finally {
@@ -1128,12 +1141,12 @@ describe("state outlines of product shapes under mocked layout", () => {
     });
   });
 
-  test("a bare input that is a direct child of a cells owner is a cell: hover closes it in the row's overlay", () => {
+  test("a bare input that is a direct child of a cells owner is a cell: hover emphasises its divider and the row's bottom line in the row's overlay", () => {
     const h = harness('<div class="semio-scope"><div id="row" data-shared-border-cells data-shared-border-frame data-shared-border-edges="top bottom"><div id="label" data-shared-border-cell></div><input id="name" /></div></div>', { row: rect(0, 0, 100, 60), label: rect(0, 0, 100, 20), name: rect(0, 20, 100, 40) });
     try {
       h.compositor.schedule();
       h.hover("name");
-      expect(h.painted("hover")).toEqual(closed(1, 99, 20, 59));
+      expect(h.painted("hover")).toEqual(["M 1 20 L 99 20", "M 1 59 L 99 59"]);
       expect(h.root.querySelector("#name > svg")).toBeNull();
       h.root.querySelector<HTMLElement>("#name")!.focus();
       expect(isSharedBorderCell(h.root.querySelector("#name")!)).toBe(true);

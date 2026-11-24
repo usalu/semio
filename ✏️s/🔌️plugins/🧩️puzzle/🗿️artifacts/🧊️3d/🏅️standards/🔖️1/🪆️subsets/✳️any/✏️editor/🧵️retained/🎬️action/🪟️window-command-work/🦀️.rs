@@ -128,7 +128,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
             Puzzle3dWindowCommandStage::Dispatch => {
                 let snapshot_interaction = Puzzle3dInteractionSnapshot::from_state(interaction, hover);
                 let instance_owner = self.instance_owner.as_ref();
-                let (emit, ephemeral) = with_puzzle3d_session_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                let (emit, ephemeral) = with_puzzle3d_session_for(self.session.clone(), &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.original_tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.stage = Puzzle3dWindowCommandStage::Complete;
                 Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
             }

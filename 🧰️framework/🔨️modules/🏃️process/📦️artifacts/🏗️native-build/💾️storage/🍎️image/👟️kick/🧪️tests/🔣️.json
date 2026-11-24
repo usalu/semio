@@ -1,0 +1,64 @@
+{
+  "$comment": "👟️ Authored corpus of the in-place kick: the due decision (checked by the TypeScript module and by the independent Python oracle) and the exact command scripts of both ports, scripted without any operating system tool.",
+  "rule": {"reclaimFloorBytes": 8589934592, "reclaimRatioPercent": 300, "reclaimTightHostFreeBytes": 51539607552},
+  "minimumIntervalMilliseconds": 60000,
+  "cases": [
+    {"name": "live rust image: 50 GB held for 27 GB used on a tight host, long since kicked", "allocatedBytes": 50000000000, "usedBytes": 27000000000, "hostFreeBytes": 11000000000, "sinceLastKickMilliseconds": 600000, "due": true},
+    {"name": "the same image kicked a second ago is not kicked again", "allocatedBytes": 50000000000, "usedBytes": 27000000000, "hostFreeBytes": 11000000000, "sinceLastKickMilliseconds": 1000, "due": false},
+    {"name": "exactly at the interval counts as due", "allocatedBytes": 50000000000, "usedBytes": 27000000000, "hostFreeBytes": 11000000000, "sinceLastKickMilliseconds": 60000, "due": true},
+    {"name": "tight host divides the floor by eight", "allocatedBytes": 4000000000, "usedBytes": 1000000000, "hostFreeBytes": 1000000000, "sinceLastKickMilliseconds": 600000, "due": true},
+    {"name": "roomy host: small bloat below the floor is left alone", "allocatedBytes": 6000000000, "usedBytes": 2000000000, "hostFreeBytes": 200000000000, "sinceLastKickMilliseconds": 600000, "due": false},
+    {"name": "roomy host: bloat above the floor but below the ratio is left alone", "allocatedBytes": 30000000000, "usedBytes": 20000000000, "hostFreeBytes": 200000000000, "sinceLastKickMilliseconds": 600000, "due": false},
+    {"name": "roomy host: bloat above floor and ratio is kicked", "allocatedBytes": 60000000000, "usedBytes": 15000000000, "hostFreeBytes": 200000000000, "sinceLastKickMilliseconds": 600000, "due": true}
+  ],
+  "scripts": [
+    {
+      "name": "macOS: the sibling volume exists, is mounted and unmounted again",
+      "platform": "darwin",
+      "image": "/cache/r/fixed.dmg",
+      "outputs": {
+        "hdiutil info": ["<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/cache/r/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk14</string></dict><dict><key>dev-entry</key><string>/dev/disk15</string></dict><dict><key>dev-entry</key><string>/dev/disk15s1</string></dict></array></dict></array></dict></plist>"],
+        "diskutil info": ["<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"><plist version=\"1.0\"><dict><key>APFSContainerReference</key><string>disk15</string></dict></plist>"],
+        "diskutil apfs": ["<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>Containers</key><array><dict><key>Volumes</key><array><dict><key>DeviceIdentifier</key><string>disk15s1</string><key>Name</key><string>t</string></dict><dict><key>DeviceIdentifier</key><string>disk15s2</string><key>Name</key><string>semio-trim</string></dict></array></dict></array></dict></plist>"]
+      },
+      "expected": [
+        "diskutil info -plist /cache/r/m",
+        "hdiutil info -plist",
+        "diskutil apfs list -plist disk15",
+        "diskutil mount nobrowse -mountPoint <scratch> disk15s2",
+        "diskutil unmount disk15s2",
+   "diskutil apfs deleteVolume disk15s2"
+      ]
+    },
+    {
+      "name": "macOS: the sibling volume is created online the first time",
+      "platform": "darwin",
+      "image": "/cache/r/fixed.dmg",
+      "outputs": {
+        "hdiutil info": ["<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>images</key><array><dict><key>image-path</key><string>/cache/r/fixed.dmg</string><key>system-entities</key><array><dict><key>dev-entry</key><string>/dev/disk14</string></dict><dict><key>dev-entry</key><string>/dev/disk15</string></dict><dict><key>dev-entry</key><string>/dev/disk15s1</string></dict></array></dict></array></dict></plist>"],
+        "diskutil info": ["<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>APFSContainerReference</key><string>disk15</string></dict></plist>"],
+        "diskutil apfs": [
+          "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>Containers</key><array><dict><key>Volumes</key><array><dict><key>DeviceIdentifier</key><string>disk15s1</string><key>Name</key><string>t</string></dict></array></dict></array></dict></plist>",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>Containers</key><array><dict><key>Volumes</key><array><dict><key>DeviceIdentifier</key><string>disk15s1</string><key>Name</key><string>t</string></dict><dict><key>DeviceIdentifier</key><string>disk15s2</string><key>Name</key><string>semio-trim</string></dict></array></dict></array></dict></plist>"
+        ]
+      },
+      "expected": [
+        "diskutil info -plist /cache/r/m",
+        "hdiutil info -plist",
+        "diskutil apfs list -plist disk15",
+        "diskutil apfs addVolume disk15 Case-sensitive APFS semio-trim -nomount",
+        "diskutil apfs list -plist disk15",
+        "diskutil mount nobrowse -mountPoint <scratch> disk15s2",
+        "diskutil unmount disk15s2",
+   "diskutil apfs deleteVolume disk15s2"
+      ]
+    },
+    {
+      "name": "Linux: fstrim on the mounted filesystem and nothing else",
+      "platform": "linux",
+      "image": "/cache/r/fixed.img",
+      "outputs": {"fstrim --verbose": ["/cache/r/m: 21.4 GiB (22980255744 bytes) trimmed"]},
+      "expected": ["fstrim --verbose /cache/r/m"]
+    }
+  ]
+}

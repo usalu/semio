@@ -24,6 +24,7 @@ export interface NxAuthorizerMemoV1{
  readonly manifest:Readonly<{version:1;mode:"release";entry:string;resolutions:readonly Readonly<{specifier:string;path:string}>[];sources:readonly Readonly<{path:string;sha256:string}>[]}>;
  readonly marks:Readonly<Record<string,string>>;
  readonly imports:Readonly<Record<string,Readonly<Record<string,string>>>>;
+ readonly shapes?:Readonly<Record<string,string>>;
 }
 
 /** 🎛️ The environment variable that switches the source memo: `on` (default) or `off`; anything else is refused in both languages. */
@@ -119,6 +120,16 @@ export async function replayNxAuthorizerMemoV1(root:string,memo:NxAuthorizerMemo
  if(!observed)return undefined;
  const files=await pool(memo.manifest.sources,async row=>{const bytes=await readRememberedV1(join(base,row.path),row.sha256);if(!bytes)return false;contents.set(row.path,bytes);return true;},signal);
  return files?contents:undefined;
+}
+
+/** 🩹️ Like {@link replayNxAuthorizerMemoV1}, but a file whose bytes differ (or that vanished) does not end the replay: every other fact still has to hold, and the paths whose bytes differ are answered beside the bytes of the unchanged files, so a caller re-reads only those and keeps the rest of the memo when their import shape is unchanged. */
+export async function replayNxAuthorizerMemoPartialV1(root:string,memo:NxAuthorizerMemoV1,signal:AbortSignal):Promise<Readonly<{contents:ReadonlyMap<string,Uint8Array>;changed:readonly string[]}>|undefined>{
+ const base=resolve(root),contents=new Map<string,Uint8Array>(),changed:string[]=[];
+ if(memo.version!==1||memo.root!==base||memo.implementation!==nxAuthorizerMemoImplementationV1()||memo.shapes===undefined)return undefined;
+ if(!await pool(memo.directories,row=>directoryHoldsV1(row,base),signal))return undefined;
+ if(!await pool(memo.observations.filter(row=>row.kind!=="package"),async row=>row.kind==="absent"?absentV1(join(base,row.path)):row.kind==="directory"?listedV1(join(base,row.path),row.entries):true,signal))return undefined;
+ await pool(memo.manifest.sources,async row=>{const bytes=await readRememberedV1(join(base,row.path),row.sha256);if(bytes)contents.set(row.path,bytes);else changed.push(row.path);return true;},signal);
+ return{contents,changed};
 }
 
 /** 📚️ Lists the distinct directories a set of captured files lives in, from the root down, with their identity at this moment. */

@@ -1,0 +1,5 @@
+[
+{"op":"shape-remove","scale":"50","view":"plan","id":"near-primary-9","group":"prism|plan|p9-n"},
+{"op":"shape-remove","scale":"50","view":"plan","id":"near-mirror","group":"prism|plan|p9-n"},
+{"op":"shape-add","scale":"50","view":"plan","after":"near-primary-10","shape":{"kind":"poly","points":[[-0.00007,0.00021],[0.00003,-0.00098],[0.09885,0.00584],[0.15208,0.01192],[0.20235,0.02078],[0.27067,0.03401],[0.29478,0.04054],[0.20499,0.03814],[0.15513,0.03415],[0.10235,0.02431],[0.00001,0.00101]],"closed":true,"id":"near-primary-9","bone":"p9-n","role":"body","z":3.4,"filled":true,"tone":0.152,"region":"wing-plumage","material":"wing-feathers","solid":{"kind":"extruded","sweep":"v","z0":-0.02615,"z1":0.00783}},"group":"prism|plan|p9-n"}
+]

@@ -1,0 +1,1 @@
+-p semio-s-artifact-puzzle-3d-editor -p semio-s-artifact-puzzle-3d --tests

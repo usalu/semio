@@ -5,12 +5,14 @@ use crate::direct_manipulation::{parse_entry, DragEffect, DragEvent, DragState, 
 use crate::FieldWrite;
 use semio_s_plugin_norm_structural_scene::{Diagram2d, Handle, Marker};
 
-const UNITS: [(&str, char, f64); 19] = [
+const UNITS: [(&str, char, f64); 23] = [
     ("m", 'L', 1.0), ("cm", 'L', 0.01), ("mm", 'L', 0.001), ("km", 'L', 1000.0),
     ("N", 'F', 1.0), ("kN", 'F', 1e3), ("MN", 'F', 1e6),
     ("Pa", 'S', 1.0), ("kPa", 'S', 1e3), ("MPa", 'S', 1e6), ("GPa", 'S', 1e9),
     ("Nm", 'M', 1.0), ("kNm", 'M', 1e3), ("MNm", 'M', 1e6),
     ("deg", 'A', 1.0), ("°", 'A', 1.0), ("rad", 'A', 57.295_779_513_082_32),
+    ("s", 'T', 1.0), ("min", 'T', 60.0), ("h", 'T', 3600.0),
+    ("°C", 'K', 1.0),
     ("%", 'R', 0.01), ("", 'R', 1.0),
 ];
 
@@ -18,9 +20,10 @@ fn unit(symbol: &str) -> Option<(char, f64)> {
     UNITS.iter().find(|(name, _, _)| *name == symbol).map(|(_, dimension, factor)| (*dimension, *factor))
 }
 
-/// 🔢️ A typed quantity converted into `target` (the unit symbol of the bound field); a bare number is taken as already in `target`, a unit of another dimension or an unknown unit is `None`.
+/// 🔢️ A typed quantity converted into `target` (the unit symbol of the bound field); a bare number is taken as already in `target` (so is a number followed by the dimensionless unit symbol `1`), a unit of another dimension or an unknown unit is `None`.
 pub fn parse_quantity_entry(text: &str, target: &str) -> Option<f64> {
     let text = text.trim();
+    let text = if target == "1" { text.strip_suffix('1').filter(|number| number.ends_with(char::is_whitespace)).map_or(text, str::trim_end) } else { text };
     let split = text.find(|c: char| c.is_alphabetic() || c == '°' || c == '%').unwrap_or(text.len());
     let (number, symbol) = text.split_at(split);
     let value = parse_entry(number)?;

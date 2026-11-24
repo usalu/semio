@@ -109,6 +109,23 @@ fn document_panes_start_below_the_chip_rows_and_edgeless_panes_stay_full_bleed()
 }
 
 #[test]
+fn first_laid_out_pane_rect_follows_the_declared_window_kind_not_the_late_host_registration() {
+    use semio_ui_declaration::ui::SurfaceKind;
+    let rect = Rect::new(10.0, 20.0, 300.0, 200.0);
+    let frame = WindowFrame::new(rect, WindowFrameEdge::new(32.0, vec![WindowFrameChip::new(0.0, 80.0)]), WindowFrameEdge::new(16.0, vec![WindowFrameChip::new(100.0, 200.0)]));
+    for kind in [SurfaceKind::World3d, SurfaceKind::NodeGraph, SurfaceKind::TiledMap, SurfaceKind::Board2d] {
+        assert!(surface_kind_is_engine_host(Some(&kind)));
+        assert_eq!(kind_pane_document_rect(rect, Some(&frame), Some(&kind)), rect, "an engine-host window is full-bleed on its very first frame");
+    }
+    for kind in [SurfaceKind::TextEditor, SurfaceKind::Table, SurfaceKind::Canvas2d] {
+        assert!(!surface_kind_is_engine_host(Some(&kind)));
+        assert_eq!(kind_pane_document_rect(rect, Some(&frame), Some(&kind)), Rect::new(10.0, 52.0, 300.0, 152.0), "a document-like window gets the chip clearance on its very first frame");
+    }
+    assert_eq!(kind_pane_document_rect(rect, Some(&frame), None), Rect::new(10.0, 52.0, 300.0, 152.0), "an undeclared kind is document-like");
+    assert_eq!(kind_pane_document_rect(rect, None, Some(&SurfaceKind::World3d)), rect);
+}
+
+#[test]
 fn window_frame_matches_the_shared_cases_for_merging_bottom_and_containment() {
     let normalized = WindowFrame::new(
         Rect::new(0.0, 0.0, 200.0, 100.0),

@@ -1,0 +1,287 @@
+{
+  "variant": "generation3d",
+  "primary": "procedural",
+  "catalog": [
+    {
+      "pluginId": "procedural",
+      "role": "plugin",
+      "consumes": [
+        "flow.extension",
+        "forms.questionKind"
+      ],
+      "contributes": [],
+      "dependsOn": [
+        "flow"
+      ],
+      "activationEvents": [
+        "on-artifact-kind:3d.generation"
+      ]
+    },
+    {
+      "pluginId": "flow",
+      "role": "plugin",
+      "consumes": [
+        "flow.extension"
+      ],
+      "contributes": [],
+      "dependsOn": [],
+      "activationEvents": [
+        "on-artifact-kind:s.flow.flow"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-brep",
+      "role": "extension",
+      "extends": "flow",
+      "consumes": [],
+      "contributes": [
+        "flow.extension"
+      ],
+      "dependsOn": [
+        "flow"
+      ],
+      "activationEvents": [
+        "on-node-kind:brep"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-math",
+      "role": "extension",
+      "extends": "flow",
+      "consumes": [],
+      "contributes": [
+        "flow.extension"
+      ],
+      "dependsOn": [
+        "flow"
+      ],
+      "activationEvents": [
+        "on-node-kind:math"
+      ]
+    },
+    {
+      "pluginId": "flow-extension-primitive",
+      "role": "extension",
+      "extends": "flow",
+      "consumes": [],
+      "contributes": [
+        "flow.extension"
+      ],
+      "dependsOn": [
+        "flow"
+      ],
+      "activationEvents": [
+        "on-node-kind:core"
+      ]
+    },
+    {
+      "pluginId": "playbook-module-procedural",
+      "role": "extension",
+      "extends": "playbook",
+      "consumes": [],
+      "contributes": [
+        "forms.questionKind"
+      ],
+      "dependsOn": [
+        "playbook"
+      ],
+      "activationEvents": [
+        "on-artifact-kind:s.playbook.procedural"
+      ]
+    },
+    {
+      "pluginId": "playbook",
+      "role": "plugin",
+      "consumes": [],
+      "contributes": [],
+      "dependsOn": [],
+      "activationEvents": [
+        "on-artifact-kind:s.playbook.playbook"
+      ]
+    },
+    {
+      "pluginId": "forms-eager",
+      "role": "extension",
+      "extends": "flow",
+      "consumes": [],
+      "contributes": [
+        "flow.extension"
+      ],
+      "dependsOn": [
+        "flow"
+      ],
+      "activationEvents": []
+    }
+  ],
+  "expected": {
+    "bootReads": [
+      "procedural",
+      "forms-eager",
+      "flow"
+    ],
+    "plan": [
+      "flow",
+      "forms-eager",
+      "procedural"
+    ],
+    "deferred": [
+      "flow-extension-brep",
+      "flow-extension-math",
+      "flow-extension-primitive",
+      "playbook-module-procedural"
+    ]
+  },
+  "owners": [
+    {
+      "request": {
+        "kind": "node-kind",
+        "nodeKind": "brep.bool.cut"
+      },
+      "owners": [
+        "flow-extension-brep"
+      ]
+    },
+    {
+      "request": {
+        "kind": "node-kind",
+        "nodeKind": "primitive.number"
+      },
+      "owners": []
+    },
+    {
+      "request": {
+        "kind": "node-kind",
+        "nodeKind": "core.number"
+      },
+      "owners": [
+        "flow-extension-primitive"
+      ]
+    },
+    {
+      "request": {
+        "kind": "node-kind",
+        "nodeKind": "unknown.kind"
+      },
+      "owners": []
+    },
+    {
+      "request": {
+        "kind": "tag",
+        "tag": "flow.extension"
+      },
+      "owners": [
+        "flow-extension-brep",
+        "flow-extension-math",
+        "flow-extension-primitive"
+      ]
+    },
+    {
+      "request": {
+        "kind": "event",
+        "event": "on-artifact-kind:s.playbook.procedural"
+      },
+      "owners": [
+        "playbook-module-procedural"
+      ]
+    },
+    {
+      "request": {
+        "kind": "plugin",
+        "pluginId": "flow-extension-math"
+      },
+      "owners": [
+        "flow-extension-math"
+      ]
+    }
+  ],
+  "requests": {
+    "valid": [
+      {
+        "kind": "node-kind",
+        "nodeKind": "brep.bool.cut"
+      },
+      {
+        "kind": "tag",
+        "tag": "flow.extension"
+      },
+      {
+        "kind": "event",
+        "event": "on-node-kind:math"
+      },
+      {
+        "kind": "plugin",
+        "pluginId": "flow-extension-brep"
+      }
+    ],
+    "invalid": [
+      {
+        "kind": "node-kind"
+      },
+      {
+        "kind": "node-kind",
+        "nodeKind": ".brep"
+      },
+      {
+        "kind": "tag",
+        "tag": ""
+      },
+      {
+        "kind": "event",
+        "event": "node-kind:brep"
+      },
+      {
+        "kind": "plugin",
+        "pluginId": "a\u0000b"
+      },
+      {
+        "kind": "other",
+        "pluginId": "x"
+      },
+      {
+        "kind": "plugin",
+        "pluginId": "x",
+        "extra": true
+      },
+      "plugin"
+    ]
+  },
+  "edges": {
+    "valid": [
+      {
+        "pluginId": "flow-extension-brep",
+        "activation": "on-demand"
+      },
+      {
+        "pluginId": "flow",
+        "activation": "required"
+      },
+      {
+        "pluginId": "flow"
+      }
+    ],
+    "invalid": [
+      {
+        "pluginId": "flow",
+        "activation": "lazy"
+      },
+      {
+        "pluginId": "flow",
+        "activation": 1
+      }
+    ]
+  },
+  "labels": {
+    "loading": {
+      "en": "Loading extension flow-extension-brep…",
+      "de": "Erweiterung flow-extension-brep wird geladen…"
+    },
+    "unavailable": {
+      "en": "Extension flow-extension-brep is not available. The rest keeps working.",
+      "de": "Erweiterung flow-extension-brep ist nicht verfügbar. Alles andere funktioniert weiter."
+    },
+    "cancelled": {
+      "en": "Loading extension flow-extension-brep was cancelled.",
+      "de": "Das Laden der Erweiterung flow-extension-brep wurde abgebrochen."
+    }
+  }
+}

@@ -961,8 +961,26 @@
       "sides": "two"
     }
   ],
-  "sheetProfiles": [],
-  "fireInsulations": [],
+  "sheetProfiles": [
+    {
+      "id": "profile-1",
+      "sheetId": "sheet-pass",
+      "pitch": 0.15,
+      "topFlange": 0.05,
+      "bottomFlange": 0.04,
+      "webHeight": 0.04
+    }
+  ],
+  "fireInsulations": [
+    {
+      "id": "ins-1",
+      "fireId": "fire-1",
+      "thickness": 0.03,
+      "conductivity": 0.06,
+      "specificHeat": 1000,
+      "density": 300
+    }
+  ],
   "shells": [
     {
       "id": "shell-pass",

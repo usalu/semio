@@ -14,11 +14,20 @@ pub struct LocalFolderIdentity {
     pub app_id: String,
 }
 
-/// 📎️ The binding to bring back: the one remembered for this document in this program, unless the document is attached
-/// already — React's `localFolderReconnectOfferV1`.
-pub fn local_folder_reconnect_offer(bindings: &LocalFolderBindings, identity: Option<&LocalFolderIdentity>, attached_document_id: Option<&str>) -> Option<LocalFolderBinding> {
-    let identity = identity.filter(|identity| attached_document_id != Some(identity.document_id.as_str()))?;
-    bindings.bindings.iter().find(|binding| binding.document_id == identity.document_id && binding.plugin_id == identity.plugin_id && binding.app_id == identity.app_id).cloned()
+/// 📎️ The binding to bring back: the one remembered for this document in this program, else the program's newest one
+/// (bindings are ordered by time-ordered document id), never one whose document is attached already — React's
+/// `localFolderReconnectOfferV1`, shared corpus `🔁️fresh-identity`.
+pub fn local_folder_reconnect_offer(bindings: &LocalFolderBindings, identity: Option<&LocalFolderIdentity>, attached_document_ids: &[&str]) -> Option<LocalFolderBinding> {
+    let identity = identity.filter(|identity| !attached_document_ids.contains(&identity.document_id.as_str()))?;
+    let mut of_program = bindings.bindings.iter().filter(|binding| binding.plugin_id == identity.plugin_id && binding.app_id == identity.app_id);
+    let offer = of_program.clone().find(|binding| binding.document_id == identity.document_id).or_else(|| of_program.next_back())?;
+    (!attached_document_ids.contains(&offer.document_id.as_str())).then(|| offer.clone())
+}
+
+/// 🪪️ The document a folder attach addresses: the remembered one a reconnect names, else the program's own identity —
+/// React's `syncAttachDocumentIdV1`, shared corpus `🔁️fresh-identity`.
+pub fn sync_attach_document_id(remembered_document_id: Option<&str>, program_document_id: Option<&str>) -> Option<String> {
+    remembered_document_id.or(program_document_id).map(str::to_string)
 }
 
 //#endregion 🔖️Reconnect
@@ -108,7 +117,7 @@ impl DocumentState {
     /// device remembering no folder answers before reading the session's identity.
     pub fn folder_reconnect_offer(&self, history: &HistoryState, sync: &SyncState) -> Option<LocalFolderBinding> {
         let bindings = history.local_folder_bindings.as_ref().filter(|bindings| !bindings.bindings.is_empty())?;
-        local_folder_reconnect_offer(bindings, self.sync_program_identity().as_ref(), sync.attached_document_id(history))
+        local_folder_reconnect_offer(bindings, self.sync_program_identity().as_ref(), sync.attached_document_id(history).as_slice())
     }
 
     /// 📎️ The offer the band shows: on a build that waits for the person's gesture, the remembered folder itself; on a

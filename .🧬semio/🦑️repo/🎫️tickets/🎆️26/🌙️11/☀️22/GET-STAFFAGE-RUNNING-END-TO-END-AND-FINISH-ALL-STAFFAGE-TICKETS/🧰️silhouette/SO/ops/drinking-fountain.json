@@ -1,0 +1,8 @@
+[
+{"op": "shape-set", "scale": "100", "view": "elevation", "id": "jet", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "jet", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "200", "view": "elevation", "id": "jet", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "200", "view": "front", "id": "jet", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "500", "view": "elevation", "id": "jet", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "500", "view": "front", "id": "jet", "set": {"role": "texture"}}
+]

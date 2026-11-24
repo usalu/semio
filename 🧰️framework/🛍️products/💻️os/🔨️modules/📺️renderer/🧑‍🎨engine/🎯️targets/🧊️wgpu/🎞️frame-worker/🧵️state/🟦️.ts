@@ -177,6 +177,11 @@ export let explicitPluginModules: readonly WgpuPluginModule[] | undefined;
 
 export let workerCatalog: PluginCatalog | undefined;
 
+/** ⏳️ The boot's on-demand activator: it activates a plugin the boot plan deferred, and keeps the module it loaded until the shell admits its handle. */
+export let onDemandActivator: import("@semio-tech/framework").OnDemandActivator | undefined;
+
+export const onDemandModules = new Map<string, Awaited<ReturnType<typeof import("../../🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts").loadPluginModule>>>();
+
 export const consumedTopics = (id: string) => (appId: string): readonly string[] =>
   consumedTopicsForApp([...(workerCatalog?.plugins ?? []), ...(workerCatalog?.extensions ?? [])], [...contributionManifests].map(([pluginId, manifest]) => ({ pluginId, manifest })), id, appId);
 
@@ -346,6 +351,12 @@ export function setBindings(value: typeof bindings): typeof bindings {
 /** 🧷 Setter for the module-level `workerCatalog`: importers read the live binding and write through this call. */
 export function setWorkerCatalog(value: typeof workerCatalog): typeof workerCatalog {
   workerCatalog = value;
+  return value;
+}
+
+/** 🧷 Setter for the module-level `onDemandActivator`: importers read the live binding and write through this call. */
+export function setOnDemandActivator(value: typeof onDemandActivator): typeof onDemandActivator {
+  onDemandActivator = value;
   return value;
 }
 

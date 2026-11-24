@@ -192,6 +192,11 @@ export function provisionedPythonV1(workspace: string, project = "workspace"): s
   }
 }
 
+/** 🐍️ Whether the checkout declares a locked Python environment that is not synchronized yet: the one state in which `repo dependencies ensure` and `sync --all` also run `uv sync`, so every test run finds its `SEMIO_PYTHON`. */
+export function pythonEnvironmentMissingV1(workspace: string): boolean {
+  return existsSync(join(workspace, "pyproject.toml")) && existsSync(join(workspace, "uv.lock")) && provisionedPythonV1(workspace) === null;
+}
+
 /** 🧷️ Adds `SEMIO_PYTHON` to a child environment: the explicit value wins, then the provisioned environment interpreter; with neither, the environment is returned unchanged. The one resolver every test and command spawn goes through. */
 export function withProvisionedPythonV1<T extends Readonly<Record<string, string | undefined>>>(environment: T, workspace: string): T | (T & {SEMIO_PYTHON: string}) {
   if (environment.SEMIO_PYTHON) return environment;

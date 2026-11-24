@@ -165,6 +165,7 @@ fn the_hub_workspace_overlay_is_never_the_active_plugin_window() {
 /// could pick Remote and never see where to type the hub document).
 #[test]
 fn every_sync_card_verb_republishes_the_sync_panel() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(FRAMEWORK_SYNC_PANEL_TAB_ID).expect("sync panel publication").expect("the sync panel owns a retained document");
     shell.docs.panel_documents.insert(FRAMEWORK_SYNC_PANEL_TAB_ID.into(), initial);
@@ -176,6 +177,7 @@ fn every_sync_card_verb_republishes_the_sync_panel() {
     }
     let tree = serde_json::to_string(&shell.sync.build_sync_attach_ui(&shell.prefs)).expect("sync ui json");
     assert!(tree.contains("framework.sync.remote.path") && tree.contains("127.0.0.1:7800/space-1/doc-a"), "the republished card carries the path input and the typed uri");
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
 }
 
 /// 🪟️ A panel control's action runs in the active window, never in the panel it was pressed in

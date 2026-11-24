@@ -1,0 +1,4 @@
+[
+{"op":"shape","scale":"50","view":"elevation","id":"base-rail-rear","shape":{"id":"base-rail-rear","bone":"frame","role":"body","z":3.25,"tone":0.25,"region":"frame","material":"galvanised-steel","filled":true,"kind":"poly","points":[[0.04,0],[0.042,0],[0.042,0.028],[0.078,0.028],[0.078,0],[0.08,0],[0.08,0.03],[0.04,0.03]],"closed":true}},
+{"op":"shape","scale":"50","view":"elevation","id":"base-rail-front","shape":{"id":"base-rail-front","bone":"frame","role":"body","z":3.25,"tone":0.25,"region":"frame","material":"galvanised-steel","filled":true,"kind":"poly","points":[[0.42,0],[0.422,0],[0.422,0.028],[0.458,0.028],[0.458,0],[0.46,0],[0.46,0.03],[0.42,0.03]],"closed":true}}
+]

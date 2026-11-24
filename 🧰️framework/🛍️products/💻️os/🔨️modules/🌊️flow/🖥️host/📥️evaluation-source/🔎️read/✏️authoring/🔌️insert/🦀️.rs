@@ -85,4 +85,4 @@ impl InsertWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.widget.terminal_is_empty()&&self.synapse.is_none()&&self.retirement.is_empty()&&self.fields.id.is_none()&&self.fields.wire_id.is_none()&&self.fields.widget.is_none()&&self.fields.wire.is_none()&&self.fields.output.is_none()&&self.fields.error.is_none()}
 }
-impl Drop for InsertWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original port insertion requires terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for InsertWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original port insertion requires terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

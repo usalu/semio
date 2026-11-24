@@ -76,7 +76,7 @@ impl WidgetNodeWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.admission.terminal_is_empty()&&self.text.is_none()&&self.json.is_none()&&self.retirement.is_empty()&&self.origin.is_none()}
 }
-impl Drop for WidgetNodeWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow widget publication requires terminal input and node custody");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for WidgetNodeWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow widget publication requires terminal input and node custody");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
 #[cfg(test)]
 #[path="🧪️laws/🦀️.rs"]

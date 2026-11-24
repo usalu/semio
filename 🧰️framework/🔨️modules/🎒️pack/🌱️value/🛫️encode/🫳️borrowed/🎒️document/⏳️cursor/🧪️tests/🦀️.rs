@@ -45,6 +45,21 @@ fn borrowed_pack_document_multiple_original_frames_match_canonical_oracle(){
  assert!(cursor.is_complete());assert_eq!(actual,expected);close(&mut cursor);
 }
 
+/// 📦️ One owner action batches many funded codec events, writes the same canonical bytes as one action per event, and charges one item per action with exact byte receipts.
+#[test]
+fn borrowed_pack_document_batched_actions_match_the_canonical_oracle_in_fewer_actions(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let frame=fixture["frameSplitBytes"].as_u64().unwrap()as usize;
+ let source=Original{name:fixture["frameText"].as_str().unwrap().repeat(fixture["frameRepeat"].as_u64().unwrap()as usize),enabled:true};let semio_framework_dsl_record::Shape::Record(make)=Original::shape()else{panic!("Record")};let FieldValue::Record(record)=source.to_value()else{panic!("Record")};let mut options=EncodeOptions::default();options.frame_size=frame as u64;let expected=encode_document(&(make.ordinary)(),&record,&options).unwrap();
+ let mut single=BorrowedPackDocumentCursor::with_options(&options).unwrap();let mut byte=[0;3];let mut single_actions=0usize;
+ for _ in 0..3000000{let step=turn(exact(&single),|effect|single.advance(&source,spec(),&mut byte,effect)).0.unwrap();single_actions+=1;if step.complete{break;}}
+ close(&mut single);
+ let mut cursor=BorrowedPackDocumentCursor::with_options(&options).unwrap();let mut output=[0;256];let mut actual=Vec::new();let mut actions=0usize;
+ for _ in 0..3000000{let first=exact(&cursor);let grant=RetainedCloneGrant{maximum_copy_bytes:first.maximum_copy_bytes+4096,..first};
+  let(result,birth,free)=turn(grant,|effect|cursor.advance_batch(&source,spec(),&mut output,effect,1024));let step=result.unwrap();assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));assert!(step.progress.copied_items<=1);assert!(cursor.last_turn_work()<=1024);actions+=1;actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+ assert!(cursor.is_complete());assert_eq!(actual,expected);close(&mut cursor);
+ assert!(actions*2<single_actions,"{actions} batched actions against {single_actions} single-event actions");
+}
+
 #[test]
 fn borrowed_pack_document_raw_body_limit_retains_refusal_receipt_and_output_custody(){
  let source=Original{name:"compressible".repeat(100),enabled:true};let mut cursor=BorrowedPackDocumentCursor::default().with_maximum_body_len(7);let mut output=[0xa5;1];let mut failed=false;

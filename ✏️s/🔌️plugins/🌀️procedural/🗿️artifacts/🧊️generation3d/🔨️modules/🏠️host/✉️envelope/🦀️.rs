@@ -1,4 +1,4 @@
-//! ✉️ Generation3d typed owned envelope catalog: the retained mutation owners, the mutation session, the snapshot and mutation decode authorities and the owned field catalog of the document envelope.
+//! ✉️ Generation3d typed owned envelope catalog: the snapshot and mutation decode authorities and the owned field catalog of the document envelope.
 #![allow(clippy::result_large_err)]
 #![allow(unused_imports)]
 extern crate semio_os_kernel as dsl;
@@ -53,21 +53,6 @@ use semio_s_artifact_procedural_3d_host::GENERATION3D_OWNER_BYTES;
 use semio_s_artifact_procedural_3d_host::GENERATION3D_RETAINED_STACK_CAPACITY;
 use semio_s_artifact_procedural_3d_host::generation3d_close_flow_frontier;
 use semio_s_artifact_procedural_3d_host::generation3d_park_flow_strings;
-
-#[path = "📑️owner-vocabulary/🦀️.rs"]
-mod owner_vocabulary;
-use owner_vocabulary::*;
-
-#[path = "🔩️owner-assembly/🦀️.rs"]
-mod owner_assembly;
-
-#[path = "📨️owner-accept/🦀️.rs"]
-mod owner_accept;
-
-#[path = "🎬️mutation-session/🦀️.rs"]
-mod mutation_session;
-use mutation_session::*;
-pub use mutation_session::Generation3dMutationSession;
 
 #[path = "📸️snapshot-authority/🦀️.rs"]
 mod snapshot_authority;

@@ -12,7 +12,7 @@ pub fn preset_query(preset_id: &str) -> &'static str {
     }
 }
 
-/// 🎬️ The authored composition supplies each explicit example with its original selected child.
+/// 🎬️ The authored composition supplies each explicit example with its original selected child; the empty id `""` is the blank graph document.
 pub fn set_active_example<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>(example_id:&str)->Emit<TrinityGraphMutation,NoConfigMutation>{
- match C::example_snapshot(example_id){Some(mut next)=>{next.query=preset_query(example_id).into();Emit{effects:vec![crate::editor::jack::reset_document_effect(&next)],..Default::default()}},None=>Emit::default()}
+ match Some(example_id).filter(|id|!id.is_empty()).map_or_else(||Some(C::initial_viewer_snapshot()),C::example_snapshot){Some(mut next)=>{next.query=preset_query(example_id).into();Emit{effects:vec![crate::editor::jack::reset_document_effect(&next)],..Default::default()}},None=>Emit::default()}
 }

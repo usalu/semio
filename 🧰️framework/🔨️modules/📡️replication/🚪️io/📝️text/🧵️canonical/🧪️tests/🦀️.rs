@@ -6,7 +6,7 @@ use crate::retained_sources::{stage,drained,effected,projected};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 fn grant(demand:RetirementDemand)->RetainedCloneGrant {
- assert!(demand.copy_bytes+demand.capacity_bytes<=4096);
+ assert!(demand.copy_bytes<=32_768&&demand.capacity_bytes<=4096);
  RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}
 }
 #[test]

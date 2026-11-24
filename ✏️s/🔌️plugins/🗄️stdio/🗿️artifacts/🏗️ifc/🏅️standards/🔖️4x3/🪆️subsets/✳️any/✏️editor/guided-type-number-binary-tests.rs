@@ -8,11 +8,12 @@ fn value(raw:&serde_json::Value)->IfcValue{match raw["kind"].as_str().unwrap(){"
 fn raw(value:&serde_json::Value)->DslValue{match value{serde_json::Value::String(value)=>DslValue::String(value.clone()),serde_json::Value::Object(values)=>DslValue::Object(values.iter().map(|(key,value)|(key.clone(),raw(value))).collect()),serde_json::Value::Array(values)=>DslValue::Array(values.iter().map(raw).collect()),_=>panic!("closed draft carrier")}}
 #[test]
 fn donated_numeric_binary_controller_matches_neutral_raw_fields_and_private_readiness(){
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     let law:serde_json::Value=serde_json::from_str(include_str!("guided-type-number-binary-cases.json")).unwrap();
     let sources:serde_json::Value=serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/type-number-binary-input.json")).unwrap();
     for row in law["cases"].as_array().unwrap(){
         let entities=sources["sources"][row["source"].as_str().unwrap()]["entities"].as_array().unwrap().iter().map(|entity|IfcEntity{id:entity["id"].as_str().unwrap().parse().unwrap(),name:entity["name"].as_str().unwrap().into(),args:entity["args"].as_array().unwrap().iter().map(value).collect(),complex:entity["complex"].as_array().unwrap().iter().map(|part|IfcComplexType{name:part["name"].as_str().unwrap().into(),args:part["args"].as_array().unwrap().iter().map(value).collect()}).collect()}).collect();
-        let snapshot=std::sync::Arc::new(IfcSnapshot{entities,..Default::default()});let history=semio_plugin::HistoryView::empty();let view=staged_view();
+        let snapshot=std::sync::Arc::new(IfcSnapshot{entities,header: ifc4x3_header(), ..Default::default() });let history=semio_plugin::HistoryView::empty();let view=staged_view();
         let operation=AppRenderOperationContext{app_instance_id:17,base_revision:semio_framework_job::RevisionId(0),generation:semio_framework_job::Generation(1),canonical_base_revision:[0;32],mounted_policy:semio_plugin::artifact_app_laws::fixture_mounted_policy()};
         let doc=semio_framework_async::poll::resolve_ready(ArtifactView::with_render_context(snapshot.as_ref(),&history,ChildContentView::EMPTY,operation,"actual-numeric-source",None));
         let mut caller=OriginalWorkFixture::new();let mut work=caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::begin_render_work(semio_plugin::action_staging::STAGED_FORM_BODY_KEY,cx)).unwrap().unwrap();

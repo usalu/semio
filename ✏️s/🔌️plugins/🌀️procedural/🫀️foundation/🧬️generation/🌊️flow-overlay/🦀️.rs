@@ -72,7 +72,7 @@ impl GenerationFlowOverlayWork{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.child.is_none()&&self.old.is_none()&&self.close.is_none()}
 }
-impl Drop for GenerationFlowOverlayWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original generation overlay retains native copy or lookup custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for GenerationFlowOverlayWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original generation overlay retains native copy or lookup custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
 
 struct OverlaySource<'a>{source:&'a mut FlowHostSnapshot,values:&'a OrderedMap<DslValue>}

@@ -28,12 +28,16 @@ def entitlement(total,runs,rules):
     wanted=total*rules["shareBasisPoints"]//10000 if not ok else math.ceil(ok[max(0,math.ceil(len(ok)*rules["percentile"]/100)-1)]*(100+rules["marginPercent"])/100)
     return min(ceiling,max(rules["minimumMegabytes"],wanted))
 
+def reserve(claim,rules):
+    if claim["waiting"]:return 0
+    return min(claim["entitlementMegabytes"],max(rules["floorMegabytes"],math.ceil(claim["observedMegabytes"]*rules["reservePercent"]/100)))
+
 def hold(claim,now,rules):
     if now-claim["atMs"]>rules["freshMilliseconds"]:return 0
-    return max(0,claim["entitlementMegabytes"]-claim["observedMegabytes"])
+    return max(0,reserve(claim,rules)-claim["observedMegabytes"])
 
 def children(total,available,observed,entitlement_megabytes,rules,limits,need):
-    claim={"entitlementMegabytes":entitlement_megabytes,"observedMegabytes":observed,"atMs":0}
+    claim={"entitlementMegabytes":entitlement_megabytes,"observedMegabytes":observed,"waiting":False,"atMs":0}
     left=max(0,available-hold(claim,0,rules))
     floor=min(limits["floorMaximumMegabytes"],max(limits["floorMinimumMegabytes"],total*limits["floorShareBasisPoints"]//10000))
     cores=10;minimum=max(1,math.ceil(cores*limits["minimumShareBasisPoints"]/10000))
@@ -45,7 +49,7 @@ def children(total,available,observed,entitlement_megabytes,rules,limits,need):
 def build():
     rules=policy();limits=pool()
     entitlements=[{"totalMegabytes":total,"case":name,"entitlementMegabytes":entitlement(total,runs,rules)} for total in TOTALS for name,runs in RUNS]
-    holds=[{"entitlementMegabytes":4915,"observedMegabytes":observed,"ageMilliseconds":age,"holdMegabytes":hold({"entitlementMegabytes":4915,"observedMegabytes":observed,"atMs":0},age,rules)} for observed in (0,1200,4915,9000) for age in (0,119999,120001)]
+    holds=[{"entitlementMegabytes":4915,"observedMegabytes":observed,"waiting":waiting,"ageMilliseconds":age,"holdMegabytes":hold({"entitlementMegabytes":4915,"observedMegabytes":observed,"waiting":waiting,"atMs":0},age,rules)} for observed in (0,100,1200,3900,4915,9000) for waiting in (False,True) for age in (0,119999,120001)]
     pools=[]
     for available in (6000,8000,10000,12000):
         for observed in (1200,4915):

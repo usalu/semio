@@ -164,13 +164,15 @@ def arc(cx, cy, rad, a0, a1, n):
     return [(cx + rad * math.cos(math.radians(a0 + (a1 - a0) * k / n)), cy + rad * math.sin(math.radians(a0 + (a1 - a0) * k / n))) for k in range(n + 1)]
 
 
-def rounded(x0, x1, y0, y1, rad, n, dip=None):
-    """🛏️ A rounded rectangle; `dip` = (xa, xb, depth) sinks the top edge in a smooth hollow."""
+def rounded(x0, x1, y0, y1, rad, n, dip=None, lip=0.0):
+    """🛏️ A rounded rectangle; `dip` = (xa, xb, depth) sinks the top edge in a smooth hollow. `lip` is the height of the worn rim the hollow begins with, 5 mm inside each end: a hollow that another part lies on (the lower mattress under the upper one in the stored bundle) then opens as a slit of that height and not as a wedge that tapers to nothing over 60 mm, which the raster of the drawing and of the body end at different places (silhouette repair SF of 2026-11-23, `catalog-silhouette` 24.4 mm in the side elevation of 1:50)."""
     top = []
     if dip is not None:
         xa, xb, depth = dip
         steps = 10
-        top = [(xb - (xb - xa) * k / steps, y1 - depth * 0.5 * (1 - math.cos(2 * math.pi * k / steps))) for k in range(steps + 1)]
+        top = [(xb - (xb - xa) * k / steps, y1 - (lip + (depth - lip) * 0.5 * (1 - math.cos(2 * math.pi * k / steps)) if 0 < k < steps else 0.0)) for k in range(steps + 1)]
+        if lip > 0:
+            top = [top[0], (xb - 0.005, y1 - lip)] + top[1:-1] + [(xa + 0.005, y1 - lip), top[-1]]
     pts = arc(x0 + rad, y0 + rad, rad, 180, 270, n) + arc(x1 - rad, y0 + rad, rad, 270, 360, n) + arc(x1 - rad, y1 - rad, rad, 0, 90, n) + top + arc(x0 + rad, y1 - rad, rad, 90, 180, n)
     return pts
 
@@ -308,7 +310,7 @@ def mattresses(scale):
         region = f"mattress-{level}"
         if scale == "50":
             dip = (0.55, 1.45, 0.012 if level == "low" else 0.016)
-            pts = rounded(X_MAT[0], X_MAT[1], y0, y1, 0.025, 4, dip)
+            pts = rounded(X_MAT[0], X_MAT[1], y0, y1, 0.025, 4, dip, 0.0025 if level == "low" else 0.0)
         elif scale == "100":
             pts = rounded(X_MAT[0], X_MAT[1], y0, y1, 0.03, 2, (0.55, 1.45, 0.016) if level == "up" else None)
         elif scale == "200":

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type Menagerie } from "@semio-tech/pets";
 import { PET_KEEPOUTS } from "@semio-tech/pets-react";
 import type { SheetClassificationTask } from "@semio-tech/course";
-import { CardIcon, ClassificationTaskView, EMPTY_PRESENCE_VIEW, PresenceOverlay, COURSE_PET_CONTROLS, COURSE_PET_KEEPOUTS, COURSE_PET_PROPS, COURSE_PET_SURFACES, CourseCard, COURSE_PETS_TEMPO, peerGlances, petsTempo, courseText, type PeerCursor, type CoursePetsSource, type CoursePetsStage } from "@semio-tech/course-react";
+import { CardIcon, ClassificationTaskView, EMPTY_PRESENCE_VIEW, PresenceOverlay, COURSE_PET_CONTROLS, COURSE_PET_KEEPOUTS, COURSE_PET_OPEN, COURSE_PET_PROPS, COURSE_PET_SURFACES, CourseCard, COURSE_PETS_TEMPO, peerGlances, petsTempo, courseText, type PeerCursor, type CoursePetsSource, type CoursePetsStage } from "@semio-tech/course-react";
 import { MENAGERIE, Pets, fakeSource, fakeStage, layer, settle, text } from "../../🪛️pet-companions-kit/🟦️.tsx";
 import { boxed, quiet } from "../🟢️harness/🟦️.tsx";
 
@@ -30,6 +30,7 @@ export function registerLayerTests(): void {
         surfaces: COURSE_PET_SURFACES,
         keepouts: `button, p, ${COURSE_PET_KEEPOUTS}`,
         controls: COURSE_PET_CONTROLS,
+        open: COURSE_PET_OPEN,
         props: COURSE_PET_PROPS,
         glances: peerGlances,
         onCast: expect.any(Function),
@@ -161,10 +162,13 @@ export function registerLayerTests(): void {
         </div>,
       );
       const surfaces = [...document.querySelectorAll<HTMLElement>(COURSE_PET_SURFACES)];
-      expect(surfaces.map((part) => [part.dataset.slot ?? part.tagName, part.closest<HTMLElement>("[data-card]")?.dataset.card])).toEqual([
-        ["course-card-stack", "task"],
-        ["FOOTER", undefined],
-      ]);
+      const frames = surfaces.filter((part) => part.matches(COURSE_PET_OPEN));
+      expect(frames.map((part) => [part.dataset.slot ?? part.tagName, part.closest<HTMLElement>("[data-card]")?.dataset.card]), "every card is a frame around open room").toEqual([["course-card-stack", "task"]]);
+      expect(surfaces.at(-1)?.tagName, "the footer line is the floor").toBe("FOOTER");
+      for (const part of surfaces.filter((part) => !frames.includes(part) && part.tagName !== "FOOTER")) {
+        expect([part.dataset.windowFrameChip, part.dataset.dock, part.closest<HTMLElement>("[data-card]")?.dataset.card], "the rest are the chips at a card's foot").toEqual(["true", "bottom", "task"]);
+        expect(part.closest(COURSE_PET_CONTROLS), "a chip is a solid body a pet stands on").toBe(part);
+      }
       const chip = surfaces[0]!.querySelector<HTMLElement>("[data-window-frame-chip]");
       expect(chip?.textContent?.trim()).toBe("Climates");
       expect(chip?.dataset.dock).toBe("top");

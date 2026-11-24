@@ -190,7 +190,7 @@ impl<T: FixedOperationOwner, const CAPACITY: usize> FixedOperationRegistry<T, CA
 
 impl<T, const CAPACITY: usize> Drop for FixedOperationRegistry<T, CAPACITY> {
     fn drop(&mut self) {
-        assert_eq!(self.occupied, 0, "fixed operation registry reached Drop before every exact owner was terminal-empty");
+        assert!(std::thread::panicking() || self.occupied == 0, "fixed operation registry reached Drop before every exact owner was terminal-empty");
     }
 }
 

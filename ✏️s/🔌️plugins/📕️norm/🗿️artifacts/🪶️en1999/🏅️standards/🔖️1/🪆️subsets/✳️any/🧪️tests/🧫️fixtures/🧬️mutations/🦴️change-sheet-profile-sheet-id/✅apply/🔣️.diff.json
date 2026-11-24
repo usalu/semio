@@ -32,11 +32,6 @@
     ]
   },
   "fireInsulations": null,
-  "transverseStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "transverseStiffeners": null,
   "reliabilityClass": null
 }

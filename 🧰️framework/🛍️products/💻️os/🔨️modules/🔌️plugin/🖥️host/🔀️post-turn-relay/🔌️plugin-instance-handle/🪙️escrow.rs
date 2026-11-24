@@ -155,7 +155,6 @@ impl ColdEscrow{
   let Some(history)=self.history_id else{return Ok(true)};
   if self.history.is_some(){
    driver.dispatch_operation_step(false,true,|cx|{OriginalNativeLease::return_slot_step(&mut self.history,cx)?;Ok(())})?;
-   if self.history.is_none(){trace_retirement("returned the History alias");}
    return Ok(false)
   }
   if !self.producer_closed{
@@ -163,7 +162,6 @@ impl ColdEscrow{
    let mut closed=false;
    driver.dispatch_operation_step(true,true,|cx|{closed=cx.close_original_native_recipient_step(producer)?;Ok(())})?;
    self.producer_closed=closed;
-   if closed{trace_retirement("closed the producer");}
    return Ok(false)
   }
   if self.witness.is_none(){
@@ -174,7 +172,6 @@ impl ColdEscrow{
     }
     Ok(())
    })?;
-   if self.witness.is_some(){trace_retirement("captured the producer witness");}
    return Ok(false)
   }
   if !self.reconciled{
@@ -187,13 +184,11 @@ impl ColdEscrow{
    Ok(())
    })?;
    self.reconciled=reconciled;
-   if reconciled{trace_retirement("reconciled the producer ledger");}
    return Ok(false)
   }
   let mut closed=false;
   driver.dispatch_operation_step(false,true,|cx|{closed=cx.close_original_native_recipient_step(history)?;Ok(())})?;
-  if closed{self.history_id=None;self.witness=None;trace_retirement("closed the History recipient");}
+  if closed{self.history_id=None;self.witness=None;}
   Ok(closed)
  }
 }
-fn trace_retirement(stage:&str){if std::env::var_os("SEMIO_TRACE_RELAY_RETIREMENT").is_some(){eprintln!("[DEBUG] relay retirement {stage}");}}

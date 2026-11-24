@@ -109,7 +109,7 @@ fn schedule(cutoff:Option<usize>){
   let mut returned_at=None;
   let mut closed_at=None;
   for index in 0..100000{
-   let closed=turn(&mut caller,&mut decoder,|cx|owner.close(&mut row.replacement,cx));
+   let closed=quoted_turn(&mut caller,&mut decoder,owner.close_demands(stock().maximum_copy_bytes).unwrap(),|cx|owner.close(&mut row.replacement,cx));
    let protocol::InputReplacement::Input{payload,..}=&row.replacement else{panic!("original input variant")};
    if payload.as_ptr()==pointer&&payload.len()==length{let _=returned_at.get_or_insert(index);}
    if closed{closed_at=Some(index);break}

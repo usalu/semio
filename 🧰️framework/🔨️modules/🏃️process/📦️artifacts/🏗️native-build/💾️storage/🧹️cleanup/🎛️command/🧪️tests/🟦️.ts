@@ -34,6 +34,28 @@ print(json.dumps({r["id"]:(r["code"]=="ENOENT" or any(re.search(p,r["message"]) 
 });
 
 
+test("an attached image that is no funded child (a test sandbox, another ticket's sparse image) is never a roster failure, a funded child keeps its shape; the classification agrees with an independent Python replay",async()=>{
+ const api=await import("../🟦️.ts"),notice=(await import("../../📥️receiver/🧬️schema/🔣️.json")).default.definitions.Protocol.const.unfundedNotice;
+ const rows=[
+  {id:"funded",root:"/c/b/n/m/ab/native/m",image:"/c/b/n/m/ab/native/fixed.dmg",unfunded:false},
+  {id:"sandbox-image",root:"/c/b/n/m/ab/native/m",image:"/c/test-sandbox/r1/.cache/b/n/m/fixed.dmg",unfunded:true},
+  {id:"sandbox-mount",root:"/c/b/n/m/test-sandbox/r1/.cache/b/l/x",image:"/c/test-sandbox/r1/.cache/b/l/fixed.dmg",unfunded:true},
+  {id:"sparse",root:"/c/b/n/m/ab/native/m",image:"/t/raster-cache.sparseimage",unfunded:true}
+ ];
+ const model=`import json,os,sys
+rows=json.loads(sys.argv[1])
+print(json.dumps({r["id"]:not(os.path.basename(r["root"])=="m" and r["image"]==os.path.join(os.path.dirname(r["root"]),"fixed.dmg")) for r in rows}))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const row of rows){expect(api.unfundedMountV1(row),row.id).toBe(row.unfunded);expect(independent[row.id],row.id).toBe(row.unfunded);}
+ for(const language of["en","de"] as const){const text=notice[language].replace("{mount}","/m").replace("{image}","/i");expect(text).toContain("/m");expect(text).toContain("/i");expect(text).not.toContain("{");}
+});
+
+test("the first unrelated attached image reaps the images of dead test sandboxes once per process, and a failing sweep never fails the build",async()=>{
+ const api=await import("../🟦️.ts");let calls=0;
+ expect(await api.reapDeadSandboxImagesV1(()=>{calls++;throw Error("hdiutil refused");})).toBe(true);
+ expect(await api.reapDeadSandboxImagesV1(()=>{calls++;})).toBe(false);expect(calls).toBe(1);
+});
+
 test("a stable foreign mount is refused at once in both languages, naming mount, image, device and owner; the classification agrees with an independent Python replay",async()=>{
  const api=await import("../🟦️.ts"),rows=corpus.foreignMount,pattern=(await import("../../📥️receiver/🧬️schema/🔣️.json")).default.definitions.Protocol.const.concurrentChangePatterns.at(-1)!;
  const model=`import json,re,sys

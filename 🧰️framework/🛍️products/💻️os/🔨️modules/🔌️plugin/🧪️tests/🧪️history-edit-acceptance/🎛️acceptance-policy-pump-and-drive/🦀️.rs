@@ -303,6 +303,8 @@ where
     for candidate in changes {
         if app.time_travel.status().is_none() {
             Box::pin(acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+            Box::pin(acceptance_pump(app, |app| !app.time_travel.has_pending_work(), cx)).await
+                .map_err(|reason| AcceptanceVerdict::Fail(reason.context("the history preview of a re-begun session does not settle".into())))?;
         }
         if Box::pin(acceptance_verb(app, HISTORY_EDIT_INPUT_ACTION_ID, vec![("path", DslValue::String(candidate.0.clone())), ("value", candidate.1.clone())],cx)).await.is_err()
             || !app.time_travel.editor().is_some_and(|editor| editor.refused.is_none() && editor.value != original)

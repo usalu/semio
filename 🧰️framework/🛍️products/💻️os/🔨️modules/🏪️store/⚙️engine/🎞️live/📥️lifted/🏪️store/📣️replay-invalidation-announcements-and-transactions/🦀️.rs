@@ -91,11 +91,13 @@ where
     /// `BackboneMessage::Mutations` batch. `false` when the publication is not an outbound one awaiting
     /// its announcement; the ACK becomes admissible only after this returns `true`.
     pub async fn flush_published_apply_batch(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>) -> Result<bool, VcsError> {
-        
-        if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&store_owners.snapshot_read_leases)){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched announcement requires its original Store issuer")));}
-if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !publication.outbound {
+        let issuer_refused=||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched announcement requires its original Store issuer"));
+        let held=publication.original_registry.as_ref();
+        if held.is_some_and(|registry|!registry.ptr_eq(&store_owners.snapshot_read_leases)){return Err(issuer_refused());}
+        if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !publication.outbound {
             return Ok(false);
         }
+        if held.is_none(){return Err(issuer_refused());}
         publication.outbound = false;
         self.flush_apply_outbound(store_log, store_owners, store_wire, publication.announce_from, publication.announce_items).await?;
         Ok(true)

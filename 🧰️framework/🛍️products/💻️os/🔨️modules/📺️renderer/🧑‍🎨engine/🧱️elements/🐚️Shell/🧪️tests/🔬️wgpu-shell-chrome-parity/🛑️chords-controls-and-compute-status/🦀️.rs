@@ -16,6 +16,7 @@ fn chord_key_action(key: &str) -> semio_ui_wgpu_input::KeyAction {
 /// open-coded ladder they read.
 #[test]
 fn every_shared_keybinding_row_routes_to_its_shell_verb_and_outranks_app_keybindings() {
+    semio_renderer_wgpu_host_base::set_host_platform_uses_meta(false);
     let fixture: Value = serde_json::from_str(SURFACE_SWITCH_FIXTURE).expect("🔀️ fixture parses");
     let apps = manifest_apps(&fixture, "procedural");
     let dialect = fixture_dialect(&fixture["dialects"]["generation3d"]);
@@ -259,7 +260,7 @@ fn a_press_on_the_overlay_chrome_over_a_surface_belongs_to_the_shell() {
     assert!(!pointer_press_belongs_to_shell_chrome(Some(&surface)), "a press on the surface body still orbits the scene");
     assert!(!pointer_press_belongs_to_shell_chrome(None), "a press on nothing is nobody's chrome");
 
-    retained_world_sequence_probe("chrome");
+    retained_world_sequence_probe_closing("chrome", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 //#endregion ⏳️ComputeStatusPane

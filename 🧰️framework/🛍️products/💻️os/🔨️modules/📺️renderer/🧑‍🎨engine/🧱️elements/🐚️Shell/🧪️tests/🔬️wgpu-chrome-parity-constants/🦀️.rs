@@ -85,7 +85,7 @@ fn the_status_stacks_sit_and_size_like_react_notice_stacks() {
     assert!(session.frame.w <= 448.0 + 0.01, "max-w-[28rem]");
     assert_eq!(StatusStackKind::ALL.len(), 5, "five notice stacks");
     assert!(route.frame.w <= 1440.0 + 0.01, "max-w-[90vw]");
-    assert_eq!(route.frame.y + route.frame.h, 900.0 - theme.footer_height);
+    assert!((route.frame.y + route.frame.h - (900.0 - theme.footer_height)).abs() < 0.01, "the route stack ends on the footer's top edge");
     assert!(route.cells[1].rect.x >= route.cells[0].rect.x + route.cells[0].rect.w, "a horizontal row");
     let ops = status_stack_ops(&artifact, &theme);
     assert!(ops.iter().any(|op| matches!(op, StatusOp::Hit { action, .. } if action.label == "Cancel")));

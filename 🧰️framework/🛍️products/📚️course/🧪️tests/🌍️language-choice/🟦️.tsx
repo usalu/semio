@@ -1,4 +1,5 @@
-/** 🌍️ No default language: the browser's list preselects only among the offered languages (shared vectors, judged by
+/** 🌍️ No default language of the client: a site's own language comes first, then the browser's list, and both preselect
+ * only among the offered languages (shared vectors, judged by
  * `i18next`'s own best-match negotiation as the third-party oracle), a list that names none leads to a chooser that
  * speaks every offered language at once and assumes nothing — no `lang` on the document, the title in every language —
  * and from the first paint on the document's `lang`, its title and every text follow the language that is known.
@@ -13,7 +14,7 @@ import i18next from "i18next";
 import { afterEach, describe, expect, it } from "vitest";
 import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import type { CourseView, Query } from "@semio-tech/course";
-import { COURSE_LOCALES, CourseApp, documentTitle, initialCourseState, localStore, memoryStorageOrigin, mountCourse, preferredLocale, courseInstance, readPreferences, type PresenceConnect, type CourseState, type StorageArea } from "@semio-tech/course-react";
+import { COURSE_LOCALES, CourseApp, documentTitle, initialCourseState, localStore, memoryStorageOrigin, initialLocale, mountCourse, preferredLocale, courseInstance, readPreferences, type PresenceConnect, type CourseState, type StorageArea } from "@semio-tech/course-react";
 import choice from "../../🧫️fixtures/🌍️language-choice/🔣️.json";
 
 type Locale = (typeof COURSE_LOCALES)[number];
@@ -21,6 +22,7 @@ type Locale = (typeof COURSE_LOCALES)[number];
 interface Fixture {
   readonly offered: readonly string[];
   readonly preselections: readonly { readonly browser: readonly string[]; readonly locale: string | null }[];
+  readonly sites: readonly { readonly site: string | null; readonly browser: readonly string[]; readonly locale: string | null }[];
   readonly neutral: { readonly title: string; readonly choices: readonly { readonly locale: string; readonly name: string; readonly invitation: string }[] };
   readonly titles: readonly { readonly screen: string; readonly en: string; readonly de: string }[];
 }
@@ -96,6 +98,39 @@ describe("🌍️ language choice", () => {
     });
   }
 
+  for (const vector of fixture.sites) {
+    it(`starts in ${vector.locale ?? "no language"} on a site that names ${vector.site ?? "no language"} for a browser that lists ${vector.browser.join(", ") || "nothing"}`, () => {
+      expect(initialLocale(vector.site ?? undefined, vector.browser) ?? null).toBe(vector.locale);
+      expect(negotiated(vector.site === null ? vector.browser : [vector.site, ...vector.browser], fixture.offered)).toBe(vector.locale);
+    });
+  }
+
+  it("speaks the site's own language from the first paint whatever the browser lists, and keeps the stored choice over it", async () => {
+    const origin = memoryStorageOrigin();
+    const site = { proctor: "", tenant: TENANT, language: "de", presence: QUIET_PRESENCE, transport: () => courseProctor(), storage: origin.tab(), languages: ["en-US"], timing: TIMING };
+    const root = document.body.appendChild(document.createElement("div"));
+    let unmount: () => void = () => undefined;
+    act(() => {
+      unmount = mountCourse(root, site);
+      expect(document.documentElement.lang).toBe("de");
+    });
+    await within(root).findByText("Willkommen im Testkurs", { selector: "[data-slot=introduction-info-box-title]" }, { timeout: 20_000 });
+    expect(readPreferences(localStore(origin.tab(), TENANT)).locale).toBeUndefined();
+    await userEvent.setup().click(within(within(root).getByRole("navigation", { name: "Hauptnavigation" })).getByRole("button", { name: "English" }));
+    expect(document.documentElement.lang).toBe("en");
+    act(() => unmount());
+    root.remove();
+
+    const again = document.body.appendChild(document.createElement("div"));
+    act(() => {
+      unmount = mountCourse(again, site);
+      expect(document.documentElement.lang).toBe("en");
+    });
+    await within(again).findByText("Welcome to the test course", { selector: "[data-slot=introduction-info-box-title]" }, { timeout: 20_000 });
+    act(() => unmount());
+    again.remove();
+  }, 60_000);
+
   it("asks in every offered language and assumes none when the browser lists no offered language", async () => {
     const origin = memoryStorageOrigin();
     document.documentElement.lang = "en";
@@ -141,7 +176,7 @@ describe("🌍️ language choice", () => {
     await within(again).findByText("Welcome to the test course", { selector: "[data-slot=introduction-info-box-title]" }, { timeout: 20_000 });
     act(() => unmount());
     again.remove();
-  });
+  }, 60_000);
 
   for (const vector of fixture.titles) {
     it(`titles the document on the ${vector.screen} screen in the language that is spoken`, () => {

@@ -28,7 +28,7 @@ import { UtilityTree, groupUtilityNodesByCategory } from "../🎛️UtilityTree/
 /** 🎯️ What the sync card attaches, typed end to end (never a URI the host parses back): a folder, a file (its folder
  * backs the document), or a hub space's document — `documentId: null` names the session's own document. */
 export type SyncAttachTargetV1 =
-  | { readonly kind: "folder"; readonly path: string }
+  | { readonly kind: "folder"; readonly path: string; readonly documentId?: string }
   | { readonly kind: "file"; readonly path: string; readonly folder: string }
   | { readonly kind: "remote"; readonly hostPort: string; readonly spaceId: string; readonly documentId: string | null };
 

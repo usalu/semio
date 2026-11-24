@@ -19,6 +19,13 @@ impl<T,const N:usize>PagedList<T,N>{
  pub fn discard_plain_tail_page(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneProgress>{
   self.discard_tail(effect, true)
  }
+ /// ♻️ Retires the whole last no-drop payload leaf of an exclusive cold owner and returns how many items it held.
+ pub fn discard_plain_tail_leaf_cold(&mut self)->Result<usize,PagedListError>{
+  if std::mem::needs_drop::<T>()||size_of::<T>()==0{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"plain tail discard requires a nonzero payload without drop glue"})}
+  if self.length==0{return Ok(0)}
+  let leaf=self.leaf_mut(self.length-1).ok_or(PagedListError{kind:PagedListRefusalKind::InvariantViolated,reason:"plain tail lost its original leaf"})?;
+  let count=leaf.len();leaf.truncate(0);self.length-=count;Ok(count)
+ }
  fn discard_tail(&mut self,effect:&mut RetainedAllocationEffect<'_>, page:bool)->RetainedWorkOutcome<RetainedCloneProgress>{
   let grant=effect.grant();
   let maximum_items=if page && grant.maximum_items != 0 { usize::MAX } else { grant.maximum_items };

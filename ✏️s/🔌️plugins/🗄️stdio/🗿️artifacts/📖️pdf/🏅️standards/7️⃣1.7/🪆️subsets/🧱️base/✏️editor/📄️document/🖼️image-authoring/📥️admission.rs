@@ -34,7 +34,7 @@ pub fn admits_png_action(action: &str) -> bool {
     matches!(action, INSERT | REPLACE | IMPORT)
 }
 
-/// 📌 Validated target fields used by both picker and completion commands.
+/// 📌 Validated target fields used by both picker and completion commands; the picker actions carry the one-based page number a person typed and the import callback echoes the zero-based page index the picker resolved.
 pub struct PngTarget {
     pub page: u32,
     pub operator: u32,
@@ -92,7 +92,7 @@ pub fn png_actions() -> [semio_plugin::ActionDefinition; 3] {
     use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, InteractiveJobClassification};
     use semio_plugin::LocalizedLabel;
     let label = LocalizedLabel::native;
-    let page = || ActionArgDef::number("page", label("Page", "Seite")).required();
+    let page = || ActionArgDef::number("page", label("Page number", "Seitenzahl")).required();
     let operator = || ActionArgDef::number("operator", label("Image placement", "Bildposition")).required();
     let geometry = || [
         ActionArgDef::number("x", label("X", "X")).required(),

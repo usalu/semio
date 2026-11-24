@@ -30,8 +30,8 @@
   "cases": [
     {
       "id": "full",
-      "rows": 26,
-      "valueBytes": 3813
+      "rows": 28,
+      "valueBytes": 4067
     },
     {
       "id": "emptyCollections",

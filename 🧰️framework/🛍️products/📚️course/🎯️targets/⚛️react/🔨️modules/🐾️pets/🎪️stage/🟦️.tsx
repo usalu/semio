@@ -116,13 +116,17 @@ export interface StagedPets {
 //#endregion 🎾️Play
 
 //#region 🗺️Stage
-/** 🪵️ What pets stand on in the quiz: the top edge of every card of the screen — one rectangle whose title chip is a
- * glass overlay inside it, so the edge is the card's own, one straight line — and the footer line of the client, which is
- * the floor. The cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so
+/** 🪵️ What pets stand on in the quiz: the border lines of the screen. The top edge of every card — the one line it
+ * shares with the card above, so a pet on it stands in the open room of that card —, the top edge of the chips at a card's
+ * foot (its actions, its notes), and the footer line of the client, which is the floor. The cards of the pages behind the overview are inert and the cards of a dialog lie outside `main`, so
  * neither carries a pet. A card the overview conceals while the pointer hovers another (`data-concealed` on its host) is
  * unseen too: the survey drops its edge, its sides and anything a pet was playing with on it, and whatever stood there
  * falls. */
-export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame], .course-app > footer';
+export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"], .course-app > footer';
+
+/** 🪟️ The surfaces that are frames around open room: every card. Its border is a line to walk on and to climb, its
+ * inside is where pets roam between what a learner reads and operates; a chip stays a solid body a pet stands on. */
+export const COURSE_PET_OPEN = "#course-main [data-card] [data-window-frame]";
 
 /** 🚧️ What pets keep clear of in the quiz besides what the layer avoids anyway: the items a learner drags, the zones
  * they are dropped on, and the navigation bar as a whole — its mark and its title are neither controls nor text
@@ -130,11 +134,10 @@ export const COURSE_PET_SURFACES = '#course-main [data-card] [data-window-frame]
 export const COURSE_PET_KEEPOUTS = "[data-course-item], [data-course-drop], .course-app > header";
 
 /** 🖱️ What of the quiz acts on a press although the layer's own rules call it no control, so a press there is never a
- * pet's: the grip that starts the drag of an item (an `aria-hidden` span), the zones an item is dropped on, and the cards
- * of the overview, which open their page on a click anywhere on the card but on a control. The empty space of a card's
- * cell around it is no card: a pet standing there is the hand's. Their actions are buttons, which every layer leaves to
- * the learner anyway. */
-export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], [data-layered-card] [data-card]";
+ * pet's: the grip that starts the drag of an item (an `aria-hidden` span), the zones an item is dropped on, and the chips
+ * at a card's foot, which are solid bodies a pet stands on. A card of the overview is none: pets live in its open room, and
+ * a press on a pet there is the pet's, a press beside it opens the card as ever. */
+export const COURSE_PET_CONTROLS = "[data-course-grip], [data-course-drop], #course-main [data-window-frame-chip][data-dock=\"bottom\"]";
 
 /** 🧸️ What pets may play with in the quiz: every element marked with a topic key (`data-pet-prop`) — except the copy of
  * a row a drag carries, a deep clone of the row with all of its attributes. */
@@ -200,6 +203,7 @@ export function CoursePetLayer(props: { readonly pets: StagedPets }): ReactEleme
         surfaces={COURSE_PET_SURFACES}
         keepouts={`${PET_KEEPOUTS}, ${COURSE_PET_KEEPOUTS}`}
         controls={COURSE_PET_CONTROLS}
+        open={COURSE_PET_OPEN}
         props={COURSE_PET_PROPS}
         glances={peerGlances}
         onCast={pets.onCast}
@@ -235,6 +239,7 @@ export function PetsPlayground(props: { readonly playing: PetPlay; readonly text
             <div {...GROUP} {...CELL} className="course-tiles">
               {PET_DEEDS.map((deed) => (
                 <BodyButton
+                  icon="sparkles"
                   key={deed}
                   row
                   onClick={() => {

@@ -28,6 +28,11 @@ Feature: The polygon union never silently returns nothing
     When their union is built
     Then the edges are cut where the other edge ends instead of at a crossing far outside both, and the union is one ring of the area polygon-clipping finds
 
+  Scenario: Edges that lie a fraction of a micrometre apart, at the limit of the resolution
+    Given two faces of a skinned quilt prism of a sleeping person that share one edge and whose opposite edges lie 0.22, 0.49 and 0.55 micrometres apart, the same faces moved so that corners nearly meet or poke through an edge, and five strips of a rain poncho
+    When their union is built
+    Then a piece counts as lying on an edge of another polygon only with both ends and its middle, vertices within the resolution of another polygon are joined to it before the union is repeated, and the union is one ring of the area polygon-clipping finds
+
   Scenario: Duplicate points do not matter
     Given a square with a doubled corner and a closing point
     Then its union is the square

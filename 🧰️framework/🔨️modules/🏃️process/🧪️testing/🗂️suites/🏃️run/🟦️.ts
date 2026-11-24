@@ -12,7 +12,7 @@ import{runOwnedBunFilesV1}from"../../🟨️bun/📁️files/🟦️.ts";
 import{pinnedRustToolchainV1,pinnedTestToolsV1}from"../../🧰️toolchain/📌️pinned/🟦️.ts";
 import{textV1}from"../../../🏗️build/🗣️language/📖️catalog/🟦️.ts";
 import{toolLanguageV1}from"../../../🧰️tools/📖️registry/🟦️.ts";
-import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestSuiteToolsV1,processTestProtocolV1,processTestScratchParentV1,processTestSuiteRunsOnV1,type ProcessTestScratchV1,type ProcessTestTableV1}from"../🟦️.ts";
+import{discoverProcessTestFilesV1,expandProcessTestSuiteV1,processTestSuiteToolsV1,processTestProtocolV1,processTestScratchParentV1,processTestSuiteRunsOnV1,processTestSuiteLaunchesV1,type ProcessTestScratchV1,type ProcessTestTableV1}from"../🟦️.ts";
 import{announceTestWorkersV1,readTestWorkerPolicyV1,testWorkersV1,type TestWorkerPolicyV1}from"../../👷️workers/🟦️.ts";
 import{createTestFileMemoryV1,readTestFileBudgetsV1,testFileRatioBasisPointsV1,type TestFileBudgetsV1,type TestFileProcessRowsV1}from"../../👷️workers/📏️file-budgets/🟦️.ts";
 import{learnedTestWorkerRatioV1,withTestWorkerLearningV1,type TestWorkerLearningV1}from"../../👷️workers/📐️learning/🟦️.ts";
@@ -67,7 +67,7 @@ export async function runProcessTestSuiteV1(run:ProcessTestSuiteRunV1):Promise<v
  const plan=announceTestWorkersV1(testWorkersV1("bun-test",environment,{request:suite.parallel??1,ratioBasisPoints:raised>10000?Math.max(learned,raised):learned},run.workers?.policy),environment,run.workers?.write);
  if(bunSources.length)await withTestWorkerLearningV1(run.workers?.learning,plan,suite.id,()=>runOwnedBunFilesV1({
   invocation,control:createIssuedResourceControlV1(invocation,owner+":"+suite.id,0),cwd:checkout,files:bunSources,
-  arguments:suite.testNamePattern?["--test-name-pattern="+suite.testNamePattern]:[],timeoutMilliseconds:stretched,...(authored?{capabilities:authored}:{}),
+  arguments:suite.testNamePattern?["--test-name-pattern="+suite.testNamePattern]:[],timeoutMilliseconds:stretched,...(authored?{capabilities:authored}:{}),...(suite.launches?{launches:processTestSuiteLaunchesV1(suite,root)}:{}),
   environment:{...environment,...pinnedRustToolchainV1(undefined,environment).environment,...tools,SEMIO_WORKSPACE_ROOT:checkout,SEMIO_TEST_ARTIFACT_DIR:output,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},
   policy:{version:1,maximumParallelFiles:plan.workers,...processTestProtocolV1.output},memory:createTestFileMemoryV1({budgets,checkout,defaultMegabytes,shareMegabytes:plan.memoryMegabytes,environment,...(run.workers?.rows?{rows:run.workers.rows}:{}),...(run.workers?.intervalMilliseconds?{intervalMilliseconds:run.workers.intervalMilliseconds}:{})}),
   onFileResult:async row=>{process.stdout.write(row.capture.stdout);process.stderr.write(row.capture.stderr);if(row.capture.status!==0||row.capture.signal!==null)failed.push(relative(root,row.file).split(sep).join("/"));},

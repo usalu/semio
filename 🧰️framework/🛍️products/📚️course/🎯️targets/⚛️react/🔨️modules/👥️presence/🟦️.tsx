@@ -24,7 +24,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { type Anchor, type CourseView, type Cursor, type Place, type PresenceState } from "@semio-tech/course";
 import { Icon, SharedBorderRow, SharedBorderRowCell, presenceColor, presencePaint, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
-import { cn } from "../🪟️chrome/🟦️.tsx";
+import { CardIcon, cn } from "../🪟️chrome/🟦️.tsx";
 import { CoursePresence } from "./🧭️rooms/🟦️.ts";
 import { EMPTY_PRESENCE_VIEW, PRESENCE_ANCHORS, type PeerCursor, placeText, type PresenceView } from "./👁️view/🟦️.ts";
 
@@ -425,7 +425,7 @@ export function PresenceFooter(props: { readonly course?: CourseView; readonly t
           );
         })}
       </SharedBorderRow>
-      {props.following === undefined ? null : <SharedBorderRowCell className="p-0"><button type="button" data-follow-stop="" onClick={props.onStop} className="course-target h-full w-full cursor-pointer border-0 px-single py-1 text-foreground hover:bg-hover-interactive-fill">{text("course.presence.stopFollowing")}</button></SharedBorderRowCell>}
+      {props.following === undefined ? null : <SharedBorderRowCell className="p-0"><button type="button" data-follow-stop="" onClick={props.onStop} className="course-target h-full w-full cursor-pointer border-0 px-single py-1 text-foreground hover:bg-hover-interactive-fill"><span className="inline-flex items-center gap-single"><CardIcon icon="x" />{text("course.presence.stopFollowing")}</span></button></SharedBorderRowCell>}
       <span role="status" className="sr-only">{props.following === undefined ? "" : text("course.presence.following", { name: roster?.learners.find((learner) => learner.tag === props.following)?.display ?? props.followingName ?? props.following })}</span>
     </SharedBorderRow>
   );

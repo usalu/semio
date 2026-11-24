@@ -95,11 +95,40 @@ fn authored<R>(grant:ArtifactStoreOneItemGrant,run:impl FnOnce(&mut semio_framew
 pub fn advance_apply_batch<P,Mutation>(store:&mut StoreParts<'_,P,Mutation>,publication:&mut ArtifactStoreBatchPublication<P,Mutation>,body:usize,grant:ArtifactStoreOneItemGrant,turn_ceiling:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<ArtifactStoreOneItemAdvance,VcsError>
 where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
     publication.turn_work=0;let before=receiving.actual_work();
+    let debug_branch=debug_apply_batch_branch(store,publication);semio_framework_value::debug_histogram::debug_unit(debug_branch);
     let result=advance_apply_batch_inner(store,publication,body,grant,turn_ceiling,receiving);
+    semio_framework_value::debug_histogram::debug_unit(match &result{Ok(ArtifactStoreOneItemAdvance::Blocked)=>"result.blocked",Ok(ArtifactStoreOneItemAdvance::PreparationProgress(..)|ArtifactStoreOneItemAdvance::Progress(_))=>"result.progress",Ok(ArtifactStoreOneItemAdvance::Published(..))=>"result.published",Ok(ArtifactStoreOneItemAdvance::PreparationRefused)=>"result.refused",Ok(_)=>"result.terminal",Err(_)=>"result.error"});
+    if let (Ok(ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt)),true)=(&result,debug_branch.starts_with("preflight.digest")){semio_framework_value::debug_histogram::debug_unit_add("digest.items",receipt.copied_items as u64);semio_framework_value::debug_histogram::debug_unit_add("digest.copy_bytes",receipt.copied_bytes as u64);}
     let observed=u64::try_from(receiving.actual_work().saturating_sub(before)).unwrap_or(u64::MAX);
     let coordination=match &result{Ok(ArtifactStoreOneItemAdvance::Blocked|ArtifactStoreOneItemAdvance::AwaitingAck(_)|ArtifactStoreOneItemAdvance::Complete)=>0,Ok(_)=>1,Err(_)=>0};
     let reported=publication.turn_work;publication.turn_work=reported.max(observed).max(coordination);
     publication.turn_work=semio_os_store_one_item::original_one_item_turn_work(reported,observed,coordination!=0).map_err(VcsError::InverseRefused)?;result
+}
+
+/// 🐛️ [DEBUG] Names the branch `advance_apply_batch_inner` is about to take, mirroring its dispatch order, for the temporary mutation-latency histogram.
+fn debug_apply_batch_branch<P,Mutation>(store:&StoreParts<'_,P,Mutation>,publication:&ArtifactStoreBatchPublication<P,Mutation>)->&'static str
+where P:semio_os_spr::StoreState,Mutation:semio_os_spr::StoreMutationFor<P>{
+    const SEAL:[&str;9]=["preflight.digest.seal.countStart","preflight.digest.seal.count","preflight.digest.seal.header","preflight.digest.seal.hashStart","preflight.digest.seal.hash","preflight.digest.seal.takeOwner","preflight.digest.seal.sourceClose","preflight.digest.seal.finalize","preflight.digest.seal.ready"];
+    let stage=publication.stage.as_ref();
+    match publication.phase{
+        ArtifactStoreOneItemPublicationPhase::Preparing if !publication.source_census_finished=>"apply.census",
+        ArtifactStoreOneItemPublicationPhase::Preparing if publication.item_closing=>if stage.is_some_and(|stage|stage.retiring.is_some()){"apply.item_close.retiring"}else{"apply.item_close.preparation"},
+        ArtifactStoreOneItemPublicationPhase::Preparing if stage.is_some_and(|stage|stage.folding.is_some())=>"apply.folding",
+        ArtifactStoreOneItemPublicationPhase::Preparing=>match publication.preparation.as_ref(){None if publication.source.as_ref().is_some_and(|source|source.remaining()==0)=>"apply.flip_cursor",None=>"apply.begin_next",Some(owner) if owner.prepared().is_none()=>"apply.preparation_loop",Some(_)=>"apply.fold"},
+        ArtifactStoreOneItemPublicationPhase::PreparingCursor=>"apply.cursor",
+        ArtifactStoreOneItemPublicationPhase::PreflightingCommit=>match stage{
+            Some(stage) if stage.digest_owner.is_some()=>{let owner=stage.digest_owner.as_ref().expect("digest owner checked");let bits=owner.witness()[0];
+                if owner.ready(){"preflight.digest.take"}else if owner.terminal_is_empty(){"preflight.digest.release"}
+                else if bits>>32==1{if bits&2!=0{"preflight.digest.admission"}else if bits&4!=0{"preflight.digest.seal_birth"}else if bits&1!=0{"preflight.digest.admit_edit"}else{"preflight.digest.other"}}
+                else if bits&(1<<8)!=0{"preflight.digest.seal.closing"}else if bits&(1<<9)!=0{"preflight.digest.seal.hashPending"}else{SEAL.get((bits&0xff)as usize).copied().unwrap_or("preflight.digest.other")}},
+            Some(stage) if !stage.digest_complete=>"preflight.begin_digest",
+            Some(stage) if (stage.diagnostics.row_count()==0&&!stage.diagnostics.terminal_is_empty())||(stage.diagnostics.row_count()!=0&&!stage.diagnostics.joined())=>"preflight.diagnostics",
+            _=>"preflight.flip",
+        },
+        ArtifactStoreOneItemPublicationPhase::Publishing if publication.outbound&&!publication.transaction_open&&batch_amend_target_ref(store,publication.transaction.as_ref()).is_none()&&store.log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some())=>match stage{Some(stage) if !stage.message_complete=>"publishing.message",Some(stage) if stage.commit_metadata.is_none()=>"publishing.metadata",_=>"publishing.commit"},
+        ArtifactStoreOneItemPublicationPhase::Publishing=>if stage.is_some_and(|stage|stage.diagnostics.row_count()!=0&&!stage.diagnostics.prepared()){"publishing.diagnostics"}else{"publishing.transfer"},
+        _=>"apply.terminal",
+    }
 }
 
 fn advance_apply_batch_inner<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, turn_ceiling: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
@@ -297,8 +326,11 @@ where
             if let Some(owner)=stage.digest_owner.as_mut(){
                 if owner.ready(){let Some((edit,digest,ownership))=owner.take_edit(grant.retained_grant()).map_err(refusal)?else{return Ok(blocked_here());};stage.edit=Some(edit);stage.digest=digest;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership));}
                 if owner.terminal_is_empty(){let released=size_of_val(owner.as_ref());if grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(blocked_here());}stage.digest_owner=None;stage.digest_complete=true;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));}
-                let work=owner.next_digest_work_demand().map_err(refusal)?;
-                let Some(step)=receiving.with_effect(grant.retained_grant(),work,|_,effect|owner.advance_digest(effect)).and_then(Option::transpose).map_err(refusal)? else{return Ok(blocked_here())};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
+                let(wide,narrow)=(owner.digest_window(grant.retained_grant()),owner.digest_window(RetainedCloneGrant::default()));
+                let(wide_work,narrow_work)=(owner.next_digest_work_demand(wide).map_err(refusal)?,owner.next_digest_work_demand(narrow).map_err(refusal)?);
+                let mut step=receiving.with_effect(grant.retained_grant(),wide_work,|_,effect|owner.advance_digest(wide,effect)).and_then(Option::transpose).map_err(refusal)?;
+                if step.is_none()&&wide_work>narrow_work{step=receiving.with_effect(grant.retained_grant(),narrow_work,|_,effect|owner.advance_digest(narrow,effect)).and_then(Option::transpose).map_err(refusal)?;}
+                let Some(step)=step else{return Ok(blocked_here())};let ownership=semio_framework_value::retained_clone::admit_retained_clone_progress(grant.retained_grant(),step.progress(),"original batch digest normal step").map_err(refusal)?;return Ok(if ownership==Default::default(){ArtifactStoreOneItemAdvance::Blocked}else{ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),ownership)});
             }
 
             let meta = stage.edit.as_ref().expect("live staged edit owner").mutation_meta.first().ok_or_else(|| VcsError::ValidationFailed("batched edit lacks its exact authority metadata".into()))?;
@@ -1076,9 +1108,6 @@ where
 
 
 /// 🩺️ Answers `Blocked` and names, once per process, the call site that did; compiled out of tests.
-#[track_caller]
 fn blocked_here() -> ArtifactStoreOneItemAdvance {
-    #[cfg(not(test))]
-    { static SEEN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false); if !SEEN.swap(true, std::sync::atomic::Ordering::Relaxed) { eprintln!("[DEBUG] batch blocked at {}", std::panic::Location::caller()); } }
     ArtifactStoreOneItemAdvance::Blocked
 }

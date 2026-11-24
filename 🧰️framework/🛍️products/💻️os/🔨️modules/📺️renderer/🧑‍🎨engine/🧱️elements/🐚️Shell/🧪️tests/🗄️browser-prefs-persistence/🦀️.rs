@@ -60,9 +60,11 @@ fn react_declared_storage_keys() -> std::collections::BTreeSet<String> {
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔑️chrome-prefs/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🌓️appearance/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗣️terminology/🟦️.tsx",
         "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🔌️extension-runtime/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🔩️plumbing/👥️presence-identity/🟦️.ts",
     ];
     let mut keys = std::collections::BTreeSet::new();
@@ -359,11 +361,11 @@ fn the_browser_preference_lane_is_the_page_door() {
     assert!(!shell.contains("\"localStorage\""), "nothing in the shell reaches a localStorage binding directly any more");
     assert!(shell.contains("        host_storage_get(key)\n"), "`raw_prefs_get`'s browser arm reads the page-seeded store");
     assert!(shell.contains("    host_storage_set(key, value);\n"), "`raw_prefs_set`'s browser arm writes through the door");
-    assert!(shell.contains("#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuSetHostStorage)]"), "the seeding hook is exported to both page doors");
-    assert!(shell.contains("crate::spawn_app_task(async move {"), "the write-through is fire-and-forget: a preference write must never fault a surface");
+    assert!(wgpu_target_source("🧊️renderer/🦀️.rs").contains("#[wasm_bindgen(js_name = semioWgpuSetHostStorage)]"), "the seeding hook is exported to both page doors");
+    assert!(shell.contains("semio_renderer_wgpu_host_base::spawn_app_task(async move {"), "the write-through is fire-and-forget: a preference write must never fault a surface");
 
     let load = shell.split("fn advance_chrome_maintenance_step").nth(1).expect("the chrome I/O lane");
-    let load = &load[..load.find("fn advance_chrome_preferences_load_step").expect("the lane ends at the load step")];
+    let load = &load[..load.find("fn advance_presence_preview_step").expect("the lane ends at the presence preview step")];
     assert!(load.contains("stored_field_get(&key)") && load.contains("stored_field_set(&key, \"true\")"), "the tour's seen flag is a FLAT key, the way `readStoredIntroductionSeen` reads it");
     assert!(!load.contains("prefs_get_bounded") && !load.contains("prefs_set_bounded"), "the nested-field accessors that hid both flat keys from React are gone");
 }
@@ -378,7 +380,7 @@ fn every_page_door_hands_the_census_across() {
     assert!(host_io.contains("wgpuHostStorageCarriesKey(request.key)"), "and refuses anything outside the census");
     assert!(host_io.contains("request.scope === \"session\" ? globalThis.sessionStorage : globalThis.localStorage"), "both of React's stores, addressed by scope");
 
-    let worker = wgpu_target_source("🎞️frame-worker/🟦️.ts");
+    let worker = format!("{}\n{}", wgpu_target_source("🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts"), wgpu_target_source("🎞️frame-worker/📨️receive/🟦️.ts"));
     let environment = worker.split("ownedStep(\"runtime-environment\"").nth(1).expect("the owned boot step");
     assert!(
         environment[..environment.find("progress(\"plugin-graph\"").expect("the step ends before the plugin graph")].contains("semioWgpuSetHostStorage?.(JSON.stringify(message.storage))"),
@@ -388,7 +390,7 @@ fn every_page_door_hands_the_census_across() {
 
     let boot = wgpu_target_source("🚀️browser-boot/🟦️.ts");
     assert!(boot.contains("import { mountWgpuBrowserHost } from \"../🌐️browser-host/🟦️.ts\";"), "the trunk page mounts the canonical browser host");
-    assert!(boot.contains("await mountWgpuBrowserHost(root, { descriptor, locale, mountId: \"root\", pageBindings: true });"), "the page admits bindings through the same host");
+    assert!(boot.contains("locale, mountId: \"root\", pageBindings: true });"), "the page admits bindings through the same host");
     let host = wgpu_target_source("🌐️browser-host/🟦️.ts");
     assert!(host.contains("return readWgpuHostStorageSnapshot(window);"), "the canonical host reads the page census");
     assert!(host.contains("storage: hostStorage()"), "the trunk page reads the census into the boot message");
@@ -396,7 +398,7 @@ fn every_page_door_hands_the_census_across() {
 
     let embedded = wgpu_target_source("🎬️renderer-boot/🟦️.ts");
     assert!(embedded.contains("import { mountWgpuBrowserHost, type WgpuBrowserMount, type WgpuBootProgress } from \"../🌐️browser-host/🟦️.ts\";"), "the embeddable door imports the same canonical page host");
-    assert!(embedded.contains("return mountWgpuBrowserHost(root, { descriptor, locale, mountId: rootId,"), "the embeddable door hands its actual mount and descriptor to that host");
+    assert!(embedded.contains("descriptor, locale, mountId: rootId,"), "the embeddable door hands its actual mount and descriptor to that host");
     assert!(host.contains("storage: hostStorage()"), "the shared host seeds the embeddable worker from the same page census");
 }
 //#endregion 🚪️Wiring

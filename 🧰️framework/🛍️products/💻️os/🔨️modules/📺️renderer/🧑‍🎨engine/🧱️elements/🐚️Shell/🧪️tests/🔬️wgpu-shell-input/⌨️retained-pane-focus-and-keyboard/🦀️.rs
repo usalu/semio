@@ -18,7 +18,6 @@ fn retained_pane_actions_address_the_concrete_window_before_guest_admission() {
         if surface != owner {
             assert!(!shell.windows.active_utility_by_window.contains_key(surface), "{} pane identity never becomes an application window", case["kind"]);
         }
-        std::mem::take(&mut shell.docs.session.as_mut().expect("the host fixture session").view_state.active_utility_by_window_id).retire_cold();
     }
 }
 
@@ -66,7 +65,8 @@ fn retained_panel_focus_routes_keyboard_without_activating_an_application_window
     let mut shell = retained_focus_panel_shell(surface);
     shell.windows.active_window_id = Some(previous.into());
     let mut document = shell.windows.publish_surface_records(surface, pane_owner_select_records()).unwrap();
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
     let focused = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
     let active = shell.windows.active_window_id.clone();
@@ -83,6 +83,7 @@ fn retained_panel_focus_routes_keyboard_without_activating_an_application_window
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
     let closed_actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     while !document.close_step() {}
+    turns.finish();
     assert!(focused);
     assert_eq!(active.as_deref(), Some(previous));
     assert_eq!(open_focus.as_deref(), Some(surface));
@@ -98,13 +99,14 @@ fn same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus
     let surface = "focus-lifecycle-keyed-successor";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("stable-select", "system")).expect("initial keyed document publishes");
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "stable-select").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     let before = SessionCtx::of(&mut shell).retained_keyboard_focus().expect("the initial keyed node owns keyboard focus");
 
     let mut successor = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("stable-select", "dark")).expect("same-surface successor publishes");
-    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     let after = SessionCtx::of(&mut shell).retained_keyboard_focus().expect("the keyed successor retains keyboard focus");
     assert_eq!(after, before, "key reconciliation preserves the exact focused node identity");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
@@ -113,6 +115,7 @@ fn same_surface_keyed_successor_retains_keyboard_focus_without_a_synthetic_focus
     assert_eq!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
     while !initial.close_step() {}
     while !successor.close_step() {}
+    turns.finish();
 }
 
 #[test]
@@ -121,19 +124,21 @@ fn successor_that_removes_the_focused_key_cannot_receive_retained_keyboard_input
     let surface = "focus-lifecycle-removed-key";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("retired-select", "system")).expect("initial removable document publishes");
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "retired-select").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_some());
 
     let mut successor = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("replacement-select", "dark")).expect("replacement document publishes");
-    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     assert!(shell.chrome.chrome_build.content_has_focus(surface), "the shell receives no invented blur command");
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_none(), "the removed focused node generation cannot route into its replacement");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).unwrap();
     assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement receives no keyboard action without its own focus event");
     while !initial.close_step() {}
     while !successor.close_step() {}
+    turns.finish();
 }
 
 #[test]
@@ -142,19 +147,21 @@ fn same_key_changed_control_kind_cannot_inherit_retained_keyboard_focus() {
     let surface = "focus-lifecycle-changed-kind";
     let mut shell = retained_focus_panel_shell(surface);
     let mut initial = shell.windows.publish_surface_records(surface, pane_owner_select_records_with("polymorphic-control", "system")).expect("initial Select document publishes");
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &initial, Rect::new(0.0, 0.0, 320.0, 120.0));
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "polymorphic-control").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_some());
 
     let mut successor = shell.windows.publish_surface_records(surface, pane_owner_input_records_with("polymorphic-control")).expect("same-key Input successor publishes");
-    input = paint_tree_pointer_document(&mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
+    input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &successor, Rect::new(0.0, 0.0, 320.0, 120.0));
     assert!(shell.chrome.chrome_build.content_has_focus(surface), "document reconciliation emits no synthetic blur");
     assert!(SessionCtx::of(&mut shell).retained_keyboard_focus().is_none(), "a same-key replacement control kind cannot inherit its predecessor's focus");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).unwrap();
     assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the replacement Input receives no Enter commit without its own focus event");
     while !initial.close_step() {}
     while !successor.close_step() {}
+    turns.finish();
 }
 
 #[test]
@@ -170,7 +177,8 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
         documents.push(document);
     }
     let paint_rows: Vec<_> = cases.iter().zip(documents.iter()).map(|(row, document)| (row["surface"].as_str().unwrap(), document, Rect::new(0.0, 0.0, 320.0, 120.0))).collect();
-    let mut input = paint_tree_pointer_documents(&mut shell, &paint_rows);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_documents_in(&mut turns, &mut shell, &paint_rows);
     let mut observations = Vec::new();
     let mut previous: Option<String> = None;
     for kind in fixture["focusSequence"].as_array().unwrap() {
@@ -188,6 +196,7 @@ fn retained_pane_focus_follows_the_last_focus_event_and_ignores_an_old_surface_b
     for mut document in documents {
         while !document.close_step() {}
     }
+    turns.finish();
     for (kind, (accepted, owner, focus, old_has_focus)) in fixture["focusSequence"].as_array().unwrap().iter().zip(observations) {
         let row = cases.iter().find(|row| &row["kind"] == kind).unwrap();
         assert!(accepted);
@@ -232,7 +241,8 @@ fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distin
         let records = pane_owner_select_records();
         let mut shell = host_test_shell();
         let mut document = shell.windows.publish_surface_records(surface, records).expect("pane document publishes");
-        let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+        let mut turns = PointerFixtureTurns::default();
+        let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
         shell.windows.active_window_id = Some(fixture["previousWindow"].as_str().unwrap().into());
         let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "pane-owner-select").expect("the published pane exposes its exact accessible address");
         let focused = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap();
@@ -240,6 +250,7 @@ fn retained_pane_accessibility_and_keyboard_focus_keep_surface_and_window_distin
         let keyboard_surface = SessionCtx::of(&mut shell).retained_keyboard_focus().map(|(surface, _)| surface);
         let select_owns_keyboard = SessionCtx::of(&mut shell).retained_select_owns_keyboard();
         while !document.close_step() {}
+        turns.finish();
         assert!(focused, "{} accessibility focus dispatch", case["kind"]);
         assert_eq!(active.as_deref(), Some(owner), "{} active window", case["kind"]);
         assert_eq!(keyboard_surface.as_deref(), Some(surface), "{} keyboard surface", case["kind"]);
@@ -289,7 +300,8 @@ fn accessibility_focus_arms_shell_select_space_and_typeahead_routing() {
     .unwrap();
     let mut shell = host_test_shell();
     let mut document = shell.windows.publish_surface_records(surface, records).expect("Select surface publishes");
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, Rect::new(0.0, 0.0, 320.0, 120.0));
     shell.windows.active_window_id = Some(surface.to_string());
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(surface, "framework.settings.appearance").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
@@ -309,4 +321,5 @@ fn accessibility_focus_arms_shell_select_space_and_typeahead_routing() {
     assert_eq!(typed.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["setAppearance"]);
     assert_eq!(typed[0].args.as_ref().and_then(|args| args.get("value")).and_then(DslValue::as_str), Some("dark"));
     while !document.close_step() {}
+    turns.finish();
 }

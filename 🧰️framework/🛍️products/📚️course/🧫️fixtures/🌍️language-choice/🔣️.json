@@ -1,6 +1,6 @@
 {
   "schema": "semio.course.language-choice/v1",
-  "description": "No default language. A course client offers its languages in a fixed order (English, then German). The language it speaks is the learner's stored choice; without one, the first tag of the browser's language list (BCP 47, preference order, case-insensitive) whose primary language subtag is offered is preselected; when the list names no offered language nothing is assumed: the client shows only a chooser with every offered language in its own language, the document names no language (no `lang` on the root element, each part tagged) and the title is the word for language in every offered language joined by ' · '. Once a language is known, the root element's `lang`, the document title ('<screen> · <course title>', the loading text until the course arrived) and every text follow it.",
+  "description": "No default language. A course client offers its languages in a fixed order (English, then German). The language it speaks is the learner's stored choice; without one, the language the site names as its own (a BCP 47 tag ahead of the browser's list) when the client offers it; without that, the first tag of the browser's language list (BCP 47, preference order, case-insensitive) whose primary language subtag is offered is preselected; when the list names no offered language nothing is assumed: the client shows only a chooser with every offered language in its own language, the document names no language (no `lang` on the root element, each part tagged) and the title is the word for language in every offered language joined by ' · '. Once a language is known, the root element's `lang`, the document title ('<screen> · <course title>', the loading text until the course arrived) and every text follow it.",
   "offered": ["en", "de"],
   "preselections": [
     { "browser": ["de-CH", "en-US"], "locale": "de" },
@@ -13,6 +13,17 @@
     { "browser": ["nds-DE", "sv"], "locale": null },
     { "browser": ["den", "eng"], "locale": null },
     { "browser": [], "locale": null }
+  ],
+  "sites": [
+    { "site": "de", "browser": ["en-US", "de"], "locale": "de" },
+    { "site": "de", "browser": ["fr-FR", "it"], "locale": "de" },
+    { "site": "de", "browser": [], "locale": "de" },
+    { "site": "en", "browser": ["de-CH"], "locale": "en" },
+    { "site": "de-AT", "browser": ["en"], "locale": "de" },
+    { "site": "fr", "browser": ["en-GB", "de"], "locale": "en" },
+    { "site": "fr", "browser": ["it"], "locale": null },
+    { "site": null, "browser": ["de-CH", "en-US"], "locale": "de" },
+    { "site": null, "browser": [], "locale": null }
   ],
   "neutral": {
     "title": "Language · Sprache",

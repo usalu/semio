@@ -1,6 +1,19 @@
 //! 🗂️ Natural file and media artifacts: the natural file codec, decode steps and cursors, the mounted natural file actions, the media artifact descriptor, errors and operation failures, the document load fault codes and the media fault helpers. See [`super`].
 
-use super::*;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+
+use pack::snapshot::ArtifactPack;
+use semio_framework::kernel::{Effect, UiDirtyScope};
+use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, AppDefinition, ArgPresentation, CapabilityAudience, Fault, FaultCode, FaultOrigin, Media, MediaError, MediaPayload, MediaType, MediaWireFormat, OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::{DslValue, RetirementDemand, ValueError};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_plugin_decl_emission::Emit;
+use semio_plugin_decl_media::media_intrinsic::media_projection_error;
+use semio_plugin_decl_media::media_operation_refusal;
+use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
+use semio_ui_locale::LocalizedLabel;
 
 /// 📄️ One editor-owned natural-file codec, matched exactly to its declared representation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -34,7 +47,42 @@ pub trait NaturalFileDecodeCursor<T>: Send {
     fn close_step(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError>;
     fn retirement_demands(&self, body:usize) -> Result<RetirementDemand,ValueError>;
     fn terminal_is_empty(&self) -> bool;
+
+    /// 🧹️ Chains quoted close actions inside one funded effect: every action runs against what the turn's retirement grant still owns, so a turn retires as much as its grant, fuel and work admit instead of one action.
+    fn close_chained(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError> {
+        use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneProgress};
+        let grant = effect.grant();
+        let left = |total: RetainedCloneProgress| RetainedCloneGrant {
+            maximum_items: grant.maximum_items.saturating_sub(total.copied_items),
+            maximum_copy_bytes: grant.maximum_copy_bytes.saturating_sub(total.copied_bytes),
+            maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(total.retained_capacity_bytes),
+            maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(total.released_bytes),
+            maximum_depth: grant.maximum_depth,
+        };
+        let mut total = RetainedCloneProgress::default();
+        for _ in 0..NATURAL_CLOSE_CHAIN_ACTIONS {
+            let work_before = effect.performed_work();
+            let quoted = self.retirement_demands(left(total).maximum_copy_bytes)?;
+            let step = { let mut nested = effect.nested(left(total)); self.close_step(&mut nested)? };
+            let complete = matches!(step, PluginLifecycleStep::Complete(_));
+            let progress = match &step { PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => *progress, _ => RetainedCloneProgress::default() };
+            let requoted = self.retirement_demands(left(total).maximum_copy_bytes)?;
+            let moved = progress != RetainedCloneProgress::default() || effect.performed_work() != work_before || requoted != quoted;
+            total = RetainedCloneProgress {
+                copied_items: total.copied_items + progress.copied_items, copied_bytes: total.copied_bytes + progress.copied_bytes,
+                retained_capacity_bytes: total.retained_capacity_bytes + progress.retained_capacity_bytes, released_bytes: total.released_bytes + progress.released_bytes,
+            };
+            if complete { return Ok(PluginLifecycleStep::Complete(total)); }
+            if !moved || self.terminal_is_empty() || effect.remaining_work_units()? < 2 { break; }
+            let next = left(total);
+            if next.maximum_items == 0 || !retained_clone_grant_admits(next, self.retirement_demands(next.maximum_copy_bytes)?) { break; }
+        }
+        Ok(PluginLifecycleStep::Progress(total))
+    }
 }
+
+/// 🧹️ Upper bound of chained close actions one decoder takes inside a single turn.
+const NATURAL_CLOSE_CHAIN_ACTIONS: usize = 1 << 14;
 
 /// 📦️ Exact owner chosen by an editor for natural-file decoding.
 pub enum NaturalFileDecodeOwner<T> {
@@ -158,9 +206,9 @@ impl semio_framework_job::OriginalDomainProjection for MediaArtifactError{
  fn projection_identity(&self)->usize{self as*const Self as usize}
  fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,ValueError>{use semio_framework_job::OriginalDomainView as V;match path{
   []=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::IntrinsicText(match self{Self::Payload(_)=>"payload",Self::Value(_)=>"value",Self::Export(_)=>"export",Self::Import(_)=>"import",Self::SchemaMismatch{..}=>"schemaMismatch",Self::NoImporter(_)=>"noImporter"})),
-  [1,rest @ ..]=>match self{Self::Payload(message)|Self::NoImporter(message)if rest.is_empty()=>Ok(V::IntrinsicText(message)),Self::Value(error)=>semio_framework_job::project_original_value_error(error,rest),Self::Import(error)=>semio_framework_job::project_original_fault(error,rest),Self::Export(error)=>crate::media_operation_refusal::project_media_error(error,rest),Self::SchemaMismatch{expected,found}=>match rest{[]=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::IntrinsicText(expected)),[1]=>Ok(V::IntrinsicText(found)),_=>Err(media_projection_error())},_=>Err(media_projection_error())},_=>Err(media_projection_error())
+  [1,rest @ ..]=>match self{Self::Payload(message)|Self::NoImporter(message)if rest.is_empty()=>Ok(V::IntrinsicText(message)),Self::Value(error)=>semio_framework_job::project_original_value_error(error,rest),Self::Import(error)=>semio_framework_job::project_original_fault(error,rest),Self::Export(error)=>media_operation_refusal::project_media_error(error,rest),Self::SchemaMismatch{expected,found}=>match rest{[]=>Ok(V::IntrinsicObject(2)),[0]=>Ok(V::IntrinsicText(expected)),[1]=>Ok(V::IntrinsicText(found)),_=>Err(media_projection_error())},_=>Err(media_projection_error())},_=>Err(media_projection_error())
  }}
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{[]=>["kind","original"].get(index).copied().ok_or_else(media_projection_error),[1,rest @ ..]=>match self{Self::Value(error)=>semio_framework_job::key_original_value_error(error,rest,index),Self::Import(error)=>semio_framework_job::key_original_fault(error,rest,index),Self::Export(error)=>crate::media_operation_refusal::key_media_error(error,rest,index),Self::SchemaMismatch{..}if rest.is_empty()=>["expected","found"].get(index).copied().ok_or_else(media_projection_error),_=>Err(media_projection_error())},_=>Err(media_projection_error())}}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{match path{[]=>["kind","original"].get(index).copied().ok_or_else(media_projection_error),[1,rest @ ..]=>match self{Self::Value(error)=>semio_framework_job::key_original_value_error(error,rest,index),Self::Import(error)=>semio_framework_job::key_original_fault(error,rest,index),Self::Export(error)=>media_operation_refusal::key_media_error(error,rest,index),Self::SchemaMismatch{..}if rest.is_empty()=>["expected","found"].get(index).copied().ok_or_else(media_projection_error),_=>Err(media_projection_error())},_=>Err(media_projection_error())}}
 }
 
 /// 🧳️ Preserves media artifact domain refusals beside complete initiating turn failures.

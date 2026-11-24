@@ -1,12 +1,12 @@
 //! 📈️ Design-point diagrams: the sheet pile M–V interaction, the bridge S–N curve with the damage-equivalent range, the crane runway wheel position envelope, the plated panel ρ(λ̄_p) curve, one stacked load-case diagram per load case, the N, V and M courses along every frame bar and the utilisation ladder of every collection that has no dedicated curve.
 
-use super::super::checks::clauses::{bridge_fatigue, crane_runway, effective_width, sheet_piling, toughness};
-use super::super::checks::{frame_envelope, frame_eigen, joint_frame, part_1_1, part_2, part_3, toughness_point, tower_design_point, AnnexParams};
-use super::super::model::{SteelMember, BridgeFatigue, TowerLeg, CraneRunway, En1993Snapshot, LoadCase, PlatedPanel, SheetPileEnvironment, SteelPile};
-use super::super::norm::{CheckReport, CheckResult};
-use super::super::scene::diagram_kit::{sn_curves, Xy};
-use super::super::scene::projection_kit::diagram_parts::{axis, column, stroke};
-use super::super::scene::*;
+use crate::checks::clauses::{bridge_fatigue, crane_runway, effective_width, sheet_piling, toughness};
+use crate::checks::{frame_envelope, frame_eigen, joint_frame, part_1_1, part_2, part_3, toughness_point, tower_design_point, AnnexParams};
+use crate::model::{SteelMember, BridgeFatigue, TowerLeg, CraneRunway, En1993Snapshot, LoadCase, PlatedPanel, SheetPileEnvironment, SteelPile};
+use crate::norm::{CheckReport, CheckResult};
+use crate::scene::diagram_kit::{sn_curves, Xy};
+use crate::scene::projection_kit::diagram_parts::{axis, column, stroke};
+use crate::scene::*;
 
 const SAMPLES: usize = 40;
 
@@ -15,7 +15,7 @@ fn loc(en: &str, de: &str) -> LocalizedCopy {
 }
 
 fn tone(ratio: f64) -> Tone {
-    super::super::scene::utilisation_tone(ratio)
+    crate::scene::utilisation_tone(ratio)
 }
 
 fn worst(report: &CheckReport, entity: &str, prefix: &str) -> f64 {
@@ -147,7 +147,7 @@ fn load_case_bars(d: &En1993Snapshot, case: &LoadCase) -> Vec<Diagram2d> {
     if actions.is_empty() {
         return Vec::new();
     }
-    let build = |key: &str, en: &str, de: &str, unit: &str, kind: QuantityKind, value: &dyn Fn(&super::super::model::MemberAction) -> f64| -> Option<Diagram2d> {
+    let build = |key: &str, en: &str, de: &str, unit: &str, kind: QuantityKind, value: &dyn Fn(&crate::model::MemberAction) -> f64| -> Option<Diagram2d> {
         let values: Vec<f64> = actions.iter().map(|a| value(a)).collect();
         let peak = values.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
         if peak <= 0.0 {
@@ -170,7 +170,7 @@ fn load_case_bars(d: &En1993Snapshot, case: &LoadCase) -> Vec<Diagram2d> {
     [build("n", "Axial force N", "Normalkraft N", "kN", QuantityKind::Force, &|a| a.action.n / 1e3), build("my", "Bending moment M_y", "Biegemoment M_y", "kN·m", QuantityKind::Moment, &|a| a.action.my / 1e3)].into_iter().flatten().collect()
 }
 
-fn frame_course(bar: &super::super::model::FrameBar, key: &str, en: &str, de: &str, unit: &str, kind: QuantityKind, first: &[frame_eigen::Station], second: &[frame_eigen::Station], amplified: Option<&[frame_eigen::Station]>, pick: &dyn Fn(&frame_eigen::Station) -> f64) -> Option<Diagram2d> {
+fn frame_course(bar: &crate::model::FrameBar, key: &str, en: &str, de: &str, unit: &str, kind: QuantityKind, first: &[frame_eigen::Station], second: &[frame_eigen::Station], amplified: Option<&[frame_eigen::Station]>, pick: &dyn Fn(&frame_eigen::Station) -> f64) -> Option<Diagram2d> {
     let curve = |stations: &[frame_eigen::Station]| -> Vec<Vec2> { stations.iter().map(|s| Vec2::new(s.x, pick(s) * 1e-3)).collect() };
     let (a, b) = (curve(first), curve(second));
     let c = amplified.map(curve);
@@ -251,7 +251,7 @@ fn polyline_of(id: String, label: LocalizedCopy, stations: &[frame_eigen::Statio
     Series::Polyline { id, label, points: stations.iter().map(|s| Vec2::new(s.x, pick(s) * 1e-3)).collect(), style: stroke(tone, 2.0, dash) }
 }
 
-fn frame_set_diagram(bar: &super::super::model::FrameBar, key: &str, (en, de, unit, kind): (&str, &str, &str, QuantityKind), suffix: &str, scope: (LocalizedCopy, LocalizedCopy), lines: Vec<Series>, columns: Vec<DataColumn>, peak: f64, length: f64) -> Option<Diagram2d> {
+fn frame_set_diagram(bar: &crate::model::FrameBar, key: &str, (en, de, unit, kind): (&str, &str, &str, QuantityKind), suffix: &str, scope: (LocalizedCopy, LocalizedCopy), lines: Vec<Series>, columns: Vec<DataColumn>, peak: f64, length: f64) -> Option<Diagram2d> {
     if peak <= 0.0 || length <= 0.0 {
         return None;
     }
@@ -430,16 +430,16 @@ fn ladder(report: &CheckReport, collection: &str, id: &str) -> Option<Diagram2d>
     ladder_of(rows, format!("ladder:{collection}:{id}"), collection, id, ("Check utilisation", "Nachweisausnutzung"))
 }
 
-/// 📊️ The outcome diagram `check-outcomes:<row>` of every row outside [`LADDER_COLLECTIONS`](super::super::kit::LADDER_COLLECTIONS) that owns checks of a family no dedicated diagram draws: one bar per such check against the limit at 1, routed through [`owner_entity`](super::super::kit::owner_entity).
+/// 📊️ The outcome diagram `check-outcomes:<row>` of every row outside [`LADDER_COLLECTIONS`](crate::kit::LADDER_COLLECTIONS) that owns checks of a family no dedicated diagram draws: one bar per such check against the limit at 1, routed through [`owner_entity`](crate::kit::owner_entity).
 fn family_outcomes(d: &En1993Snapshot, report: &CheckReport, wanted: &dyn Fn(&str) -> bool) -> Vec<Diagram2d> {
     let mut rows: std::collections::BTreeMap<String, Vec<&CheckResult>> = std::collections::BTreeMap::new();
-    for check in report.checks.iter().filter(|c| c.utilization.is_finite() && c.status != super::super::norm::CheckStatus::NotApplicable && super::super::kit::is_outcome_check(&c.id)) {
-        if let Some(id) = super::super::kit::owner_entity(d, check).filter(|id| wanted(id)) {
+    for check in report.checks.iter().filter(|c| c.utilization.is_finite() && c.status != crate::norm::CheckStatus::NotApplicable && crate::kit::is_outcome_check(&c.id)) {
+        if let Some(id) = crate::kit::owner_entity(d, check).filter(|id| wanted(id)) {
             rows.entry(id).or_default().push(check);
         }
     }
     rows.into_iter().filter_map(|(id, checks)| {
-        let spec = super::super::kit::entity_kind_of(d, &id).filter(|k| !super::super::kit::LADDER_COLLECTIONS.contains(&k.collection))?;
+        let spec = crate::kit::entity_kind_of(d, &id).filter(|k| !crate::kit::LADDER_COLLECTIONS.contains(&k.collection))?;
         ladder_of(checks, format!("check-outcomes:{id}"), spec.collection, &id, ("Check outcomes without a dedicated diagram", "Nachweisergebnisse ohne eigenes Diagramm"))
     }).collect()
 }

@@ -87,12 +87,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
         let raw = semio_framework_pack_json::to_json_string(&(action, args.cloned())).into_bytes();
         let work_items = self.framework_reserved_work_items(action, args).await?;
-        let Some(permit)=self.as_dispatch().admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx).await?else{return Ok(None)};
-        let mut job = permit.operation.operation.0;
-        self.pending.retire_pending_reserved_latest_wins(action, job);
-        assert!(self.pending.pending_reserved.can_insert(job),"original reserved admission seals its exact vacant spawn slot");
-        self.pending.pending_reserved.insert_admitted(job, PendingFrameworkReserved { action: action.to_string(), args: args.cloned(), meta: meta.clone(), permit });
-        self.tools.release_reserved_emit_slot(job);
+        let job = if let Some(job) = self.pending.superseded_reserved_interaction(action, meta, self.stores.store.generation_now()) {
+            self.pending.pending_reserved.get_mut(job).ok_or_else(|| plugin_sdk_fault("superseded reserved interaction lost its pending slot"))?.args = args.cloned();
+            job
+        } else {
+            let Some(permit)=self.as_dispatch().admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx).await?else{return Ok(None)};
+            let job = permit.operation.operation.0;
+            self.pending.retire_pending_reserved_latest_wins(action, job);
+            assert!(self.pending.pending_reserved.can_insert(job),"original reserved admission seals its exact vacant spawn slot");
+            self.pending.pending_reserved.insert_admitted(job, PendingFrameworkReserved { action: action.to_string(), args: args.cloned(), meta: meta.clone(), permit });
+            self.tools.release_reserved_emit_slot(job);
+            job
+        };
         let mut admitted = ToolOperations::<A>::empty_result(action, meta, vec![Effect::SpawnJob { job, kind: FRAMEWORK_RESERVED_JOB_KIND.into(), input: encode_framework_reserved_job_input(work_items as u64, &raw), placement: semio_framework::kernel::JobPlacement::Isolated }], Vec::new(), UiDirtyScope::None)
         .await;
         admitted.output = DslValue::Object(vec![("operationId".into(), DslValue::String(job.to_string())), ("generation".into(), DslValue::String(self.stores.store.generation().to_string()))]);

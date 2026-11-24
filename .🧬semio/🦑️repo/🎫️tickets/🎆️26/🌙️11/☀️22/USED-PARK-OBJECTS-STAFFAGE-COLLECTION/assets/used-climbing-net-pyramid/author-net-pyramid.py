@@ -1022,3 +1022,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch R2-O, the last step: ops/used-climbing-net-pyramid.json of the umbrella ticket of 2026-11-22
+    import importlib.util as _util
+    from pathlib import Path as _Path
+    _spec = _util.spec_from_file_location("silhouette_r2o_lib", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/R2-O/lib.py")
+    _r2o = _util.module_from_spec(_spec)
+    _spec.loader.exec_module(_r2o)
+    _r2o.repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-climbing-net-pyramid")

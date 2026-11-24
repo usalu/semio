@@ -66,6 +66,7 @@ semio-os-kernel = { workspace = true }
 semio-plugin-host-codec = { path = "../../🔀️post-turn-relay/🧬️codec/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+wit-parser = "=0.252.0"
 semio-plugin-host-operation = { path = "../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-wit = { path = "../../🔗️wit-bindings/📦️packages/🦀️rust" }
 semio-plugin-host-engine = { path = "../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }

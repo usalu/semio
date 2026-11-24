@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust" }
+semio-plugin-testing-instance-laws = { path = "../../../../🧪️testing/🧪️artifact-app-instance-laws/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

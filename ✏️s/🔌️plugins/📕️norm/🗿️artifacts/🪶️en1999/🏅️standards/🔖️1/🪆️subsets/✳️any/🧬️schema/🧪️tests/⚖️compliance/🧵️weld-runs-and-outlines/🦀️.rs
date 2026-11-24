@@ -7,7 +7,7 @@ use semio_s_artifact_norm_en1999_model::{AluminiumSection, En1999Snapshot, Fatig
 fn close(a: f64, b: f64, rel: f64) -> bool { (a - b).abs() <= rel * b.abs().max(1e-12) }
 
 fn run(id: &str, member: &str, element: &str, direction: &str) -> WeldRun {
-    WeldRun { id: id.into(), member_id: member.into(), element_id: element.into(), start: 0.5, length: 1.0, offset: 0.01, throat: 0.004, process: semio_s_artifact_norm_en1999_model::WeldProcess::Mig, t_junction: false, direction: direction.into(), haz_extent: 0.0 }
+    WeldRun { id: id.into(), member_id: member.into(), element_id: element.into(), start: 0.5, length: 1.0, offset: 0.01, throat: 0.004, process: semio_s_artifact_norm_en1999_model::WeldProcess::Mig, t_junction: false, direction: match direction { "longitudinal" => semio_s_artifact_norm_en1999_model::WeldDirection::Longitudinal, "transverse" => semio_s_artifact_norm_en1999_model::WeldDirection::Transverse, other => panic!("unknown weld direction {other}") }, haz_extent: 0.0 }
 }
 
 fn vertex(id: &str, section: &str, ring: &str, element: &str, y: f64, z: f64) -> SectionVertex {
@@ -99,7 +99,7 @@ fn a_haz_wider_than_its_element_fails_by_the_shared_status_rule_and_never_warns(
 fn a_run_with_unknown_member_element_or_geometry_fails_with_a_remedy() {
     let mut doc = En1999Snapshot::compliant_roof_purlin();
     let member = doc.members[0].id.clone();
-    let mut bad = run("bad", "nobody", "nothing", "diagonal");
+    let mut bad = run("bad", "nobody", "nothing", "longitudinal");
     bad.throat = 0.0;
     doc.weld_runs.push(bad);
     let mut long = run("long", &member, &doc.sections[0].elements[0].id, "longitudinal");
@@ -174,7 +174,8 @@ fn a_run_haz_extent_override_scales_the_haz_strip_of_the_section() {
     assert!(alloy.rho_o_haz < 1.0);
     let mut weld = run("h", &member.id, &section.elements[0].id, "longitudinal");
     weld.offset = 0.0;
-    let (_, s) = resolved(member, section, &[&weld]);
+    let (_, mut s) = resolved(member, section, &[&weld]);
+    s.elements.iter_mut().skip(1).for_each(|e| e.welded = false);
     let element = &s.elements[0];
     let table = part_1_1::haz_width_for(element);
     assert!(table < element.width, "the table strip lies inside the element");
@@ -264,6 +265,7 @@ fn doc_flange_thickness() -> f64 { En1999Snapshot::compliant_roof_purlin().secti
 #[test]
 fn a_member_on_a_free_i_outline_gets_shear_torsion_and_ltb_like_the_parametric_section() {
     let mut parametric = En1999Snapshot::compliant_roof_purlin();
+    parametric.sections[0].elements.iter_mut().for_each(|e| e.welded = false);
     parametric.members[0].actions[0].torsion_k = 800.0;
     let section = parametric.sections[0].clone();
     let member = parametric.members[0].id.clone();

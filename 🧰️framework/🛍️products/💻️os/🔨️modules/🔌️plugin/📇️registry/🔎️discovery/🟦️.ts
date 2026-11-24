@@ -295,6 +295,16 @@ export function parseComponentSourceOwnerV1(manifestPath: string, repoRoot: stri
     ...(extendsHost ? { extends: extendsHost } : {}), ...(host ? { host } : {}) });
 }
 
+/** ⏳️ The activation events a crate AUTHORS in `[package.metadata.semio].activates-on` (`on-node-kind:brep`): catalog-level events a
+ * plugin has no descriptor-declared WIT event for, merged with the descriptor's own events into one `activationEvents` column.
+ * A non-empty list defers the plugin to on-demand activation instead of the boot closure. */
+export function parseSemioActivatesOn(semioText: string, manifestPath: string): string[] {
+  const events = parseTomlStringArray(semioText, "activates-on");
+  for (const event of events) if (!/^on-[a-z-]+:[^\s\u0000-\u001f\u007f]+$/u.test(event)) throw new Error(`${manifestPath} metadata.semio.activates-on holds the malformed activation event ${JSON.stringify(event)}`);
+  if (new Set(events).size !== events.length) throw new Error(`${manifestPath} metadata.semio.activates-on repeats an activation event`);
+  return events;
+}
+
 /** 🛂️Reads a compiled descriptor only after admitting its exact source identity. */
 export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: string, view?: RegistryCatalogInputView): CompiledComponentOwnerV1 {
   const source = parseComponentSourceOwnerV1(manifestPath, repoRoot, view);
@@ -319,7 +329,9 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
     }
     const rawExtensionPoints = Array.isArray(descriptor.extensionPoints) ? descriptor.extensionPoints : [];
     extensionPoints = uniqueStrings(rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string"));
-    activationEvents = uniqueStrings(activationEvents);
+    const manifestText = view ? view.readText(relative(repoRoot, manifestPath).replaceAll("\\", "/")) : readFileSync(manifestPath, "utf8");
+    const authoredBlock = tomlBlocksAfterHeader(manifestText.split("\n"), (line) => line === "[package.metadata.semio]")[0];
+    activationEvents = uniqueStrings([...activationEvents, ...parseSemioActivatesOn(authoredBlock?.join("\n") ?? "", manifestPath)]);
     executionMode = typeof descriptor.execution === "string" ? descriptor.execution : undefined;
   }
   return parseCompiledComponentRowV1({ ...source, capabilities, contributes, activationEvents, extensionPoints,

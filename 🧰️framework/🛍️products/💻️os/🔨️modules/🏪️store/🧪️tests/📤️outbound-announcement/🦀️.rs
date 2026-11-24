@@ -96,6 +96,7 @@ async fn publish_outbound_gesture(store: &mut ArtifactStore<DemoSnapshot, DemoMu
     assert!(!store.flush_published_apply_batch(&mut publication).await.expect("a second flush is refused"), "a publication is announced once");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
+    assert!(!store.flush_published_apply_batch(&mut publication).await.expect("a closed publication has released its issuer and has nothing left to announce"));
 }
 
 #[semio_framework_async_macros::async_test]

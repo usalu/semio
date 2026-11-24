@@ -29,7 +29,7 @@ export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInput
 export function resetClosureEntriesV1(entryBytes?: number): void;
 export function mergeWalkMembersV1(table: { get(key: string): string[] | undefined; set(key: string, value: string[]): unknown }, digest: string, members: string[]): boolean;
 export function closureCollectionsV1(): { name: string; entries: number; bytes: number }[];
-export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number };
+export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number; fetched: number; reasked: number; reaskFailed: number; reaskEqual: number; reaskDifferent: number };
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
 export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean): void;
 export function closureApiV1(scripts: ScriptInputsValueV1, workspaceRoot: string): ScriptInputsValueV1;
@@ -56,7 +56,11 @@ export function releaseOwnerStateV1(scripts: ScriptInputsValueV1, options?: { sh
 /** 📈️ Whether a look releases the shared cache: the managed memory grew `lookReleaseGrowthBytes` beyond its lowest reading, or the host is short. */
 export function lookReleaseDueV1(lowestBytes: number, managedBytes: number, options?: { shrink?: boolean; limits?: { lookReleaseGrowthBytes: number } }): boolean;
 /** 🪤️ Runs a take look in which no closure entry is derived: a missing or stale entry ends it with `BUILD_TAKE_MISS`. */
-export function runClosureTakeV1<T>(body: () => Promise<T>, signal?: AbortSignal): Promise<T>;
+export function runClosureTakeV1<T>(body: () => Promise<T>, signal?: AbortSignal, options?: { reask?: true | ((workspaceRoot: string, recipe: unknown) => Promise<{ value: unknown; rows: unknown[]; layers: unknown[][] } | undefined>) }): Promise<T>;
+export function firstMovedRowOfEntryV1(entry: Readonly<{rows?: readonly unknown[]; layers?: readonly (readonly unknown[])[]; digests?: readonly string[]; store?: unknown}>, budgetMilliseconds?: number): Readonly<{kind: string; path: string; fact: unknown}> | undefined;
+export function closureFailureWhyV1(error: unknown, key: string): string;
+export const importRefusalsV1: Readonly<{get(id: string): Readonly<{kind: string; path: string; fact: unknown}> | null | undefined; has(id: string): boolean; set(id: string, row: Readonly<{kind: string; path: string; fact: unknown}> | null): boolean; delete(id: string): boolean; clear(): void; stats(): Readonly<{entries: number}>}>;
+export function rememberImportRefusalV1(id: string, bundle: Readonly<{rows?: readonly unknown[]}>): void;
 export function releaseAfterTakeLookV1(scripts: ScriptInputsValueV1 | undefined, options?: { shrink?: boolean; gate?: { grantBytes(): number | undefined; footprintBytes(): number } }): void;
 /** 🛃️ Walks every declared tool closure and provider port once and returns the refusals. */
 export function preflightToolClosuresV1(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<{ checked: number; refused: readonly { name: string; version: 1; code: string; key: string; values: Record<string, string | number> }[] }>;

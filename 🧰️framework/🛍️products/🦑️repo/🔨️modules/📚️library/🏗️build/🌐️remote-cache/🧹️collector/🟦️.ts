@@ -59,23 +59,55 @@ export function planRemoteCacheCollectionV1(rows:Iterable<RemoteCacheRowV1>,boun
  return drops;
 }
 
-/** 🧺️ One entry as the blob bound sees it: the blobs it references, how valuable it is (0 stale or unreached, 1 undeclared, 2 declared and live) and whether a claim, a write in flight or the grace guards it. */
-export type RemoteCacheBlobRowV1=Readonly<{key:string;accessed:number;tier:number;refs:readonly string[];guarded:boolean}>;
+/** 🧺️ One entry as the blob bound sees it: the blobs it references, how valuable it is (0 stale or unreached, 1 undeclared, 2 declared and live) and whether a claim, a write in flight or the grace guards it; `graph` marks an entry of the protected graph class (kind `graph`) with its slot and the time it was stored. */
+export type RemoteCacheBlobRowV1=Readonly<{key:string;accessed:number;tier:number;refs:readonly string[];guarded:boolean;graph?:Readonly<{slot:string;storedAt:number}>}>;
 
-/** 📐️ Plans the removals that bring the bytes of the blobs the entries reference (each blob once, however many entries share it) down to nine tenths of `bound` when they exceed it: least valuable tier first (stale or unreached, undeclared, declared), least recently used first, ties by key; guarded entries and entries without blobs are never taken. Answers the keys in removal order and the referenced bytes before and after. */
-export function planRemoteCacheBlobBoundV1(rows:Iterable<RemoteCacheBlobRowV1>,sizeOf:(hash:string)=>number,bound:number):Readonly<{before:number;after:number;keys:readonly string[]}>{
+/** 🛡️ The protected graph class of one blob bound plan: the bytes reserved for it, the time now and how long an entry a newer one of its slot replaced stays. */
+export type RemoteCacheGraphClassV1=Readonly<{budgetBytes:number;now:number;graceMilliseconds:number}>;
+
+/** 📐️ The outcome of a blob bound plan: the keys in removal order, the referenced bytes before and after, and the graph class it protected (entries and blob bytes, each blob once). */
+export type RemoteCacheBlobPlanV1=Readonly<{before:number;after:number;keys:readonly string[];protectedKeys:readonly string[];protectedBytes:number}>;
+
+const byKeyOrder=(left:string,right:string)=>left<right?-1:left>right?1:0;
+
+/** 🛡️ Splits the entries of the graph class: the newest entry of every slot is current, an older one is superseded (kept while the grace after its successor lasts, afterwards it is the first to leave); the current entries, most recently used first, are protected while their blobs (each once) fit the reserved bytes, the entry that crosses the reserve stays whole, the rest competes as declared entries do. */
+function planGraphClassV1(all:readonly RemoteCacheBlobRowV1[],sizeOf:(hash:string)=>number,graph:RemoteCacheGraphClassV1):Readonly<{protectedKeys:ReadonlySet<string>;due:ReadonlySet<string>;bytes:number}>{
+ const rows=all.filter(row=>row.graph!==undefined&&row.refs.length>0),newest=new Map<string,RemoteCacheBlobRowV1>();
+ for(const row of rows){const held=newest.get(row.graph!.slot);if(held===undefined||row.graph!.storedAt>held.graph!.storedAt||row.graph!.storedAt===held.graph!.storedAt&&row.key>held.key)newest.set(row.graph!.slot,row);}
+ const protectedKeys=new Set<string>(),due=new Set<string>(),current:RemoteCacheBlobRowV1[]=[];
+ for(const row of rows){
+  const head=newest.get(row.graph!.slot)!;
+  if(head===row)current.push(row);
+  else if(graph.now-head.graph!.storedAt>=graph.graceMilliseconds)due.add(row.key);
+  else protectedKeys.add(row.key);
+ }
+ current.sort((left,right)=>(right.accessed-left.accessed)||byKeyOrder(left.key,right.key));
+ const counted=new Set<string>();let bytes=0;
+ for(const row of rows)if(protectedKeys.has(row.key))for(const hash of new Set(row.refs))if(!counted.has(hash)){counted.add(hash);bytes+=sizeOf(hash);}
+ for(const row of current){
+  if(bytes>=graph.budgetBytes)break;
+  protectedKeys.add(row.key);
+  for(const hash of new Set(row.refs))if(!counted.has(hash)){counted.add(hash);bytes+=sizeOf(hash);}
+ }
+ return {protectedKeys,due,bytes};
+}
+
+/** 📐️ Plans the removals that bring the bytes of the blobs the entries reference (each blob once, however many entries share it) down to nine tenths of `bound` when they exceed it: least valuable tier first (stale or unreached, undeclared, declared), least recently used first, ties by key; guarded entries and entries without blobs are never taken. With `graph` the entries of the graph class are protected within their reserved bytes (never taken, however the unit outputs press), an entry a newer one of its slot replaced leaves first once the grace after its successor passed, and the entries beyond the reserve compete as declared entries do. */
+export function planRemoteCacheBlobBoundV1(rows:Iterable<RemoteCacheBlobRowV1>,sizeOf:(hash:string)=>number,bound:number,graph?:RemoteCacheGraphClassV1):RemoteCacheBlobPlanV1{
  const holders=new Map<string,number>(),all=[...rows];
  for(const row of all)for(const hash of new Set(row.refs))holders.set(hash,(holders.get(hash)??0)+1);
  let before=0;for(const hash of holders.keys())before+=sizeOf(hash);
- if(before<=bound)return {before,after:before,keys:[]};
+ const kept=graph===undefined?undefined:planGraphClassV1(all,sizeOf,graph),protectedKeys=kept===undefined?[]:[...kept.protectedKeys].sort(byKeyOrder),protectedBytes=kept?.bytes??0;
+ if(before<=bound)return {before,after:before,keys:[],protectedKeys,protectedBytes};
  const target=Math.floor(bound*LOW_WATER_NUMERATOR/LOW_WATER_DENOMINATOR),keys:string[]=[];let after=before;
- const order=all.filter(row=>!row.guarded&&row.refs.length>0).sort((left,right)=>(left.tier-right.tier)||left.accessed-right.accessed||(left.key<right.key?-1:left.key>right.key?1:0));
+ const tierOf=(row:RemoteCacheBlobRowV1)=>kept?.due.has(row.key)===true?0:row.tier;
+ const order=all.filter(row=>!row.guarded&&row.refs.length>0&&kept?.protectedKeys.has(row.key)!==true).sort((left,right)=>(tierOf(left)-tierOf(right))||left.accessed-right.accessed||byKeyOrder(left.key,right.key));
  for(const row of order){
   if(after<=target)break;
   for(const hash of new Set(row.refs)){const left=holders.get(hash)!-1;holders.set(hash,left);if(left===0)after-=sizeOf(hash);}
   keys.push(row.key);
  }
- return {before,after,keys};
+ return {before,after,keys,protectedKeys,protectedBytes};
 }
 
 /** 🥀️ Judges every entry of a scanned store against the synchronized tree: the entries come from the scan and the sidecars (`declaration` is what an entry declared), the tree from `tree`, the tombstones are the blobs of entries an earlier sweep retired. */

@@ -35,8 +35,7 @@ where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetAnnotation>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_annotation(self.index, self.at, self.annotation.clone()))
+        diff::outcome_over(base, diff::diff_set_annotation(self.index, self.at, self.annotation.clone()))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

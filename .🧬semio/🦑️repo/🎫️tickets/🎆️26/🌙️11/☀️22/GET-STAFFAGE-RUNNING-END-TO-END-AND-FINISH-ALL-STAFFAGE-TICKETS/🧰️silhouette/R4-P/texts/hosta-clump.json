@@ -1,0 +1,40 @@
+{
+  "50": {
+    "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every view is the true orthographic view of the 1:50 model in summer-full, drawn from its solids: 25 leaves, every blade by the outline of its two cupped halves and its midrib, so that the outline is the blade as modelled with lobes, sinus, waved margin and acuminate tip; every petiole by the outline of its tapered stalk with the broad clasping base; the four shoot necks with their sheath scales by their outline. A part that reaches deeper than 60 mm along the viewing direction is drawn as several plates, one per 60 mm of depth, so that it keeps its depth in every pose; the midrib and the third vein of each half are strokes. Far leaves lie under near ones.",
+      "de": "Bei 1:50 (1 m sind 20 mm) ist jede Ansicht die wahre Parallelprojektion des 1:50-Modells in summer-full, aus seinen Körpern gezeichnet: 25 Blätter, jede Spreite als Umriss ihrer zwei gewölbten Hälften und ihrer Mittelrippe, sodass der Umriss die modellierte Spreite mit Lappen, Bucht, gewelltem Rand und ausgezogener Spitze ist; jeder Blattstiel als Umriss seines verjüngten Stiels mit breiter umfassender Basis; die vier Triebhälse mit ihren Scheidenschuppen als Umriss. Ein Teil, das in Blickrichtung tiefer als 60 mm reicht, ist als mehrere Platten gezeichnet, eine je 60 mm Tiefe, sodass es in jeder Pose seine Tiefe behält; die Mittelrippe und die dritte Ader jeder Hälfte sind Striche. Ferne Blätter liegen unter nahen."
+    },
+    "omitted": {
+      "en": "Omitted: the scape and flowers of summer (not part of this asset), the puckering between the veins, the lobe veins.",
+      "de": "Weggelassen: Schaft und Blüten des Sommers (nicht Teil dieses Assets), die Kräuselung zwischen den Adern, die Lappenadern."
+    },
+    "thinElements": {
+      "en": "Petioles (12 mm) are drawn by their outline in true width (0.25 mm); midribs are 0.18 mm and veins 0.13 mm texture strokes.",
+      "de": "Blattstiele (12 mm) sind als Umriss in wahrer Breite (0,25 mm) gezeichnet; Mittelrippen sind Texturstriche von 0,18 mm, Adern von 0,13 mm."
+    }
+  },
+  "100": {
+    "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) every view is the true view of the 1:100 model, drawn from its solids: 25 blades (about 2.2 mm wide) by the outline of their two halves with lobes and smooth margin, the petioles by their outline in true width, the shoot necks by their outline; a part deeper than 60 mm along the viewing direction is several plates, one per 60 mm of depth; the midrib is a stroke.",
+      "de": "Bei 1:100 (1 m sind 10 mm) ist jede Ansicht die wahre Ansicht des 1:100-Modells, aus seinen Körpern gezeichnet: 25 Spreiten (etwa 2,2 mm breit) als Umriss ihrer zwei Hälften mit Lappen und glattem Rand, die Blattstiele als Umriss in wahrer Breite, die Triebhälse als Umriss; ein Teil, das in Blickrichtung tiefer als 60 mm reicht, besteht aus mehreren Platten, eine je 60 mm Tiefe; die Mittelrippe ist ein Strich."
+    },
+    "thinElements": {
+      "en": "Petioles (12 mm) are drawn by their outline in true width (0.12 mm on paper), mostly covered by blades; midribs are 0.13 mm texture strokes.",
+      "de": "Blattstiele (12 mm) sind als Umriss in wahrer Breite (0,12 mm auf Papier) gezeichnet, meist von Spreiten verdeckt; Mittelrippen sind Texturstriche von 0,13 mm."
+    }
+  },
+  "200": {
+    "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) every view is the true view of the 1:200 model, drawn from its solids: a mound 4.9 mm wide and 3.1 mm high of 25 shingled blades, each by the ovate pointed outline of its body (about 1 mm wide) with the closed base, over the petioles and the four shoot necks, each by its outline; a part deeper than 60 mm along the viewing direction is several plates, one per 60 mm of depth.",
+      "de": "Bei 1:200 (1 m sind 5 mm) ist jede Ansicht die wahre Ansicht des 1:200-Modells, aus seinen Körpern gezeichnet: ein Hügel von 4,9 mm Breite und 3,1 mm Höhe aus 25 geschindelten Spreiten, jede als eiförmig spitzer Umriss ihres Körpers (etwa 1 mm breit) mit geschlossener Basis, über den Blattstielen und den vier Triebhälsen, jeweils als Umriss; ein Teil, das in Blickrichtung tiefer als 60 mm reicht, besteht aus mehreren Platten, eine je 60 mm Tiefe."
+    },
+    "merged": {
+      "en": "Merged: lobes and sinus into a closed blade base, the cup into the thickness of the blade body.",
+      "de": "Zusammengefasst: Lappen und Bucht in eine geschlossene Spreitenbasis, die Wölbung in die Dicke des Spreitenkörpers."
+    },
+    "thinElements": {
+      "en": "Petioles (12 mm, 0.06 mm on paper) are drawn by their outline in true width under the blades; they read only as tone between the leaves.",
+      "de": "Blattstiele (12 mm, 0,06 mm auf Papier) sind als Umriss in wahrer Breite unter den Spreiten gezeichnet; sie wirken nur als Ton zwischen den Blättern."
+    }
+  }
+}

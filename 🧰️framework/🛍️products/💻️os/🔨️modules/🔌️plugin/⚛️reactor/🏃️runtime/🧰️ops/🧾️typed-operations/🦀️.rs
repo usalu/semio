@@ -280,7 +280,8 @@ fn pending_typed_operation_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     Ok((None, TypedOperationScan { runnable: false, contended }))
 }
 /// ⏱️ Drives armed pending-effects owners against their latest mounted view. Document work and contention leave each owner armed. A paid poll returning `None` reports runnable work, and `Some` publishes and lowers the owner.
-pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, effects: &mut Vec<semio_framework::kernel::Effect>, document_ingress_pending: impl Fn(u32) -> bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+/// Every published effect is handed to `admit` with its owning instance, so job render bindings and timer authority see the real owner.
+pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, admit: &mut dyn FnMut(u32, semio_framework::kernel::Effect), document_ingress_pending: impl Fn(u32) -> bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let armed: Vec<std::sync::Arc<semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell<PA>>> = {
         let instances = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut armed = Vec::new();
@@ -311,7 +312,7 @@ pub fn plugin_drive_pending_effects<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
         match ::semio_framework_async::poll::resolve_ready(active.app.pending_effects(view, cx))? {
             Some(polled) => {
                 cell.pending_effects.publish();
-                effects.extend(polled);
+                for effect in polled { admit(cell.id, effect); }
             }
             None => runnable = true,
         }

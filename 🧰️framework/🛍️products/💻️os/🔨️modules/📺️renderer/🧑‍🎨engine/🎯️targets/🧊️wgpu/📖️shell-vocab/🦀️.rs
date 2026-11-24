@@ -22,6 +22,10 @@ use window_sync_and_search::shell_chrome_window_sync_and_search;
 mod check_in_and_palette;
 use check_in_and_palette::shell_chrome_check_in_and_palette;
 
+#[path = "🧯️fault-vocab/🦀️.rs"]
+mod fault;
+pub use fault::shell_fault_text;
+
 #[path = "🧵️task-manager-and-route-vocab/🦀️.rs"]
 mod task_manager_and_route;
 use task_manager_and_route::shell_chrome_task_manager_and_route;

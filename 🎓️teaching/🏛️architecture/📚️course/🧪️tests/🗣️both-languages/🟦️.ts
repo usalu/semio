@@ -1,10 +1,10 @@
-/** 🗣️ English and German are both complete, and neither is the default: the language follows the browser, a browser
- * that names neither is asked in both, an explicit choice wins and is kept, and on every screen a learner visits — the
+/** 🗣️ English and German are both complete: the site speaks its own language (`site.language` of the deployment)
+ * whatever the browser lists, an explicit choice wins and is kept, and on every screen a learner visits — the
  * introduction, the identity step, the overview, every page behind it, a run with every kind of task, the confirmation
  * and the results — no label is left unresolved, the course's texts are those of the chosen language, and every action
  * and heading the client itself words reads differently in the other language.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { COURSE, LOCALES, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, enter, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, LOCALES, SITE_LOCALE, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, enter, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 import { readFileSync } from "node:fs";
 import course from "../../🔣️.json" with { type: "json" };
 
@@ -46,6 +46,7 @@ async function storedNotice(device: Device): Promise<readonly string[]> {
  * repeated for every member of the moving cast are read once, and so is nothing inside a crowd figure (its columns are the
  * answers of the learners who played at the same time) or in the roster of who is online: that is data of other learners, not wording of the client. */
 async function wording(device: Device, scope?: ReturnType<typeof screen>): Promise<readonly string[]> {
+  if (scope === undefined && (await device.page.locator('.course-app:not([data-pets="off"]):not([data-pets="still"]) [data-layered-pane="prefs"][data-opened]').count()) > 0) await expect.poll(() => device.page.locator('[data-layered-pane="prefs"] [data-pets-player]').count(), { message: "the cast is back on stage after the language changed, so its deeds are read in both languages" }).toBeGreaterThan(0);
   const texts = await (scope ?? device.page.locator("#course-main, header, footer")).evaluateAll((roots) =>
     roots.flatMap((root) => [...root.querySelectorAll<HTMLElement>("button, h1, h2, h3, h4, legend, label, th[scope=col], summary")].filter((element) => element.closest("[inert], [hidden], [aria-hidden=true], [data-crowd-figure], [data-presence-footer] > ul") === null && element.checkVisibility({ visibilityProperty: true }) && (element.closest("[data-pets-player]") === null || element.closest("[data-pets-player]") === element.closest("[data-pets-play]")?.querySelector("[data-pets-player]"))).map((element) => (element.getAttribute("aria-label") ?? element.innerText).replace(/\s+/gu, " ").trim())),
   );
@@ -109,7 +110,7 @@ for (const locale of LOCALES) {
     }
   });
 
-  test(`a ${locale} browser reads every screen in ${locale}, and each screen switches completely`, async ({ device }) => {
+  test(`a learner who reads ${locale} reads every screen in ${locale}, and each screen switches completely`, async ({ device }) => {
     const learner = await device(locale);
     const name = handle("Polyglot");
 
@@ -123,11 +124,11 @@ for (const locale of LOCALES) {
 
     await readIntroduction(learner);
     const identity = screen(learner.page, "identity");
-    await identity.locator('input[type="radio"][value="pseudonym"]').check();
+    await identity.locator('input[type="radio"][value="pseudonym"]').locator("xpath=ancestor::label[1]").click();
     await expectBothLanguages(learner, locale, "identity", [], {
       scope: identity,
       close: async () => { await learner.page.keyboard.press("Escape"); await expect(identity).toHaveCount(0); },
-      open: async () => { await primary(card(learner.page, "learner")).click(); await expect(identity).toBeVisible(); await identity.locator('input[type="radio"][value="pseudonym"]').check(); },
+      open: async () => { await primary(card(learner.page, "learner")).click(); await expect(identity).toBeVisible(); await identity.locator('input[type="radio"][value="pseudonym"]').locator("xpath=ancestor::label[1]").click(); },
     });
     await screen(learner.page, "identity").locator('input[type="text"]').fill(name);
     await primary(screen(learner.page, "identity")).click();
@@ -188,42 +189,22 @@ for (const locale of LOCALES) {
   });
 }
 
-test("the language follows the browser, is asked for when the browser names neither, and an explicit choice is kept", async ({ device }) => {
-  for (const [language, expected] of [
-    ["de-CH", "de"],
-    ["en-US", "en"],
-  ] as const) {
-    const visitor = await device(expected, language);
-    await arrive(visitor);
-    await expect(visitor.page.locator(".course-app")).toHaveAttribute("lang", expected);
-    await expect(screen(visitor.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title[expected]);
-    await expect(visitor.page.locator(`header button[lang="${expected}"]`)).toHaveAttribute("aria-pressed", "true");
+test("the site speaks its own language whatever the browser lists, never asks for one, and an explicit choice is kept", async ({ device }) => {
+  for (const language of ["de-CH", "en-US", "fr-FR"]) {
+    const visitor = await device(SITE_LOCALE, language);
+    await visitor.page.goto("/");
+    await expect(screen(visitor.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title[SITE_LOCALE]);
+    await expect(screen(visitor.page, "language")).toHaveCount(0);
+    await expectDocumentIn(visitor, SITE_LOCALE);
+    await expect(visitor.page.locator(`header button[lang="${SITE_LOCALE}"]`)).toHaveAttribute("aria-pressed", "true");
+    expect(await unresolvedLabels(visitor)).toEqual([]);
   }
 
-  const stranger = await device("de", "fr-FR");
-  await stranger.page.goto("/");
-  const question = screen(stranger.page, "language");
-  await expect(question).toBeVisible();
-  await expect(screen(stranger.page, "introduction")).toHaveCount(0);
-  await expect(stranger.page.locator(".course-app")).not.toHaveAttribute("lang", /.*/u);
-  await expect(stranger.page.locator("html")).not.toHaveAttribute("lang", /.*/u);
-  const asked = await question.getByRole("heading", { level: 1 }).locator("[lang]").evaluateAll((parts) => parts.map((part) => [part.getAttribute("lang"), (part as HTMLElement).innerText] as const));
-  expect(asked.map(([locale]) => locale)).toEqual([...LOCALES]);
-  await expect.poll(() => stranger.page.title()).toBe(asked.map(([, text]) => text).join(" · "));
-  for (const locale of LOCALES) await expect(question.locator(`li[lang="${locale}"] button`)).toHaveCount(1);
-  expect(await question.locator("li[lang]").evaluateAll((offers) => offers.map((offer) => offer.getAttribute("lang")))).toEqual([...LOCALES]);
-  expect(await unresolvedLabels(stranger)).toEqual([]);
-  await question.locator('li[lang="de"] button').click();
-  await expect(screen(stranger.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title.de);
-  await expect(stranger.page.locator(".course-app")).toHaveAttribute("lang", "de");
-  await stranger.page.reload();
-  await expect(screen(stranger.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title.de);
-
-  const chooser = await device("en");
+  const chooser = await device(SITE_LOCALE, "de-DE");
   await arrive(chooser);
-  await choose(chooser, "de");
+  await choose(chooser, other(SITE_LOCALE));
   await chooser.page.reload();
-  await expect(chooser.page.locator(".course-app")).toHaveAttribute("lang", "de");
-  await expect(screen(chooser.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title.de);
-  await expect(chooser.page.locator('header button[lang="de"]')).toHaveAttribute("aria-pressed", "true");
+  await expectDocumentIn(chooser, other(SITE_LOCALE));
+  await expect(screen(chooser.page, "introduction").locator('[data-slot="introduction-info-box-title"]')).toHaveText(COURSE.introduction.title[other(SITE_LOCALE)]);
+  await expect(chooser.page.locator(`header button[lang="${other(SITE_LOCALE)}"]`)).toHaveAttribute("aria-pressed", "true");
 });

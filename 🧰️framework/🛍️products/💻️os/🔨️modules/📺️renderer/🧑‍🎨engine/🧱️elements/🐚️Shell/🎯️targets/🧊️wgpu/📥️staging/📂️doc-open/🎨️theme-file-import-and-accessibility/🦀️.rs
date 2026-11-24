@@ -169,7 +169,7 @@ impl OpeningState {
             children.push(UiNode::Button(UiButtonNode {
                 id: Some(format!("os.task-manager.cancel.{task}")),
                 icon_id: IconName::Square,
-                label: Label::data(if is_de { format!("{} abbrechen", transfer.file) } else { format!("Cancel {}", transfer.file) }),
+                label: Label::data(semio_renderer_wgpu_shell_vocab::shell_chrome_format("taskManager.tasks.cancelTask", is_de, &[("task", &transfer.file)])),
                 action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "transfer": transfer.id }) },
                 style: None,
                 presence: UiPresence::default(),
@@ -182,17 +182,17 @@ impl OpeningState {
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(task) = &self.native_media_save {
-            children.push(settings_text_row(&format!("{} · {} · {}", task.file, pick("File export", "Dateiexport"), task.plugin_id)));
+            children.push(settings_text_row(&format!("{} · {} · {}", task.file, shell_chrome_string("taskManager.transfer.exportLabel", is_de), task.plugin_id)));
             children.push(UiNode::Progress(semio_ui_declaration::ui::UiProgressNode {
                 id: format!("os.task-manager.progress.documentTransfer:{}", task.id),
                 completed: task.completed() as f64, total: None,
-                value_text: Label::data(pick("Export progress", "Exportfortschritt")),
+                value_text: Label::data(shell_chrome_string("taskManager.transfer.exportProgress", is_de)),
                 presence: UiPresence::default(), menu: None,
             }));
             children.push(UiNode::Button(UiButtonNode {
                 id: Some(format!("os.task-manager.cancel.documentTransfer:{}", task.id)),
                 icon_id: IconName::Square,
-                label: Label::data(if is_de { format!("{} abbrechen", task.file) } else { format!("Cancel {}", task.file) }),
+                label: Label::data(semio_renderer_wgpu_shell_vocab::shell_chrome_format("taskManager.tasks.cancelTask", is_de, &[("task", &task.file)])),
                 action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(),
                     args: semio_renderer_wgpu_host_base::action_args_json!({ "transfer": task.id }) },
                 style: None, presence: UiPresence::default(), menu: None,
@@ -218,15 +218,12 @@ pub async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bo
                     use std::io::Read;
                     let file = system_fs::File::open(&path).ok()?;
                     let limit = u64::from(limit);
-                    let refuse = || debug_log(&format!("[DEBUG] File \"{name}\" exceeds the {limit}-byte import limit"));
                     if file.metadata().ok()?.len() > limit {
-                        refuse();
                         return None;
                     }
                     let mut bytes = Vec::new();
                     file.take(limit + 1).read_to_end(&mut bytes).ok()?;
                     if bytes.len() as u64 > limit {
-                        refuse();
                         return None;
                     }
                     bytes

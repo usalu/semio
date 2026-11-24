@@ -167,7 +167,9 @@ fn every_variable_action_row_is_a_load_glyph_with_a_magnitude_grip_writing_its_t
             assert!(matches!(&glyph.geometry, Geometry::Load(LoadGlyph::Point { direction, magnitude, case, .. }) if direction.z < 0.0 && magnitude.value == qk && case.kind == LoadKind::Variable), "{id}");
             let grip = all.iter().find(|h| h.id == format!("{id}:qk")).unwrap_or_else(|| panic!("{id}:qk"));
             assert!(glyph.handles.contains(&grip.id));
-            assert_eq!((grip.writes[0].path.as_str(), grip.writes[0].map.base, grip.writes[0].unit.as_str()), (path.as_str(), qk, "N"));
+            let rest = scene::projection_kit::handle_kit::rest_of(&grip.kind, &grip.anchor).expect("an along-axis grip");
+            assert_eq!((grip.writes[0].path.as_str(), grip.writes[0].unit.as_str()), (path.as_str(), "N"));
+            assert!((grip.writes[0].map.apply(rest) - qk).abs() < 1e-6, "the grip rests at the stored value: {id}");
             let at = match &glyph.geometry {
                 Geometry::Load(LoadGlyph::Point { at, .. }) => at.clone(),
                 _ => unreachable!(),

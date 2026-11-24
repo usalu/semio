@@ -4446,6 +4446,7 @@ dependencies = [
  "semio-plugin-actor-host",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-media",
+ "semio-plugin-decl-natural-file-media",
  "semio-plugin-decl-tool-contract",
  "semio-plugin-decl-views",
  "semio-plugin-interaction",
@@ -4500,6 +4501,23 @@ dependencies = [
  "semio-plugin-decl-views",
  "semio-plugin-ownership",
  "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-decl-natural-file-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-ownership",
+ "semio-ui-locale",
 ]
 
 [[package]]

@@ -20,7 +20,7 @@ pub fn image_layer(snapshot: &PdfSnapshot, content: &[PdfOp], item: &Placed) -> 
     let resources = NativePdfArtifactResources::from_objects(&snapshot.objects);
     let resolve = |reference: &ArtifactRef, size, channels| semio_s_artifact_stdio_pdf_editor_document::graph_png_preview(&resources, reference, size, channels)
         .or_else(|| coded_samples(&resources, reference, size, channels));
-    let convert = |space: &PdfColorSpace, components: &[f64]| function_colour::rgb(snapshot, space, components);
+    let convert = |space: &PdfColorSpace, components: &[f64]| function_colour::image_rgb(snapshot, space, components);
     let fill = item.object.fill;
     let inline = match content.get(item.object.end) { Some(PdfOp::InlineImage { image }) => Some(image), _ => None };
     let xobject = if inline.is_some() { None } else { Some(snapshot.image(&item.object.text)?) };
@@ -82,7 +82,7 @@ fn infer_jpx_space(resources: &impl PdfArtifactResourcePort, image: &PdfImage) -
     if image.color_space.is_some() || image.image_mask { return None; }
     let PdfObject::Stream { data, filters, .. } = resources.resolve(reference).ok()? else { return None };
     filters.iter().find(|filter| matches!(filter, PdfStreamFilter::Jpx))?;
-    let colour_components = paint_codecs::jpx::component_count(data.as_slice()).ok()?.checked_sub(usize::from(image.soft_mask_in_data == Some(1)))?;
+    let colour_components = paint_codecs::jpx::component_count(&data.to_vec_owner()).ok()?.checked_sub(usize::from(image.soft_mask_in_data == Some(1)))?;
     let space = match colour_components { 1 => PdfColorSpace::DeviceGray, 3 => PdfColorSpace::DeviceRgb, 4 => PdfColorSpace::DeviceCmyk, _ => return None };
     Some(PdfImage { color_space: Some(space), ..image.clone() })
 }
@@ -92,7 +92,7 @@ fn coded_samples(resources: &impl PdfArtifactResourcePort, reference: &ArtifactR
     if filters.iter().all(|filter| !filter.is_image_codec()) {
         require_pdf_artifact_kind(reference, "s.stdio.samples").ok()?;
         let expected = (size.0 as usize).checked_mul(size.1 as usize)?.checked_mul(channels)?;
-        return (matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. }]) && data.len() == expected).then_some(data);
+        return (matches!(filters.as_slice(), [] | [PdfStreamFilter::Flate { .. }]) && data.len() == expected).then(|| data.to_vec_owner());
     }
     let codec = filters.iter().find(|filter| filter.is_image_codec())?;
     let kind = match codec {
@@ -102,7 +102,8 @@ fn coded_samples(resources: &impl PdfArtifactResourcePort, reference: &ArtifactR
         _ => "s.stdio.jbig2",
     };
     require_pdf_artifact_kind(reference, kind).ok()?;
-    let source = data.as_slice();
+    let source_bytes = data.to_vec_owner();
+    let source = source_bytes.as_slice();
     match codec {
         PdfStreamFilter::Dct { color_transform } => dct_samples(source, *color_transform, size, channels),
         PdfStreamFilter::Jpx => {
@@ -123,10 +124,11 @@ fn coded_samples(resources: &impl PdfArtifactResourcePort, reference: &ArtifactR
     }
 }
 
+/// 🎞️ Decodes DCT samples; four-component images are kept as stored planes because MuPDF 1.26.7 applies neither the Adobe YCCK transform nor `/ColorTransform` to them.
 fn dct_samples(source: &[u8], color_transform: Option<u32>, size: (u32, u32), channels: usize) -> Option<Vec<u8>> {
     let mut decoder = JpgComponentDecoder::new(&source, MAX_DCT_WORKING_BYTES, &mut || false).ok()?;
-    let transform = decoder.adobe_color_transform().map(u32::from).or(color_transform).unwrap_or(u32::from(channels != 4));
-    if (channels == 3 && !matches!(transform, 0 | 1)) || (channels == 4 && !matches!(transform, 0 | 2)) { return None; }
+    let transform = if channels == 4 { 0 } else { decoder.adobe_color_transform().map(u32::from).or(color_transform).unwrap_or(1) };
+    if channels == 3 && !matches!(transform, 0 | 1) { return None; }
     let mut decoded = loop {
         if let Some(decoded) = decoder.step(&source, 4096, &mut || false).ok()? { break decoded; }
     };
@@ -135,12 +137,6 @@ fn dct_samples(source: &[u8], color_transform: Option<u32>, size: (u32, u32), ch
         for pixel in decoded.samples.chunks_exact_mut(3) {
             let (r, g, b) = ycbcr_to_rgb(f64::from(pixel[0]), f64::from(pixel[1]), f64::from(pixel[2]));
             pixel.copy_from_slice(&[r, g, b]);
-        }
-    }
-    if channels == 4 && transform == 2 {
-        for pixel in decoded.samples.chunks_exact_mut(4) {
-            let (r, g, b) = ycbcr_to_rgb(f64::from(pixel[0]), f64::from(pixel[1]), f64::from(pixel[2]));
-            pixel[..3].copy_from_slice(&[255 - r, 255 - g, 255 - b]);
         }
     }
     Some(decoded.samples)

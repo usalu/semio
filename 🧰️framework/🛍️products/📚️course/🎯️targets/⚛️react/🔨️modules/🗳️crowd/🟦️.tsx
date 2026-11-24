@@ -69,7 +69,7 @@ export function CrowdDoor(props: { readonly gate: CrowdGate; readonly onAsk: () 
   if (gate !== "locked" && gate !== "asked") return null;
   return (
     <div data-crowd-gate={gate} {...CELL} {...GROUP} className="flex flex-col text-xs text-muted-foreground">
-      <BodyButton row onClick={gate === "locked" ? props.onAsk : props.onUnask} describedBy={gate === "locked" ? id : undefined}>
+      <BodyButton icon={gate === "locked" ? "eye" : "eye-off"} row onClick={gate === "locked" ? props.onAsk : props.onUnask} describedBy={gate === "locked" ? id : undefined}>
         {text(gate === "locked" ? "course.crowd.ask" : "course.crowd.unask")}
       </BodyButton>
       {gate === "locked" ? (

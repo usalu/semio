@@ -313,21 +313,21 @@
       "why": "Measured: with the picker handed to the pump, `io`'s \"the import opens a real file picker\" read `{\"inputs\":[],\"choosers\":0}` — no input element was ever created — and \"the picked file REPLACES the graph\" fell with it, 6/6 → 4/6.",
       "source": "shell",
       "owns": "pub async fn handle_pointer_button_for",
-      "runs": "self.drain_gesture_bound_work().await;"
+      "runs": "self.as_actions().drain_gesture_bound_work().await;"
     },
     {
       "id": "a-retained-press-runs-its-file-picker-before-it-returns",
       "why": "The retained half of the same gesture — a toolbar button, a tree row, a form control — reaches the same parked request.",
       "source": "shell",
       "owns": "async fn route_retained_pointer_press",
-      "runs": "self.drain_gesture_bound_work().await;"
+      "runs": "self.as_actions().drain_gesture_bound_work().await;"
     },
     {
       "id": "a-chord-runs-its-file-picker-before-it-returns",
       "why": "`mod+o` is the ONLY door the import has on this shell — the `io` probe reaches `importDocumentRequest` through the keybinding path, not through a click — so a fix that covered only the pointer paths left the row red.",
       "source": "shell",
       "owns": "pub async fn handle_keyboard_async",
-      "runs": "self.drain_gesture_bound_work().await;"
+      "runs": "self.as_actions().drain_gesture_bound_work().await;"
     }
   ]
 }

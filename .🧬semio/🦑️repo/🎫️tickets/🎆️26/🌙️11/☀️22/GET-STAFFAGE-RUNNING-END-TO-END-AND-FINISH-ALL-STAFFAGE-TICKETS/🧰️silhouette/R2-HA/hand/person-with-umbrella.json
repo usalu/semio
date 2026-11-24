@@ -1,0 +1,4 @@
+[
+{"op":"solid-set","scale":"50","id":"rib-front","set":{"texture":false}},
+{"op":"solid-set","scale":"50","id":"rib-back","set":{"texture":false}}
+]

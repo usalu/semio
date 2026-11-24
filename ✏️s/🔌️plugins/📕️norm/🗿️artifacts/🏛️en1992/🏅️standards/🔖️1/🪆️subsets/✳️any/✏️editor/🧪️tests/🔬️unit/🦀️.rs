@@ -1,5 +1,6 @@
 pub(crate) mod context {
     use crate::*;
+    use semio_s_artifact_norm_en1992_editor::modes::edit::windows::checks;
     use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -49,7 +50,7 @@ pub(crate) mod context {
                 focused_window_id: Some(checks::WINDOW_CHECKS.into()),
                 window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-            });
+            }.into());
         }
         let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
@@ -70,6 +71,18 @@ pub(crate) mod context {
 
 use crate::*;
 use semio_plugin::PluginApp;
+use semio_s_artifact_norm_en1992_editor::commands::selected_check;
+use semio_s_artifact_norm_en1992_editor::commands::set_field;
+use semio_s_artifact_norm_en1992_editor::modes::edit::windows::checks;
+use semio_s_artifact_norm_en1992_editor::modes::edit::windows::diagrams;
+use semio_s_artifact_norm_en1992_editor::modes::edit::windows::outliner;
+use semio_s_artifact_norm_en1992_editor::modes::edit::windows::properties;
+use semio_s_artifact_norm_en1992_editor::modes::edit::windows::viewport;
+use semio_s_artifact_norm_en1992_editor::panels::catalogue as catalogue_panel;
+use semio_s_artifact_norm_en1992_editor::panels::document as document_panel;
+use semio_s_artifact_norm_en1992_editor::panels::inspection as inspection_panel;
+use semio_s_artifact_norm_en1992_model::En1992Snapshot;
+use semio_plugin::InteractiveJobClassification;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
@@ -113,8 +126,8 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        let printed = protocol::OpText::print_op(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }
 }
@@ -126,7 +139,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// of the three payload shapes involves the per-standard `En1992Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
-    let hex = |command: &En1992Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let hex = |command: &En1992Command| semio_os_kernel::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
     assert_eq!(hex(&En1992Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
@@ -274,7 +287,7 @@ fn the_full_showcase_populates_every_collection_and_is_in_the_palette() {
     let d = semio_s_artifact_norm_en1992_showcase::full_showcase();
     assert!(!d.concrete_grades.is_empty() && !d.reinforcement_grades.is_empty() && !d.prestress_steels.is_empty() && !d.members.is_empty() && !d.anchors.is_empty() && !d.placements.is_empty() && !d.cases.is_empty());
     assert!(d.members.iter().any(|m| !m.stud_rows.is_empty()) && d.members.iter().any(|m| !m.openings.is_empty()) && d.members.iter().any(|m| !m.section_points.is_empty() && !m.bars.is_empty() && !m.tendon_points.is_empty()));
-    assert!(En1992PlayApp::examples().iter().any(|e| e.id() == "full-showcase"));
+    assert!(<En1992PlayApp as semio_plugin::ArtifactEditor>::examples().iter().any(|e| e.id() == "full-showcase"));
 }
 
 #[test]

@@ -69,5 +69,22 @@
         255
       ]
     }
+  },
+  "refusal": {
+    "code": "document.loading",
+    "message": "'setValue' waits: the document is still loading",
+    "retryable": true,
+    "seq": 7,
+    "afterRefusal": [
+      "poll",
+      "startJob",
+      "stepJob",
+      "poll"
+    ],
+    "heldCount": 0,
+    "turnFailure": {
+      "tag": "semantic",
+      "laterCallRejects": "original-turn.native-return-refused: semantic"
+    }
   }
 }

@@ -142,7 +142,7 @@ impl OriginalScratchWork<FlowHostSnapshot> for ProvisionalTypedInputWork{
  fn advance(&mut self,source:&mut FlowHostSnapshot,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{ProvisionalTypedInputWork::advance(self,source,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.progress}
 }
-impl Drop for ProvisionalTypedInputWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"provisional typed input retains its original payload, native fields or map owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ProvisionalTypedInputWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"provisional typed input retains its original payload, native fields or map owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
 pub enum P3ProvisionalFold{Input(ProvisionalTypedInputWork),Transform(super::retained_provisional_transform::ProvisionalTransformWork)}
 impl super::retained_native_provisional_fold::NativeAdditionalFold for P3ProvisionalFold{

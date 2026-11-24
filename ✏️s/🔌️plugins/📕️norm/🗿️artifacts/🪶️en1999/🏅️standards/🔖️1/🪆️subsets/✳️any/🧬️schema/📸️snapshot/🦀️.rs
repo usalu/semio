@@ -794,10 +794,19 @@ fn default_welds() -> WeldGroup {
     WeldGroup { filler_alloy: "4043".into(), throat: 0.004, length: 0.120, beta_w: 0.63, haz_extent: 0.025 }
 }
 
-/// 🌱 Initial subject of a live evaluation session: the worked example.
+/// 🌱 Initial subject of a live evaluation session: the worked example plus the first showcase row of every entity kind it lacks, so that every kind has a row to select, edit and delete.
 impl Default for En1999Snapshot {
     fn default() -> Self {
-        Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+        let showcase = Self::full_showcase();
+        Self {
+            weld_runs: showcase.weld_runs.into_iter().take(1).collect(),
+            fatigue_categories: showcase.fatigue_categories.into_iter().take(1).collect(),
+            patch_loads: showcase.patch_loads.into_iter().take(1).collect(),
+            ring_stiffeners: showcase.ring_stiffeners.into_iter().take(1).collect(),
+            transverse_stiffeners: showcase.transverse_stiffeners.into_iter().take(1).collect(),
+            outline_vertices: showcase.outline_vertices.into_iter().filter(|vertex| vertex.section_id == "sec-i120").collect(),
+            ..Self::example(semio_s_plugin_norm_compliance::AnnexChoice::En)
+        }
     }
 }
 

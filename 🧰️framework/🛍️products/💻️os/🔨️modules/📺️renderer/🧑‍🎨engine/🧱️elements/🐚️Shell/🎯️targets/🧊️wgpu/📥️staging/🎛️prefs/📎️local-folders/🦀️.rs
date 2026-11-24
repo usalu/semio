@@ -64,6 +64,7 @@ pub const FOLDER_FORGET_ACTION: &str = "forgetFolder";
 /// 🎬️ The band's two verbs, dispatched on the shell's own sync controller.
 pub const FOLDER_RECONNECT_ACTION: &str = "reconnectFolder";
 
+//#region 🗣️ChromeI18n
 /// 🗣️ One line of the band (or of a reconnect refusal) in `locale`; `folder` fills the message.
 pub fn local_folder_text(text: LocalFolderText, folder: &str, locale: Locale) -> String {
     match (text, locale) {
@@ -79,6 +80,7 @@ pub fn local_folder_text(text: LocalFolderText, folder: &str, locale: Locale) ->
         (LocalFolderText::Unidentified, Locale::De) => "Dieses Programm hat kein Dokument zum Verbinden".into(),
     }
 }
+//#endregion 🗣️ChromeI18n
 
 /// 🗣️ The band's copy — React's `ui.sync.reconnect.{label,message,attach,forget}` at the normal terminology.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -103,6 +105,7 @@ pub const LOCAL_FILE_OPEN_ACTION: &str = "openKeptFile";
 /// 📜️ The listing's scroll region: when the documents do not fit above the footer, the wheel moves the first listed row, like React's section growing past the viewport.
 pub const LOCAL_FILES_SCROLL_ID: &str = "s-local-files.scroll";
 
+//#region 🗣️ChromeI18n
 /// 🗣️ The listing's title (React's `LocalFilesV1` `title` label).
 pub fn local_files_title(locale: Locale) -> &'static str {
     match locale {
@@ -110,6 +113,7 @@ pub fn local_files_title(locale: Locale) -> &'static str {
         Locale::De => "Dateien auf diesem Gerät",
     }
 }
+//#endregion 🗣️ChromeI18n
 
 /// 📐️ One laid-out listing band: the strip, its title line, the visible window of the list (one button per kept document: control id, document id, name, box), the pixel pitch of one row, the largest first row and the scroll thumb when rows are hidden.
 #[derive(Clone, Debug, PartialEq)]

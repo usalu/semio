@@ -30,8 +30,10 @@ pub(super) struct MountedIdentity {
 }
 
 impl MountedIdentity {
-    pub(super) fn operation(self) -> Operation {
-        Operation::new(self.operation, self.base_revision, self.generation, self.operation.0.rotate_left(17) ^ self.base_revision.0)
+    /// 🪢️ The child-job operation of this mounted analysis under the operation and generation the host bound to the running job
+    /// (`StepContext::operation`/`generation`), which every bounded child checks on each step; the document identity only seeds it.
+    pub(super) fn operation(self, operation: OperationId, generation: semio_framework_job::Generation) -> Operation {
+        Operation::new(operation, self.base_revision, generation, self.operation.0.rotate_left(17) ^ self.base_revision.0)
     }
 }
 

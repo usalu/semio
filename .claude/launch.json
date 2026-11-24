@@ -75,6 +75,23 @@
       "port": 6081
     },
     {
+      "name": "architecture-course-native",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/site-direct.ts",
+        "dev"
+      ],
+      "port": 6061
+    },
+    {
+      "name": "architecture-course-cdn-native",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️23/ARCHITECTURE-COURSE-REDEPLOY-READINESS/site-serve.ts"
+      ],
+      "port": 6062
+    },
+    {
       "name": "draw-react-native",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

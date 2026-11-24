@@ -291,8 +291,26 @@
         "sides": "two"
       }
     ],
-    "sheetProfiles": [],
-    "fireInsulations": []
+    "sheetProfiles": [
+      {
+        "id": "profile-1",
+        "sheetId": "sheet",
+        "pitch": 0.2,
+        "topFlange": 0.04,
+        "bottomFlange": 0.03,
+        "webHeight": 0.035
+      }
+    ],
+    "fireInsulations": [
+      {
+        "id": "insulation-1",
+        "fireId": "fire",
+        "thickness": 0.03,
+        "conductivity": 0.06,
+        "specificHeat": 1000,
+        "density": 300
+      }
+    ]
   },
   "binary64Words": [
     "0000000000000000",

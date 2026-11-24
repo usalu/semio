@@ -289,7 +289,7 @@ impl Drop for DbIoFault {
         let owner = Self { kind: self.kind, cause: self.cause, detail: std::mem::replace(&mut self.detail, DbIoText::new()), structured: self.structured.take(), result_handback: self.result_handback.take(), custody: Some(custody) };
         let mut arena = DB_IO_FAULT_CUSTODY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let cell = &mut arena.cells[slot];
-        assert!(cell.reserved && cell.generation == generation && cell.owner.is_none(), "exact original fault parking cell");
+        assert!(std::thread::panicking()||(cell.reserved && cell.generation == generation && cell.owner.is_none()), "exact original fault parking cell");
         cell.owner = Some(owner);
         drop(arena);
         db_io_request_lost_owner_maintenance();

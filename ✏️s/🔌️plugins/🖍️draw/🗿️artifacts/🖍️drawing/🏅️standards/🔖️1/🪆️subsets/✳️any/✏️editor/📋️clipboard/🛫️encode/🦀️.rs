@@ -18,7 +18,7 @@ impl<'a> View<'a>{
             match layer{
                 DrawingLayerNode::Shape(value)=>{fields.push("shapeKind",Native(&value.shape_kind));if let Some(value)=&value.rect{fields.push("rect",Rect(value));}if let Some(value)=&value.ellipse{fields.push("ellipse",Ellipse(value));}if let Some(value)=&value.circle{fields.push("circle",Circle(value));}if let Some(value)=&value.line{fields.push("line",Line(value));}if let Some(value)=&value.polygon{fields.push("polygon",Polygon(value));}},
                 DrawingLayerNode::Path(value)=>fields.push("segments",Segments(&value.segments)),
-                DrawingLayerNode::Text(value)=>{fields.push("x",Number(value.x));fields.push("y",Number(value.y));fields.push("content",Native(&value.content));fields.push("size",Number(value.size));},
+                DrawingLayerNode::Text(value)=>{fields.push("x",Number(value.x));fields.push("y",Number(value.y));fields.push("content",Native(&value.content));fields.push("size",Number(value.size));fields.push("fontFamily",Text(value.font_family.as_str()));},
                 DrawingLayerNode::Image(value)=>{fields.push("imageKey",Native(&value.image_key));fields.push("width",Number(value.width));fields.push("height",Number(value.height));},
                 DrawingLayerNode::Group(value)=>{if value.isolation{fields.push("isolation",Bool(true));}fields.push("children",Children(&value.children));},
                 DrawingLayerNode::Boolean(value)=>{fields.push("operation",Native(&value.operation));fields.push("children",Identities(&value.children));},

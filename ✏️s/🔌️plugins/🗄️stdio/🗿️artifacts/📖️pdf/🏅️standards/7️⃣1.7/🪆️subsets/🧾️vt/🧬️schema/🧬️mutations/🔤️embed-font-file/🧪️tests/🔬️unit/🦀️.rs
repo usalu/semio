@@ -11,12 +11,12 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use crate::standards::v1_7::subsets::base::schema::testkit;
 use crate::standards::v1_7::subsets::vt::schema::mutations::embed_font_file::*;
 use crate::standards::v1_7::subsets::base::schema::testkit::applied;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfObject};
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]
 fn attaches_the_program_to_the_selected_descriptor() {
-    let base = testkit::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string()))])]);
+    let base = testkit::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"font"), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string()))])]);
     let program = ObjRef { num: 1, gen: 0 };
     let mutation = EmbedFontFile { descriptor_ordinal: 0, key: "FontFile2".to_string(), program, entry_index: None };
     let next = applied(&base, &PdfVtMutation::EmbedFontFile(mutation.clone()));
@@ -26,6 +26,6 @@ fn attaches_the_program_to_the_selected_descriptor() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = testkit::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string()))])]);
+    let base = testkit::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"font"), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string()))])]);
     assert_mutation_inverse_sum_law(&PdfVtMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: 0, key: "FontFile2".to_string(), program: ObjRef { num: 1, gen: 0 }, entry_index: None }), &base).await;
 }

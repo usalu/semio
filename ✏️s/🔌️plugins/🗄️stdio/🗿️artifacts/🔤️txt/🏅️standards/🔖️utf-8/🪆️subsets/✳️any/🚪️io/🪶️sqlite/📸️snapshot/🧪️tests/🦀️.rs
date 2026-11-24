@@ -273,7 +273,7 @@ mod lent{
  fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("fixture turn stayed pending")}}
  pub type Closed=(RetainedWorkOutcome<RetainedCloneStep,OriginalRetirementFailure>,usize,usize);
  pub fn close_encode(native:&mut NativeEncodeControl<'_>,grant:RetainedCloneGrant)->Closed{
-  let mut bank=EffectBank::new(BankWallet::new(grant,WORK));let mut heap=(0,0);
+  let mut bank=EffectBank::new(BankWallet::new(semio_framework_value_testing_admission::driven_stock::<OriginalRetirementFailure>(grant),WORK));let mut heap=(0,0);
   let turn=settled(driven::<OriginalRetirementFailure>(&mut bank,grant,WORK,|effect,reply,recover|{let(call,observed)=observe(||if recover{native.recover_close_retirement_recipient_into(grant.maximum_copy_bytes,effect,reply)}else{native.close_retirement_recipient_into(grant.maximum_copy_bytes,effect,reply)});heap=(observed.requested_bytes,observed.released_bytes);call}).0);
   (turn,heap.0,heap.1)
  }
@@ -321,7 +321,7 @@ fn txt_original_encoding_original_owner_cancellation_and_funded_close_conserve_e
    let mut native=NativeEncodeControl::new_forwarded(law["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut original,loan);native.install_retirement_recipient(&mut recipient).unwrap();
    let(prior,before,maximum,accepted,error)=lent::encode(&mut native,policy,|native|{
     let prior=native.copy_text("original").unwrap();let before=native.owned_bytes();let maximum=native.maximum_bytes();let mut sql_yes=|_|true;let mut sql=SqliteSnapshotControl::new(&mut sql_yes,SqliteDatabaseLimits::default());let sql_before=sql.allocation_remaining_bytes();let mut owner=store::NativeSnapshotEncodeOwner::new(native,policy);
-    let(result,heap)=observe(||encoded(&source,encoding,&mut sql,&mut owner));let error=result.unwrap_err();let accepted=owner.progress();assert_eq!(owner.grant(),policy);assert!(accepted.fits(policy));assert_eq!(error.retained_progress(),accepted);assert_eq!(error.kind(),semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(error.message(),law["nativeCause"]["message"].as_str().unwrap());assert!(borrowed_message(&error));assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert_eq!(accepted.released_bytes,0);assert!(canceled.get());drop(owner);
+    let(result,heap)=observe(||encoded(&source,encoding,&mut sql,&mut owner));let error=result.unwrap_err();let accepted=owner.progress();assert_eq!(owner.grant(),policy);assert!(accepted.fits(policy));assert_eq!(error.retained_progress(),accepted);assert_eq!(error.kind(),semio_framework_value::ValueRefusalKind::Canceled);assert_eq!(error.message(),law["nativeCause"]["message"].as_str().unwrap());assert!(borrowed_message(&error));assert_eq!((heap.requested_bytes,heap.released_bytes),(accepted.retained_capacity_bytes,accepted.released_bytes));assert!(accepted.released_bytes>=extent);assert!(canceled.get());drop(owner);
     assert!(native.has_retirement_owner());assert_eq!(native.maximum_bytes(),maximum);assert_eq!(native.owned_bytes()-before,ledger.load(Ordering::Relaxed)-before);assert_eq!(sql_before-sql.allocation_remaining_bytes(),native.owned_bytes()-before);
     (prior,before,maximum,accepted,error)
    });

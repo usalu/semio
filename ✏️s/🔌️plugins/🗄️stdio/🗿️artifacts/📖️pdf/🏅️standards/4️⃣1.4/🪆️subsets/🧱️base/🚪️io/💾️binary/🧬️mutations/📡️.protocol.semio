@@ -2,22 +2,18 @@ dialect protocol
 protocol stdio.pdf.mutations
 version 1
 schema stdio.pdf.op
-start op
-framing record
+start document
+framing magic 0x8953504B0D0A1A0A
 
-# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
-# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
-header fixed 2
-field format u8
-field tag u8
-record insert-page tag=0
-field payload bytes
-record remove-page tag=1
-field payload bytes
-record move-page tag=2
-field payload bytes
-record resize-page tag=3
-field payload bytes
-record replace-page-text tag=4
-field payload bytes
+# Semio Pack document v1. Field 1 (`value`) holds the internally tagged
+# PdfMutation defined in the 1.4 mutation schema. The Pack format defines
+# the segments, checksums, and footer.
+header fixed 32
+field version_major u16
+field version_minor u16
+field required_flags u32
+field optional_flags u32
+field header_crc32c u32
+field reserved fixed 8
+segment pack_segments bytes
+footer fixed 84

@@ -1,0 +1,17 @@
+import{readFileSync}from"node:fs";import{createHash}from"node:crypto";
+const root="/Users/ueli/Documents/semio",L=root+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/",B=L+"🕸️graph/📥️load/";
+const ex=await import(B+"🤝️selected-exchange/🟦️.ts"),at=await import(B+"🤝️selected-exchange/🔌️attempt/🟦️.ts"),port=await import(L+"🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts");
+const ob=await import(L+"👁️observation/🔢️row-table/🟨️.mjs"),aschema=(await import(L+"🧬️schema/📥️authority.json",{with:{type:"json"}})).default;
+const memo=await import(B+"🧠️admission-memo/🟦️.ts"),fi=await import(L+"🕸️graph/🧭️file-owner/🟨️.mjs");
+const scope=process.argv[2],dir=root+"/.cache/b/g/m/selected/",sha=(t:string)=>createHash("sha256").update(t).digest("hex");
+const graph=readFileSync(dir+scope+".json","utf8"),auth=JSON.parse(readFileSync(dir+scope+".authority.json","utf8"));
+const rows=ob.decodeAuthorityObservationsV1(auth.observations,aschema.definitions.ObservationKind.enum,()=>{});
+const m=await memo.readAdmissionMemoV1(dir+scope+".admission.json",scope,()=>true);
+const owners=memo.ownersOfAdmissionMemoV1(m!);
+const admission=owners.map((e:any)=>({owner:e.suffix.slice(0,e.suffix.indexOf("\0")),suffix:e.suffix,facts:e.facts,rows:e.rows}));
+const projects=JSON.parse(graph).projects,ownerOf=fi.createProjectFileIndexV1(projects);
+console.log("rows",rows.length,"admission",admission.length,"projects",Object.keys(projects).length,"graphBytes",graph.length);
+const client=at.selectedFleetClientV1(root);console.log("upload",client?.settings.upload,"usable",client?.usable());
+const built=ex.buildSelectedGenerationV1({scope,platform:"darwin-arm64",host:port.hostOfRootV1(root),sealed:{graph,rows,membership:auth.membership,admission},ownerOf:(x:string)=>ownerOf(x),now:Date.now()});console.log(built.documents.map((d:any)=>d.name+" "+(d.bytes.length/1048576).toFixed(1)+" MiB").join(", "));
+const t=Date.now(),r=await ex.publishSelectedGenerationV1({client:client!,scope,platform:"darwin-arm64",host:port.hostOfRootV1(root),sealed:{graph,rows,membership:auth.membership,admission},ownerOf:(x:string)=>ownerOf(x)});
+console.log(JSON.stringify({stored:r.stored,reason:r.reason,owners:r.head?Object.keys(r.head.owners).length:0}),Date.now()-t,"ms");

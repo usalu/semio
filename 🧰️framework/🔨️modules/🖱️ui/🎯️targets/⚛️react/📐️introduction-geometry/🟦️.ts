@@ -124,6 +124,15 @@ export function useIntroductionAnchorRect(selector: string | null): Introduction
   return rect;
 }
 
+/** 🧱️ Whether `element` forms a stacking context that traps the z-index of its descendants; an ancestor already raised as elevation path counts, since that raise made it one. A raised unit inside such an ancestor (a card inside the overlay of a layered overview) would stay under the veil whatever its own z-index, so {@link useIntroductionElevation} stamps every such ancestor `data-introduction-elevation-path`; the styling raises it and veils its other content.
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Stacking_context */
+function formsStackingContext(element: Element): boolean {
+  if (element.hasAttribute("data-introduction-elevation-path")) return true;
+  const style = getComputedStyle(element);
+  const set = (value: string | undefined, none = "none"): boolean => value !== undefined && value !== "" && value !== none;
+  return (set(style.zIndex, "auto") && set(style.position, "static")) || style.position === "fixed" || style.position === "sticky" || set(style.transform) || set(style.filter) || set(style.perspective) || style.isolation === "isolate" || (set(style.opacity, "1") && Number(style.opacity) < 1) || set(style.mixBlendMode, "normal") || /layout|paint|strict|content/u.test(style.contain ?? "") || /transform|opacity|filter/u.test(style.willChange ?? "") || set(style.backdropFilter);
+}
+
 /** 🔝️ Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨️ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (the whole window frame: tab chips, controls and body) or else its
@@ -153,6 +162,8 @@ export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<st
     };
     const observeRoot: globalThis.Node = shellScope?.rootRef.current ?? document.body;
     let stampedRoots = new Set<Element>();
+    let stampedPath = new Set<Element>();
+    let stampedVeiled = new Set<Element>();
     const positionedByUs = new Set<Element>();
 
     const resolve = () => {
@@ -182,6 +193,39 @@ export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<st
         }
       });
       stampedRoots = wantedRoots;
+      const wantedPath = new Set<Element>();
+      wantedRoots.forEach((root) => {
+        for (let ancestor = root.parentElement; ancestor !== null && ancestor !== document.body && ancestor !== searchRoot; ancestor = ancestor.parentElement) if (!wantedRoots.has(ancestor) && formsStackingContext(ancestor)) wantedPath.add(ancestor);
+      });
+      stampedPath.forEach((ancestor) => {
+        if (wantedPath.has(ancestor)) return;
+        ancestor.removeAttribute("data-introduction-elevation-path");
+        if (positionedByUs.has(ancestor)) {
+          (ancestor as HTMLElement).style.position = "";
+          positionedByUs.delete(ancestor);
+        }
+      });
+      wantedPath.forEach((ancestor) => {
+        if (!positionedByUs.has(ancestor) && getComputedStyle(ancestor).position === "static") {
+          (ancestor as HTMLElement).style.position = "relative";
+          positionedByUs.add(ancestor);
+        }
+        ancestor.setAttribute("data-introduction-elevation-path", "true");
+      });
+      stampedPath = wantedPath;
+      const wantedVeiled = new Set<Element>();
+      const veilBeside = (parent: Element): void => {
+        for (const child of parent.children) {
+          if (wantedRoots.has(child)) continue;
+          if ([...wantedRoots].some((root) => child.contains(root)) || getComputedStyle(child).display === "contents") veilBeside(child);
+          else wantedVeiled.add(child);
+        }
+      };
+      const outermost = [...wantedPath].filter((ancestor) => ![...wantedPath].some((other) => other !== ancestor && other.contains(ancestor)));
+      outermost.forEach(veilBeside);
+      stampedVeiled.forEach((element) => { if (!wantedVeiled.has(element)) element.removeAttribute("data-introduction-veiled"); });
+      wantedVeiled.forEach((element) => element.setAttribute("data-introduction-veiled", "true"));
+      stampedVeiled = wantedVeiled;
       setResolved((prev) => (prev.size === nextResolved.size && [...nextResolved].every((id) => prev.has(id)) ? prev : nextResolved));
     };
 
@@ -194,6 +238,11 @@ export function useIntroductionElevation(ids: readonly string[]): ReadonlySet<st
         root.removeAttribute("data-introduction-elevated");
         if (positionedByUs.has(root)) (root as HTMLElement).style.position = "";
       });
+      stampedPath.forEach((ancestor) => {
+        ancestor.removeAttribute("data-introduction-elevation-path");
+        if (positionedByUs.has(ancestor)) (ancestor as HTMLElement).style.position = "";
+      });
+      stampedVeiled.forEach((element) => element.removeAttribute("data-introduction-veiled"));
       setResolved(new Set());
     };
   }, [ids, shellScope]);

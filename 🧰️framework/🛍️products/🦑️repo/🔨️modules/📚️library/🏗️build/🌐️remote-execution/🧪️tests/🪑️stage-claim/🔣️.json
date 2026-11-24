@@ -290,72 +290,252 @@
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 0,
+   "waiting": false,
    "ageMilliseconds": 0,
-   "holdMegabytes": 4915
+   "holdMegabytes": 256
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 0,
+   "waiting": false,
    "ageMilliseconds": 119999,
-   "holdMegabytes": 4915
+   "holdMegabytes": 256
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 0,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 0,
+   "waiting": true,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": false,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 156
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": false,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 156
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 100,
+   "waiting": true,
    "ageMilliseconds": 120001,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 1200,
+   "waiting": false,
    "ageMilliseconds": 0,
-   "holdMegabytes": 3715
+   "holdMegabytes": 300
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 1200,
+   "waiting": false,
    "ageMilliseconds": 119999,
-   "holdMegabytes": 3715
+   "holdMegabytes": 300
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 1200,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 1200,
+   "waiting": true,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": false,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 975
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": false,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 975
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 3900,
+   "waiting": true,
    "ageMilliseconds": 120001,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 4915,
+   "waiting": false,
    "ageMilliseconds": 0,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 4915,
+   "waiting": false,
    "ageMilliseconds": 119999,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 4915,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 4915,
+   "waiting": true,
    "ageMilliseconds": 120001,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 9000,
+   "waiting": false,
    "ageMilliseconds": 0,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 9000,
+   "waiting": false,
    "ageMilliseconds": 119999,
    "holdMegabytes": 0
   },
   {
    "entitlementMegabytes": 4915,
    "observedMegabytes": 9000,
+   "waiting": false,
+   "ageMilliseconds": 120001,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "waiting": true,
+   "ageMilliseconds": 0,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "waiting": true,
+   "ageMilliseconds": 119999,
+   "holdMegabytes": 0
+  },
+  {
+   "entitlementMegabytes": 4915,
+   "observedMegabytes": 9000,
+   "waiting": true,
    "ageMilliseconds": 120001,
    "holdMegabytes": 0
   }
@@ -367,8 +547,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 800,
-   "leftMegabytes": 2285,
-   "children": 0,
+   "leftMegabytes": 5700,
+   "children": 4,
    "childrenGrown": 4
   },
   {
@@ -377,8 +557,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 1393,
-   "leftMegabytes": 2285,
-   "children": 0,
+   "leftMegabytes": 5700,
+   "children": 2,
    "childrenGrown": 2
   },
   {
@@ -407,8 +587,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 800,
-   "leftMegabytes": 4285,
-   "children": 2,
+   "leftMegabytes": 7700,
+   "children": 7,
    "childrenGrown": 7
   },
   {
@@ -417,8 +597,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 1393,
-   "leftMegabytes": 4285,
-   "children": 1,
+   "leftMegabytes": 7700,
+   "children": 4,
    "childrenGrown": 4
   },
   {
@@ -447,8 +627,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 800,
-   "leftMegabytes": 6285,
-   "children": 5,
+   "leftMegabytes": 9700,
+   "children": 9,
    "childrenGrown": 9
   },
   {
@@ -457,8 +637,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 1393,
-   "leftMegabytes": 6285,
-   "children": 3,
+   "leftMegabytes": 9700,
+   "children": 5,
    "childrenGrown": 5
   },
   {
@@ -487,8 +667,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 800,
-   "leftMegabytes": 8285,
-   "children": 7,
+   "leftMegabytes": 11700,
+   "children": 9,
    "childrenGrown": 9
   },
   {
@@ -497,8 +677,8 @@
    "observedMegabytes": 1200,
    "entitlementMegabytes": 4915,
    "childMegabytes": 1393,
-   "leftMegabytes": 8285,
-   "children": 4,
+   "leftMegabytes": 11700,
+   "children": 6,
    "childrenGrown": 7
   },
   {

@@ -43,7 +43,10 @@ pub struct ArtifactEditMessageSlots {
 
 impl ArtifactEditMessageSlots {
     fn empty() -> Self { Self { pages: std::array::from_fn(|_| None), admitted: 0 } }
-    fn new() -> Self { Self { pages: std::array::from_fn(|_| Some(Box::<[protocol::EditMessages]>::new_uninit_slice(ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS))), admitted: ARTIFACT_EDIT_MESSAGE_SLOT_PAGES } }
+    fn new() -> Self {
+        semio_framework_value::birth_ledger::record_original_birth(ARTIFACT_EDIT_MESSAGE_SLOT_PAGES*ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS*size_of::<protocol::EditMessages>());
+        Self { pages: std::array::from_fn(|_| Some(Box::<[protocol::EditMessages]>::new_uninit_slice(ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS))), admitted: ARTIFACT_EDIT_MESSAGE_SLOT_PAGES }
+    }
     fn len(&self) -> usize { self.admitted * ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS }
     fn is_empty(&self) -> bool { self.pages.iter().all(Option::is_none) }
     fn admission_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -244,7 +247,7 @@ impl ArtifactEditMessageLedger {
     }
 
     pub fn new() -> Self {
-        Self {
+        let born = Self {
             original_admission:None,
             slots: ArtifactEditMessageSlots::new(),
             generations: vec![0; ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY].into_boxed_slice(),
@@ -257,7 +260,9 @@ impl ArtifactEditMessageLedger {
             head: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE,
             tail: ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE,
             len: 0,
-        }
+        };
+        semio_framework_value::birth_ledger::record_original_birth(size_of_val(&*born.generations)+size_of_val(&*born.occupied)+size_of_val(&*born.next)+size_of_val(&*born.previous)+size_of_val(&*born.buckets)+size_of_val(&*born.free));
+        born
     }
 
     pub fn try_from_entries(entries: Vec<protocol::EditMessages>) -> Result<Self, ArtifactEditMessageLedgerRejected> {

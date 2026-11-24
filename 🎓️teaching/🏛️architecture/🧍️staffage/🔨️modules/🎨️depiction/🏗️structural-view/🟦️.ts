@@ -62,6 +62,8 @@ const at3 = (p: { readonly x: number; readonly y: number }, z: number): Vec3 => 
 const stationAt = (s: DiagramStation): Vec3 => at3(s.at, s.z);
 const placeOf = (ctx: Ctx, p: Vec3): Vec => ctx.paper(planeOf(ctx.options.viewpoint, p));
 const outLabel = (symbol: "dot" | "cross" | null): string => (symbol === "dot" ? "⊙" : "⊗");
+/** ↔️ The mark of the part of a vector that lies in the plane of the view, as the moment symbols use it. */
+const IN_PLANE = "⟷";
 
 function memberValue(diagram: MemberDiagram | undefined, quantity: StructuralQuantity): number | null {
   if (!diagram) return null;
@@ -330,11 +332,14 @@ export function peakOf(result: StructuralResult, kind: DiagramKind, include: (bo
   return Math.max(0, ...Object.entries(result.members).flatMap(([id, m]) => (include(id) ? m.stations.map((s) => totalOf(kind, s)) : [])));
 }
 
-/** 💡️ One filled region of a member diagram: the baseline followed by the reversed ordinate curve, and its peak (the signed in-plane value). */
-export type DiagramPolygon = { readonly bone: Slug; readonly index: number; readonly points: readonly Vec[]; readonly peak: number; readonly peakAt: Vec };
+/** 💡️ One filled region of a member diagram: the baseline followed by the reversed ordinate curve, its peak (the signed in-plane value) and the invariant magnitude of its member ({@link memberMagnitude}). */
+export type DiagramPolygon = { readonly bone: Slug; readonly index: number; readonly points: readonly Vec[]; readonly peak: number; readonly peakAt: Vec; readonly magnitude: number };
 
-/** 🔧️ A member whose diagram has a significant component along the line of sight: the symbol replaces the missing ordinate at the peak station. */
+/** 🔧️ A member whose diagram has a significant component along the line of sight: the symbol replaces the missing ordinate at the peak station; `total` is the invariant magnitude of the member ({@link memberMagnitude}). */
 export type DiagramOutOfPlane = { readonly bone: Slug; readonly at: Vec3; readonly total: number; readonly outOfPlane: number; readonly symbol: "dot" | "cross" };
+
+/** 🏔️ The one magnitude a member has for a diagram kind, the largest invariant value over its stations (|N|, |V| of both shear components, |M| of both bending components): every view reads it, whatever part of the vector lies in its plane. */
+export const memberMagnitude = (member: MemberDiagram, kind: DiagramKind): number => Math.max(0, ...member.stations.map((s) => totalOf(kind, s)));
 
 function directionOf(state: EvaluatedState, viewpoint: Viewpoint, bone: Slug): Vec | null {
   const u = planeOf(viewpoint, state.bones[bone]!.frame.u);
@@ -362,6 +367,7 @@ export function diagramPolygons(state: EvaluatedState, result: StructuralResult,
     const left = yDown ? { x: leftModel.x, y: -leftModel.y } : leftModel;
     const base = member.stations.map((s) => map(planeOf(viewpoint, stationAt(s))));
     const values = member.stations.map((s) => stationVector(state, viewpoint, kind, bone, s, leftModel).scalar);
+    const magnitude = memberMagnitude(member, kind);
     const offset = (i: number, v: number): Vec => add(base[i]!, scaleVec(left, (meta.side * v * ordinate) / peak));
     let run: DiagramRun = { base: [], off: [], peak: 0, peakAt: base[0]! };
     let index = 0;
@@ -374,7 +380,7 @@ export function diagramPolygons(state: EvaluatedState, result: StructuralResult,
       }
     };
     const close = (): void => {
-      if (run.base.length > 1 && Math.abs(run.peak) > 1e-9) out.push({ bone, index: index++, points: [...run.base, ...run.off.slice().reverse()], peak: run.peak, peakAt: run.peakAt });
+      if (run.base.length > 1 && Math.abs(run.peak) > 1e-9) out.push({ bone, index: index++, points: [...run.base, ...run.off.slice().reverse()], peak: run.peak, peakAt: run.peakAt, magnitude });
       run = { base: [], off: [], peak: 0, peakAt: base[0]! };
     };
     for (let i = 0; i < base.length; i++) {
@@ -400,9 +406,10 @@ export function diagramOutOfPlane(state: EvaluatedState, result: StructuralResul
   for (const [bone, member] of Object.entries(result.members)) {
     if (!include(bone) || !state.bones[bone]) continue;
     let best: DiagramOutOfPlane | null = null;
+    const total = memberMagnitude(member, kind);
     for (const s of member.stations) {
       const { out: depth } = stationVector(state, viewpoint, kind, bone, s, { x: 0, y: 1 });
-      if (Math.abs(depth) > Math.max(OUT_OF_PLANE_MIN * peak, 1e-9) && (best === null || Math.abs(depth) > Math.abs(best.outOfPlane))) best = { bone, at: stationAt(s), total: totalOf(kind, s), outOfPlane: depth, symbol: depth > 0 ? "dot" : "cross" };
+      if (Math.abs(depth) > Math.max(OUT_OF_PLANE_MIN * peak, 1e-9) && (best === null || Math.abs(depth) > Math.abs(best.outOfPlane))) best = { bone, at: stationAt(s), total, outOfPlane: depth, symbol: depth > 0 ? "dot" : "cross" };
     }
     if (best !== null) out.push(best);
   }
@@ -422,16 +429,18 @@ function drawDiagram(canvas: Canvas, ctx: Ctx, result: StructuralResult, kind: D
     canvas.path("diagrams", id, commandsOf(r.points, true), {
       fill: { color, opacity: 0.4 },
       stroke: { color, widthMm: 0.2, join: "round" },
-      value: { quantity: kind === "moment" ? "bending-moment" : kind === "axial" ? "axial-force" : "shear-force", value: r.peak, unit: meta.unit, label },
+      value: { quantity: kind === "moment" ? "bending-moment" : kind === "axial" ? "axial-force" : "shear-force", value: kind === "axial" ? r.peak : r.magnitude, unit: meta.unit, label },
       bone: r.bone,
     });
-    if (ctx.options.annotations.labels) ctx.labels.add(`${id}:label`, r.peakAt, `${label[ctx.language]} ${formatQuantity(r.peak, meta.unit, ctx.language)}`, { required: false, magnitude: Math.abs(r.peak) });
+    const whole = kind === "axial" || Math.abs(Math.abs(r.peak) - r.magnitude) <= OUT_OF_PLANE_MIN * r.magnitude;
+    const reading = whole ? formatQuantity(r.peak, meta.unit, ctx.language) : `${formatQuantity(r.magnitude, meta.unit, ctx.language)} (${IN_PLANE} ${formatQuantity(r.peak, meta.unit, ctx.language)})`;
+    if (ctx.options.annotations.labels) ctx.labels.add(`${id}:label`, r.peakAt, `${label[ctx.language]} ${reading}`, { required: false, magnitude: Math.abs(r.peak) });
   }
   for (const o of diagramOutOfPlane(ctx.state, result, kind, viewpoint, peak, include)) {
     const color = divergingColour(o.outOfPlane, sc, false, ctx.theme);
     const label = titleOf(o.bone);
     const centre = placeOf(ctx, o.at);
-    crossSymbol(canvas, `diagram:${kind}:${o.bone}:out`, centre, 0.9 + 1.6 * Math.sqrt(Math.abs(o.outOfPlane) / peak), o.symbol, color, undefined, { quantity: kind === "moment" ? "bending-moment" : "shear-force", value: Math.abs(o.outOfPlane), unit: meta.unit, label });
+    crossSymbol(canvas, `diagram:${kind}:${o.bone}:out`, centre, 0.9 + 1.6 * Math.sqrt(Math.abs(o.outOfPlane) / peak), o.symbol, color, undefined, { quantity: kind === "moment" ? "bending-moment" : "shear-force", value: o.total, unit: meta.unit, label });
     if (ctx.options.annotations.labels) ctx.labels.add(`diagram:${kind}:${o.bone}:out:label`, centre, `${label[ctx.language]} ${formatQuantity(o.total, meta.unit, ctx.language)} (${outLabel(o.symbol)} ${formatQuantity(Math.abs(o.outOfPlane), meta.unit, ctx.language)})`, { required: false, magnitude: o.total });
   }
 }
@@ -449,7 +458,7 @@ function diagramLegend(ctx: Ctx, kind: DiagramKind, peak: number): Legend {
     convention: side
       ? tx("M > 0 sagging (cool), M < 0 hogging (warm); the ordinate is drawn on the tension side of the member, projected into the view (M > 0 about the lateral axis on the bone's local −y face); at the peak a ringed dot (towards the viewer) or cross (away) marks the component along the line of sight of the tension-side direction of the bending moment (the direction in which the ordinate is drawn).", "M > 0 Feldmoment (kühl), M < 0 Stützmoment (warm); die Ordinate liegt auf der Zugseite des Stabes, in die Ansicht projiziert (M > 0 um die Querachse auf der lokalen −y-Seite des Stabes); am Maximum markiert ein Punkt im Kreis (zum Betrachter) oder Kreuz im Kreis (vom Betrachter weg) die Komponente in Blickrichtung der Zugseitenrichtung des Biegemoments (die Richtung, in der die Ordinate gezeichnet wird).")
       : tx("Positive values (tension for N) are drawn on the bone's local +y side (left of the bone direction), negative values on the other side; the vector is projected into the view, at its peak a ringed dot (towards the viewer) or cross (away) marks the component along the line of sight of the shear force vector V = −Σ distal transverse force (for N there is none).", "Positive Werte (Zug bei N) liegen auf der lokalen +y-Seite des Stabes (links der Stabrichtung), negative Werte auf der anderen Seite; der Vektor wird in die Ansicht projiziert, an ihrem Maximum markiert ein Punkt im Kreis (zum Betrachter) oder Kreuz im Kreis (vom Betrachter weg) die Komponente in Blickrichtung des Querkraftvektors V = −Σ distale Querkraft (bei N gibt es keine)."),
-    interpretation: tx(`Ordinate scale: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "en")} ${meta.unit} (the invariant maximum of the three-dimensional vector), the same for all members and all views.`, `Ordinatenmaßstab: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "de")} ${meta.unit} (das unveränderliche Maximum des räumlichen Vektors), für alle Stäbe und alle Ansichten gleich.`),
+    interpretation: tx(`Ordinate scale: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "en")} ${meta.unit} (the invariant maximum of the three-dimensional vector), the same for all members and all views; every member reads its own invariant maximum in every view, a label adds the part in the plane of the view (⟷) or along the line of sight (⊙, ⊗) where the view does not see the whole.`, `Ordinatenmaßstab: ${DIAGRAM_MM} mm ≙ ${formatNumber(peak, 2, "de")} ${meta.unit} (das unveränderliche Maximum des räumlichen Vektors), für alle Stäbe und alle Ansichten gleich; jeder Stab liest in jeder Ansicht sein eigenes unveränderliches Maximum, ein Label nennt zusätzlich den Anteil in der Ansichtsebene (⟷) oder in Blickrichtung (⊙, ⊗), wo die Ansicht nicht das Ganze sieht.`),
   });
 }
 

@@ -1,11 +1,11 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {existsSync,readdirSync} from "node:fs";
-import {isAbsolute,join} from "node:path";
+import {dirname,isAbsolute,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {dependencyClosureV1,walkFilesV1} from "../🌳️inputs/🟦️.ts";
-import {includedSourcesV1,offloadRealTextV1,planOffloadV1,semioEnvironmentReadV1,type OffloadPlanV1} from "../🗺️paths/🟦️.ts";
+import {climbAboveV1,includedSourcesV1,offloadRealTextV1,planOffloadV1,semioEnvironmentReadV1,type OffloadPlanV1} from "../🗺️paths/🟦️.ts";
 import {parseDepInfoV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {OFFLOAD_POLICY_V1,extractOffloadFlagV1,offloadLinksNativelyV1,offloadModeV1,offloadPinV1,offloadSettingV1,offloadTextV1} from "../📐️policy/🟦️.ts";
 import {offloadRustcCommandV1,offloadPlatformV1,parseRustcIdentityV1} from "../📜️action/🟦️.ts";
@@ -414,6 +414,32 @@ test("a unit Cargo compiles in its package directory (absolute source, working d
  expect("declined" in declined&&declined.detail).toContain("source outside CARGO_MANIFEST_DIR");
 });
 
+test("a shim whose #[path] climbs out of the module directory and back into it by name (intrinsic-size: [lib] path in packages/rust, #[path = \"../../../intrinsic-size/lib.rs\"]) keeps that directory name in the virtual layout: the text resolves on the other machine and rustc compiles the shipped files",()=>{
+ const planned=(label:string,depth:string)=>{
+  const checkout=chain(label),base=join(checkout.root,depth,"modules"),module=join(base,"📏️intrinsic-size"),manifest=join(module,"packages","rust");
+  mkdirSync(manifest,{recursive:true});writeFileSync(join(manifest,"Cargo.toml"),"[package]\nname = \"c\"\n");
+  writeFileSync(join(manifest,"lib.rs"),"#[path = \"../../../📏️intrinsic-size/lib.rs\"]\nmod component;\npub use component::*;\n");
+  writeFileSync(join(module,"lib.rs"),"pub fn c()->u32{1}\n");
+  const args=checkout.arguments("c",[]).map(argument=>argument==="pk/c/src/lib.rs"?join(manifest,"lib.rs"):argument).filter((argument,index,all)=>!argument.startsWith("--remap-path-prefix")&&all[index-1]!=="--remap-path-prefix");
+  return{manifest,module,result:planOffloadV1({args:[...args,`--remap-path-prefix=${checkout.root}=.`,`--remap-path-prefix=${manifest}=c-1.0.0`],environment:{...checkout.environment("c"),CARGO_MANIFEST_DIR:manifest},cwd:manifest})};
+ };
+ const left=planned("climb-left","pk"),right=planned("climb-right","pk");
+ if("declined" in left.result||"declined" in right.result)throw Error(JSON.stringify(left.result)+JSON.stringify(right.result));
+ expect(left.result.arguments).toEqual(right.result.arguments);expect([...left.result.files.keys()]).toEqual([...right.result.files.keys()]);
+ const names=[...left.result.files.keys()],source=left.result.environment.SEMIO_SOURCE??"";
+ expect(source.endsWith("/📏️intrinsic-size/packages/rust/lib.rs")).toBe(true);
+ const target=join(dirname(source),"../../../📏️intrinsic-size/lib.rs").split("\\").join("/");
+ expect(names,"the file that the #[path] text names, resolved in the virtual layout").toContain(target);
+ expect(climbAboveV1(join(left.manifest,"lib.rs"),[join(left.module,"lib.rs")],left.module,left.manifest)).toBe(1);
+ expect(climbAboveV1("/m/a.rs",[],"/m",undefined,()=>"#[path = \"b/c.rs\"] mod x;")).toBe(0);
+ const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"offload-climb-")));
+ try{
+  for(const [name,real] of left.result.files){mkdirSync(dirname(join(root,name)),{recursive:true});writeFileSync(join(root,name),readFileSync(real));}
+  const done=spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=c","--emit=metadata","--out-dir",root,join(root,source)],{encoding:"utf8",cwd:root,env:testRustEnvironmentV1()});
+  expect(done.stderr,"rustc over the shipped virtual layout").not.toContain("couldn't find file");expect(done.status).toBe(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
 test("environment variables the worker policy cannot carry (a name with a hyphen, a value with a line break or beyond the bound) stay on the requester instead of failing the whole action there",()=>{
  const checkout=chain("names"),result=planOffloadV1({args:checkout.arguments("c",["b"]),environment:{...checkout.environment("c"),"SENTRY-TRACE":"00-abc-def-01",CARGO_BROKEN_LINES:"a\nb",CARGO_HUGE:"x".repeat(20000),CARGO_KEPT_NAME:"fine"},cwd:checkout.root});
  if("declined" in result)throw Error(JSON.stringify(result));
@@ -482,12 +508,12 @@ test("the fleet fanout ceiling is available with offload enabled, a published sc
  expect(await offloadFanOutJobsV1({...scheduler,SEMIO_OFFLOAD:"pin:g1-m06"},quiet),"a pinned build queues on one machine whatever this one is doing").toBe(Math.min(OFFLOAD_POLICY_V1.limits.fanOutJobs,availableParallelism()));
 });
 
-test("a unit whose recorded local cost is below a round trip is not worth a round trip; unknown or costly units go; the workspace root is found from any directory below it",()=>{
+test("a unit whose recorded local cost is below a round trip is not worth a round trip; costly units go, unmeasured ones compile here first; the workspace root is found from any directory below it",()=>{
  const root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"cost-")));
- expect(readUnitCostV1(root,"tiny")).toBeUndefined();expect(worthARoundTripV1(root,"tiny"),"no record: the first compile teaches the cost").toBe(true);
- writeUnitCostV1(root,"tiny",300);expect(readUnitCostV1(root,"tiny")).toBe(300);expect(worthARoundTripV1(root,"tiny")).toBe(false);
- writeUnitCostV1(root,"tiny",9300);expect(readUnitCostV1(root,"tiny"),"halfway to the new measurement").toBe(4800);expect(worthARoundTripV1(root,"tiny")).toBe(true);
- writeUnitCostV1(root,"a/b c",OFFLOAD_POLICY_V1.limits.roundTripMilliseconds);expect(worthARoundTripV1(root,"a/b c")).toBe(true);
+ expect(readUnitCostV1(root,"tiny")).toBeUndefined();expect(worthARoundTripV1(root,"tiny"),"no record: the first compile teaches the cost").toBe("unmeasured");
+ writeUnitCostV1(root,"tiny",300);expect(readUnitCostV1(root,"tiny")).toBe(300);expect(worthARoundTripV1(root,"tiny")).toBe("cheap");
+ writeUnitCostV1(root,"tiny",9300);expect(readUnitCostV1(root,"tiny"),"halfway to the new measurement").toBe(4800);expect(worthARoundTripV1(root,"tiny")).toBe("cheap");writeUnitCostV1(root,"tiny",14800);expect(readUnitCostV1(root,"tiny")).toBe(9800);expect(worthARoundTripV1(root,"tiny")).toBe("worth");
+ writeUnitCostV1(root,"a/b c",OFFLOAD_POLICY_V1.limits.roundTripMilliseconds);expect(worthARoundTripV1(root,"a/b c")).toBe("worth");
  const checkout=join(root,"ws"),below=join(checkout,"x","y");mkdirSync(join(checkout,".cache","f"),{recursive:true});mkdirSync(below,{recursive:true});writeFileSync(join(checkout,".cache","f","machine.json"),"{}");
  expect(workspaceRootFromV1(below)).toBe(checkout);expect(workspaceRootFromV1(root)).toBeUndefined();
  rmSync(root,{recursive:true,force:true});

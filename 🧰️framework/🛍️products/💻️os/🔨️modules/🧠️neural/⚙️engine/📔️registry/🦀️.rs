@@ -64,7 +64,7 @@ impl AsRef<Registry> for SharedRegistry { fn as_ref(&self) -> &Registry { self }
 impl Drop for SharedRegistry {
     fn drop(&mut self) {
         if let Some(root) = self.root.take().and_then(Arc::into_inner) {
-            assert!(self.final_root.registry.set(ManuallyDrop::new(root)).is_ok(), "registry final root is handed off exactly once");
+            assert!(std::thread::panicking()||(self.final_root.registry.set(ManuallyDrop::new(root)).is_ok()), "registry final root is handed off exactly once");
         }
     }
 }

@@ -1,0 +1,29 @@
+--- a/🚀️offload/🔌️client/🟦️.ts	2026-11-23 19:01:51
++++ b/🚀️offload/🔌️client/🟦️.ts	2026-11-23 19:01:51
+@@ -4,6 +4,7 @@
+ import {decodeProtobufV1,REAPI_V1,type ProtobufMessageV1} from "../../📡️wire/📦️protobuf/🟦️.ts";
+ import {connectGrpcV1,GRPC_CODES_V1,GrpcErrorV1,type GrpcClientV1} from "../../📡️wire/🚪️grpc/🟦️.ts";
+ import type {RemoteExecutionContentV1} from "../../🗄️content/🟦️.ts";
++import {remoteExecutionPeakOfMetadataV1} from "../../🟦️.ts";
+ import {classifyOffloadStatusV1} from "../🩺️failure/🟦️.ts";
+ import {OFFLOAD_POLICY_V1,type OffloadReasonV1} from "../📐️policy/🟦️.ts";
+ import type {OffloadDigestV1} from "../📜️action/🟦️.ts";
+@@ -92,7 +93,7 @@
+ 
+ const wired=(digest:{hash:string;size_bytes:number}):{hash:string;size:number}=>({hash:digest.hash,size:digest.size_bytes});
+ /** 📥️ What an action wrote: the files below one output directory by relative path, the content of single output files, and the compiler's streams. */
+-export type OffloadOutputsV1=Readonly<{directory:ReadonlyMap<string,Readonly<{digest:OffloadDigestV1;executable:boolean}>>;files:ReadonlyMap<string,Uint8Array>;stdout:Buffer;stderr:Buffer;exitCode:number}>;
++export type OffloadOutputsV1=Readonly<{directory:ReadonlyMap<string,Readonly<{digest:OffloadDigestV1;executable:boolean}>>;files:ReadonlyMap<string,Uint8Array>;stdout:Buffer;stderr:Buffer;exitCode:number;peakMegabytes?:number}>;
+ 
+ /** 📚️ Reads an action result into memory-light descriptors: the tree of the output directory (directories are blobs of the store), small single files and both streams. */
+ export async function readOffloadOutputsV1(content:RemoteExecutionContentV1,instance:string,actionResult:ProtobufMessageV1,outputDirectory:string,singleFiles:readonly string[],signal?:AbortSignal):Promise<OffloadOutputsV1>{
+@@ -107,7 +108,8 @@
+  for(const row of actionResult.output_directories as {path:string;root_directory_digest:OffloadDigestV1}[])if(row.path===outputDirectory)await walk(row.root_directory_digest,"");
+  for(const row of actionResult.output_files as {path:string;digest:OffloadDigestV1}[])if(singleFiles.includes(row.path))files.set(row.path,row.digest.size_bytes===0?new Uint8Array(0):await content.read(instance,wired(row.digest),signal)??new Uint8Array(0));
+  const stream=async(raw:Uint8Array,digest:OffloadDigestV1|undefined):Promise<Buffer>=>raw.length>0||!digest||digest.size_bytes===0?Buffer.from(raw):Buffer.from(await content.read(instance,wired(digest),signal)??new Uint8Array(0));
+- return{directory,files,stdout:await stream(actionResult.stdout_raw,actionResult.stdout_digest),stderr:await stream(actionResult.stderr_raw,actionResult.stderr_digest),exitCode:actionResult.exit_code};
++ const peak=remoteExecutionPeakOfMetadataV1((actionResult.execution_metadata as {auxiliary_metadata?:{type_url:string;value:Uint8Array}[]}|undefined)?.auxiliary_metadata);
++ return{directory,files,stdout:await stream(actionResult.stdout_raw,actionResult.stdout_digest),stderr:await stream(actionResult.stderr_raw,actionResult.stderr_digest),exitCode:actionResult.exit_code,...(peak===undefined?{}:{peakMegabytes:peak})};
+ }
+ 
+ /** 💾️ Writes the output files into a directory the way a local compilation leaves them: atomically per file, executable bit kept. Bytes already read are checked against their digest by the store client. */

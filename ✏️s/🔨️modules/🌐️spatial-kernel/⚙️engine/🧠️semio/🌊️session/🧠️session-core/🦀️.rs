@@ -164,7 +164,7 @@ impl SessionCapture {
 }
 
 impl Drop for SessionCapture {
-    fn drop(&mut self){assert!(self.terminal_is_empty(),"geometry capture requires explicit retirement before drop");}
+    fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"geometry capture requires explicit retirement before drop");}
 }
 
 /// 🔌️ Owner-supplied geometry operations; the retained session owns all authority and retirement.

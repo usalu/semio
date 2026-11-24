@@ -36,6 +36,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
@@ -73,20 +74,6 @@ TITLE_DE = "Modul 3: Lüftung im Winter"
 
 
 #region Beat helpers
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in ``1_introduction/scene_1.py`` and
-    ``2_conduction/scene_2.py`` so every module footnotes its norm identically. The winter ventilation loss is the
-    chain of DIN EN 12831-1 (Q̇_V = V · n · c_Luft · Δθ).
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Moving air
 def _streams(streams, rt: float, *, speed: float = 0.8, waves: int = 3):
     """💨 Continuous particle streams for ``rt`` seconds at a steady ``speed`` in passes per second."""
@@ -169,7 +156,7 @@ class Beat1_LueftungImWinter(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Ventilation loss in winter", "Lüftungsverlust im Winter"))
-        din = _din_ref(_references.cite("din-en-12831-1"))
+        din = reference_chip(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)

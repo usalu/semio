@@ -174,7 +174,7 @@ impl Lifter<'_> {
                 let saved_scope = self.scope;
                 self.scope = value.as_ref().map_or(self.scope.wrapping_mul(31).wrapping_add(7), |r| r.num as usize);
                 let map = self.lift_resources(&resources);
-                let content = self.parse_and_rename(value, data, &map);
+                let content = self.parse_and_rename(value, &data.to_vec_owner(), &map);
                 self.scope = saved_scope;
                 PdfPatternKind::Tiling { paint_type: dict_i64(&dict, "PaintType").unwrap_or(1) as u32, tiling_type: dict_i64(&dict, "TilingType").unwrap_or(1) as u32, bbox: rect_of(dict_get(&dict, "BBox")).unwrap_or([0.0, 0.0, 1.0, 1.0]), x_step: dict_f64(&dict, "XStep").unwrap_or(1.0), y_step: dict_f64(&dict, "YStep").unwrap_or(1.0), content }
             }
@@ -226,7 +226,7 @@ impl Lifter<'_> {
                 let oc_ids = self.ids.clone();
                 let mut id_of = |reference: &PdfObject| -> Option<String> { mask_ids.get(&reference.as_ref()?.num).cloned() };
                 let mut oc_id_of = |reference: &PdfObject| -> Option<String> { oc_ids.get(&(Category::OptionalContent, reference.as_ref()?)).cloned() };
-                let image = match lift_image(&id, dict, data, filters, self.source, &mut id_of, &mut oc_id_of) {Ok(image)=>image,Err(error)=>{self.admission_error=Some(error);return String::new();}};
+                let image = match lift_image(&id, dict, &data.to_vec_owner(), filters, self.source, &mut id_of, &mut oc_id_of) {Ok(image)=>image,Err(error)=>{self.admission_error=Some(error);return String::new();}};
                 self.source.record_role(value, PdfStreamRoleValue::Image { image: image.clone() });
                 self.snapshot.images.push(image);
                 for (mask_id, mask) in pending_masks {
@@ -238,7 +238,7 @@ impl Lifter<'_> {
                 let saved_scope = self.scope;
                 self.scope = value.as_ref().map_or(self.scope.wrapping_mul(31).wrapping_add(11), |r| r.num as usize);
                 let map = self.lift_resources(&resources);
-                let content = self.parse_and_rename(value, data, &map);
+                let content = self.parse_and_rename(value, &data.to_vec_owner(), &map);
                 self.scope = saved_scope;
                 let group = dict_get(dict, "Group").map(|g| self.source.deref(g)).and_then(|g| g.as_dict().map(|g| self.lift_group(g)));
                 let optional_content = dict_get(dict, "OC").and_then(|oc| self.existing_id(Category::OptionalContent, oc));
@@ -290,7 +290,7 @@ impl Lifter<'_> {
         let subtype = dict_name(&dict, "Subtype").unwrap_or("Type1").to_string();
         let base_font = dict_name(&dict, "BaseFont").unwrap_or("").to_string();
         let to_unicode = dict_get(&dict, "ToUnicode").map(|t| self.source.deref(t)).and_then(|t| match t {
-            PdfObject::Stream { data, .. } => { let mapping = cmap::parse_to_unicode(&data); if let Some(value) = dict_get(&dict, "ToUnicode") { self.source.record_role(value, PdfStreamRoleValue::UnicodeMap { mapping: mapping.clone() }); } Some(mapping) },
+            PdfObject::Stream { data, .. } => { let mapping = cmap::parse_to_unicode(&data.to_vec_owner()); if let Some(value) = dict_get(&dict, "ToUnicode") { self.source.record_role(value, PdfStreamRoleValue::UnicodeMap { mapping: mapping.clone() }); } Some(mapping) },
             _ => None,
         });
         let descriptor = dict_get(&dict, "FontDescriptor").map(|d| self.source.deref(d)).and_then(|d| d.as_dict().map(|d| self.lift_descriptor(d)));
@@ -306,7 +306,7 @@ impl Lifter<'_> {
                 let cmap = match dict_get(&dict, "Encoding").map(|e| self.source.deref(e)) {
                     Some(PdfObject::Name(name)) => PdfCMap::Predefined { name },
                     Some(PdfObject::Stream { dict: cmap_dict, data, .. }) => {
-                        let mut parsed = cmap::parse_cmap(&data, dict_name(&cmap_dict, "CMapName").unwrap_or("Embedded"));
+                        let mut parsed = cmap::parse_cmap(&data.to_vec_owner(), dict_name(&cmap_dict, "CMapName").unwrap_or("Embedded"));
                         if let Some(PdfObject::Name(parent)) = dict_get(&cmap_dict, "UseCMap") {
                             parsed.use_cmap = Some(parent.clone());
                         }
@@ -328,7 +328,7 @@ impl Lifter<'_> {
                 let mut char_procs = Vec::new();
                 for entry in procs {
                     if let PdfObject::Stream { data, .. } = self.source.deref(&entry.value) {
-                        let content = self.parse_and_rename(&entry.value, &data, &map);
+                        let content = self.parse_and_rename(&entry.value, &data.to_vec_owner(), &map);
                         char_procs.push(PdfCharProc { name: entry.key, content });
                     }
                 }
@@ -411,7 +411,7 @@ impl Lifter<'_> {
         let vertical_metrics = dict_get(dict, "W2").map(|w| self.source.deref(w)).and_then(|w| w.as_array().map(<[PdfObject]>::to_vec)).map(|items| self.lift_cid_vertical(&items)).unwrap_or_default();
         let cid_to_gid = match dict_get(dict,"CIDToGIDMap").map(|m|self.source.deref(m)) {
             Some(PdfObject::Name(name)) if name=="Identity"=>Some(PdfCidToGid::Identity),
-            Some(PdfObject::Stream {data,..})=>{if data.len()%2!=0 {self.admission_error=Some(PdfEngineError::Malformed("CIDToGIDMap must contain complete glyph ids".into()));None}else{let glyphs=data.chunks_exact(2).map(|pair|u16::from_be_bytes([pair[0],pair[1]])).collect::<Vec<_>>();if let Some(value)=dict_get(dict,"CIDToGIDMap"){self.source.record_role(value,PdfStreamRoleValue::GlyphIds {glyphs:glyphs.clone()});}Some(PdfCidToGid::Map {glyphs})}},
+            Some(PdfObject::Stream {data,..})=>{if data.len()%2!=0 {self.admission_error=Some(PdfEngineError::Malformed("CIDToGIDMap must contain complete glyph ids".into()));None}else{let glyphs=data.to_vec_owner().chunks_exact(2).map(|pair|u16::from_be_bytes([pair[0],pair[1]])).collect::<Vec<_>>();if let Some(value)=dict_get(dict,"CIDToGIDMap"){self.source.record_role(value,PdfStreamRoleValue::GlyphIds {glyphs:glyphs.clone()});}Some(PdfCidToGid::Map {glyphs})}},
             _=>None,
         };
         PdfCidFont {

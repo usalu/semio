@@ -29,7 +29,7 @@ pub fn handle(payload: &PatchLayer, doc: &ArtifactView<'_, DrawingSnapshot>, _cf
 /// 🕳️ A validated field edit equal to its semantic inverse carries no authored change.
 pub fn changes_layer(document:&DrawingSnapshot,operation:&DrawingMutation)->Result<bool,Fault> {
     let inverse=semio_s_artifact_draw_drawing_mutations::inverse_drawing_mutation(document,operation).map_err(|error|Fault::from(error.to_string()))?;
-    if inverse.is_empty(){return Err(Fault::from("The layer field target is missing"));}
+    if inverse.is_empty(){return if semio_s_artifact_draw_drawing_mutations::drawing_mutation_is_refused(document,operation){Err(Fault::from("The layer field target is missing"))}else{Ok(false)};}
     Ok(inverse.len()!=1||inverse[0]!=*operation)
 }
 

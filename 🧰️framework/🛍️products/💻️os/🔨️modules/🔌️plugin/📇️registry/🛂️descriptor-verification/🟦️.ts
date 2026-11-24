@@ -135,6 +135,7 @@ export function validateDescriptors(entries: readonly DeployedRegistryEntryV1[],
     const hostPluginId = entry.extends;
     const hostExtensionPoints = hostPluginId ? new Set(byId.get(hostPluginId)?.extensionPoints ?? []) : undefined;
     for (const activation of entry.activationEvents) {
+      if (activation.startsWith("on-node-kind:") && hostPluginId === undefined) errors.push(`${entry.pluginId}: declares ${activation} but has no "extends" host plugin`);
       const point = activation.startsWith("on-extension-request:") ? activation.slice("on-extension-request:".length) : undefined;
       if (point === undefined) continue;
       if (hostPluginId === undefined) {

@@ -121,7 +121,7 @@ impl<T:NativeReceive<DslValue>> JsonField<T>{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.retirement.is_empty()&&self.owners.parser.is_none()&&self.owners.parsed.is_none()&&self.owners.admission.is_none()&&self.owners.source.is_none()&&self.owners.receiver.is_none()&&self.owners.output.is_none()&&self.owners.error.is_none()}
 }
-impl<T:NativeReceive<DslValue>> Drop for JsonField<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original composed JSON field must close its grammar and receiving custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
+impl<T:NativeReceive<DslValue>> Drop for JsonField<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original composed JSON field must close its grammar and receiving custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 
 
 #[cfg(test)]

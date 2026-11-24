@@ -9,6 +9,7 @@ import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import healthyHeal from "./🧫️fixtures/🩹️healthy-heal.json" with {type:"json"};
 import {appendEventsV1,formatHlcV1,readEventsV1,listOriginsV1,storeBlobV1,type FleetEventV1} from "../../📒️journal/🟦️.ts";
 import {gitBrokenV1,gitStateV1} from "../../🌿️git/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {authorisePacksV1} from "../🧷️packgate/🟦️.ts";
 import {readAttestationV1} from "../../🩺️attest/🟦️.ts";
 import {closeReplicaV1,followOnceV1,healGitV1,joinV1,openReplicaV1,publishOnceV1,runV1,seedV1,type ReplicaEventV1,type ReplicaOptionsV1,type ReplicaV1} from "../🟦️.ts";
@@ -145,6 +146,25 @@ posixTest("the check names why HEAD does not resolve, the heal brings the shared
   expect((await gitStateV1(worker.options.worktree)).commit).toBe(tip);
  }finally{await shut(server);await shut(worker);}
 },120_000);
+
+posixTest("a shallow boundary stays on the machine that wrote it and never cuts the history of another machine",async()=>{
+ const {store,server,worker}=await pair();
+ try{
+  write(server,"b.txt","bravo\n");cli(server,["add","-A"]);cli(server,["commit","-q","-m","second"]);
+  const tip=cli(server,["rev-parse","HEAD"]).trim();
+  await converge([server,worker],()=>ok(worker,["cat-file","-e",`${tip}^{commit}`]));
+  write(server,".git/shallow",`${tip}\n`);
+  expect(cli(server,["rev-list","--count",tip]).trim()).toBe("1");
+  await publishOnceV1(server.replica!,undefined,[".git/shallow"]);
+  await converge([server,worker],()=>true);
+  const paths:string[]=[];
+  for(const origin of await listOriginsV1(store))for(const event of (await readEventsV1(store,origin,undefined)).events)paths.push(event.path);
+  expect(paths.includes(".git/shallow")).toBe(false);
+  expect(existsSync(at(worker,".git/shallow"))).toBe(false);
+  expect(cli(worker,["rev-list","--count",tip]).trim()).toBe("2");
+  expect(cli(worker,["log","-1","--format=%P",tip]).trim()).toBe(cli(worker,["rev-parse",`${tip}~1`]).trim());
+ }finally{await shut(server);await shut(worker);}
+},stretchedBudgetMillisecondsV1(60_000));
 
 posixTest("a config git cannot parse is named, an absent config and a sound repository are not",async()=>{
  const {server,worker}=await pair();

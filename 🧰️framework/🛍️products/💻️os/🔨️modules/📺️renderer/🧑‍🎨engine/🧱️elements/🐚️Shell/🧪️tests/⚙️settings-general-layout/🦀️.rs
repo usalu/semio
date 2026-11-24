@@ -129,7 +129,8 @@ fn chrome_hosted_panel_owns_only_nested_rows_above_the_footer_root_toggle() {
 
 #[test]
 fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pending_panel_tab() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    caller.own_surface(FRAMEWORK_SETTINGS_GENERAL_TAB_ID);
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let anchor = PanelAnchor::BottomRight;
     shell.dock.dock_tabs.tabs_mut(anchor).clear();
@@ -152,10 +153,10 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut panel_cursor = ShellChromeChildCursor::default();
     for _ in 0..9 {
-        assert!(!caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)), "a fresh retained panel remains stepped while its document layout is pending");
+        assert!(!caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)), "a fresh retained panel remains stepped while its document layout is pending");
     }
     assert_eq!(panel_cursor.phase, 1, "the real panel walk waits for accepted document layout before committing panel geometry");
-    assert!(!caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
+    assert!(!caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
     assert!(!panel_cursor.document.terminal_is_complete() && !panel_cursor.document.terminal_is_fault(), "the footer is rendered while the General document is still pending");
 
     let (screen_w, screen_h) = (shell.chrome.screen_w, shell.chrome.screen_h);
@@ -169,7 +170,7 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     assert!(input.hits().is_empty(), "an incomplete frame cannot promote even its completed footer");
     assert!(input.staged_hits().iter().all(|hit| hit.kind != HitKind::PanelTab || hit.control_id.as_deref() != Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID)), "a pending panel stages no premature leaf hit");
 
-    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
+    let panel_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut panel_cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut world_resources, cx)));
     assert!(panel_complete, "the same pending panel cursor reaches accepted layout and paints");
     let mut settled_footer_cursor = ShellChromeChildCursor::default();
     let footer_complete = (0..4_096).any(|_| PanelsViewCtx::of(&mut shell).render_footer_step(&mut settled_footer_cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, screen_w, screen_h));
@@ -190,13 +191,15 @@ fn rendered_footer_root_closes_settings_without_selecting_or_dragging_the_pendin
     );
     assert!(shell.dock.dock_tab_drag.is_none() && !input.drag.active, "the footer root gesture never arms a dock-tab drag");
     caller.retire_world(&mut world_resources);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }
 
 #[test]
 fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     const SURFACE: &str = "framework.settings.general.compact-law";
+    caller.own_surface(SURFACE);
     let fixture = fixture();
     let vector = &fixture["stableGeneral"];
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
@@ -225,7 +228,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     let mut first_input = InputState::<ActionDescriptor>::default();
     let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut first_cursor = ShellChromeChildCursor::default();
-    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources, cx)));
+    let first_complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut first_cursor, anchor, &mut first_draw, None, &mut atlas, &icons, &mut first_input, &theme, body, &mut resources, cx)));
     assert!(first_complete, "normal General ingress, reconcile, layout and paint complete");
     assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_root_is_tree(SURFACE), "the accepted production root remains Tree");
     let intrinsic = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_content_height(SURFACE).expect("accepted General intrinsic height");
@@ -240,7 +243,7 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     draw.set_screen_height(shell.chrome.screen_h);
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx)));
+    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx)));
     assert!(complete, "a new Shell panel cursor completes against the accepted General layout");
     let compact = cursor.rect.expect("second panel rectangle");
     let glass = draw.glass_regions.first().expect("General panel glass").rect;
@@ -270,13 +273,15 @@ fn accepted_general_tree_hugs_the_bottom_anchor_on_the_next_shell_panel_walk() {
     assert!(!content.contains(unused.0, unused.1));
     assert!(input.hit_at(unused.0, unused.1).is_none(), "the unused former full-height band has no General target");
     caller.retire_world(&mut resources);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }
 
 #[test]
 fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     const SURFACE: &str = "framework.settings.general.appearance-commit-law";
+    caller.own_surface(SURFACE);
     let fixture = fixture();
     let vector = &fixture["selectCommit"];
     let control_id = vector["controlId"].as_str().unwrap();
@@ -319,7 +324,7 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.chrome.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources, cx)));
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, theme, body, &mut resources, cx)));
         assert!(complete, "General panel ingress/layout/paint completes");
         PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
         draw
@@ -394,13 +399,15 @@ fn appearance_option_commit_uses_the_retained_router_and_retires_its_popup() {
     assert_eq!(ordinary_actions.len(), 1, "ordinary retained Buttons keep one EventRouter action path");
     assert_eq!(ordinary_actions[0].action, "runOsCommand");
     caller.retire_world(&mut resources);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }
 
 #[test]
 fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_them_when_closed() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     const SURFACE: &str = "framework.settings.general.driver-retirement-law";
+    caller.own_surface(SURFACE);
     let neutral = fixture();
     let geometry = &neutral["upFlowDisclosure"];
     let section = &geometry["sectionRect"];
@@ -431,7 +438,7 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.chrome.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx)));
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx)));
         assert!(complete, "General panel ingress/layout/paint completes");
         PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
     };
@@ -461,11 +468,13 @@ fn an_open_up_flow_disclosure_keeps_its_header_below_its_children_and_retires_th
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(child_id.as_str())), "closing Drivers retires its child from the host hit registry");
     assert!(!shell.input.retained_hit_windows.contains_key(&child_id), "the atomic retained owner map retires the same child generation");
     caller.retire_world(&mut resources);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     caller.finish();
 }
 
 #[test]
 fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let contract = &fixture["retainedPreferencePublication"];
     let surface = contract["surfaceId"].as_str().unwrap();
@@ -499,6 +508,7 @@ fn host_preference_dispatch_republishes_general_without_a_guest_refresh() {
 
 #[test]
 fn driver_draft_save_and_reset_republish_every_retained_general_field() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let contract = &fixture["retainedPreferencePublication"];
     let surface = contract["surfaceId"].as_str().unwrap();
@@ -531,6 +541,7 @@ fn driver_draft_save_and_reset_republish_every_retained_general_field() {
 
 #[test]
 fn general_republication_refusal_preserves_the_exact_readable_owner_and_retries() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let surface = FRAMEWORK_SETTINGS_GENERAL_TAB_ID;
     let initial = SessionCtx::of(&mut shell).publish_shell_panel_document(surface).expect("initial General publication").expect("General retained document");
@@ -598,4 +609,13 @@ fn a_framework_setting_dispatch_completes_on_a_one_mebibyte_thread() {
 fn a_shell_state_stays_small_enough_to_live_on_a_bounded_thread() {
     let bytes = std::mem::size_of::<ShellState>();
     assert!(bytes <= 64 * 1024, "ShellState is {bytes} bytes; a phase owner moved inline again");
+}
+
+#[test]
+fn debug_sizes() {
+    fn g<T>(_: impl Fn(&ShellState) -> &T) -> usize { std::mem::size_of::<T>() }
+    eprintln!("[DEBUG] ShellState {}", std::mem::size_of::<ShellState>());
+    eprintln!("[DEBUG] surfaces: w3d {} nodegraph {} tiled {} board {} icon_render {} retire {} retired_q {} status {} fault {}", g(|s| &s.surfaces.world3d_states), g(|s| &s.surfaces.node_graph_states), g(|s| &s.surfaces.tiled_map_states), g(|s| &s.surfaces.board2d_states), g(|s| &s.surfaces.icon_render_states), g(|s| &s.surfaces.component_world3d_retirement), g(|s| &s.surfaces.retired_world3d_states), g(|s| &s.surfaces.world3d_status), g(|s| &s.surfaces.world3d_retirement_fault));
+    eprintln!("[DEBUG] opening: doc_opening {} icon_export {} video {} native_media {} lease {} import {} services {}", g(|s| &s.opening.document_opening), g(|s| &s.opening.icon_export), g(|s| &s.opening.video_render), g(|s| &s.opening.native_media_save), g(|s| &s.opening.document_execution_target_lease), g(|s| &s.opening.import_transfers), g(|s| &s.opening.document_services));
+    eprintln!("[DEBUG] docs: session {} clip {} ident {} closing {} overlay {} spawned {}", g(|s| &s.docs.session), g(|s| &s.docs.workspace_clipboard), g(|s| &s.docs.app_document_identities), g(|s| &s.docs.closing_documents), g(|s| &s.docs.app_labels_overlay), g(|s| &s.docs.spawned_session));
 }

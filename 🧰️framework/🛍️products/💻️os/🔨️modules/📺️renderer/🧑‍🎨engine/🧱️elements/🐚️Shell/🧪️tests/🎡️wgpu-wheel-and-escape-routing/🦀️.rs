@@ -9,7 +9,7 @@
 //! | `zoom-wheel` | `interactionHover`, `noteWorldNavigation`, `setCamera` | `interactionHover` | the notch resolved the window's own `ScrollRegion`, whose id names no `.pane`/`.map` surface, so `wheel_reaches_scene_surface` refused and the world never saw it (`🗑️generated/w11a-parity-run-14/wgpu/console.txt:19476`, `wheel apply … hit=Some(ScrollRegion) control=Some("") propagates=false`) |
 //! | `example-picker-dismiss` | `engagementAbort` | (none) | the open picker made `idle` false, so the app-keybinding rung never ran, and the sync Escape arm closed the picker and returned |
 
-use semio_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, test_app};
+use semio_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe_closing, test_app};
 use super::*;
 use infinite_world::world::World3dState;
 use semio_framework::manifest::Keybinding;
@@ -242,7 +242,7 @@ fn a_modal_layer_or_an_unnamed_dock_row_activates_no_window() {
 /// 🖱️ A real secondary press opens the menu and reaches only its captured World.
 #[test]
 fn a_plain_secondary_press_over_a_pane_opens_the_menu_and_still_presses_the_surface() {
-    retained_world_sequence_probe("secondary");
+    retained_world_sequence_probe_closing("secondary", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 /// ⚖️ LAW (source anchor + oracle): a modal layer OPENING hands every surface that still publishes a

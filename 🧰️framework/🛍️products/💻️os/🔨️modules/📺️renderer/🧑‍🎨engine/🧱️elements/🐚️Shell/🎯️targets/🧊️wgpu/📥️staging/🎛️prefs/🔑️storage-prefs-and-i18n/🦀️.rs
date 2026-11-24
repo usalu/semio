@@ -39,7 +39,7 @@ pub fn stored_field_set(key: &str, value: &str) {
 /// there — kiosk/demo locking is a native `semio-wgpu-native` deployment concern).
 #[derive(Clone, Debug, Default)]
 #[cfg(any(test, feature = "testkit"))]
-struct ShellPrefLocks {
+pub struct ShellPrefLocks {
     pub appearance: Option<String>,
     pub locale: Option<String>,
     pub terminology: Option<String>,
@@ -122,7 +122,7 @@ pub struct UiPreferencesEventLog {
 /// rewrite from this renderer's own events would destroy what it could not read, while reads replay `readable`, the
 /// events it did decode.
 #[derive(Clone, Debug)]
-struct UiPreferencesLogRefusal {
+pub struct UiPreferencesLogRefusal {
     pub reason: &'static str,
     pub event_index: Option<usize>,
     pub readable: UiPreferencesEventLog,

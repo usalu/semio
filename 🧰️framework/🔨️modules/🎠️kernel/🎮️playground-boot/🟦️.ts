@@ -105,6 +105,7 @@ export class PlaygroundBootPlanner {
           moduleUrl: target.role === "extension" ? this.catalog.extensionModuleUrl(target.pluginId) : this.catalog.moduleUrl(target.pluginId),
           contributes: target.contributes,
           consumes: target.consumes,
+          activationEvents: target.activationEvents,
           dependencies: dependsOnToPluginDependencies(target.dependsOn),
         });
       }

@@ -29,7 +29,8 @@
           "weldsHazExtent": null,
           "actions": null,
           "loadEccentricity": 0.06,
-          "holeStagger": null
+          "holeStagger": null,
+          "forceMethod": null
         }
       }
     ]
@@ -46,11 +47,6 @@
   "ringStiffeners": null,
   "sheetProfiles": null,
   "fireInsulations": null,
-  "transverseStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "transverseStiffeners": null,
   "reliabilityClass": null
 }

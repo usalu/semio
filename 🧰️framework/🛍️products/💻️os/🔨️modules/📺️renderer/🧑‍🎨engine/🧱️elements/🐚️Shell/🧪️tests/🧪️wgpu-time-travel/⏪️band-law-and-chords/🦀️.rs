@@ -183,6 +183,7 @@ fn a_chord_dispatches_only_what_the_stage_offers() {
 /// the band on, and a bare Escape reaches no history-edit verb at all.
 #[test]
 fn the_keyboard_router_accepts_by_chord_and_escape_discards_nothing() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     DISPATCHED.with(|log| log.borrow_mut().clear());
     let mut shell = host_test_shell();
     shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(record_action);
@@ -196,5 +197,6 @@ fn the_keyboard_router_accepts_by_chord_and_escape_discards_nothing() {
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("Escape routes");
     assert!(!dispatched()[before..].iter().any(|action| action.contains("historyEdit")), "Escape dispatched no history-edit verb: {:?}", &dispatched()[before..]);
     assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying));
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
 }
 //#endregion ⌨️Chords

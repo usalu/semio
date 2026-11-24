@@ -49,7 +49,25 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "I": {
+            "en": "I — minor importance",
+            "de": "I — geringe Bedeutung"
+          },
+          "II": {
+            "en": "II — ordinary buildings",
+            "de": "II — gewöhnliche Hochbauten"
+          },
+          "III": {
+            "en": "III — large occupancy",
+            "de": "III — große Menschenansammlungen"
+          },
+          "IV": {
+            "en": "IV — vital for civil protection",
+            "de": "IV — lebenswichtig für den Katastrophenschutz"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1990_model::ImportanceClass"

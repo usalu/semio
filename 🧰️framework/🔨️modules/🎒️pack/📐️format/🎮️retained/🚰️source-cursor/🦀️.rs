@@ -225,7 +225,7 @@ impl RetainedPackSourceCursor {
 
 impl Drop for RetainedPackSourceCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained canonical pack source reached Drop before terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained canonical pack source reached Drop before terminal-empty close");
     }
 }
 //#endregion 🔖️RetainedCanonicalSource

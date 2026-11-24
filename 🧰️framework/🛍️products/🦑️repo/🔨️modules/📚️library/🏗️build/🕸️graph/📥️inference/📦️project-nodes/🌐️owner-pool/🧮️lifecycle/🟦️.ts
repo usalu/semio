@@ -26,3 +26,15 @@ export function ownerPoolStartDelayV1(input:Readonly<{children:readonly OwnerPoo
  const loading=input.children.filter(child=>!child.ready&&!child.drained&&input.now-child.startedMs<warmup).map(child=>warmup-(input.now-child.startedMs));
  return Math.max(0,spacing,young.length===0?0:Math.max(...young),loading.length<policy.startingMaximum?0:Math.min(...loading));
 }
+
+export type OwnerPoolSharelessV1=Readonly<{count:number;until:number}>;
+
+/** 🚫️ Whether a machine may keep claiming owners at all: a machine whose finished records cannot be shared (code `unshareable`, a record that names its root in a spelling that cannot be neutralized, as a Windows checkout can) burns every claim it makes, so after `unshareableLimit` such refusals without a published record in between it claims nothing for `unshareablePauseMilliseconds` (`until` is the end of the pause, 0 when none runs) and then probes again with the next refusal tripping it at once. `tripped` is true on the step that starts a pause.
+ * @see ../🧪️tests/🧮️lifecycle/🚫️unshareable/🟦️.ts */
+export function ownerPoolSharelessStepV1(state:OwnerPoolSharelessV1,event:"unshareable"|"published"|"tick",now:number,policy:typeof P=P):Readonly<{state:OwnerPoolSharelessV1;tripped:boolean}>{
+ if(event==="published")return{state:{count:0,until:state.until},tripped:false};
+ if(event==="tick")return{state:state.until>0&&now>=state.until?{count:policy.unshareableLimit-1,until:0}:state,tripped:false};
+ const count=state.count+1;
+ if(count>=policy.unshareableLimit&&state.until===0)return{state:{count,until:now+policy.unshareablePauseMilliseconds},tripped:true};
+ return{state:{count,until:state.until},tripped:false};
+}

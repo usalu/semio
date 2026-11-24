@@ -10,6 +10,7 @@ import {recordFillSampleV1} from "./📈️fill/🟦️.ts";
 import {pruneAdmissionsV1} from "./📖️admissions/🟦️.ts";
 import {retireLocalStaleUnitsV1} from "./🪢️supersession/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {measureNativeImageShardRootV1,nativeImageShardVolumeFactsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 
 const policy=UNIT_CACHE_POLICY_V1.gc,layout=UNIT_CACHE_POLICY_V1.layout;
 /** 🧮️ One measured lane. */
@@ -80,6 +81,8 @@ export type VolumeFactsV1=Readonly<{volumeBytes:number;freeBytes:number;unmeasur
 export function measureVolumeV1(root:string,capacityBytes:number):VolumeFactsV1{
  const space=nativeFreeSpaceSyncV1(root);
  if(space?.totalBytes===undefined)return{volumeBytes:capacityBytes,freeBytes:capacityBytes,unmeasured:true};
+ const shards=measureNativeImageShardRootV1(root);
+ if(shards!==undefined)return nativeImageShardVolumeFactsV1(shards,capacityBytes);
  return{volumeBytes:Math.max(1,space.totalBytes),freeBytes:Math.min(space.totalBytes,space.availableBytes)};
 }
 

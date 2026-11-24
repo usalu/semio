@@ -34,7 +34,11 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation as _;
     let mut bank = semio_framework_test_original_snapshot_owners::original_bank();
     let mut close = |preparation: &mut HomeConfigPreparation, grant: RetainedCloneGrant| {
-        let (poll, _) = bank.run(grant, 1 << 20, |effect| preparation.close_step(effect));
+        let (poll, _) = bank.run(grant, 1 << 20, |effect| {
+            let mut step = None;
+            semio_framework_value_testing_admission::with_original_invocation(None, effect, &mut |effect| step = Some(preparation.close_step(effect))).expect("original invocation");
+            step.expect("the close turn ran")
+        });
         let admitted = bank.take_admitted();
         match poll {
             RetainedWorkPoll::Complete(outcome) => {

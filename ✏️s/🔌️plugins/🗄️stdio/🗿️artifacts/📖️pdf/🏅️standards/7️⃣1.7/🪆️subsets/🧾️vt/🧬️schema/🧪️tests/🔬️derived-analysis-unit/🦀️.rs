@@ -1,5 +1,5 @@
 use semio_s_artifact_stdio_pdf_schema_5::standards;
-use standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
+use standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfSnapshot};
 use standards::v1_7::subsets::vt::io::{CODE_DPART_ROOT, CODE_DPM, check_vt_conformance};
 use semio_framework_diagnostic::Severity;
 
@@ -13,7 +13,7 @@ mod tests {
         let entry=|key:&str,value|PdfDictEntry::new(key,value);
         let object=|num,entries|PdfIndirectObject{id:reference(num),value:PdfObject::Dict(entries)};
         let profile=include_bytes!("../../../../../../../🖼️assets/🌈️icc/🌈️sRGB2014.icc").to_vec();
-        let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![entry("N",PdfObject::Int(3))],data:profile.clone(),filters:Vec::new()}).unwrap();
+        let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![entry("N",PdfObject::Int(3))],data:stream_bytes(&(profile.clone())),filters:Vec::new()}).unwrap();
         let mut page=PdfPage::new(100.0,100.0);
         page.trim_box=Some(page.media_box);
         PdfSnapshot{
@@ -26,7 +26,7 @@ mod tests {
                 object(2,vec![entry("Type",PdfObject::name("OutputIntent")),entry("S",PdfObject::name("GTS_PDFX")),entry("OutputConditionIdentifier",PdfObject::Str(b"sRGB2014".to_vec())),entry("DestOutputProfile",PdfObject::Ref(reference(9)))]),
                 object(3,vec![entry("Type",PdfObject::name("Page")),entry("Parent",PdfObject::Ref(reference(4))),entry("MediaBox",PdfObject::numbers(&[0.0,0.0,100.0,100.0])),entry("TrimBox",PdfObject::numbers(&[0.0,0.0,100.0,100.0]))]),
                 object(4,vec![entry("Type",PdfObject::name("Pages")),entry("Kids",PdfObject::Array(vec![PdfObject::Ref(reference(3))])),entry("Count",PdfObject::Int(1))]),
-                PdfIndirectObject{id:reference(9),value:PdfObject::Stream{dict:vec![entry("N",PdfObject::Int(3))],data:profile,filters:Vec::new()}},
+                PdfIndirectObject{id:reference(9),value:PdfObject::Stream{dict:vec![entry("N",PdfObject::Int(3))],data:stream_bytes(&(profile)),filters:Vec::new()}},
                 object(10,vec![entry("Type",PdfObject::name("DPartRoot")),entry("DPartRootNode",PdfObject::Ref(reference(11)))]),
                 object(11,vec![entry("Type",PdfObject::name("DPart")),entry("Parent",PdfObject::Ref(reference(10))),entry("Start",PdfObject::Ref(reference(3))),entry("DPM",PdfObject::Dict(Vec::new()))]),
             ],

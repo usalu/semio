@@ -12,6 +12,8 @@ import quoteLaw from "./🧫️fixtures/receiving-quote-refusal.json";
 import quoteSchema from "./🧫️fixtures/receiving-quote-refusal.schema.json";
 import refundLaw from "./🧫️fixtures/receiving-refund.json";
 import refundSchema from "./🧫️fixtures/receiving-refund.schema.json";
+import birthLaw from "./🧫️fixtures/close-birth-ledger.json";
+import birthSchema from "./🧫️fixtures/close-birth-ledger.schema.json";
 test("one retained item and one fuel are admitted together", () => {
  expect(new Ajv().compile(chargeSchema)(chargeCases)).toBe(true);
  using db = new Database(":memory:");
@@ -63,4 +65,15 @@ test("an idle unquoted receiving scope settles with nothing held on the Source",
  const row=db.query("select json_extract(?1,'$.heldAfterSettle')+json_extract(?1,'$.claimsAfterSettle') as kept").get(JSON.stringify(refundLaw)) as {kept:number};
  expect(row.kept).toBe(0);
  expect(refundLaw.scopes).toBeGreaterThan(1);
+});
+
+test("a release is charged to the ledger that recorded its birth",()=>{
+ expect(new Ajv().compile(birthSchema)(birthLaw)).toBe(true);
+ using db=new Database(":memory:");
+ for(const {born,releases,business,outstanding} of birthLaw.cases){
+  const rows=db.query("with steps as (select key as i, value as r from json_each(?1)), run as (select i, r, sum(r) over (order by i) as upto from steps) select r-(min(upto,?2)-min(upto-r,?2)) as business from run order by i").all(JSON.stringify(releases),born) as {business:number}[];
+  expect(rows.map(row=>row.business)).toEqual(business);
+  expect(business.length).toBe(releases.length);
+  expect(born-Math.min(releases.reduce((total,release)=>total+release,0),born)).toBe(outstanding);
+ }
 });

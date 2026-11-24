@@ -200,7 +200,7 @@ def fixtures_of(scene, stage, is_prop):
     return fixtures
 
 
-def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_prop=lambda item: "data-pet-prop" in item["attributes"]):
+def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_prop=lambda item: "data-pet-prop" in item["attributes"], is_open=lambda item: False):
     viewport = scene["viewport"]
     frame = scene.get("frame")
     stage = (frame["left"], frame["top"], frame["width"], frame["height"]) if frame and frame["width"] > 0 and frame["height"] > 0 else (0, 0, viewport["width"], viewport["height"])
@@ -218,14 +218,16 @@ def expectation(scene, is_surface, is_keepout, is_wall=lambda item: False, is_pr
         if region is None or staged(region, stage) is None:
             continue
         carries = not (region[1] > edges(item)[1] or region[2] - region[0] < SURFACE_WIDTH)
-        parts.append((region, carries))
+        parts.append((region, carries, is_open(item)))
         if not carries:
             continue
         surfaces.append({"element": item["key"], "x0": region[0] - stage[0], "x1": region[2] - stage[0], "y": region[1] - stage[1]})
         lines.append({"x0": region[0], "x1": region[2], "y": region[1]})
     solids = []
-    for region, _ in parts:
-        if abs(region[3] - stage[1] - stage[3]) <= 0.5 or any(carries and other is not region and abs(other[1] - region[3]) <= 0.5 and region[0] >= other[0] - 0.5 and region[2] <= other[2] + 0.5 for other, carries in parts):
+    for region, _, hollow in parts:
+        if hollow:
+            continue
+        if abs(region[3] - stage[1] - stage[3]) <= 0.5 or any(carries and other is not region and abs(other[1] - region[3]) <= 0.5 and region[0] >= other[0] - 0.5 and region[2] <= other[2] + 0.5 for other, carries, _ in parts):
             solids.append({"x": region[0] - stage[0] - KEEPOUT_MARGIN, "y": region[1] - stage[1], "width": region[2] - region[0] + 2 * KEEPOUT_MARGIN, "height": region[3] - region[1]})
     surfaces.append({"element": "floor", "x0": 0, "x1": stage[2], "y": stage[3]})
     lines.append({"x0": stage[0], "x1": stage[0] + stage[2], "y": stage[1] + stage[3]})
@@ -252,7 +254,7 @@ def marked(attribute):
     return lambda item: attribute in item["attributes"]
 
 
-def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=None, keepouts=None, walls=None, props=None, pointer=None):
+def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=None, keepouts=None, walls=None, props=None, pointer=None, open=None):
     """🎬️ A scene with its expectation; `surfaces` and `keepouts` name the attributes that replace or extend the defaults, `walls` those of the elements that are walls besides the surfaces, `props` those that replace the default props; `pointer` is where the pointer rests in viewport pixels."""
     made = {"name": name, "viewport": {"width": viewport[0], "height": viewport[1]}, "nodes": nodes}
     if frame is not None:
@@ -278,9 +280,13 @@ def scene(name, nodes, viewport=(1200, 800), frame=None, focus=None, surfaces=No
     if props is not None:
         options["props"] = ", ".join(f"[{attribute}]" for attribute in props)
         is_prop = lambda item: any(attribute in item["attributes"] for attribute in props)
+    is_open = lambda item: False
+    if open is not None:
+        options["open"] = ", ".join(f"[{attribute}]" for attribute in open)
+        is_open = lambda item: any(attribute in item["attributes"] for attribute in open)
     if options:
         made["options"] = options
-    made["expected"] = expectation(made, is_surface, is_keepout, is_wall, is_prop)
+    made["expected"] = expectation(made, is_surface, is_keepout, is_wall, is_prop, is_open)
     return made
 
 
@@ -621,10 +627,29 @@ SCENES = [
         frame=(100, 50, 1000, 700),
         props=["data-toy"],
     ),
+    scene(
+        "cards that share their border lines are frames around open room: none is a solid although each stands on the next, a chip at a card's foot is one, and what a card holds is still kept free",
+        [
+            node("grid", "main", (0, 0, 1200, 800), children=[
+                node("upper", "section", (100, 100, 400, 200), {"data-line": "", "data-frame": ""}, children=[
+                    node("upper-text", "p", (108, 132, 384, 20)),
+                    node("upper-chip", "div", (400, 276, 100, 24), {"data-line": ""}, children=[
+                        node("upper-action", "button", (400, 276, 100, 24)),
+                    ]),
+                ]),
+                node("beside", "section", (500, 100, 400, 200), {"data-line": "", "data-frame": ""}),
+                node("lower", "section", (100, 300, 800, 200.5), {"data-line": "", "data-frame": ""}, children=[
+                    node("lower-text", "p", (108, 332, 384, 20)),
+                ]),
+            ]),
+        ],
+        surfaces=["data-line"],
+        open=["data-frame"],
+    ),
 ]
 
 DOCUMENT = {
-    "$comment":"📡️ Shared vectors of the React suite 🧪️tests/📡️surface-survey: document trees with the box of every element and the `surveyed` event a stage must receive for them. Generated by `python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/generate_survey_vectors.py` from a second reading of design §6.3 written in Python (tag and attribute tables instead of a selector engine, interval arithmetic); never edited by hand. `expected.surfaces[].element` names the element of the scene whose surface it is (`floor` for the floor); `options.keepoutsBesidesDefaults` extends the default keep-outs.",
+    "$comment":"📡️ Shared vectors of the React suite 🧪️tests/📡️surface-survey: document trees with the box of every element and the `surveyed` event a stage must receive for them. Generated by `python .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-PETS/generate_survey_vectors.py` from a second reading of design §6.3 written in Python (tag and attribute tables instead of a selector engine, interval arithmetic); never edited by hand. `expected.surfaces[].element` names the element of the scene whose surface it is (`floor` for the floor); `options.keepoutsBesidesDefaults` extends the default keep-outs, `options.open` names the surfaces that are frames around open room.",
     "margins": {"surfaceWidth": SURFACE_WIDTH, "keepout": KEEPOUT_MARGIN, "focus": FOCUS_MARGIN, "fixtureElements": FIXTURE_ELEMENTS},
     "scenes": SCENES,
 }

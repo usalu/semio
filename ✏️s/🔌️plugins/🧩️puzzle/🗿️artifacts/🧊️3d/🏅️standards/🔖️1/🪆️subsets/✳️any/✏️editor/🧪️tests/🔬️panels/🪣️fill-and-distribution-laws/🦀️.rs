@@ -15,6 +15,7 @@ fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     runtime.active_tool_id = None;
     assert!(!puzzle3d_fill_tool_active(&runtime));
     assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), "select");
+    retire_view(view);
 }
 
 /// ⏯️ Fill is a framework tool run declared through the manifest (`📋️tool-run-contract.md` §2.4): a mutating

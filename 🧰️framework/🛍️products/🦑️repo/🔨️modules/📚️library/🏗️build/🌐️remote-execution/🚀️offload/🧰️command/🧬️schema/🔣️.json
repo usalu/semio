@@ -298,7 +298,8 @@
       "refusal.environment": "environment not allowed: {detail}",
       "refusal.output": "output path not allowed: {detail}",
       "refusal.shape": "command shape not allowed: {detail}",
-      "refusal.shipped": "the shipped tool does not have its declared digest"
+      "refusal.shipped": "the shipped tool does not have its declared digest",
+      "refusal.warden-cancelled": "the host warden cancelled the compiler of this action to keep the machine from running out of memory; the scheduler places the action on another machine"
     },
     "de": {
       "offloaded": "Schritt {crate} lief auf {origin} ({milliseconds} ms).",
@@ -313,7 +314,8 @@
       "refusal.environment": "Umgebung nicht erlaubt: {detail}",
       "refusal.output": "Ausgabepfad nicht erlaubt: {detail}",
       "refusal.shape": "Befehlsform nicht erlaubt: {detail}",
-      "refusal.shipped": "das mitgelieferte Werkzeug hat nicht seinen deklarierten Digest"
+      "refusal.shipped": "das mitgelieferte Werkzeug hat nicht seinen deklarierten Digest",
+      "refusal.warden-cancelled": "der Host-Waechter hat den Compiler dieser Aktion abgebrochen, damit der Maschine der Speicher nicht ausgeht; der Scheduler platziert die Aktion auf einer anderen Maschine"
     }
   }
 }

@@ -165,7 +165,8 @@ fn publish_retained_action(input: &mut semio_ui_wgpu_input::InputState<ActionDes
  * and queues the merged `ActionDescriptor` — `dispatchUiAction`'s own React-side merge order
  * (`{...descriptor.args, ...patch}`, patch wins) reproduced by `merge_action_args`. A no-op if the
  * target has no currently declared drop action,
- * or the payload carries no decodable semio-mime entry. */
+ * or the payload carries no decodable semio-mime entry, or a positional tree-row reorder payload
+ * lands on a target that is no tree row (the engine only offers such a drag to tree rows). */
 pub fn apply_drop_committed(window_id: &str, target: NodeId, y: f32, payload: &DragPayload, input: &mut semio_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_ui_action::BoundedActionFault> {
     let mime = ui_contract::TREE_ROW_REORDER_MIME;
     let tree_drop = UI_ENGINE.with(|cell| {
@@ -177,6 +178,7 @@ pub fn apply_drop_committed(window_id: &str, target: NodeId, y: f32, payload: &D
         Some((action, key, position))
     });
     let Some((action, key, position)) = tree_drop else {
+        if payload.contains_key(mime) { return Ok(()); }
         return drop_target_action(window_id, target).map_or(Ok(()), |action| queue_drop_action(window_id, &action, decode_drop_payload(payload), input).map(|_| ()));
     };
     let patch = match payload.get(mime) {

@@ -2,7 +2,7 @@
 .course-mockup { grid-column: 1 / -1; min-width: 0; max-width: 100%; margin: 0.5rem 0 0; font-size: 0.75rem; font-weight: normal; }
 .course-chip > .course-mockup, .course-sort > .course-mockup, .course-slot > .course-mockup { margin: 0; padding: var(--spacing-single); border-block-start: var(--stroke-hairline) solid var(--border-normal-color); }
 .course-mockup figcaption { margin-bottom: 0.35rem; font-weight: 600; }
-.course-mockup-scroll { max-width: 100%; overflow: auto; contain: layout paint; overscroll-behavior-inline: contain; border: 1px solid var(--border-normal-color); border-radius: 0.25rem; }
+.course-mockup-scroll { max-width: 100%; overflow: auto; contain: layout paint; overscroll-behavior-inline: contain; border: 1px solid var(--border-normal-color); }
 .course-mockup [data-highlight] { outline: 3px double currentColor; outline-offset: -3px; background: var(--active-base); }
 .course-workbook { min-width: 24rem; background: var(--base); }
 .course-workbook-title { display: flex; gap: 1.5rem; padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border-normal-color); }
@@ -12,7 +12,7 @@
 .course-workbook th, .course-workbook td { border: 1px solid var(--border-normal-color); padding: 0.35rem 0.55rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .course-workbook th { font-weight: 600; text-align: center; background: color-mix(in srgb, currentColor 8%, var(--base)); }
 .course-workbook th:first-child { width: 2.5rem; }
-.course-workbook td[data-selected] { box-shadow: inset 0 0 0 2px currentColor; }
+.course-workbook td[data-selected] { outline: 2px solid currentColor; outline-offset: -2px; }
 .course-workbook-sheets { display: flex; gap: 0.3rem; padding: 0.35rem 2.5rem; border-top: 1px solid var(--border-normal-color); }
 .course-workbook-sheets > span { padding: 0.25rem 0.7rem; border: 1px solid var(--border-normal-color); }
 .course-workbook-sheets [data-active] { font-weight: 700; border-bottom: 3px solid currentColor; }

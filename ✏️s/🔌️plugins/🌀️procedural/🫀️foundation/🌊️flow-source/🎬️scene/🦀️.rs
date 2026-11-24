@@ -136,5 +136,5 @@ impl<A:ArtifactApp,S:NativeProvisionalFolds<A::Mutation>> ProvisionalSceneWork<A
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.replay.terminal_is_empty()&&self.fields.clone.is_none()&&self.fields.projected.is_none()&&self.fields.admission.terminal_is_empty()&&self.fields.generation.is_none()&&self.retirement.is_empty()&&self.fields.source.terminal_is_empty()}
 }
 impl<A:ArtifactApp,S:NativeProvisionalFolds<A::Mutation>> Drop for ProvisionalSceneWork<A,S>where A::Mutation:NativeReceive<DslValue>{
- fn drop(&mut self){assert!(self.terminal_is_empty(),"procedural scene retains its original read, context, native scratch or clone owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+ fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"procedural scene retains its original read, context, native scratch or clone owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 }

@@ -15,6 +15,9 @@ pub use semio_framework_value_native_shared_engine::{NativeSharedReceiver,Native
 pub use semio_framework_value_native_default::{native_admit_default,NativeDefault,NativeDefaultCursor,NativeDefaultValue,NativeDefaultValueCursor,NativeDefaultSlot,NativeArrayDefaultCursor,NativePairDefaultCursor};
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
+pub use semio_framework_value_native_record_machine::machine;
+#[path="🏗️record-machine/🧩️slot/🦀️.rs"]mod machine_slot;
+pub use semio_framework_value_native_record_machine::enum_machine;
 pub use tree::NativeReceiveSlot;
 #[path="🗂️map/🦀️.rs"]pub mod map;
 #[path="🧺️set/🦀️.rs"]pub mod set;
@@ -63,4 +66,4 @@ pub use mapped::{NativeMapValidation,NativeReceiveMap,NativeMappedReceiver,Nativ
 
 
 pub use semio_framework_value_native_receiver_protocol::{native_output_demand,native_output_take,native_record_pure_take};
-pub use semio_framework_value_native_receiver_protocol::{NativeReceivingChild,NativeLocalAuthority,NativeLocalProducer,NativeLocalOperation,native_poll_local,native_receive_local};
+pub use semio_framework_value_native_receiver_protocol::{SlotFrame,OwnedFrame,SharedFrame,NativeReceivingChild,NativeLocalAuthority,NativeLocalProducer,NativeLocalOperation,native_poll_local,native_receive_local};

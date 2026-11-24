@@ -36,7 +36,8 @@ where
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, cx: &mut StepContext<'_>)
         -> Result<ArtifactCommandWorkStep<A>, OriginalTurnFailure>
     {
-        let (target, guard) = (self.read)(input.command)?;
+        let (picked, guard) = (self.read)(input.command)?;
+        let target = PngTarget { page: crate::document::resolve_page(input.snapshot.pages.len(), u64::from(picked.page))? as u32, operator: picked.operator, x: picked.x, y: picked.y, width: picked.width, height: picked.height };
         let operation = input.operation;
         if target.operator != INSERT_OPERATOR && guard.as_bytes() != &revision_bytes(operation)[..16] {
             return Err(Fault::from("Selected PDF image changed before the picker opened").into());

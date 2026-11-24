@@ -70,7 +70,7 @@ impl<A:ArtifactApp> ProvisionalSourceWork<A>{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.close.is_none()}
 }
-impl<A:ArtifactApp> Drop for ProvisionalSourceWork<A>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original provisional source retains its captured context issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original)}}}}
+impl<A:ArtifactApp> Drop for ProvisionalSourceWork<A>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original provisional source retains its captured context issuer");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original)}}}}
 
 #[path="🛬️receive/🦀️.rs"]
 mod receiving;

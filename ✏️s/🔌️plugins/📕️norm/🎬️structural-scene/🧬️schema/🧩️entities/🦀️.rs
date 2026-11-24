@@ -646,8 +646,9 @@ impl Validate for Geometry {
     }
 }
 
-impl Validate for SceneEntity {
-    fn check(&self, path: &str, out: &mut Vec<Violation>) {
+impl SceneEntity {
+    /// ✅️ Every law of the entity except that its content hash matches its content; see [`StructuralScene::validate_sealed`].
+    pub fn check_content(&self, path: &str, out: &mut Vec<Violation>) {
         self.entity.check(&at(path, "entity"), out);
         expect(out, &at(path, "entity.kind"), self.geometry.kind() == self.entity.kind, "kind-matches-geometry");
         self.geometry.check(&at(path, "geometry"), out);
@@ -658,15 +659,47 @@ impl Validate for SceneEntity {
         self.accessible_detail.check(&at(path, "accessibleDetail"), out);
         non_empty(out, &at(path, "layer"), &self.layer);
         expect(out, &at(path, "handles"), self.handles.iter().all(|h| !h.trim().is_empty()) && self.handles.iter().collect::<BTreeSet<_>>().len() == self.handles.len(), "unique-non-empty");
+    }
+
+    /// ✅️ The seal law alone: the content hash matches the content.
+    pub fn check_seal(&self, path: &str, out: &mut Vec<Violation>) {
         expect(out, &at(path, "contentHash"), self.content_hash == self.compute_hash(), "matches-content");
+    }
+}
+
+impl Validate for SceneEntity {
+    fn check(&self, path: &str, out: &mut Vec<Violation>) {
+        self.check_content(path, out);
+        self.check_seal(path, out);
+    }
+}
+
+impl StructuralScene {
+    /// ✅️ [`Validate::validate`] for a scene whose entities were seal-checked when their fragment was built: every other law, without hashing every entity again.
+    pub fn validate_sealed(&self) -> Result<(), Vec<Violation>> {
+        let mut out = Vec::new();
+        self.check_with("$", &mut out, false);
+        if out.is_empty() { Ok(()) } else { Err(out) }
     }
 }
 
 impl Validate for StructuralScene {
     fn check(&self, path: &str, out: &mut Vec<Violation>) {
+        self.check_with(path, out, true);
+    }
+}
+
+impl StructuralScene {
+    fn check_with(&self, path: &str, out: &mut Vec<Violation>, seals: bool) {
         expect(out, &at(path, "schema"), self.schema == SCENE_SCHEMA_ID, "schema-id");
         self.bounds.check(&at(path, "bounds"), out);
-        each(&self.entities, path, "entities", out);
+        for (index, entity) in self.entities.iter().enumerate() {
+            let at = nth(path, "entities", index);
+            entity.check_content(&at, out);
+            if seals {
+                entity.check_seal(&at, out);
+            }
+        }
         each(&self.annotations, path, "annotations", out);
         each(&self.legends, path, "legends", out);
         each(&self.layers, path, "layers", out);

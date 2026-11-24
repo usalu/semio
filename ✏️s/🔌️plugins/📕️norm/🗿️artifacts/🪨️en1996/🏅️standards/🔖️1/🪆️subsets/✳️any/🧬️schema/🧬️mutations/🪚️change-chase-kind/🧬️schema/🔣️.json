@@ -44,7 +44,21 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "Vertical": {
+            "en": "Vertical chase",
+            "de": "Senkrechter Schlitz"
+          },
+          "Horizontal": {
+            "en": "Horizontal chase",
+            "de": "Waagerechter Schlitz"
+          },
+          "Recess": {
+            "en": "Recess",
+            "de": "Aussparung"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1996_model::ChaseKind"

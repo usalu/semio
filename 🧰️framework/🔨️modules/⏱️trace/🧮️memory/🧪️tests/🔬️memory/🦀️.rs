@@ -6,8 +6,8 @@
 use semio_framework_test_fixtures::fixture_text;
 
 use super::{
-    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, reset_heap_peak, retained_heap_bytes,
-    GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES, GUEST_LINEAR_MEMORY_STACK_BYTES,
+    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_over_refusal_ceiling, guest_linear_memory_percent, guest_linear_memory_refusal_ceiling_bytes, peak_heap_bytes, reset_heap_peak, retained_heap_bytes,
+    GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES, GUEST_LINEAR_MEMORY_REFUSAL_PERCENT, GUEST_LINEAR_MEMORY_STACK_BYTES,
 };
 
 fn schema() -> serde_json::Value {
@@ -21,8 +21,17 @@ fn the_budget_matches_the_neutral_schema() {
     assert_eq!(properties["maximumBytes"]["const"].as_u64().unwrap() as usize, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES);
     assert_eq!(properties["stackBytes"]["const"].as_u64().unwrap() as usize, GUEST_LINEAR_MEMORY_STACK_BYTES);
     assert_eq!(properties["installPeakPercent"]["const"].as_u64().unwrap() as usize, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT);
+    assert_eq!(properties["refusalPercent"]["const"].as_u64().unwrap() as usize, GUEST_LINEAR_MEMORY_REFUSAL_PERCENT);
     assert_eq!(properties["contiguousRequestCeilingBytes"]["const"].as_u64().unwrap() as usize, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
     assert_eq!(properties["hostAnswerCeilingBytes"]["const"].as_u64().unwrap() as usize, GUEST_HOST_ANSWER_CEILING_BYTES);
+}
+
+/// ⚖️ LAW: the refusal ceiling sits above the diagnostic install-peak ceiling and leaves the headroom one typed refusal needs; natively no linear memory is read, so nothing refuses.
+#[test]
+fn the_refusal_ceiling_sits_between_the_install_peak_and_the_budget() {
+    assert!(guest_linear_memory_refusal_ceiling_bytes() > guest_linear_memory_install_peak_ceiling_bytes());
+    assert!(GUEST_LINEAR_MEMORY_MAXIMUM_BYTES - guest_linear_memory_refusal_ceiling_bytes() >= 4 * GUEST_HOST_ANSWER_CEILING_BYTES, "a refusal must still have room to allocate its own fault");
+    assert!(!guest_linear_memory_over_refusal_ceiling());
 }
 
 /// ⚖️ LAW: the host-answer ceiling is a whole number of contiguous-request pages, strictly above one

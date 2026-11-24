@@ -113,7 +113,7 @@ impl<T:RetireOwned+Sync> PreviewLinkDigestWork<T>{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{(self.closing||self.phase==7)&&self.owner.is_none()&&self.writer.is_none()&&self.output.is_none()&&self.admission.terminal_is_empty()}
 }
-impl<T:RetireOwned+Sync> Drop for PreviewLinkDigestWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"preview digest retains original tree ownership or output");unsafe{ManuallyDrop::drop(&mut self.owner)}}}
+impl<T:RetireOwned+Sync> Drop for PreviewLinkDigestWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"preview digest retains original tree ownership or output");unsafe{ManuallyDrop::drop(&mut self.owner)}}}
 
 #[cfg(test)]
 #[path="🧪️.rs"]

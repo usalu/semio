@@ -71,7 +71,6 @@ pub fn sourcing_curation_retained_reduce(
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
     let cfg = ConfigView { snapshot: config, window };
     let emit = command.dispatch(&doc, &cfg)?;
-    eprintln!("[DEBUG] reduce {:?} avail={:?} {} stock_extra={} curated={} muts={} cfg={} effects={}", command, snapshot.stock_extra.iter().map(|e| (e.id.clone(), e.availability)).take(4).collect::<Vec<_>>(), command.command_id(), snapshot.stock_extra.len(), snapshot.curated.len(), emit.artifact_mutation_count(), emit.config_mutations.len(), emit.effects.len());
     let view = _context.and_then(|context| context.view_state.as_deref());
     sourcing_curation_finish_emit(command, emit, window, view)
 }

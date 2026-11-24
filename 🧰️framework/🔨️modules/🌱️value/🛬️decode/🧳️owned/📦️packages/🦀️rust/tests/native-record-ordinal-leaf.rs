@@ -59,3 +59,24 @@ fn finish(mut receiver:<Point as NativeReceive<PointSource>>::Receiver,bank:&mut
   finish(receiver,&mut bank);driver::close_source(original,&mut bank);
  }
 }
+#[derive(crate::RetireOwned)]#[value(crate="crate",native_owned="crate")]struct PairSource{a:PointSource,b:PointSource}
+impl NativeValueSource for PairSource{
+ fn query_scalar<'r>(&self,query:NativeScalarQuery,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Done<'r>{record(match query{NativeScalarQuery::Kind=>Ok(NativeSourceScalar::Kind(Some(NativeTreeKind::Object))),NativeScalarQuery::Null=>Ok(NativeSourceScalar::Null(false)),NativeScalarQuery::RecordLength=>Ok(NativeSourceScalar::Length(2)),_=>Err(refused())},effect,reply)}
+ fn recover_scalar<'r>(&self,_:NativeScalarQuery,_:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Done<'r>{Ok(reply.pending())}
+ fn as_source(&self)->&dyn NativeValueSource{self}
+ fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
+ fn record_len(&self)->Result<usize,ValueError>{Ok(2)}
+ fn record_key(&self,index:usize)->Result<NativeRecordKey<'_>,ValueError>{if index<2{Ok(NativeRecordKey::Ordinal(index as u16))}else{Err(refused())}}
+ fn record_child(&self,index:usize)->Result<&dyn NativeValueSource,ValueError>{match index{0=>Ok(&self.a),1=>Ok(&self.b),_=>Err(refused())}}
+}
+#[derive(Debug,PartialEq,crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate",native_owned="crate")]struct Pair{a:Point,b:Point}
+/// 🔁️ Two same-typed nested fields reuse one receiving slot: the first field's closed slot is legitimately vacant for the second.
+#[test]fn two_same_typed_nested_fields_share_one_receiving_slot_and_both_arrive(){
+ let mut bank=driver::bank();
+ let original=driver::admit(&mut bank,PairSource{a:source(),b:PointSource{x:Num(-7.),y:Num(0.25),on:Flag(false)}});
+ let mut receiver=<Pair as NativeReceive<PairSource>>::receiver();
+ let pair=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().unwrap();
+ assert_eq!(pair,Pair{a:Point{x:1.5,y:-2.,on:true},b:Point{x:-7.,y:0.25,on:false}});
+ driver::close(&mut receiver,&mut bank,BODY);assert!(receiver.terminal_is_empty());
+ driver::retire(pair,&mut bank);driver::close_source(original,&mut bank);
+}

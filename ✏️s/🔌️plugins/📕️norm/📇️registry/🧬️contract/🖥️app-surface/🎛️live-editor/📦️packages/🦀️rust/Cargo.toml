@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-compliance-testing = ["dep:semio-framework-hash", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
+compliance-testing = ["dep:semio-framework-hash", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference", "dep:semio-ui-contract-values"]
 
 [dependencies]
 semio-s-plugin-norm-inspector-forms = { path = "../../../🪺️inspector-forms/📦️packages/🦀️rust" }
@@ -41,6 +41,7 @@ semio-s-plugin-norm-results-config = { workspace = true }
 semio-s-plugin-norm-structural-scene = { path = "../../../../../../🎬️structural-scene/📦️packages/🦀️rust" }
 semio-ui-contract = { workspace = true }
 semio-framework-artifact-reference = { workspace = true, optional = true }
+semio-ui-contract-values = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust", features = ["testkit"], optional = true }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 semio-s-plugin-norm-app-surface-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

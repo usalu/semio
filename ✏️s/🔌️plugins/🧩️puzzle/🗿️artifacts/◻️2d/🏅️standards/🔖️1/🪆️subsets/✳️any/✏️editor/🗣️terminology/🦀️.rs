@@ -44,6 +44,8 @@ semio_ui_locale::app_labels! {
         target: native_en "Target", native_de "Ziel", reuse_en "Target", reuse_de "Ziel";
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        yes: native_en "Yes", native_de "Ja", reuse_en "Yes", reuse_de "Ja";
+        no: native_en "No", native_de "Nein", reuse_en "No", reuse_de "Nein";
         selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
         show: native_en "Show", native_de "Einblenden", reuse_en "Show", reuse_de "Einblenden";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";

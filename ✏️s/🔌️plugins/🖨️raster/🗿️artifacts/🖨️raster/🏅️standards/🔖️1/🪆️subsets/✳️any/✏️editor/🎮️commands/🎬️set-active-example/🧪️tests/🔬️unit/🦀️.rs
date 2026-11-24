@@ -82,3 +82,13 @@ fn switch_compares_document_and_materialized_asset_identity() {
         assert_eq!(Some(actual), row[2].as_str(), "{}", row[0]);
     }
 }
+
+/// ⚖️ LAW: the canonical empty example id `""` resolves to the empty raster document.
+#[test]
+fn empty_id_resolves_to_the_empty_document() {
+    let document = example_document("").expect("the empty id resolves");
+    let empty = semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document();
+    assert_eq!(document, empty);
+    dismantle(document);
+    dismantle(empty);
+}

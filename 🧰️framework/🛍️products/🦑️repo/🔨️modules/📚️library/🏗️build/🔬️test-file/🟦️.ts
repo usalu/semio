@@ -98,6 +98,17 @@ export function routeTestFilesV1(root:string,files:readonly string[],tables:Read
  return Object.freeze(routes);
 }
 
+/** 🪪️ The build selection a suite's files are born under: the neutral `run` of the contract target `test-<suite>` its table's project declares, the one and only selection the suite runner's own target issues, so a file holds the same declared launches under `repo test-file` as under its suite.
+ * @see ./🏃️run/🟦️.ts */
+export function testFileEnvelopeArgumentsV1(project:string,suite:string):readonly string[]{return Object.freeze(["run",project+":test-"+suite]);}
+
+/** ✂️ Narrows a suite row to one module the way the runner of its own suite would run it alone: the suite's other fields (capabilities, declared nested `launches`, scratch, budget) stay exactly as declared, only the files and the typecheck sources shrink to the module, so a file holds the same grants under `repo test-file` as under its suite.
+ * @see ./🏃️run/🟦️.ts */
+export function testFileNarrowedSuiteV1(declared:ProcessTestSuiteV1,module:string):ProcessTestSuiteV1{
+ const {trees:_trees,files:_files,typecheckFiles:_typecheckFiles,...rest}=declared;
+ return Object.freeze({...rest,files:Object.freeze([module]),...(rest.typecheck==="none"?{}:{typecheckFiles:Object.freeze([module])})}) as ProcessTestSuiteV1;
+}
+
 /** 🧮️ Counts the rows of a run by status. */
 export function testFileCountsV1(rows:readonly TestFileRowV1[]):TestFileResultV1["counts"]{
  const count=(status:TestFileRowV1["status"])=>rows.filter(row=>row.status===status).length;

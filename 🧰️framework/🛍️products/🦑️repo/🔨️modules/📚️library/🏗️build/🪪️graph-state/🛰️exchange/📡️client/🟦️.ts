@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {mkdirSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {mkdirSync,statSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {join} from "node:path";
 import {GRAPH_STATE_POLICY_V1 as policy} from "../../🟦️.ts";
 import {graphRefusalOfV1,type GraphRefusalV1} from "../🧯️refusal/🟦️.ts";
@@ -78,11 +78,23 @@ export function createGraphFleetClientV1(settings:GraphFleetSettingsV1,world:Rea
   if("error" in answer){mark("down");return "down";}
   return answer;
  }
+ const waiting:(()=>void)[]=[];let flying=0;
+ const admit=(signal?:AbortSignal):Promise<()=>void>=>{
+  const take=()=>{flying++;let done=false;return()=>{if(done)return;done=true;flying--;waiting.shift()?.();};};
+  if(flying<policy.requests.readsInFlightMaximum)return Promise.resolve(take());
+  return new Promise((resolve,reject)=>{
+   const go=()=>{signal?.removeEventListener("abort",cancel);resolve(take());},cancel=()=>{const at=waiting.indexOf(go);if(at>=0)waiting.splice(at,1);reject(signal!.reason);};
+   waiting.push(go);signal?.addEventListener("abort",cancel,{once:true});
+  });
+ };
+ const heal=(startedMilliseconds:number)=>{try{const path=join(settings.stateDirectory,"down");if(statSync(path).mtimeMs<=startedMilliseconds)unlinkSync(path);}catch{}};
  async function attempt(method:string,url:string,timeout:number,init:{body?:BodyInit;headers?:Record<string,string>},signal?:AbortSignal):Promise<GraphResponseV1|{error:"timeout"|"network";late:number}>{
   signal?.throwIfAborted();
-  const began=performance.now(),deadline=AbortSignal.timeout(timeout),requestSignal=signal===undefined?deadline:AbortSignal.any([signal,deadline]);
-  try{const response=await request(url,{method,headers:headers(init.headers),signal:requestSignal,...(init.body===undefined?{}:{body:init.body})});return{status:response.status,response,signal:requestSignal};}
+  const release=method==="GET"?await admit(signal):()=>{};
+  const startedMilliseconds=Date.now(),began=performance.now(),deadline=AbortSignal.timeout(timeout),requestSignal=signal===undefined?deadline:AbortSignal.any([signal,deadline]);
+  try{const response=await request(url,{method,headers:headers(init.headers),signal:requestSignal,...(init.body===undefined?{}:{body:init.body})});if(response.status<500)heal(startedMilliseconds);return{status:response.status,response,signal:requestSignal};}
   catch(error){signal?.throwIfAborted();return{error:(error as {name?:string})?.name==="TimeoutError"||(error as {name?:string})?.name==="AbortError"?"timeout":"network",late:Math.max(0,Math.round(performance.now()-began-timeout))};}
+  finally{release();}
  }
  async function put(request:GraphPutTimeoutV1["request"],url:string,deadlineMilliseconds:number,init:{body:BodyInit;headers:Record<string,string>}):Promise<GraphPutV1>{
   const answer=await attempt("PUT",url,deadlineMilliseconds,init);

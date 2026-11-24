@@ -38,3 +38,44 @@ Timeline, decisions and every lane verdict: `coordination.md`. Per-lane detail: 
 - `repo cargo` still spends ~250 s in command-stage setup and ~213 s inside `cargo metadata` before compiling (C2 open).
 - Local compile-slot wait for build-script RUN has no time bound (progress + cancellable, not hung).
 - Linux/Windows workers (g1-m04 disk, g1-m05 replica) not Ready; platform-split sharing applies.
+
+## Day 2 (2026-11-23) addendum — state at 20:06
+
+Full timeline: `coordination.md`. New lane reports: GR1–GR13 (graph), H1–H3 + O10–O12 (headroom, component jobs, memory charging), CAS2–CAS4 + R3 (store), SY1/SY2 (play snapshot sync lists), TI1/TI2 + PY1 + F2/F4 (test infrastructure), RP1 (replica bootstrap packs), W1/W2 (worker readiness).
+
+### Regressions this wave caused and then fixed
+- Continuous CAS collection (CAS1) + server unpinning (R3) deleted the blobs of local unit-cache entries → every build attempt recompiled from zero. Fixed in three steps: unit-cache roots are registered holders (CAS2), held blobs carry keeper hard links so old-code collectors skip them (CAS3), partition pressure never evicts held entries + `repo cache cas gc --unreferenced` (CAS4).
+- A lane probe sealed the rustc wrapper into `units/` INSIDE the checkout (349 files, replicated) → 81 % of the graph's "workspace is stale" lines. Removed; relative cache roots now resolve to absolute; `sealed` excluded from graph inputs (GR5).
+- The `taskpolicy -b` throttle rule slowed disk reads ~60× (1,124 s vs 33 s for one test file) and starved the wave's own tests. Withdrawn.
+- ~70 tool edits invalidated graph owner records fleet-wide (records are valid only while a ~1,900-file tool closure is unchanged). Mitigated: equal re-derived answer keeps a record valid (GR12). Narrowing the closures themselves is DEFERRED (changes task hashes).
+
+### Live numbers (20:06)
+- Scheduler: 24 units executing remotely; play release build 1,748 units compiled in 115 min with 4 on the fleet at that moment; no `inputs-too-large` declines since the snapshot sync (O9).
+- Host store 21.7 of 27.8 GiB; retention dry-run: 3,489 entries, 2,954 judged, 440 stale, 27 unreachable, 535 undeclared, 0 retired.
+- Graph: fleet inference 2.4 → 6.25 owners/min, fleet-record adoption 70 % → 80 %; **Generation: none published** (no read has finished since 2026-11-20).
+- Workers: **0 Ready**, 11 working (setup stages blocked on the graph).
+
+### Not done
+1. No graph head/generation published → workers still not Ready; `repo run` on a worker still blocked. (`repo cargo` needs no graph: warm 29–44 s on the coordinator.)
+2. Component finals do not run on workers: finals need up to 6.5 GB (cad), 16 GB workers report 0–4.5 GB spare while their own setup stage runs; single charging (O12) is live on the scheduler, workers switch over by themselves; not yet observed.
+3. Retention is dry-run; `enforce` is the user's decision (recommended after the play release passes once).
+4. Play release has not completed a build; concurrent component jobs proven only with stub jobs (TI2).
+5. Deferred: closure narrowing (GR10 options 1–2), SDK identity + key namespace v3 in the play snapshot, driver test file 46/24 on causes not traced to this wave, 6 pre-existing unbounded module Maps, Linux/Windows workers.
+
+## Night 2→3 addendum — state at 01:15 on 2026-11-24
+
+New lane reports since 20:06: GR14, GR15, W3, W4, W5 (worker readiness), R4 (graph heads on the cache server), O13–O17 (placement, local jobs, one-thread finals, remote codegen, expensive-unit rule), P2/P3 (final-on-worker proof attempts), SC1 (stage cache), RP1 (replica packs).
+
+### Found and fixed
+- Hour-long component finals: `semio-build-scheduler` added `-Z no-parallel-backend` to every cdylib final (codegen + ThinLTO on one thread). Now only at a grant of one job (O15, applied in the play snapshot 23:55); same on the remote path with a worker-side thread grant (O16). Output bytes proven identical at 1/2/4/9 threads.
+- Offload slower than local (7 vs 25 units/min): cargo ran with 4 jobs and `distribute` sent all 4 remote. Cargo now gets the fleet-sized job count in every pass; placement is local-first; cost records time only the compiler (O13). Expensive units (≥120 s or ≥4 GB predicted) prefer a worker (O17).
+- Component jobs were serial without remote slots; now also planned from local memory (O14).
+- A graph head for the workers' 605-owner selection is published (first since 11-20) after two defects (≥24 GB machine waiting behind a 16 GB claimant; 318 MiB admission document over a 256 MiB limit, refused silently) (GR14). The cache server kept evicting it; heads/records are now a protected `graph` class with an eviction journal (R4).
+- Worker read convergence: taken-owner memo lost under memory pressure, whole-tree inventory per round, seal wait (W4); per-pass re-verification of ~100k directory rows → stamp memo (W5).
+
+### Not achieved
+1. **Workers Ready: 0 of 11.** Fixes W4/W5 reach a worker only when its graph child restarts; 5 of 8 were still on older code at 01:10. Not observed working.
+2. **A component final on a worker: unproven.** Two proof runs were stopped for disk (P2, P3). P3 measured 802 dependency units remote on g1-m12 at a 3.6 s median.
+3. **A full release cache does not fit:** host store cap in force 27.75 GiB, full of in-use data; 2,202 of the play build's entries evicted for capacity between 20:24 and 00:40 → each restart recompiles about two thirds; offload uploads refused (507).
+4. Root constraint: coordinator disk at 96–97 %. `/Users/ueli/Documents/semio.old-20261114/.cache` (146 GiB, retired checkout) is the largest reclaimable item — USER decision, asked by the play session.
+5. Play release: not finished. Retention: dry-run (user decision). Server journal shows 2 small graph entries evicted for budget → R4 protection to re-check. Whole-graph generation head not in the protected class.

@@ -132,7 +132,7 @@ pub(super) fn overrides(document: &En1990Snapshot, report: &CheckReport) -> Opti
         let x = i as f64;
         let applied = verdicts[i] == inferences::factor_overrides::Verdict::Applied;
         series.push(Series::Polygon { id: format!("annex-{}", row.id), label: loc(&format!("{} annex value {:.3}", row.id, annex[i]), &format!("{} Anhangswert {:.3}", row.id, annex[i])), ring: rect(x + CELL_INSET, 0.0, x + 0.5, annex[i]), fill: Fill { tone: Tone::Neutral, opacity: 0.5 }, hatch: None });
-        series.push(Series::Polygon { id: format!("override-{}", row.id), label: loc(&format!("{} override {:.3} ({})", row.id, row.value, if applied { "deviates from NA" } else { "not applied" }), &format!("{} Überschreibung {:.3} ({})", row.id, row.value, if applied { "weicht vom NA ab" } else { "nicht angewendet" })), ring: rect(x + 0.5, 0.0, x + 1.0 - CELL_INSET, row.value.max(0.0)), fill: Fill { tone: if applied { Tone::Warning } else { Tone::Error }, opacity: 0.9 }, hatch: (!applied).then_some(Hatch::Diagonal) });
+        series.push(Series::Polygon { id: format!("override-bar-{}", row.id), label: loc(&format!("{} override {:.3} ({})", row.id, row.value, if applied { "deviates from NA" } else { "not applied" }), &format!("{} Überschreibung {:.3} ({})", row.id, row.value, if applied { "weicht vom NA ab" } else { "nicht angewendet" })), ring: rect(x + 0.5, 0.0, x + 1.0 - CELL_INSET, row.value.max(0.0)), fill: Fill { tone: if applied { Tone::Warning } else { Tone::Error }, opacity: 0.9 }, hatch: (!applied).then_some(Hatch::Diagonal) });
         let check = report.checks.iter().find(|c| c.id == format!("en1990.override.{}", row.id));
         markers.push(Marker {
             id: format!("override-{}", row.id),

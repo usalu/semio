@@ -1,0 +1,282 @@
+import {execFile,spawn,spawnSync} from "node:child_process";
+import {createHash} from "node:crypto";
+import {appendFileSync,closeSync,mkdirSync,openSync,readdirSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
+import {createRequire} from "node:module";
+import {join} from "node:path";
+import {fileURLToPath} from "node:url";
+import {currentHostProbeV1,readHostSampleV1,type HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
+import type {HostCapacityPolicyV1} from "../../📏️decision/🟦️.ts";
+import {readHostProcessRowsV1} from "../../🧺️unmanaged/🟦️.ts";
+import {HOST_WARDEN_PLATFORMS_V1,HOST_WARDEN_POLICY_V1,HOST_WARDEN_TABLES_V1,HOST_WARDEN_TABLE_V1,buildHostWardenAlarmV1,classifyWardenSubjectsV1,decideHostWardenV1,formatHostWardenNoticeV1,formatHostWardenStopReasonV1,isHostWardenV1,parseWardenProcessTableV1,planWardenSignalsV1,requireHostWardenV1,type HostWardenAlarmV1,type HostWardenCancelV1,type HostWardenHostV1,type HostWardenMirrorV1,type HostWardenPolicyV1,type HostWardenPreviousV1,type HostWardenStateV1,type HostWardenRowV1,type HostWardenSubjectV1,type HostWardenTablesV1} from "../🟦️.ts";
+
+const MEGABYTE=1048576;
+
+/** 📡️ Everything the loop reaches the machine through, injectable: the host sample, the process table, signals, the clock, the standard error line, the directory of the warden, the sleep and the mode. */
+export type HostWardenPortsV1=Readonly<{sample:()=>Promise<HostWardenHostV1>;table:()=>Promise<readonly HostWardenRowV1[]>;signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>void;now:()=>number;write:(line:string)=>void;directory:string;sleep:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;mode:()=>"observe"|"enforce"}>;
+/** 🎛️ What one run of the loop may be told besides its ports. */
+export type HostWardenLoopOptionsV1=Readonly<{ports:HostWardenPortsV1;policy?:HostWardenPolicyV1;tables?:HostWardenTablesV1;within?:number;prefixes?:readonly string[];maxTicks?:number;signal?:AbortSignal;code?:string;platform?:NodeJS.Platform;sources?:()=>string|Promise<string>}>;
+/** 🏁️ How a run ended and what it did. */
+export type HostWardenLoopResultV1=Readonly<{reason:"idle"|"code"|"signal"|"locked"|"limit";ticks:number;counters:Readonly<{suspended:number;resumed:number;cancelled:number}>}>;
+
+const POLICY=HOST_WARDEN_POLICY_V1;
+const defaultSleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promise(done=>{if(signal?.aborted)return done();const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
+const wardenLocale=(platform:NodeJS.Platform):Record<string,string>=>{const locale=(HOST_WARDEN_TABLE_V1.locale as Record<string,string>)[platform];return locale===undefined?{}:{LC_ALL:locale};};
+
+/** ⏱️ Reads the start text of one process (`ps -o lstart= -p`); the empty text where the platform has no such command or the process is gone. */
+export function wardenProcessStartV1(pid:number,platform:NodeJS.Platform=process.platform):string{
+ if(platform==="win32")return"";
+ const table=HOST_WARDEN_TABLE_V1.start,done=spawnSync(table.command,[...table.arguments,String(pid)],{encoding:"utf8",env:{...process.env,...wardenLocale(platform)},timeout:POLICY.commandMilliseconds});
+ return done.status===0?done.stdout.trim():"";
+}
+
+/** 🧬️ The digest of the sources of the warden (its pure module, its loop, its entry and its schema): a running warden whose digest differs from the code on disk ends itself, the next caller starts the new code. */
+export function hostWardenCodeDigestV1():string{
+ const hash=createHash("sha256");
+ for(const path of["../🟦️.ts","🟦️.ts","../⌨️main/🟦️.ts","../🧬️schema/🔣️.json"])hash.update(readFileSync(fileURLToPath(new URL(path,import.meta.url))));
+ return hash.digest("hex").slice(0,16);
+}
+
+/** 🗂️ The directory of the warden below the machine-wide host capacity directory. */
+export function hostWardenDirectoryV1(hostCapacityDirectory?:string):string{
+ const base=hostCapacityDirectory??(createRequire(import.meta.url)("../../🎫️gate/📖️status/🟦️.ts") as typeof import("../../🎫️gate/📖️status/🟦️.ts")).hostCapacityDirectoryV1();
+ return join(base,POLICY.directory);
+}
+
+const readJson=(path:string):unknown=>{try{return JSON.parse(readFileSync(path,"utf8"));}catch{return undefined;}};
+const writeAtomic=(path:string,text:string):void=>{const temporary=`${path}.${process.pid}.tmp`;writeFileSync(temporary,text);renameSync(temporary,path);};
+const alive=(pid:number):boolean=>{try{process.kill(pid,0);return true;}catch(error){return (error as NodeJS.ErrnoException).code==="EPERM";}};
+
+/** 📖️ Reads the state the running warden wrote (validated); null when absent, invalid or older than `staleMilliseconds`. */
+export function readHostWardenStateV1(directory?:string,nowMs:number=Date.now()):HostWardenStateV1|null{
+ const value=readJson(join(hostWardenDirectoryV1(directory),POLICY.stateFile));
+ if(value===undefined||!isHostWardenV1("State",value))return null;
+ const state=value as HostWardenStateV1;
+ return nowMs-state.atMs>POLICY.staleMilliseconds?null:state;
+}
+
+const listCancels=(directory:string|undefined,nowMs:number):HostWardenCancelV1[]=>{
+ const folder=join(hostWardenDirectoryV1(directory),POLICY.cancelledDirectory),found:HostWardenCancelV1[]=[];
+ try{for(const name of readdirSync(folder)){
+  if(!name.endsWith(".json"))continue;
+  const value=readJson(join(folder,name));
+  if(isHostWardenV1("Cancel",value)&&nowMs-(value as HostWardenCancelV1).atMs<=POLICY.cancelRecordMaximumAgeMilliseconds)found.push(value as HostWardenCancelV1);
+ }}catch{}
+ return found;
+};
+
+/** 🚫️ Reads the cancel record of a pid when the warden cancelled it less than `cancelRecordMaximumAgeMilliseconds` ago, so its owner can requeue instead of failing; null otherwise. */
+export function readHostWardenCancelV1(pid:number,directory?:string,nowMs:number=Date.now()):HostWardenCancelV1|null{
+ let best:HostWardenCancelV1|null=null;
+ for(const record of listCancels(directory,nowMs))if(record.pid===pid&&(best===null||record.atMs>best.atMs))best=record;
+ return best;
+}
+
+/** 🚫️ Reads every cancel record written at or after `sinceMs` (newest first): the warden cancels the leaf (`rustc`), not the root of a task, so an owner matches the records of its task by the `command` they carry. */
+export function readHostWardenCancelsSinceV1(sinceMs:number,directory?:string,nowMs:number=Date.now()):readonly HostWardenCancelV1[]{
+ return listCancels(directory,nowMs).filter(record=>record.atMs>=sinceMs).sort((a,b)=>b.atMs-a.atMs);
+}
+
+/** 🪞️ The record a worker mirrors to the group store: the fresh state of the warden as written, else `{"version":1,"atMs":<now>,"absent":true}`, so the coordinator tells no warden from no record. */
+export function currentHostWardenMirrorV1(directory?:string,nowMs:number=Date.now()):HostWardenMirrorV1{
+ return readHostWardenStateV1(directory,nowMs)??{version:1,atMs:nowMs,absent:true};
+}
+
+/** 📖️ Reads a mirrored `memory.json` (validated against schema `Mirror`); null when absent or invalid. */
+export function readHostWardenMirrorV1(path:string):HostWardenMirrorV1|null{
+ const value=readJson(path);
+ return value!==undefined&&isHostWardenV1("Mirror",value)?value as HostWardenMirrorV1:null;
+}
+
+/** 🏭️ The default ports: the real machine. The host sample reads the counters through the authored host capacity policy (no `hdiutil`, no footprint: the loop must stay cheap), the table is one `ps` (the native process walk on Windows, which has no state, start or command line), signals go through `process.kill`, the mode is the content of the `mode` file or forced by `observe`. */
+export function defaultHostWardenPortsV1(options:Readonly<{hostPolicy:HostCapacityPolicyV1;directory?:string;observe?:boolean;platform?:NodeJS.Platform}>):HostWardenPortsV1{
+ const platform=options.platform??process.platform,directory=hostWardenDirectoryV1(options.directory);
+ let previous:Readonly<{atMs:number;swappedOutMegabytes:number|null}>|undefined;const commands=new Map<string,string>();
+ const probe=currentHostProbeV1(),quick={...probe,run:(command:string,args:readonly string[],signal?:AbortSignal)=>command.endsWith("hdiutil")||args.includes("kern.num_files")?Promise.reject(Error("skipped")):probe.run(command,args,signal)};
+ return Object.freeze({
+  directory,now:Date.now,sleep:defaultSleep,write:(line:string)=>{process.stderr.write(line+"\n");},
+  mode:()=>options.observe?"observe" as const:(()=>{try{const text=readFileSync(join(directory,POLICY.modeFile),"utf8").trim();if(text==="observe"||text==="enforce")return text;}catch{}return POLICY.defaultMode as "observe"|"enforce";})(),
+  sample:async()=>{
+   const record:HostSampleRecordV1=await readHostSampleV1(options.hostPolicy,quick,previous);
+   previous={atMs:record.host.atMs,swappedOutMegabytes:record.swappedOutMegabytes};
+   const host=record.host as typeof record.host&{compressedMegabytes?:number|null};
+   return{totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,swapUsedMegabytes:host.swapUsedMegabytes,swapOutMegabytesPerSecond:host.swapOutMegabytesPerSecond,compressedMegabytes:host.compressedMegabytes??null,pressure:host.pressure};
+  },
+  table:async()=>{
+   if(platform==="win32")return(await readHostProcessRowsV1(platform)).map(row=>({pid:row.pid,parent:row.ppid,group:row.pid,rssKilobytes:row.kilobytes,stopped:false,elapsedSeconds:0,start:"",command:row.name}));
+   const table=HOST_WARDEN_TABLE_V1,rows=parseWardenProcessTableV1(await runPs(table.quickArguments,platform)),key=(row:HostWardenRowV1)=>`${row.pid}.${row.start}`;
+   const young=new Map<string,string>(),missing=rows.filter(row=>!commands.has(key(row)));
+   if(missing.length>0){
+    const found=new Map<number,string>();
+    for(const line of(await runPs(missing.length>=table.commandAllMinimum?["-A",...table.commandArguments]:[...table.commandArguments,"-p",missing.map(row=>row.pid).join(",")],platform,true)).split("\n")){const match=/^\s*(\d+)\s(.*)$/u.exec(line);if(match)found.set(Number(match[1]),match[2]!);}
+    for(const row of missing){const command=found.get(row.pid)??"";if(row.elapsedSeconds>=table.commandSettledSeconds&&!command.startsWith("("))commands.set(key(row),command);else young.set(key(row),command);}
+   }
+   const live=new Set(rows.map(key));for(const known of[...commands.keys()])if(!live.has(known))commands.delete(known);
+   return rows.map(row=>({...row,command:commands.get(key(row))??young.get(key(row))??""}));
+  },
+  signal:(pid:number,name:"SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")=>{try{process.kill(pid,name);}catch{}},
+ });
+}
+
+const runPs=(args:readonly string[],platform:NodeJS.Platform,vanished=false):Promise<string>=>new Promise((done,fail)=>execFile(HOST_WARDEN_TABLE_V1.command,[...args],{maxBuffer:64*MEGABYTE,encoding:"utf8",timeout:POLICY.commandMilliseconds,env:{...process.env,...wardenLocale(platform)}},(error,stdout)=>error&&stdout.length===0&&!vanished?fail(error):done(stdout)));
+const percentile=(values:readonly number[],share:number):number=>{if(!values.length)return 0;const sorted=[...values].sort((a,b)=>a-b);return sorted[Math.min(sorted.length-1,Math.floor(sorted.length*share))]!;};
+const round=(value:number,digits=2):number=>Math.round(value*10**digits)/10**digits;
+
+type Record1=Readonly<{id:string;pid:number;start:string;kind:string;sinceMs:number}>;
+
+/** 🔁️ Runs the host warden until it has no subject for `idleMilliseconds`, its sources changed, the signal aborts, another warden holds the lock or `maxTicks` ticks ran. Every tick samples the host and the process table, classifies the subjects, decides, and for each action writes its record first (`state.json` with the suspended set; the `cancelled/<pid>.<start digest>.json` record for a cancel), then signals (suspend: SIGSTOP to the tree, parent first; resume: SIGCONT; cancel: SIGCONT, then the signal of the kind), then appends the alarm to `alarms.jsonl` and writes it to the standard error in English and German. A resume writes the state after its signal, so a crash never loses a stopped process. In observe mode, and on a platform that cannot suspend, nothing is signalled and alarms are marked observed. A starting warden resumes every process a dead predecessor left suspended, and every exit resumes what this run suspended.
+ * @see ../🧬️schema/🔣️.json */
+export async function runHostWardenLoopV1(options:HostWardenLoopOptionsV1):Promise<HostWardenLoopResultV1>{
+ const ports=options.ports,policy=options.policy??POLICY,tables=options.tables??HOST_WARDEN_TABLES_V1,platform=options.platform??process.platform,directory=ports.directory;
+ const stateFile=join(directory,policy.stateFile),lockFile=join(directory,policy.lockFile),alarmsFile=join(directory,policy.alarmsFile),cancelled=join(directory,policy.cancelledDirectory);
+ mkdirSync(cancelled,{recursive:true});
+ const code=options.code??hostWardenCodeDigestV1(),observeOnly=(HOST_WARDEN_PLATFORMS_V1.observeOnly as readonly string[]).includes(platform),selfStart=wardenProcessStartV1(process.pid,platform);
+ const done=(reason:HostWardenLoopResultV1["reason"],ticks:number,counters:HostWardenLoopResultV1["counters"]):HostWardenLoopResultV1=>{
+  for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"stopped",{reason:formatHostWardenStopReasonV1(language,reason,{minutes:Math.round(policy.idleMilliseconds/60000)})}));
+  return{reason,ticks,counters};
+ };
+ const locked=(():number|undefined=>{
+  for(let attempt=0;attempt<3;attempt++){
+   try{writeFileSync(lockFile,JSON.stringify({pid:process.pid,start:selfStart}),{flag:"wx"});return undefined;}catch{}
+   const held=readJson(lockFile);
+   if(isHostWardenV1("Lock",held)){const lock=held as {pid:number;start:string};if(alive(lock.pid)&&(lock.start===""||wardenProcessStartV1(lock.pid,platform)===lock.start))return lock.pid;}
+   rmSync(lockFile,{force:true});
+  }
+  return 0;
+ })();
+ if(locked!==undefined){for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"locked",{pid:locked}));return done("locked",0,{suspended:0,resumed:0,cancelled:0});}
+ const counters={suspended:0,resumed:0,cancelled:0,ticks:0},suspended=new Map<string,Record1>(),since=new Map<string,number>(),lastAlarms:HostWardenAlarmV1[]=[],durations:number[]=[],announced=new Set<string>(),marks:{wall:number;cpu:number}[]=[{wall:performance.now(),cpu:(process.cpuUsage().user+process.cpuUsage().system)/1000}];
+ let previous:HostWardenPreviousV1={level:"calm",calmTicks:0},level:"calm"|"guard"|"danger"="calm",lastSubjectAt=ports.now(),lastCodeCheck=ports.now(),stopReason:HostWardenLoopResultV1["reason"]|undefined;
+ const mode=():"observe"|"enforce"=>observeOnly?"observe":ports.mode();
+ const exclusion=(rows:readonly HostWardenRowV1[]):Set<number>=>{const byPid=new Map(rows.map(row=>[row.pid,row] as const)),found=new Set<number>([process.pid]);for(let row=byPid.get(process.pid);row!==undefined&&!found.has(row.parent)&&row.parent>0;row=byPid.get(row.parent))found.add(row.parent);return found;};
+ const signalTree=(rows:readonly HostWardenRowV1[],subject:Readonly<{pid:number;scope?:"process"|"group"|"tree"}>,names:readonly("SIGSTOP"|"SIGCONT"|"SIGKILL"|"SIGTERM")[]):void=>{
+  const pids=planWardenSignalsV1(rows,subject,tables,exclusion(rows));
+  for(const name of names)for(const pid of pids)ports.signal(pid,name);
+ };
+ const appendAlarm=(alarm:HostWardenAlarmV1):void=>{
+  try{
+   appendFileSync(alarmsFile,JSON.stringify(alarm)+"\n");
+   if(statSync(alarmsFile).size>policy.alarmsMaximumBytes){const lines=readFileSync(alarmsFile,"utf8").split("\n").filter(Boolean),kept=lines.slice(Math.floor(lines.length/2));writeAtomic(alarmsFile,kept.join("\n")+"\n");}
+  }catch{}
+  lastAlarms.push(alarm);if(lastAlarms.length>policy.lastAlarms)lastAlarms.splice(0,lastAlarms.length-policy.lastAlarms);
+  ports.write(alarm.text.en);ports.write(alarm.text.de);
+ };
+ let last:{host:HostWardenHostV1;decision:ReturnType<typeof decideHostWardenV1>;subjects:readonly HostWardenSubjectV1[]}|undefined;
+ const writeState=(host:HostWardenHostV1,decision:{guardMegabytes:number;dangerMegabytes:number;resumeMegabytes:number;hold:boolean},subjects:readonly HostWardenSubjectV1[]):void=>{
+  const byKind:Record<string,{count:number;megabytes:number}>={};
+  for(const subject of subjects){const row=byKind[subject.kind]??={count:0,megabytes:0};row.count++;row.megabytes+=subject.megabytes;}
+  const wall=marks.length>1?marks.at(-1)!.wall-marks[0]!.wall:0,cpu=marks.length>1?marks.at(-1)!.cpu-marks[0]!.cpu:0;
+  const state={version:1,atMs:ports.now(),pid:process.pid,mode:mode(),code,host,level,hold:decision.hold,guardMegabytes:decision.guardMegabytes,dangerMegabytes:decision.dangerMegabytes,resumeMegabytes:decision.resumeMegabytes,subjects:{count:subjects.length,megabytes:subjects.reduce((sum,subject)=>sum+subject.megabytes,0),byKind},suspended:[...suspended.values()],counters:{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,ticks:counters.ticks},lastAlarms:[...lastAlarms],overhead:{tickMillisecondsP50:round(percentile(durations,0.5)),tickMillisecondsP95:round(percentile(durations,0.95)),cpuBasisPoints:wall>0?round(cpu/wall*10000):0,residentMegabytes:round(process.memoryUsage().rss/MEGABYTE)}};
+  if(!isHostWardenV1("State",state)){ports.write(`[warden] state invalid / Zustand ungültig: ${JSON.stringify(state).slice(0,200)}`);return;}
+  try{writeAtomic(stateFile,JSON.stringify(state));}catch{}
+ };
+ const resumeAll=async(rows:readonly HostWardenRowV1[]):Promise<void>=>{
+  for(const entry of[...suspended.values()]){
+   const row=rows.find(candidate=>candidate.pid===entry.pid&&candidate.start===entry.start);
+   if(row!==undefined)signalTree(rows,{pid:entry.pid,scope:tables.kinds.find(kind=>kind.name===entry.kind)?.scope??"tree"},["SIGCONT"]);
+   suspended.delete(entry.id);
+  }
+ };
+ const predecessor=readJson(stateFile);
+ if(isHostWardenV1("State",predecessor)&&mode()==="enforce"&&!observeOnly){
+  const left=(predecessor as {suspended:readonly Record1[]}).suspended;
+  if(left.length>0){
+   const rows=await ports.table().catch(()=>[] as readonly HostWardenRowV1[]);
+   for(const entry of left){
+    const row=rows.find(candidate=>candidate.pid===entry.pid&&candidate.start===entry.start);
+    if(row===undefined)continue;
+    signalTree(rows,{pid:entry.pid,scope:tables.kinds.find(kind=>kind.name===entry.kind)?.scope??"tree"},["SIGCONT"]);
+    for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"left",{kind:entry.kind,pid:entry.pid}));
+   }
+  }
+ }
+ if(observeOnly)for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"observeOnly",{platform}));
+ for(const language of["en","de"] as const)ports.write(formatHostWardenNoticeV1(language,"started",{pid:process.pid,mode:mode(),code,directory}));
+ const protectList=():readonly string[]=>{const value=readJson(join(directory,policy.protectFile));return isHostWardenV1("Protect",value)?value as string[]:[];};
+ try{
+  for(;;){
+   if(options.signal?.aborted){stopReason="signal";break;}
+   if(options.maxTicks!==undefined&&counters.ticks>=options.maxTicks){stopReason="limit";break;}
+   const began=performance.now();
+   try{
+    const[host,rows]=await Promise.all([ports.sample(),ports.table()]),now=ports.now();
+    const protect=protectList(),subjects=classifyWardenSubjectsV1(rows,tables,{protect,...options.within===undefined?{}:{within:options.within},prefixes:options.prefixes??[],nowMs:now,suspendedSince:since});
+    const ids=new Set(subjects.map(subject=>subject.id));
+    for(const subject of subjects){if(subject.suspended){if(!since.has(subject.id))since.set(subject.id,suspended.get(subject.id)?.sinceMs??now);}else since.delete(subject.id);}
+    for(const id of[...since.keys()])if(!ids.has(id))since.delete(id);
+    let dirty=false;
+    for(const id of[...suspended.keys()]){const subject=subjects.find(candidate=>candidate.id===id);if(subject===undefined||!subject.suspended){suspended.delete(id);dirty=true;}}
+    if(subjects.length>0)lastSubjectAt=now;
+    const decision=decideHostWardenV1(policy,host,subjects,previous),effective=mode(),byId=new Map(subjects.map(subject=>[subject.id,subject] as const)),keys=new Set(decision.actions.map(action=>`${action.action}.${action.id}`));
+    level=decision.level;previous={level:decision.level,calmTicks:decision.calmTicks};last={host,decision,subjects:subjects};
+    if(dirty)writeState(host,decision,subjects);
+    for(const action of decision.actions){
+     const subject=byId.get(action.id);if(subject===undefined)continue;
+     const alarm=buildHostWardenAlarmV1({atMs:ports.now(),observed:effective==="observe",level:decision.level,action,subject,host,decision});
+     if(effective==="enforce"){
+      const start=subject.start??"",scope=subject.scope??"tree";
+      if(action.action==="suspend"){
+       suspended.set(subject.id,{id:subject.id,pid:subject.pid,start,kind:subject.kind,sinceMs:now});since.set(subject.id,now);writeState(host,decision,subjects);
+       signalTree(rows,{pid:subject.pid,scope},["SIGSTOP"]);counters.suspended++;
+      }else if(action.action==="resume"){
+       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);suspended.delete(subject.id);since.delete(subject.id);counters.resumed++;writeState(host,decision,subjects);
+      }else{
+       const record:HostWardenCancelV1={version:1,pid:subject.pid,start,kind:subject.kind,owner:subject.owner??"",command:(rows.find(row=>row.pid===subject.pid)?.command??"").slice(0,512),megabytes:subject.megabytes,atMs:now,reason:action.reason};
+       writeAtomic(join(cancelled,`${subject.pid}.${createHash("sha256").update(start).digest("hex").slice(0,8)}.json`),JSON.stringify(record));
+       signalTree(rows,{pid:subject.pid,scope},["SIGCONT"]);signalTree(rows,{pid:subject.pid,scope},[subject.signal??"SIGKILL"]);
+       suspended.delete(subject.id);since.delete(subject.id);counters.cancelled++;writeState(host,decision,subjects);
+      }
+     }
+     if(effective==="enforce"||!announced.has(`${action.action}.${action.id}`))appendAlarm(alarm);
+    }
+    announced.clear();if(effective==="observe")for(const key of keys)announced.add(key);
+    counters.ticks++;
+    const elapsed=performance.now()-began;durations.push(elapsed);if(durations.length>policy.tickWindow)durations.shift();
+    {const used=process.cpuUsage();marks.push({wall:performance.now(),cpu:(used.user+used.system)/1000});}if(marks.length>policy.tickWindow)marks.shift();
+    writeState(host,decision,subjects);
+    if(now-lastSubjectAt>=policy.idleMilliseconds){stopReason="idle";break;}
+    if(ports.now()-lastCodeCheck>=policy.codeCheckMilliseconds){
+     lastCodeCheck=ports.now();
+     const current=options.sources===undefined?hostWardenCodeDigestV1():await options.sources();
+     if(current!==code){stopReason="code";break;}
+     try{for(const name of readdirSync(cancelled)){const value=readJson(join(cancelled,name));if(!isHostWardenV1("Cancel",value)||ports.now()-(value as HostWardenCancelV1).atMs>policy.cancelRecordMaximumAgeMilliseconds)rmSync(join(cancelled,name),{force:true});}}catch{}
+    }
+   }catch(error){ports.write(`[warden] tick failed / Tick fehlgeschlagen: ${String((error as Error)?.message??error).split("\n")[0]}`);counters.ticks++;}
+   await ports.sleep(observeOnly?policy.observeOnlyMilliseconds:level==="calm"?policy.calmMilliseconds:policy.tightMilliseconds,options.signal);
+  }
+ }finally{
+  if(mode()==="enforce"&&!observeOnly&&suspended.size>0){const rows=await ports.table().catch(()=>[] as readonly HostWardenRowV1[]);await resumeAll(rows);if(last!==undefined)writeState(last.host,last.decision,last.subjects);}
+  try{const held=readJson(lockFile);if(isHostWardenV1("Lock",held)&&(held as {pid:number}).pid===process.pid)rmSync(lockFile,{force:true});}catch{}
+ }
+ return done(stopReason??"limit",counters.ticks,{suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled});
+}
+
+let digestMemory:string|undefined;
+const ensured=new Map<string,Readonly<{atMs:number;result:Readonly<{started:boolean;reason:"running"|"replacing"|"spawned"|"failed"}>}>>();
+
+/** 🚀️ Makes sure a warden runs on this machine, cheaply: the source digest is read once per process, a process that ensured less than `ensureMilliseconds` ago (same directory and code, `memoise` not `false`) returns its earlier answer without any file read, otherwise one small file read (`state.json`) and one `kill(pid,0)`; no spawn while a holder with a fresh state is alive (a holder whose code differs from the caller's digest is left to end itself), else it spawns the entry detached with its output in `warden.log` (rotated at `logMaximumBytes`) and `unref`s it. Never throws. A process under a test runner (`NODE_ENV=test`) that names neither a directory nor a spawn port never spawns the real warden of the machine. */
+export function ensureHostWardenV1(options:Readonly<{directory?:string;code?:string;nowMs?:number;spawn?:(command:string,args:readonly string[],log:number)=>void;observe?:boolean;main?:string;memoise?:boolean}>={}):Readonly<{started:boolean;reason:"running"|"replacing"|"spawned"|"failed"}>{
+ try{
+  if(options.spawn===undefined&&options.directory===undefined&&process.env.NODE_ENV==="test")return{started:false,reason:"failed"};
+  const now=options.nowMs??Date.now(),code=options.code??(digestMemory??=hostWardenCodeDigestV1()),key=`${options.directory??""}\n${code}`,known=options.memoise===false?undefined:ensured.get(key);
+  if(known!==undefined&&now-known.atMs<POLICY.ensureMilliseconds&&now>=known.atMs)return known.result;
+  const result=ensureOnce(options,now,code);
+  if(options.memoise!==false&&result.reason!=="failed")ensured.set(key,{atMs:now,result:{started:false,reason:result.reason==="spawned"?"running":result.reason}});
+  return result;
+ }catch{return{started:false,reason:"failed"};}
+}
+
+const ensureOnce=(options:Readonly<{directory?:string;spawn?:(command:string,args:readonly string[],log:number)=>void;observe?:boolean;main?:string}>,now:number,code:string):Readonly<{started:boolean;reason:"running"|"replacing"|"spawned"|"failed"}>=>{
+ try{
+  const directory=hostWardenDirectoryV1(options.directory),state=readJson(join(directory,POLICY.stateFile)) as {atMs?:unknown;pid?:unknown;code?:unknown}|undefined;
+  if(state!==undefined&&typeof state.atMs==="number"&&typeof state.pid==="number"&&now-state.atMs<=POLICY.staleMilliseconds&&alive(state.pid))return{started:false,reason:state.code===code?"running":"replacing"};
+  mkdirSync(directory,{recursive:true});
+  const log=join(directory,POLICY.logFile);
+  try{if(statSync(log).size>=POLICY.logMaximumBytes)renameSync(log,`${log}.1`);}catch{}
+  const handle=openSync(log,"a"),main=options.main??fileURLToPath(new URL("../⌨️main/🟦️.ts",import.meta.url)),args=[main,...options.directory===undefined?[]:["--directory",options.directory],...options.observe?["--observe"]:[]];
+  try{
+   if(options.spawn)options.spawn(process.execPath,args,handle);
+   else spawn(process.execPath,args,{detached:true,stdio:["ignore",handle,handle],windowsHide:true}).unref();
+  }finally{closeSync(handle);}
+  return{started:true,reason:"spawned"};
+ }catch{return{started:false,reason:"failed"};}
+};

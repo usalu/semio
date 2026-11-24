@@ -1,0 +1,23 @@
+appliances	duct-fan	1:50 elevation Hausdorff: expected 0.026640625 to be less than or equal to 0.015
+appliances	electric-kettle	1:50 elevation Hausdorff: expected 0.015214286795205605 to be less than or equal to 0.015
+appliances	hot-water-cylinder	1:50 axis 2: 0.6095600241553372 m against 0.6 m: expected 0.009560024155337188 to be less than or equal to 0.0075
+appliances	server-rack	1:100 axis 2: 1.0164999999999997 m against 1 m: expected 0.016499999999999737 to be less than or equal to 0.015
+appliances	shower-head	1:100 elevation: expected 0.9121844127332601 to be greater than or equal to 0.92
+appliances	used-dishwasher	1:50 elevation Hausdorff: expected 0.026115728019720223 to be less than or equal to 0.015
+appliances	used-electric-bass-and-cabinet	1:50 elevation Hausdorff: expected 0.01602000702247037 to be less than or equal to 0.015
+appliances	used-electronic-drum-kit	1:50 elevation Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+appliances	used-fridge-freezer	1:50 elevation Hausdorff: expected 0.016875 to be less than or equal to 0.015
+appliances	used-sewing-machine	1:50 front Hausdorff: expected 0.031875 to be less than or equal to 0.015
+appliances	used-stage-piano	1:100 plan Hausdorff: expected 0.0375 to be less than or equal to 0.03
+appliances	vacuum-cleaner	1:50 front Hausdorff: expected 0.043125 to be less than or equal to 0.015
+machinery	concrete-mixer-truck	1:500 elevation Hausdorff: expected 0.6541036328442154 to be less than or equal to 0.15
+machinery	diesel-generator	1:200 elevation Hausdorff: expected 0.0675 to be less than or equal to 0.06
+machinery	evaporative-humidifier	1:50 axis 2: 0.40750000000000003 m against 0.4 m: expected 0.007500000000000007 to be less than or equal to 0.0075
+machinery	excavator	1:500 elevation Hausdorff: expected 0.31875 to be less than or equal to 0.15
+machinery	forklift	1:500 elevation Hausdorff: expected 0.256359375 to be less than or equal to 0.15
+machinery	heat-pump-outdoor-unit	1:50 axis 0: 0.479 m against 0.47 m: expected 0.009000000000000008 to be less than or equal to 0.0075
+machinery	oil-pumpjack	1:500 axis 0: 9.100000000000001 m against 9.2 m: expected 0.09999999999999787 to be less than or equal to 0.075
+machinery	plate-heat-exchanger	1:50 elevation Hausdorff: expected 0.01875 to be less than or equal to 0.015
+machinery	scissor-lift	1:200 elevation Hausdorff: expected 0.1575 to be less than or equal to 0.06
+machinery	tower-crane	1:500 elevation: expected 0.7935860609714293 to be greater than or equal to 0.92
+machinery	wheel-loader	1:500 plan Hausdorff: expected 0.2466177457118607 to be less than or equal to 0.15

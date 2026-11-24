@@ -1,4 +1,4 @@
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfObject};
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
 #[allow(unused_imports)]
@@ -57,7 +57,7 @@ fn every_algorithm_seals_and_opens_with_user_and_owner_passwords() {
     for algorithm in [PdfEncryptionAlgorithm::Rc4_40, PdfEncryptionAlgorithm::Rc4_128, PdfEncryptionAlgorithm::Aes128, PdfEncryptionAlgorithm::Aes256] {
         let parameters = PdfEncryption { algorithm, permissions: -3904, user_password: "user".into(), owner_password: Some("owner".into()), encrypt_metadata: true };
         let (sealer, dictionary) = seal_standard_security(&parameters, document_id, b"seed");
-        let object = PdfObject::Dict(vec![PdfDictEntry::new("S", PdfObject::Str(b"secret string".to_vec())), PdfDictEntry::new("T", PdfObject::Stream { dict: Vec::new(), data: b"stream body".to_vec(), filters: Vec::new() })]);
+        let object = PdfObject::Dict(vec![PdfDictEntry::new("S", PdfObject::Str(b"secret string".to_vec())), PdfDictEntry::new("T", PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"stream body"), filters: Vec::new() })]);
         let sealed = sealer.encrypt_object(object.clone(), 7, 0);
         assert_ne!(sealed, object);
         for password in ["user", "owner"] {

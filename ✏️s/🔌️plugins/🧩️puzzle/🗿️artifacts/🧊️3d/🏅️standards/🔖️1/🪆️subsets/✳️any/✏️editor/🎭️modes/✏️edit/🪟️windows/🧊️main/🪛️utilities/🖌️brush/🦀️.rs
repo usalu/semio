@@ -24,7 +24,6 @@ use semio_plugin::RequestId;
 use semio_plugin::ToolRunJob;
 use semio_plugin::ToolRunJobPurpose;
 use semio_plugin::ToolRunJobRequest;
-use semio_plugin::ToolRunView;
 use semio_plugin::UtilityDefinition;
 use semio_plugin::WindowMeasure;
 use semio_framework_tool_run::JobKindId;

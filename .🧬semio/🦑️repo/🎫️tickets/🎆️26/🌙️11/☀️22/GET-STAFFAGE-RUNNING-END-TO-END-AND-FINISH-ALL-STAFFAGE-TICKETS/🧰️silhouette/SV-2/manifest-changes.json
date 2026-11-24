@@ -1,0 +1,54 @@
+{
+  "ivy-on-trellis": {
+    "widthM": 1.9
+  },
+  "london-plane-pollarded": {
+    "widthM": 5.672,
+    "heightM": 8.654,
+    "depthM": 5.606
+  },
+  "miscanthus-grass": {
+    "widthM": 2.125,
+    "depthM": 1.785
+  },
+  "multi-stem-birch": {
+    "heightM": 13.031
+  },
+  "norway-maple": {
+    "depthM": 14.171
+  },
+  "olive-tree": {
+    "heightM": 6.877
+  },
+  "red-oak": {
+    "widthM": 18.389
+  },
+  "scots-pine": {
+    "widthM": 12.056,
+    "depthM": 7.876
+  },
+  "small-leaved-lime": {
+    "heightM": 14.399
+  },
+  "stone-pine": {
+    "widthM": 14.472,
+    "heightM": 20.452
+  },
+  "sweetgum": {
+    "widthM": 9.372,
+    "heightM": 17.979
+  },
+  "sycamore-maple": {
+    "widthM": 20.778,
+    "heightM": 25.104,
+    "depthM": 20.029
+  },
+  "tulip-tree": {
+    "depthM": 13.843
+  },
+  "weeping-willow": {
+    "widthM": 16.124,
+    "heightM": 11.094,
+    "depthM": 13.885
+  }
+}

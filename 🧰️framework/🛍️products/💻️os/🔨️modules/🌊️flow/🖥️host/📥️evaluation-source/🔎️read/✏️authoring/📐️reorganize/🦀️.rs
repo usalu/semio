@@ -121,4 +121,4 @@ impl ReorganizeWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{let f=&self.fields;self.closing&&self.reach.is_none()&&self.text.is_none()&&self.retirement.is_empty()&&f.order.is_none()&&f.scratch.is_none()&&f.reverse.is_none()&&f.handles.is_none()&&f.handle_order.is_none()&&f.handle_scratch.is_none()&&f.nodes.is_none()&&f.edges.is_none()&&f.entries.is_none()&&f.output.is_none()&&f.id.is_none()&&f.error.is_none()&&f.sort.is_none()&&f.lex.is_none()&&f.endpoint.is_none()&&f.kernel.is_none()}
 }
-impl Drop for ReorganizeWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original reorganization must close its exact numeric and mutation custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ReorganizeWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original reorganization must close its exact numeric and mutation custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

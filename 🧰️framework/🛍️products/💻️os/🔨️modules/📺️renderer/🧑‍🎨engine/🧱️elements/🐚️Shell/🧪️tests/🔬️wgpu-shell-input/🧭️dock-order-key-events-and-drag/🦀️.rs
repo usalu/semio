@@ -267,7 +267,8 @@ fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
     shell.windows.active_window_id = Some(opened_with.into());
     let mut document = shell.windows.publish_surface_records(pressed, pane_owner_select_records_with("body-focus", "system")).expect("pressed window document publishes");
     let body = Rect::new(3.0, 54.0, 315.0, 814.0);
-    let mut input = paint_tree_pointer_document(&mut shell, pressed, &document, body);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, pressed, &document, body);
     let target = semio_renderer_wgpu_ui_engine_dump::chrome_ledger::published_accessibility_target_for_test(pressed, "body-focus").expect("the published pane exposes its exact accessible address");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).unwrap());
     assert!(!shell.chrome.chrome_build.content_has_focus(opened_with), "sanity: the window the keyboard used to follow never had content focus");
@@ -277,6 +278,7 @@ fn a_retained_body_press_activates_its_own_window_so_the_keyboard_follows_it() {
     assert_eq!(shell.windows.active_window_id.as_deref(), Some(pressed), "the pressed window is the active one");
     assert!(shell.chrome.chrome_build.content_has_focus(shell.windows.active_window_id.as_deref().expect("an active window")), "…so the keyboard's own predicate now answers for the window whose content holds focus");
     while !document.close_step() {}
+    turns.finish();
 }
 
 /// ⚖️ LAW: the RELEASE half of the same click changes nothing about activation — a click activates on

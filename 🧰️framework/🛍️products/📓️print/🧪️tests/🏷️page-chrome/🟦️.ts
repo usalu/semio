@@ -40,7 +40,7 @@ export function verifyPageChromeBorders(): void {
   }
   const chip = definition(text, "semio@chrome@chip");
   assert.ok(!chip.includes("\\fcolorbox") && !chip.includes("\\colorbox") && !chip.includes("chip@rule"));
-  assert.ok(chip.includes("\\semio@chip@box{\\ifsemio@chrome@footer b\\else t\\fi lr}"));
+  assert.ok(chip.includes("\\expandafter\\semio@chip@box\\expandafter{\\semio@chrome@chip@edges}") && text.includes("\\def\\semio@chrome@chip@edges{lr}"));
   assert.ok(!text.includes("\\semio@chrome@chip@rule") && !text.includes("\\semio@chrome@chip@body"));
   for (const name of ["SemioFooterAuthorChips", "SemioFooterLogoChips", "SemioChromeNavbarProjectChip", "SemioChromeNavbarCenterChip", "SemioChromeNavbarLabelsCompute"]) assert.ok(text.includes("\\cs_new_eq:NN \\" + name), name);
   const edgeLetters: Record<string, string> = { top: "t", bottom: "b", left: "l", right: "r" };
@@ -53,11 +53,12 @@ export function verifyPageChromeBorders(): void {
     const bar = definition(text, "semio@chrome@" + row.bar + "@bar");
     assert.ok(!bar.includes("\\semio@spacing@single"), row.name);
     assert.ok(bar.includes("\\semio@chrome@footer" + (row.bar === "footer" ? "true" : "false")));
-    const rule = bar.indexOf("\\semio@window@stroke@h"), content = bar.indexOf("\\hbox to \\headwidth{#1}");
-    assert.ok(row.side === "bottom" ? rule > content : rule < content);
+    const rule = bar.indexOf("\\semio@window@stroke@h"), content = bar.indexOf("\\semio@chrome@band@row{#1}"), closing = bar.lastIndexOf("\\semio@window@stroke@h");
+    assert.ok(rule >= 0 && rule < content && content < closing, row.name + ": band closed above and below");
     assert.ok(bar.includes("\\nointerlineskip"));
   }
   assert.ok(definition(text, "semio@chrome@bar@threezone").includes("\\vbox to \\dimexpr#1-\\semio@stroke@hairline\\relax"));
+  assert.equal(definition(text, "semio@chrome@band@row").split("\\vrule width\\semio@stroke@hairline height\\ht\\z@ depth\\dp\\z@").length, 3);
   assert.match(definition(text, "SemioChromeNavbarHead"), /\\semio@chrome@navbar@chip@text\{\\semio@chrome@font@chip\}\{%\s*\\semio@chrome@fit@width/);
 }
 

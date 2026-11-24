@@ -25,11 +25,6 @@ pub mod standards {
                         pub mod snapshot;
                         #[path = "../../../../../🚪️io/💾️binary/💡️inferences/🦀️.rs"]
                         pub mod inferences;
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../../🚪️io/💾️binary/🧬️mutations/🧰️wire/🦀️.rs"]
-                            pub mod wire;
-                        }
                     }
                     #[path = "."]
                     pub mod text {

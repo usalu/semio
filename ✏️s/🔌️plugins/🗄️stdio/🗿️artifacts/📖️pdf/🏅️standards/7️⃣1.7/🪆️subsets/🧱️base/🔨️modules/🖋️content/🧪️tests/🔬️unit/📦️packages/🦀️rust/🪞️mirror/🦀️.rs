@@ -144,28 +144,6 @@ pub mod standards {
                             pub mod insert_signature_field;
                         }
                     }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🛬️remove-launch-action/🦀️.rs"]
-                            pub mod remove_launch_action;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🚫️remove-javascript-action/🦀️.rs"]
-                            pub mod remove_javascript_action;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/✂️remove-signature-field/🦀️.rs"]
-                            pub mod remove_signature_field;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🧺️remove-font-file/🦀️.rs"]
-                            pub mod remove_font_file;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/📜️insert-javascript-action/🦀️.rs"]
-                            pub mod insert_javascript_action;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🔤️embed-font-file/🦀️.rs"]
-                            pub mod embed_font_file;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/🚀️insert-launch-action/🦀️.rs"]
-                            pub mod insert_launch_action;
-                            #[path = "../../../../../../../../⚕️h/🚪️io/💾️binary/🧬️mutations/✒️insert-signature-field/🦀️.rs"]
-                            pub mod insert_signature_field;
-                        }
-                    }
                 }
             }
         }

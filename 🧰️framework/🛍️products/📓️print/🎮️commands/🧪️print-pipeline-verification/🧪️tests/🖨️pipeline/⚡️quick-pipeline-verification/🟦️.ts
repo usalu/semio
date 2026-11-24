@@ -1,4 +1,5 @@
 import { verifyPageChromeBorders, verifyPageChromeLogo } from "../../../../../🧪️tests/🏷️page-chrome/🟦️.ts";
+import { verifyFrameJunctions } from "../../../../../🧪️tests/🧩️frame-junctions/🟦️.ts";
 /** ⚡️ The quick print pipeline verification: the schema module reader, the toolchain manifest and the pure transformations of the print pipeline. */
 import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
@@ -29,6 +30,7 @@ export function verifyPrintToolchainManifest(): void {
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
 export async function verifyPrintPipelineSourcesV1(): Promise<void> {
   verifyPageChromeBorders();
+  verifyFrameJunctions();
   await verifyPageChromeLogo();
   verifyPrintApiFreshness();
   await verifyPrintPdfGlyphPolicy();

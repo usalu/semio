@@ -7,7 +7,7 @@ import {dirname,join,relative,resolve} from "node:path";
 import Ajv from "ajv";
 import {parse} from "smol-toml";
 import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {goDependencies,nativeDependencies,nativeWorkspaceV1} from "../../🟨️.mjs";
+import {goDependencies,nativeDependencies,nativeDependencyRoots,nativeWorkspaceV1,wire} from "../../🟨️.mjs";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -85,4 +85,19 @@ withGo("Go module files read the same module, requirements and replacements as `
   expect(actual.requires,row.name).toEqual((edit.Require??[]).map((entry:any)=>entry.Path));
   expect(actual.replacements,row.name).toEqual((edit.Replace??[]).map((entry:any)=>({module:entry.Old.Path,path:entry.New.Path})));
  }
+});
+
+test("a path dependency without a manifest is refused once, naming the manifest that declares it and the path it spells",()=>{
+ wire({sourceAnalyses:{},coordinates:{buildPath:(path:string)=>path.split("\\").join("/"),SCRIPT_BASENAME:"x"},targetPolicy:{}});
+ const repository=join(root,"missing-manifest");mkdirSync(join(repository,"a"),{recursive:true});mkdirSync(join(repository,"b"),{recursive:true});
+ writeFileSync(join(repository,"Cargo.toml"),"[workspace]\n");
+ writeFileSync(join(repository,"a","Cargo.toml"),'[package]\nname="a"\n[dependencies]\nb={path="../b"}\n');
+ writeFileSync(join(repository,"b","Cargo.toml"),'[package]\nname="b"\n[dependencies]\ngone={path="../packages/gone"}\n');
+ const failure=attempt(()=>nativeDependencyRoots("a",repository,true,new Map(),new Map()));
+ expect(failure.error?.code).toBe("NATIVE_INPUT_ADMISSION");
+ expect((failure.error as any).manifest).toBe(join(repository,"packages","gone","Cargo.toml"));
+ expect((failure.error as any).dependant).toBe(join(repository,"b","Cargo.toml"));
+ expect(failure.error?.message).toBe(`Native dependency has no Cargo manifest: ${join(repository,"packages","gone","Cargo.toml")} (declared by ${join(repository,"b","Cargo.toml")} as path "../packages/gone")`);
+ const rootless=attempt(()=>nativeDependencyRoots("nothing",repository,true,new Map(),new Map()));
+ expect(rootless.error?.message).toBe(`Native dependency has no Cargo manifest: ${join(repository,"nothing","Cargo.toml")}`);
 });

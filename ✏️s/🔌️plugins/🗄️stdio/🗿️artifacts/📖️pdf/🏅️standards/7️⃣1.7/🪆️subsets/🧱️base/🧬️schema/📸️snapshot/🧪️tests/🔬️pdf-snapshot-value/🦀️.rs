@@ -45,9 +45,8 @@ fn owned_reference_snapshot_reuses_document_id_storage() {
 }
 
 #[test]
-fn owned_cos_stream_reuses_decoded_octet_storage() {
+fn owned_cos_stream_pages_decoded_octets() {
     let bytes = vec![0, 1, 127, 255];
-    let backing = bytes.as_ptr();
     let value = DslValue::Object(vec![
         ("kind".into(), DslValue::String("stream".into())),
         ("dict".into(), DslValue::Array(Vec::new())),
@@ -55,8 +54,8 @@ fn owned_cos_stream_reuses_decoded_octet_storage() {
         ("filters".into(), DslValue::Array(Vec::new())),
     ]);
     let PdfObject::Stream { data, .. } = PdfObject::from_value(value).unwrap() else { panic!("expected stream") };
-    assert_eq!(data, [0, 1, 127, 255]);
-    assert_eq!(data.as_ptr(), backing);
+    assert_eq!(data.to_vec_owner(), [0, 1, 127, 255]);
+    assert_eq!(data.retained_bytes().len(), 4);
 }
 
 #[test]
@@ -130,6 +129,7 @@ fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
 #[test]
 fn owned_pdf_snapshot_borrowed_projection_matches_reference_pack_fields() {
     use semio_framework_dsl_record::{FieldValue, native_encoding::{FieldProjectionView, RetainedFieldProjection}};
+    use semio_framework_value::ByteReadSource;
     use store::os_store::serialization::ArtifactStoreSnapshot;
     use crate::standards::v1_7::subsets::base::io::{import::decode_pdf, text::snapshot as snapshot_text};
 
@@ -139,9 +139,10 @@ fn owned_pdf_snapshot_borrowed_projection_matches_reference_pack_fields() {
     let stream = snapshot.objects.iter().position(|object| object.id.num == 4).unwrap();
     let PdfObject::Stream { data, .. } = &snapshot.objects[stream].value else { panic!("expected content stream") };
     let view = snapshot.native_pack_source().unwrap();
-    let FieldProjectionView::IntrinsicBytes(original) = view.source.projection_view(&[29, stream, 1, 2]).unwrap() else { panic!("expected original octets") };
-    assert_eq!(original.as_ptr(), data.as_ptr());
-    assert_eq!(original, data);
+    let FieldProjectionView::IntrinsicBytesSource(original) = view.source.projection_view(&[29, stream, 1, 2]).unwrap() else { panic!("expected original paged octets") };
+    let mut copied = vec![0u8; data.len()];
+    assert_eq!((original.byte_len(), original.read_bytes(0, &mut copied)), (data.len(), data.len()));
+    assert_eq!(copied, data.to_vec_owner());
 
     let expected = snapshot_text::to_record(&snapshot);
     let mut projection = RetainedFieldProjection::new(view.source);

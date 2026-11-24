@@ -113,3 +113,17 @@ for (const mode of ["exit", "timeout", "cancelled", "output-limit"] as const) {
     expect(Date.now() - started).toBeLessThan(5000);
   });
 }
+
+test("owned process capture re-reads a renewable live deadline instead of freezing its remaining window", async () => {
+  const root = mkdtempSync(join(artifactRoot, "owned-capture-renewable-")), started = performance.now();
+  const options = (name: string, deadline: { remainingMilliseconds(): number | null }) => ({ invocation: originalInvocation(name, root, new AbortController(), []), cwd: root, env: process.env, budgetMs: 0, deadline, maxOutputBytes: 1024, stdoutPath: join(root, name + ".stdout"), stderrPath: join(root, name + ".stderr") });
+  const source = "setTimeout(()=>{process.exitCode=3},900)";
+  const renewing = await captureOwnedProcess(process.execPath, ["-e", source], options("renewing", { remainingMilliseconds: () => performance.now() - started < 5000 ? 250 : 0 }));
+  expect<string>(renewing.reason).toBe("exit");
+  expect(renewing.status).toBe(3);
+  const fixed = performance.now() + 250;
+  const frozen = await captureOwnedProcess(process.execPath, ["-e", "setInterval(()=>{},1000)"], options("fixed", { remainingMilliseconds: () => fixed - performance.now() }));
+  expect<string>(frozen.reason).toBe("timeout");
+  const refused = await captureOwnedProcess(process.execPath, ["-e", "setInterval(()=>{},1000)"], options("refused", { remainingMilliseconds: () => { throw Error("expired"); } }));
+  expect<string>(refused.reason).toBe("timeout");
+});

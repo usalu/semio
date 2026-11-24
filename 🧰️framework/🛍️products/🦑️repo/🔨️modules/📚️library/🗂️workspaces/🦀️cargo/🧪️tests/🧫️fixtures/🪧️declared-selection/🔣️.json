@@ -1,14 +1,15 @@
 {
   "schemaVersion": 1,
   "workspaces": [
-    {"directory": ".", "members": ["framework/a/📦️packages/🦀️rust", "framework/a/🧪️tests/📦️packages/🦀️rust", "framework/b/📦️packages/🦀️rust", "framework/o/🔮️oracles/📦️packages/🦀️rust", "framework/f/🧫️fixtures/📦️packages/🦀️rust", "framework/a/📦️packages/🦀️rust/inner/📦️packages/🦀️rust"], "exclude": ["framework/nested", "framework/globbed"], "memberManifests": ["framework/**/📦️packages/🦀️rust/Cargo.toml"], "excludePatterns": ["**/🔮️oracles/**"]},
+    {"directory": ".", "members": ["framework/a/📦️packages/🦀️rust", "framework/a/🧪️tests/📦️packages/🦀️rust", "framework/b/📦️packages/🦀️rust", "framework/o/🔮️oracles/📦️packages/🦀️rust", "framework/f/🧫️fixtures/📦️packages/🦀️rust", "framework/a/📦️packages/🦀️rust/inner/📦️packages/🦀️rust"], "exclude": ["framework/nested", "framework/globbed"], "dependencies": [{"name": "fx-pathdep", "path": "framework/d/📦️packages/🦀️rust"}, {"name": "fx-nested", "path": "framework/nested/📦️packages/🦀️rust"}, {"name": "fx-glob", "path": "framework/globbed/pkgs/g"}, {"name": "fx-oracle", "path": "framework/o/🔮️oracles/📦️packages/🦀️rust"}], "memberManifests": ["framework/**/📦️packages/🦀️rust/Cargo.toml"], "excludePatterns": ["**/🔮️oracles/**"]},
     {"directory": "framework/nested", "members": ["📦️packages/🦀️rust"], "exclude": [], "memberManifests": ["📦️packages/🦀️rust/Cargo.toml"], "excludePatterns": []},
     {"directory": "framework/globbed", "members": ["pkgs/*"], "exclude": [], "memberManifests": ["pkgs/*/Cargo.toml"], "excludePatterns": []}
   ],
   "packages": [
     {"directory": "framework/a/📦️packages/🦀️rust", "name": "fx-a"},
     {"directory": "framework/a/🧪️tests/📦️packages/🦀️rust", "name": "fx-a-tests"},
-    {"directory": "framework/b/📦️packages/🦀️rust", "name": "fx-b"},
+    {"directory": "framework/b/📦️packages/🦀️rust", "name": "fx-b", "uses": ["fx-pathdep"]},
+    {"directory": "framework/d/📦️packages/🦀️rust", "name": "fx-pathdep"},
     {"directory": "framework/c/📦️packages/🦀️rust", "name": "fx-undeclared"},
     {"directory": "framework/o/🔮️oracles/📦️packages/🦀️rust", "name": "fx-oracle"},
     {"directory": "framework/f/🧫️fixtures/📦️packages/🦀️rust", "name": "fx-fixture"},
@@ -21,6 +22,7 @@
     {"id": "two names in caller order", "near": "framework/a/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-b", "fx-a"], "expect": "declared"},
     {"id": "near the workspace root", "near": "Cargo.toml", "names": ["fx-a-tests"], "expect": "declared"},
     {"id": "nested workspace near its own member", "near": "framework/nested/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-nested"], "expect": "declared"},
+    {"id": "workspace path dependency that is no literal member", "near": "framework/a/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-pathdep"], "expect": "declared"},
     {"id": "admitted but undeclared package", "near": "framework/a/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-undeclared"], "expect": "deferred"},
     {"id": "declared below an excluded pattern", "near": "framework/a/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-oracle"], "expect": "deferred"},
     {"id": "declared inside a testing collection", "near": "framework/a/📦️packages/🦀️rust/Cargo.toml", "names": ["fx-fixture"], "expect": "deferred"},

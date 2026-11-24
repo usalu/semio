@@ -103,7 +103,7 @@ impl PreviewScopeCopy{
  }
  fn terminal_is_empty(&self)->bool{self.fields.is_none()&&self.close.is_none()}
 }
-impl Drop for PreviewScopeCopy{fn drop(&mut self){assert!(self.terminal_is_empty(),"original preview publication requires paid full close");}}
+impl Drop for PreviewScopeCopy{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original preview publication requires paid full close");}}
 
 /// 🧠️ The actual evaluation command owns its donated reply through Dictionary/cache receiving and addressed publication.
 pub struct PreviewEvalReceive{receiver:Option<semio_os_flow::FlowEvaluationReplyReceiver>,scope:PreviewScopeCopy,folded:bool,closing:bool}

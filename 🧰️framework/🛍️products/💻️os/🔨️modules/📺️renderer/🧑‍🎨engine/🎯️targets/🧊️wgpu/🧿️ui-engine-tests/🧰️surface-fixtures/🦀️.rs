@@ -70,6 +70,11 @@ pub fn retained_document(surface_id: &str, generation: u64, root: u64, records: 
     ui_contract::UiDocumentLease::try_publish(ui_contract::SurfaceId::try_from(surface_id).expect("bounded Map surface id"), identity, records).expect("Map lifecycle document publishes")
 }
 
+/// 🌐️ Serves the component close request a retired CPU-only scene (map, node graph, board, text editor) hands its host, exactly as the host frame loop does; a no-op while no request is pending.
+pub fn serve_cpu_only_component_close() {
+    semio_renderer_wgpu_host_winit::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
+}
+
 pub fn close_retained_surface_fixture(window_id: &str) {
     let mut caller=crate::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(window_id));

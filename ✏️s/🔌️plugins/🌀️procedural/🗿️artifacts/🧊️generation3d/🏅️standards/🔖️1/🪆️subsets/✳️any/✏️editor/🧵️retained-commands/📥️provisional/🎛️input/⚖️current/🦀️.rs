@@ -198,4 +198,4 @@ impl<'a,'b> OriginalScratchWork<(&'a Value,&'b WidgetInputValue)> for Provisiona
  fn advance(&mut self,source:&mut (&'a Value,&'b WidgetInputValue),effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{ProvisionalInputComparison::advance(self,source.0,source.1,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.progress}
 }
-impl Drop for ProvisionalInputComparison{fn drop(&mut self){assert!(self.terminal_is_empty(),"provisional neural comparison retains actual lookup owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ProvisionalInputComparison{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"provisional neural comparison retains actual lookup owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

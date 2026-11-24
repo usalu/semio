@@ -16,7 +16,8 @@
         "idleCompactionIntervalMilliseconds": 3600000,
         "idleCompactionMaximumMilliseconds": 600000,
         "idleCompactionFirstDelayMilliseconds": 600000,
-        "strayScanMilliseconds": 300000
+        "strayScanMilliseconds": 300000,
+        "journalGraceMilliseconds": 3600000
       }
     },
     "LimitsDescriptions": {
@@ -32,7 +33,8 @@
           "dedupeCountProgressStride": "After how many counted files the deduplication checks for progress and cancellation.",
           "idleCompactionIntervalMilliseconds": "The least time between two compactions of one image by `repo cache gc --idle` (1 hour).",
           "idleCompactionMaximumMilliseconds": "The most time one pass of compaction on idle may take over all images (10 minutes).",
-          "idleCompactionFirstDelayMilliseconds": "How long a starting sidecar waits before its first compaction pass (10 minutes)."
+          "idleCompactionFirstDelayMilliseconds": "How long a starting sidecar waits before its first compaction pass (10 minutes).",
+          "journalGraceMilliseconds": "How long a build journal of the generation store keeps resting after its last write before the collector may retire it when a newer journal exists (1 hour)."
         },
         "de": {
           "graphLeaseWaitMilliseconds": "Wie lange die Graph-Rückgewinnung auf die exklusive Lease der Graph-Partition wartet, bevor sie aufgibt (10 Minuten).",
@@ -45,7 +47,8 @@
           "dedupeCountProgressStride": "Nach wie vielen gezählten Dateien die Deduplizierung auf Fortschritt und Abbruch prüft.",
           "idleCompactionIntervalMilliseconds": "Die kleinste Zeit zwischen zwei Verdichtungen eines Abbilds durch `repo cache gc --idle` (1 Stunde).",
           "idleCompactionMaximumMilliseconds": "Die meiste Zeit, die ein Durchgang der Verdichtung im Leerlauf über alle Abbilder dauern darf (10 Minuten).",
-          "idleCompactionFirstDelayMilliseconds": "Wie lange ein startender Sidecar bis zu seinem ersten Verdichtungsdurchgang wartet (10 Minuten)."
+          "idleCompactionFirstDelayMilliseconds": "Wie lange ein startender Sidecar bis zu seinem ersten Verdichtungsdurchgang wartet (10 Minuten).",
+          "journalGraceMilliseconds": "Wie lange ein Bau-Journal des Generationsspeichers nach seinem letzten Schreiben ruht, bevor der Sammler es entfernen darf, wenn ein neueres Journal existiert (1 Stunde)."
         }
       }
     }

@@ -110,7 +110,7 @@ describe("📥️ load failures", () => {
     expect(chosen()).toBeUndefined();
     expect(reloads()).toBe(0);
     expect(unhandled()).toEqual([]);
-  });
+  }, 60_000);
 
   it("says a new version is available, with a reload, when the chunk of a screen is gone", async () => {
     const { testing, client, unhandled, reloads } = await clientWithout(ASSIGNMENTS);

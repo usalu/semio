@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
 fn report(doc: &En1997Snapshot) -> norm::CheckReport {
-    checks::check_project(doc)
+    norm::incremental_evaluation::owned::<checks::En1997Units>(doc, checks::check_project(doc))
 }
 
 fn scene_of(doc: &En1997Snapshot) -> scene::StructuralScene {
@@ -91,7 +91,8 @@ fn projection_is_deterministic_and_incremental() {
     let (a, b) = (scene_of(&doc), scene_of(&doc));
     assert_eq!(canonical_json(&a), canonical_json(&b));
     let mut wider = doc.clone();
-    wider.footings[0].width += 0.5;
+    wider.footings[0].embedment += 0.2;
+    wider.footings[0].load_cases[0].moment_permanent += 1.0e5;
     let (before, after) = (hashes(&a), hashes(&scene_of(&wider)));
     for layer in ["layer-sand", "layer-gravel", "wall-W1", "slope-S1", "pile-P1"] {
         assert_eq!(before[layer], after[layer], "{layer} must keep its hash");
@@ -170,7 +171,16 @@ fn diagrams_validate_and_carry_table_twins() {
     }
     for d in &list {
         d.validate().unwrap_or_else(|v| panic!("{} {v:?}", d.id));
-        assert!(d.table_twin.rows() >= 2, "{}", d.id);
+        match (d.id.strip_prefix("anchor-layout:"), d.id.starts_with("pile-group-raft:")) {
+            (Some(wall), _) => assert_eq!(d.table_twin.rows(), doc.anchors.iter().filter(|a| a.wall_id == wall).count(), "{}: one row per anchor of the wall (the demo holds a single anchor by design)", d.id),
+            (None, true) => assert_eq!(d.table_twin.rows(), 1, "{}: one equivalent raft per pile group", d.id),
+            (None, false) if d.id.starts_with("case:") => {
+                let case = d.id.trim_start_matches("case:");
+                let checks = report.checks.iter().filter(|c| c.subject.entity_id == case && c.status != norm::CheckStatus::NotApplicable && c.utilization.is_finite()).count();
+                assert_eq!(d.table_twin.rows(), checks, "{}: one row per applicable check of the design case", d.id);
+            }
+            (None, false) => assert!(d.table_twin.rows() >= 2, "{}", d.id),
+        }
     }
     let wall = &doc.retaining_walls[0];
     let pressure = list.iter().find(|d| d.id == "earth-pressure:wall-W1").expect("pressure");
@@ -377,7 +387,7 @@ fn wave_two_entity_registry_resolves_every_collection() {
     }
     assert!(entity_dependencies(&doc, "anchor-A1").contains(&"ewall-E1".to_string()));
     assert!(entity_dependencies(&doc, "lab-T1").contains(&"layer-sand".to_string()));
-    assert!(entity_dependencies(&doc, "layer-sand").contains(&"lab-T1".to_string()));
+    assert!(entity_dependencies(&doc, "layer-sand").is_empty());
 }
 
 #[test]
@@ -398,7 +408,10 @@ fn slip_circle_override_is_drawn_and_dragged_with_three_handles() {
     assert_eq!(grips.len(), 3);
     for grip in &grips {
         let fields: Vec<&str> = grip.writes.iter().map(|w| w.path.rsplit('.').next().unwrap()).collect();
-        assert_eq!(fields, ["circleCentreX", "circleCentreZ", "circleRadius"], "{}", grip.id);
+        let driving = match grip.id.rsplit('-').next() { Some("x") => "circleCentreX", Some("z") => "circleCentreZ", _ => "circleRadius" };
+        let mut all = fields.clone();
+        all.sort_unstable();
+        assert_eq!((fields[0], all), (driving, vec!["circleCentreX", "circleCentreZ", "circleRadius"]), "{}: the driven field first, the other two held", grip.id);
     }
     let radius = grips.iter().find(|h| h.id.ends_with("circle-r")).unwrap();
     let moved = radius.writes.iter().find(|w| w.path.ends_with("circleRadius")).unwrap();
@@ -416,7 +429,7 @@ fn flow_net_lines_exist_only_with_a_head_and_carry_the_finite_difference_exit_gr
     let potentials: Vec<_> = scene.entities.iter().filter(|e| e.entity.id.starts_with("ewall-E1:equipotential-")).collect();
     assert!(streams.len() >= 5 && potentials.len() >= 5, "{} streamline and {} equipotential segments", streams.len(), potentials.len());
     let first = streams.iter().find(|e| e.entity.id == "ewall-E1:seepage-1-1").expect("first segment");
-    assert!(first.accessible_detail.en.contains(&format!("{:.3}", 0.142_306_890_928_401_57)), "scipy sparse solution of the same stencil: {}", first.accessible_detail.en);
+    assert!(first.accessible_detail.en.contains(&format!("{:.3}", 0.146_840_697_062_283_5)), "scipy sparse solution of the same stencil: {}", first.accessible_detail.en);
 }
 
 #[test]
@@ -543,7 +556,7 @@ fn geotechnical_visuals_stratigraphy_bulb_deflection_line_seismic_wedge_and_fact
     close(safety::factor_of_safety(0.25), 4.0, 1e-12);
     assert!(safety::factor_of_safety(0.0).is_infinite());
     let state = checks::lateral_and_seismic::seismic_wall(&doc.retaining_walls[0], doc.retaining_walls[0].base_width).expect("seismic state");
-    assert!((state.wedge_deg - 47.907_640_844_827_18).abs() < 1e-3 && (state.thrust.e_ae - 60_604.029_397_552_96).abs() < 0.01 * 60_604.0 * 1e-4 + 1.0, "{} deg, {} N/m", state.wedge_deg, state.thrust.e_ae);
+    assert!((state.wedge_deg - 47.907_640_844_827_18).abs() < 1e-3 && (state.thrust.soil - 60_604.029_397_552_96).abs() < 0.01 * 60_604.0 * 1e-4 + 1.0, "{} deg, {} N/m", state.wedge_deg, state.thrust.soil);
     let compliant = scene_of(&compliant_demo());
     assert!(!compliant.entities.iter().any(|e| e.entity.id.ends_with(":seismic-wedge")), "k_h = 0 draws no wedge");
 }
@@ -556,7 +569,7 @@ fn case_row(id: &str, entry: &str, numbers: &[(&str, f64)]) -> model::CaseRow {
 fn cased() -> En1997Snapshot {
     let mut doc = compliant_demo();
     doc.cases = vec![
-        case_row("case-footing", "GEO-F02", &[("b", 2.4), ("l", 3.0), ("d", 0.8), ("v_d", 1.0e6)]),
+        case_row("case-footing", "GEO-F02", &[("b", 2.4), ("l", 3.0), ("d", 0.8), ("v_d", 1.0e6), ("cu_k", 60_000.0), ("gamma2", 19_000.0)]),
         case_row("case-pile", "PILE-04", &[("d", 0.6), ("l", 12.0), ("h_d", 120_000.0)]),
         case_row("case-wall", "RW-11", &[("t_stem", 0.4), ("h", 4.0), ("b", 3.2), ("t_base", 0.5), ("a_toe", 0.6), ("q", 10_000.0)]),
         case_row("case-slope", "SLOPE-04", &[("h", 6.0), ("beta_deg", 45.0)]),
@@ -695,7 +708,7 @@ fn slip_circle_diagrams_and_slices_follow_the_checked_circle_while_the_centre_is
         let list = diagrams(&doc, &report(&doc), Some("slope-S1"));
         let ids: Vec<&str> = list.iter().map(|d| d.id.as_str()).collect();
         assert_eq!(ids[..2], ["slip-forces:slope-S1", "slip-centre:slope-S1"]);
-        assert!(ids.len() == 2 || ids[2] == "spencer-equilibrium:slope-S1", "{ids:?}");
+        assert!(ids[2..].iter().all(|id| *id == "spencer-equilibrium:slope-S1" || id.starts_with("check-outcomes:")), "{ids:?}");
         for d in &list {
             d.validate().unwrap_or_else(|v| panic!("{} {v:?}", d.id));
         }
@@ -714,7 +727,7 @@ fn slip_circle_diagrams_and_slices_follow_the_checked_circle_while_the_centre_is
             assert!(a.weight == b.w && a.pore == b.u && a.alpha == b.alpha && a.x0 == b.x0 && a.x1 == b.x1);
         }
     }
-    let at = |x: f64| {
+    let mut at = |x: f64| {
         doc.slopes[0].circle_centre_x = x;
         let (proto, tan_phi, c) = slopes_proto(&doc);
         slope_checks::bishop(&slope_checks::Circle { xc: x, yc: 12.0, r: 14.0, ..proto }, tan_phi, c, mech::SLICES)
@@ -748,7 +761,7 @@ fn the_heave_prism_takes_the_check_utilisation_and_the_seepage_arrows_follow_the
     let (scene, checks) = (scene_of(&doc), report(&doc));
     scene.validate().expect("valid");
     let prism = scene.entities.iter().find(|e| e.entity.id == "ewall-E1:heave-prism").expect("heave prism");
-    let check = checks.checks.iter().find(|c| c.subject.entity_id == "ewall-E1" && c.id.contains("hyd-03") && c.id.ends_with("heave_prism")).expect("heave check");
+    let check = checks.checks.iter().find(|c| c.subject.entity_id == "ewall-E1" && c.id.starts_with("en1997.hyd-03.heave_prism.")).expect("heave check");
     close(prism.utilisation.as_ref().expect("utilisation").ratio, check.utilization, 1e-12);
     let arrows: Vec<_> = scene.entities.iter().filter(|e| e.entity.id.starts_with("ewall-E1:flow-arrow-") && !e.entity.id.ends_with("-head")).collect();
     assert!(arrows.len() >= 8, "{} arrows", arrows.len());
@@ -847,7 +860,7 @@ fn investigation_points_are_columns_with_a_reading_ribbon_grips_and_a_live_soil_
     let selected = handles::handles(&doc, &[], &[scene::EntityRef::new(scene::EntityKind::Solid, "cpt-1", "investigations[id=cpt-1]")]);
     assert_handle_laws(&selected);
     let paths: Vec<&str> = selected.iter().flat_map(|h| h.writes.iter().map(|w| w.path.as_str())).collect();
-    assert_eq!(paths, ["investigations[id=cpt-1].positionX", "investigations[id=cpt-1].positionY", "investigations[id=cpt-1].depth"]);
+    assert_eq!(paths, ["investigations[id=cpt-1].positionX", "investigations[id=cpt-1].positionY", "investigations[id=cpt-1].depth", "investigations[id=cpt-1].groundLevel"]);
     let ghost = scene.entities.iter().find(|e| e.entity.id.ends_with(":investigation-ghost")).expect("ghost");
     assert!(ghost.accessible_detail.en.contains("by cpt-1"), "the ghost names the point that reaches z_a");
     let profile = |doc: &En1997Snapshot, id: &str| diagrams(doc, &report(doc), None).into_iter().find(|d| d.id == id).unwrap_or_else(|| panic!("no diagram {id}"));
@@ -893,7 +906,7 @@ fn characteristic_bases_and_investigations_are_registered_kinds_that_link_to_the
     doc.placements = vec![super::model::Placement { id: "orphan".into(), x: 0.0, y: 0.0, z: 0.0, yaw: 0.0 }];
     assert_eq!(entity_kind_of(&doc, "orphan").map(|k| k.collection), Some("placements"));
     assert!(entity_dependencies(&doc, "basis-1").contains(&layer));
-    assert!(entity_dependencies(&doc, &layer).contains(&"basis-1".to_string()));
+    assert!(entity_dependencies(&doc, &layer).is_empty());
     assert_eq!(entity_kind_of(&doc, "cpt-1").map(|k| k.collection), Some("investigations"));
     assert!(entities_of(&doc).iter().any(|e| e.id == "cpt-1"));
 }

@@ -1,20 +1,20 @@
 [profile.prototype]
-codegen-units = 256
-debug = 0
-debug-assertions = true
-incremental = true
 inherits = "dev"
-lto = "off"
-opt-level = 0
+opt-level = "s"
+debug = 0
+codegen-units = 16
+incremental = false
+lto = "thin"
+debug-assertions = true
 overflow-checks = true
-strip = "none"
+strip = "symbols"
 trim-paths = "object"
 
 [profile.prototype.build-override]
-codegen-units = 256
-debug = 0
-incremental = false
 opt-level = 0
+debug = 0
+codegen-units = 256
+incremental = false
 
 [profile.prototype.package."cranelift-assembler-x64"]
 opt-level = 3
@@ -57,6 +57,120 @@ opt-level = 3
 
 [profile.prototype.package."semio-framework-hash"]
 opt-level = 3
+
+[profile.prototype.package."semio-framework-pack"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-causal"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-codec"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-command-ingress"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-conflict"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-edit"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-format"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-frames"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-history"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-history-index"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-ids"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-interaction"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-local-interaction"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-mutation"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-mutation-messages"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-presence"]
+opt-level = 2
+
+[profile.prototype.package."semio-framework-replication-wire-core"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-drawing"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-extensions"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-geometry"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-host"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-host-core"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-host-read"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-host-session"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-host-source"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-mesh"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-operators"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-vcs"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-wasm"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-wasm-actions-a"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-wasm-actions-b"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-flow-wasm-domain"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-kernel-neural-engine"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-kernel-neural-engine-budgeted"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-kernel-neural-engine-model"]
+opt-level = 2
+
+[profile.prototype.package."semio-os-kernel-neural-engine-registry"]
+opt-level = 2
 
 [profile.prototype.package."semio-plugin-interpreter"]
 opt-level = 3
@@ -105,4 +219,3 @@ opt-level = 3
 
 [profile.prototype.package."wit-parser"]
 opt-level = 3
-

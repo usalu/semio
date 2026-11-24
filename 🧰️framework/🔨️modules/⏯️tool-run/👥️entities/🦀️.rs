@@ -181,7 +181,7 @@ impl<K:BoundedOrd+RetainedClone+Copy> RetireOwned for ToolRunEntityEdit<K> {
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
-impl<K:BoundedOrd+RetainedClone+Copy> Drop for ToolRunEntityEdit<K> {fn drop(&mut self){assert!(self.transferred,"original entity edit workspace requires controlled retirement");}}
+impl<K:BoundedOrd+RetainedClone+Copy> Drop for ToolRunEntityEdit<K> {fn drop(&mut self){assert!(std::thread::panicking()||(self.transferred),"original entity edit workspace requires controlled retirement");}}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

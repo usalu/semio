@@ -413,7 +413,7 @@ async fn mounted_demo_static_publishes_live_load_reaction() {
         registry.current[slot] = Some(CurrentSession { app_instance_id: app, shell: pending.shell, identity: pending.identity, previous_valid: None });
         (owner, pending.identity)
     });
-    let mut original = OriginalNumericalFixture::new(identity.operation());
+    let mut original = OriginalNumericalFixture::new(identity.operation(OperationId(identity.operation.0 ^ 0x5eed), semio_framework_job::Generation(identity.generation.0 + 3)));
     let (stage, validated, published, reaction, stages, mut last, fault) = {
         let mut mounted = owner.borrow_mut();
         let state = mounted.as_mut().expect("admitted mounted owner");

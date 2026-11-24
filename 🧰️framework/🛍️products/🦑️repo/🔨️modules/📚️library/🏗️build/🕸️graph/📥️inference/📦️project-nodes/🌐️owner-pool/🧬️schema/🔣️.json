@@ -84,6 +84,8 @@
         "swapActiveBasisPointsPerSecond": 0.6,
         "swapOutBasisPointsPerSecond": 40,
         "yieldKillMilliseconds": 3000,
+        "unshareableLimit": 3,
+        "unshareablePauseMilliseconds": 600000,
         "targetPollMilliseconds": 2000,
         "beatMilliseconds": 5000,
         "drainGraceMilliseconds": 20000,
@@ -106,6 +108,8 @@
         "noRecordRetries": 1,
         "minimumShareBasisPoints": 2500,
         "announceMinimumOwners": 8,
+        "lookaheadBuildMilliseconds": 20000,
+        "lookaheadMemoMaximum": 4096,
         "republishShrinkBasisPoints": 1000,
         "republishMinimumMilliseconds": 120000,
         "republishKeepAliveMilliseconds": 600000,
@@ -230,6 +234,12 @@
             }
           }
         },
+        "priority": {
+          "description": "Which waves the machines of the fleet serve first: 0 is a read a command waits for (a selection, an interactive read), 1 is a background read of the whole graph; a machine starts its next child on the open wave of the lowest priority, the one with fewest children first.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
         "revision": {
           "type": "string"
         }
@@ -258,6 +268,12 @@
         "megabytes": {
           "type": "integer",
           "minimum": 0
+        },
+        "tier": {
+          "description": "0 or absent: the reading machine waits for this owner now (selection and priority owners first); 1: one of the next owners of the same read, inferred ahead by machines that have no tier 0 owner left to take.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
         },
         "admission": {
           "description": "What the admission of the reading machine selected for this owner (targets, inputs, generated task dependencies), so a machine that pulls the owner files the same record the admission read looks up.",
@@ -289,6 +305,7 @@
           "reasonNothingFits": "waiting: no capacity for another child now",
           "reasonOff": "switched off by SEMIO_OWNER_POOL=off or no fleet cache",
           "reasonYielding": "waiting: the machine's own work holds the capacity; the pool keeps one child and takes what is left",
+          "reasonUnshareable": "paused: {count} records of this machine could not be shared with the fleet (they name the root in a spelling that cannot be neutralized), so it claims no further owners for {minutes} min and then tries again",
           "reasonMemory": "waiting: the next child needs {need} MB but only {free} MB are free above the {floor} MB floor ({held} MB are held for the machine's own work, {children} children run)",
           "reasonCores": "waiting: no idle core for the next child ({idle} of {cores} cores idle, {booked} booked by the machine's own work, {children} children run)",
           "reasonStarting": "starting: {children} of {target} children run, the next one may start in {seconds} s",
@@ -323,6 +340,7 @@
           "reasonNothingFits": "wartet: gerade keine Kapazität für einen weiteren Kindprozess",
           "reasonOff": "abgeschaltet durch SEMIO_OWNER_POOL=off oder kein Flotten-Cache",
           "reasonYielding": "wartet: die eigene Arbeit der Maschine hält die Kapazität; der Pool behält einen Kindprozess und nimmt, was übrig ist",
+          "reasonUnshareable": "pausiert: {count} Records dieser Maschine ließen sich nicht mit der Flotte teilen (sie nennen die Wurzel in einer Schreibweise, die sich nicht neutralisieren lässt), daher zieht sie {minutes} min lang keine weiteren Owner und versucht es danach erneut",
           "reasonMemory": "wartet: der nächste Kindprozess braucht {need} MB, aber nur {free} MB sind über der Grenze von {floor} MB frei ({held} MB hält die eigene Arbeit der Maschine zurück, {children} Kindprozesse laufen)",
           "reasonCores": "wartet: kein freier Kern für den nächsten Kindprozess ({idle} von {cores} Kernen frei, {booked} von der eigenen Arbeit der Maschine gebucht, {children} Kindprozesse laufen)",
           "reasonStarting": "startet: {children} von {target} Kindprozessen laufen, der nächste darf in {seconds} s starten",
@@ -477,6 +495,7 @@
             "yielding",
             "pressure",
             "waiting",
+            "unshareable",
             "starting",
             "no-current-wave",
             "waves-done",

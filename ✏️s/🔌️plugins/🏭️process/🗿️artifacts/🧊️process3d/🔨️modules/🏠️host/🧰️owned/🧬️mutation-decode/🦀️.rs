@@ -229,7 +229,7 @@ impl ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Process3dMuta
 
 impl Drop for Process3dMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Process3d mutation field reached Drop before publication or terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "Process3d mutation field reached Drop before publication or terminal-empty close");
     }
 }
 

@@ -20,7 +20,7 @@ impl GuestRelayOperation{
   self.handle.as_mut().unwrap().run_from(kind,input,&self.driver,&mut self.result).await?;guard.armed=false;Ok(())
  }
  /// 📄️ Drives a binary job without detaching or copying its original provider outside paid turns.
- pub async fn run_bytes_from(&mut self,kind:&'static str,input:&mut dyn GuestRelayByteSource)->GuestRelayOperationStatus{if self.failure.is_some(){return GuestRelayOperationStatus::Failed}match self.run_bytes_inner(kind,input).await{Ok(())=>GuestRelayOperationStatus::Complete,Err(error)=>{trace_retirement_refusal("body",&error);*self.failure=Some(error);GuestRelayOperationStatus::Failed}}}
+ pub async fn run_bytes_from(&mut self,kind:&'static str,input:&mut dyn GuestRelayByteSource)->GuestRelayOperationStatus{if self.failure.is_some(){return GuestRelayOperationStatus::Failed}match self.run_bytes_inner(kind,input).await{Ok(())=>GuestRelayOperationStatus::Complete,Err(error)=>{*self.failure=Some(error);GuestRelayOperationStatus::Failed}}}
  async fn run_bytes_inner(&mut self,kind:&'static str,input:&mut dyn GuestRelayByteSource)->Result<(),GuestRelayAdmissionFailure>{
   if self.closed||self.driver.operation_abandoned()||self.result.is_some(){return Err(refused().into())}let mut guard=AdmissionGuard{driver:&self.driver,armed:true};
   while self.handle.is_none(){let requires_execution=self.admission.requires_execution();self.driver.dispatch_admission_step(requires_execution,|execution,cx|self.admission.advance(execution,cx))?;self.driver.dispatch_operation_step(false,false,|cx|{self.admission.take_born_step(&mut self.handle,cx)?;Ok(())})?;if self.handle.is_none(){semio_framework_async::yield_once().await}}
@@ -64,21 +64,11 @@ impl GuestRelayOperation{
  /// 👁️ Borrows the next hop's retained result without moving it out of its parent.
  pub fn next_result_parts(&mut self)->Option<(&GuestRelayWakeDriver,&mut Option<GuestRelayResult>)>{let next=self.next.as_mut()?;Some((&self.driver,&mut next.result))}
  /// ♻️ Retires the complete original Source after its caller-owned recipients have returned.
- pub async fn close(&mut self)->GuestRelayOperationStatus{if self.failure.is_some()||self.cleanup_failure.is_some(){return GuestRelayOperationStatus::Failed}match self.close_inner().await{Ok(())=>GuestRelayOperationStatus::Complete,Err(error)=>{trace_retirement_refusal("close",&error);*self.cleanup_failure=Some(error);GuestRelayOperationStatus::Failed}}}
+ pub async fn close(&mut self)->GuestRelayOperationStatus{if self.failure.is_some()||self.cleanup_failure.is_some(){return GuestRelayOperationStatus::Failed}match self.close_inner().await{Ok(())=>GuestRelayOperationStatus::Complete,Err(error)=>{*self.cleanup_failure=Some(error);GuestRelayOperationStatus::Failed}}}
  async fn close_inner(&mut self)->Result<(),GuestRelayAdmissionFailure>{
-  let tracing=std::env::var_os("SEMIO_TRACE_RELAY_RETIREMENT").is_some();
-  let mut attempts=0usize;
   while !self.close_contents_step_inner()?{
-   if tracing{
-    attempts=attempts.saturating_add(1);
-    if attempts.is_power_of_two(){
-     eprintln!("[DEBUG] relay retirement contents {attempts}: next={}, result={}, aliases={:?}, remaining={:?}",
-      self.next.is_some(),self.result.is_some(),self.handle.as_ref().map(PluginInstanceHandle::terminal_is_empty),self.driver.original_remaining());
-    }
-   }
    semio_framework_async::yield_once().await
   }
-  if tracing{eprintln!("[DEBUG] relay retirement entering root close");}
   self.driver.close_operation().await?;self.closed=true;Ok(())
  }
  /// 🧯️ A failed operation is captured, read and retired under its own driver before the owner closes.
@@ -107,4 +97,3 @@ impl Drop for AdmissionGuard<'_>{fn drop(&mut self){if self.armed{self.driver.ab
 fn pay_normal(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn pay(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 fn refused()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"operation owner cannot restart or replace its result")}
-fn trace_retirement_refusal(stage:&str,error:&GuestRelayAdmissionFailure){if std::env::var_os("SEMIO_TRACE_RELAY_RETIREMENT").is_some(){eprintln!("[DEBUG] relay retirement {stage}: {error:?}");}}

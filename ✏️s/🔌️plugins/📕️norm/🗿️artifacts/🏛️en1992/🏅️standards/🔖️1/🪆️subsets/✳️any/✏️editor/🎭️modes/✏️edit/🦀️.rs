@@ -22,9 +22,6 @@ pub fn layout_for(device: DeviceClass, prefs: &LayoutPrefs) -> WindowLayout {
 //#endregion 🔖️Definition
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🪢️Mounts

@@ -316,6 +316,7 @@ function RetryAction(props: {
   const { session, state, quiz, challenge, pending, setPending, setProblem, text } = props;
   return (
     <CardAction
+      icon="check"
       primary
       disabled={pending !== undefined}
       onClick={() => {
@@ -359,7 +360,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
   const quiz = localized(view.sheet.title, locale);
   const title = text("course.results.title", { quiz });
   const home = (
-    <CardAction primary onClick={() => session.open({ screen: "home" })}>
+    <CardAction icon="home" primary onClick={() => session.open({ screen: "home" })}>
       {text("course.results.home")}
     </CardAction>
   );
@@ -388,7 +389,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
         title={title}
         footerLeft={
           <>
-            <CardAction onClick={() => session.open({ screen: "home", page: HOME_PAGES.leaderboard })}>{text("course.results.leaderboard")}</CardAction>
+            <CardAction icon="award" onClick={() => session.open({ screen: "home", page: HOME_PAGES.leaderboard })}>{text("course.results.leaderboard")}</CardAction>
             {offersDirectRetry(result.score) ? home : null}
           </>
         }
@@ -403,7 +404,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
                 <span>{text("course.home.starting")}</span>
               </div>
             </CardSection>
-            <BodyButton row onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
+            <BodyButton icon="x" row onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
           </>
         )}
         <CardSection className="course-summary flex-row">

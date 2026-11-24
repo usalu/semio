@@ -9,9 +9,11 @@ package semio:framework@1.0.0;
 ///
 /// 🧬️ B1 world-collapse: `poll` itself is now `async func`, and the earlier "deliberately not
 /// dependent on stackful-async component-model features" framing is RETIRED — S7 (terra-probe-
-/// spikes, reproduced on this ticket) found a plain sync `func` EXPORT is uncallable at all on any
-/// Store with `wasm_component_model_async(true)`, and `world actor` now imports `host-async`, which
-/// requires exactly such a Store. What `poll` still avoids is a SECOND long-lived call shape (the
+/// spikes) found a plain sync `func` EXPORT is callable on a Store with
+/// `wasm_component_model_async(true)` only through `call_concurrent`, so the sync `stage-*` exports
+/// are bound `async | store` on the host; every `async func` export flattens to at most 16 core
+/// params (wit-bindgen frees no async param block), so oversized budgets arrive through those sync
+/// stages instead. What `poll` still avoids is a SECOND long-lived call shape (the
 /// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
 /// runs on an async-capable Store like every other export in this world.
 interface reactor {
@@ -273,16 +275,30 @@ interface reactor {
   stage-command-page: async func(cursor: command-page-cursor, bytes: list<u8>) -> result<_, plugin-error>;
 
   /// 🧊️ Hands the next `poll` the ONE cold document-pair page it may admit — same staging contract
-  /// and the same reason as `stage-command-page`.
-  stage-cold-pair-page: async func(page: cold-document-pair-page) -> result<_, plugin-error>;
+  /// and the same reason as `stage-command-page`; SYNC like `stage-actor-context-budget`, because the page flattens to 26
+  /// core values and `wit-bindgen` frees the indirect parameter area of sync exports only.
+  stage-cold-pair-page: func(page: cold-document-pair-page) -> result<_, plugin-error>;
+
+  /// 🎚️ Stages the ONE `actor-context-budget` the next `admit-actor-context`, `admit-actor-input`, `close-actor-context`,
+  /// `close-actor-output`, `poll`, `checkpoint`, `restore`, `describe` or `codec` call consumes. Staged rather than passed
+  /// for the reason `stage-command-page` states, and it is a SYNC export on purpose: the budget flattens to 19 core values,
+  /// so it crosses through an indirect parameter area, and `wit-bindgen` frees that area for sync exports only
+  /// (bytecodealliance/wit-bindgen#1757). Every async export below therefore flattens to at most
+  /// `MAX_FLAT_ASYNC_PARAMS` (16) values and is called directly; a budget on an async signature leaked 152 to 168 B of guest
+  /// linear memory per call (ticket 26/09/01/SOURCING-END-TO-END, `🧯️async-param-leak.md`). The law
+  /// `every async func flattens to at most 16 core params` pins it for every schema in this directory.
+  ///
+  /// ⚖️ LAW: exactly one staged budget per consuming call, taken at its synchronous entry. A consuming call with no staged
+  /// budget is refused as cancelled with an empty grant, and the host stages immediately before each call it makes.
+  stage-actor-context-budget: func(budget: actor-context-budget);
 
   /// 📥️ Tagged ActorInput admission owns every command, event and cold pair until its actual return proof.
-  admit-actor-context: async func(budget: actor-context-budget) -> actor-admission-call;
-  admit-actor-input: async func(wire: option<list<u8>>, budget: actor-context-budget) -> actor-input-admission-call;
-  close-actor-context: async func(budget: actor-context-budget) -> actor-context-close-call;
-  close-actor-output: async func(budget: actor-context-budget) -> actor-context-close-call;
+  admit-actor-context: async func() -> actor-admission-call;
+  admit-actor-input: async func(wire: option<list<u8>>) -> actor-input-admission-call;
+  close-actor-context: async func() -> actor-context-close-call;
+  close-actor-output: async func() -> actor-context-close-call;
   /// ▶️ Poll consumes only its already admitted tagged input under the same authenticated scope.
-  poll: async func(budget: actor-context-budget) -> result<turn-result, actor-call-refusal>;
+  poll: async func() -> result<turn-result, actor-call-refusal>;
 
   /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after
   /// instantiation and before any frame, and refuses a guest of another version with `plugin.channel-mismatch`: the frame layout

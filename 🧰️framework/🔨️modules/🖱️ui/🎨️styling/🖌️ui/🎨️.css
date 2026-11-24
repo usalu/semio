@@ -1029,6 +1029,7 @@
   --hover-shade-step: 12%;
   --veil-alpha: 0.4;
   --veil-blur: 0.5rem;
+  --chip-tint: 10%;
   /* #endregion 🎚️LevelKnobs */
   --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
@@ -1364,6 +1365,14 @@
   }
 }
 
+/* 📏️ A frame's outline is stroked centred on its edge, so half of every edge line lies outside the frame's box. A frame
+   that clips its content (`overflow: clip`) therefore lets one hairline past its edge: without it the outline shows at
+   half the thickness of the lines inside the frame (chip seams), dimmer, and a hovered frame's rectangle never reads as
+   one emphasized line. */
+[data-window-frame] {
+  overflow-clip-margin: var(--stroke-hairline);
+}
+
 .window-frame-border-introduced {
   stroke-width: var(--stroke-hairline);
   animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
@@ -1445,6 +1454,20 @@
    data-introduced), so re-renders can't clobber it. */
 [data-introduction-elevated] {
   z-index: calc(var(--z-tutorial) + 1) !important;
+}
+
+/* 🎓️ An elevated unit nested in an ancestor's stacking context (a card inside the overlay of a layered overview) cannot
+   leave it, so every such ancestor rises with it. What else the path holds would then show crisp above the veil; the
+   elevation stamps those boxes `data-introduction-veiled` (the first real boxes beside the way to the unit, through
+   `display: contents` wrappers) and they are veiled here instead, with the veil's own blur, saturation and tint
+   strength, and take no pointer. */
+[data-introduction-elevation-path] {
+  z-index: calc(var(--z-tutorial) + 1) !important;
+}
+[data-introduction-veiled] {
+  filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
+  opacity: calc(1 - var(--veil-alpha, 0.5));
+  pointer-events: none;
 }
 
 /* 🎓️ Portaled floating UI (Select / Popover / …) leaves the elevated chrome subtree and would otherwise
@@ -1565,7 +1588,6 @@
   align-items: flex-start;
   gap: var(--spacing-single);
   color: var(--foreground);
-  filter: drop-shadow(0 var(--stroke-hairline) var(--spacing-single) color-mix(in oklab, var(--base) 55%, transparent));
   will-change: transform, opacity;
 }
 
@@ -1702,9 +1724,8 @@
   height: var(--size-huge);
   margin: 0;
   border: var(--stroke-hairline) dashed var(--accent);
-  border-radius: 0;
   pointer-events: none;
-  box-shadow: 0 0 0 var(--stroke-hairline) color-mix(in oklab, var(--accent) 25%, transparent);
+  outline: var(--stroke-hairline) solid color-mix(in oklab, var(--accent) 25%, transparent);
 }
 
 .introduction-demo-zoom-ring--in {
@@ -7325,6 +7346,111 @@
 
 [data-window-frame-chip] {
   pointer-events: auto;
+}
+
+/* 🪟 Chip tint: a chip lies one layer above what it covers, so over its level glass it lays a veil of the foreground colour at `--chip-tint`. The veil shifts the chip away from whatever is beneath it by the same share at every level, so a chip never has the background of the surface it sits on, and the blurred content stays visible through it. */
+:is([data-window-frame-chip], [data-glass-chip]) {
+  background-image: linear-gradient(color-mix(in srgb, var(--foreground) var(--chip-tint), transparent), color-mix(in srgb, var(--foreground) var(--chip-tint), transparent));
+}
+
+@media (forced-colors: active) {
+  :is([data-window-frame-chip], [data-glass-chip]) {
+    background-image: none;
+  }
+}
+
+/* ⬛️ No rounded corner and no shadow anywhere: the radius and shadow tokens of the theme are zero, and the controls a browser draws itself are drawn here instead.
+   A native tick box and a native radio button are squares with the element line; a ticked box is filled with the active colour and carries its tick, a chosen radio button holds a smaller square of the active colour.
+   As a direct child of a cells owner (`data-shared-border-cells`) the control is a cell of the border grid: it has no line of its own, its edges are the shared lines of its row, it is as high as the row, and a chosen radio button fills its cell.
+   Forced colours keep the system's own controls. */
+@layer base {
+  input:is([type="checkbox"], [type="radio"]) {
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-grid;
+    flex: none;
+    place-content: center;
+    inline-size: 1.25em;
+    block-size: 1.25em;
+    margin: 0;
+    border: var(--stroke-hairline) solid var(--border-element-color);
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--active-foreground);
+    vertical-align: middle;
+    cursor: pointer;
+  }
+
+  input:is([type="checkbox"], [type="radio"])::before {
+    content: "";
+    inline-size: 0.75em;
+    block-size: 0.75em;
+    background-color: currentColor;
+    scale: 0;
+  }
+
+  input[type="checkbox"]::before {
+    clip-path: polygon(14% 52%, 0 66%, 40% 100%, 100% 22%, 86% 10%, 38% 70%);
+  }
+
+  input[type="checkbox"]:checked {
+    border-color: var(--active-base);
+    background-color: var(--active-base);
+  }
+
+  input[type="radio"] {
+    color: var(--active-base);
+  }
+
+  input[type="radio"]:checked {
+    border-color: var(--active-base);
+  }
+
+  input:is([type="checkbox"], [type="radio"]):checked::before {
+    scale: 1;
+  }
+
+  input:is([type="checkbox"], [type="radio"]):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  [data-shared-border-cells] > input:is([type="checkbox"], [type="radio"]) {
+    align-self: stretch;
+    inline-size: var(--chip-row-height);
+    block-size: auto;
+    min-block-size: var(--chip-row-height);
+    border: 0;
+  }
+
+  [data-shared-border-cells] > input[type="radio"]:checked {
+    background-color: var(--active-base);
+  }
+
+  [data-shared-border-cells] > input[type="radio"]::before {
+    content: none;
+  }
+
+  @media (forced-colors: active) {
+    input:is([type="checkbox"], [type="radio"]) {
+      -webkit-appearance: auto;
+      appearance: auto;
+      display: inline-block;
+      border: 0;
+    }
+
+    input:is([type="checkbox"], [type="radio"])::before {
+      content: none;
+    }
+  }
+}
+
+/* 🖍️ Hover emphasis lives on what is already there: the border compositor recolours the lines that lie on a hovered box and never adds one, so a borderless box (a tab, a tree row, a menu item, an icon button) answers a hover with its foreground. The rule sits in the components layer, so a colour utility of the element still decides. */
+@layer components {
+  :is([data-shared-border-frame][data-shared-border-edges=""], [data-slot="mode-dock-tab"]):hover:not(:disabled, [aria-disabled="true"], [data-active="true"], [data-selected="true"], [data-state="on"], [data-state="active"], [aria-selected="true"], [aria-pressed="true"]) {
+    color: var(--border-emphasized-color);
+    --hover-ink: var(--color-emphasized);
+  }
 }
 
 /* 📏 A frame is never shorter than its chip rows: a frame without content height is exactly its chips, never a zero-height frame with chips hanging outside. */

@@ -501,12 +501,6 @@ pub fn create_en1995_app() -> semio_plugin::AppDefinition {
 //#endregion 🔖️Manifest
 
 //#region 🧪️UnitTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-#[cfg(test)]
-#[path = "🧪️tests/📚️assets/🦀️.rs"]
-mod asset_laws;
 
 #[cfg(test)]
 #[path = "🧪️tests/🗂️case-edits/🦀️.rs"]

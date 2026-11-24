@@ -7,7 +7,6 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 #[allow(unused_imports)]
 use pack::value::{ToValue, FromValue, DslValue};
-use crate::standards::v1_7::subsets::base::io::text::snapshot::{field};
 use crate::standards::v1_7::subsets::base::io::text::snapshot::*;
 fn rows(spec:&semio_framework_dsl_record::RecordSpec)->serde_json::Value{serde_json::Value::Array(spec.fields.iter().map(|field|serde_json::json!({"id":field.id,"key":field.key,"shape":match field.shape{semio_framework_dsl_record::Shape::Text=>"Text",semio_framework_dsl_record::Shape::UInt=>"UInt",semio_framework_dsl_record::Shape::Bytes64=>"Bytes64",semio_framework_dsl_record::Shape::Bool=>"Bool",semio_framework_dsl_record::Shape::Value=>"Value",_=>panic!("scalar metadata shape")},"optional":field.optional})).collect())}
 #[test]

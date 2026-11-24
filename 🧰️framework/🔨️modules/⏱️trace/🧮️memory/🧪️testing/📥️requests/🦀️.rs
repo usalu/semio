@@ -11,12 +11,7 @@ struct Restore(*mut Scope);
 impl Drop for Restore {
     fn drop(&mut self) { let _ = ACTIVE.try_with(|active| active.set(self.0)); }
 }
-std::thread_local! { static DBG_LOG: [Cell<usize>; 1024] = const { [const { Cell::new(0) }; 1024] }; static DBG_N: Cell<usize> = const { Cell::new(0) }; }
-fn dbg_push(tag: usize) { let _ = DBG_N.try_with(|n| { let at = n.get(); if at < 1024 { let _ = DBG_LOG.try_with(|log| log[at].set(tag)); n.set(at + 1); } }); }
-/// [DEBUG] Takes the sizes of the requests (plain) and releases (tagged with bit 62) of at least 2048 bytes this thread saw since the last take.
-pub fn debug_sizes_take() -> Vec<usize> { let n = DBG_N.with(|n| n.replace(0)); DBG_LOG.with(|log| (0..n).map(|at| log[at].get()).collect()) }
 fn record(bytes: usize) {
-    if bytes >= 32 { dbg_push(bytes) }
     let _ = ACTIVE.try_with(|active| {
         let mut scope = active.get();
         while !scope.is_null() {
@@ -28,7 +23,6 @@ fn record(bytes: usize) {
     });
 }
 fn release(bytes: usize) {
-    if bytes >= 2048 { dbg_push(bytes | (1 << (usize::BITS - 2))) }
     let _ = ACTIVE.try_with(|active| {
         let mut scope = active.get();
         while !scope.is_null() {

@@ -1,0 +1,8 @@
+objects	shopping-trolley	1:100 front Hausdorff: expected 0.0525 to be less than or equal to 0.03
+objects	stepladder	1:500 front Hausdorff: expected 0.21377091924028727 to be less than or equal to 0.15
+objects	used-baby-grand-piano	1:100 plan Hausdorff: expected 0.0675 to be less than or equal to 0.03
+objects	used-basketball-hoop	1:100 elevation Hausdorff: expected 0.047434164902525694 to be less than or equal to 0.03
+objects	used-climbing-net-pyramid	1:500 plan Hausdorff: expected 0.3606634511563377 to be less than or equal to 0.15
+objects	used-drum-kit	1:100 elevation Hausdorff: expected 0.10297147663309486 to be less than or equal to 0.03
+objects	used-bathtub	1:50 front Hausdorff: expected 0.320625 to be less than or equal to 0.015
+objects	used-marching-snare-and-bass-drum	1:500 elevation: expected 0.9076132602144162 to be greater than or equal to 0.92

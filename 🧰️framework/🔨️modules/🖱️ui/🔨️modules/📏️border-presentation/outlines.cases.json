@@ -1,6 +1,6 @@
 [
  {
-  "name": "a hovered cell closes its outline across the owner's edges and its neighbours' dividers",
+  "name": "a hovered cell emphasises its own outline across the owner's edges and its neighbours' dividers",
   "boxes": [
    {
     "id": "g",
@@ -249,7 +249,7 @@
   ]
  },
  {
-  "name": "a stated box draws the sides that lie on its parent's undrawn edges while a normal sibling suppresses them",
+  "name": "a hovered box emphasises only the sides it draws when normal: the sides on its parent's undrawn edges stay undrawn",
   "boxes": [
    {
     "id": "f",
@@ -305,22 +305,6 @@
   ],
   "expected": [
    {
-    "id": "k:top",
-    "owner": "k",
-    "from": {
-     "x": 0,
-     "y": 0
-    },
-    "to": {
-     "x": 10,
-     "y": 0
-    },
-    "state": "hover",
-    "contributors": [
-     "k:top"
-    ]
-   },
-   {
     "id": "k:bottom",
     "owner": "k",
     "from": {
@@ -355,6 +339,131 @@
     ]
    },
    {
+    "id": "k:right",
+    "owner": "k",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "k:right",
+     "m:left"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "a focused box draws the sides that lie on its parent's undrawn edges while a normal sibling suppresses them",
+  "boxes": [
+   {
+    "id": "f",
+    "parent": null,
+    "owner": "f",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "bottom"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "k",
+    "parent": "f",
+    "owner": "k",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 10,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "focus"
+   },
+   {
+    "id": "m",
+    "parent": "f",
+    "owner": "m",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   }
+  ],
+  "expected": [
+   {
+    "id": "k:top",
+    "owner": "k",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 0
+    },
+    "state": "focus",
+    "contributors": [
+     "k:top"
+    ]
+   },
+   {
+    "id": "k:bottom",
+    "owner": "k",
+    "from": {
+     "x": 0,
+     "y": 10
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "focus",
+    "contributors": [
+     "f:bottom",
+     "k:bottom"
+    ]
+   },
+   {
+    "id": "f:bottom",
+    "owner": "f",
+    "from": {
+     "x": 10,
+     "y": 10
+    },
+    "to": {
+     "x": 20,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "f:bottom",
+     "m:bottom"
+    ]
+   },
+   {
     "id": "k:left",
     "owner": "k",
     "from": {
@@ -365,7 +474,7 @@
      "x": 0,
      "y": 10
     },
-    "state": "hover",
+    "state": "focus",
     "contributors": [
      "k:left"
     ]
@@ -381,10 +490,145 @@
      "x": 10,
      "y": 10
     },
-    "state": "hover",
+    "state": "focus",
     "contributors": [
      "k:right",
      "m:left"
+    ]
+   }
+  ]
+ },
+ {
+  "name": "a hovered borderless box adds no line",
+  "boxes": [
+   {
+    "id": "r",
+    "parent": null,
+    "owner": "r",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 30,
+     "bottom": 10
+    },
+    "edges": [],
+    "state": "normal"
+   },
+   {
+    "id": "t",
+    "parent": "r",
+    "owner": "r",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [],
+    "state": "hover"
+   }
+  ],
+  "expected": []
+ },
+ {
+  "name": "a hovered borderless box emphasises the neighbour's line on its perimeter and adds none",
+  "boxes": [
+   {
+    "id": "n",
+    "parent": null,
+    "owner": "n",
+    "rect": {
+     "left": 0,
+     "top": 0,
+     "right": 10,
+     "bottom": 10
+    },
+    "edges": [
+     "top",
+     "right",
+     "bottom",
+     "left"
+    ],
+    "state": "normal"
+   },
+   {
+    "id": "t",
+    "parent": null,
+    "owner": "t",
+    "rect": {
+     "left": 10,
+     "top": 0,
+     "right": 20,
+     "bottom": 10
+    },
+    "edges": [],
+    "state": "hover"
+   }
+  ],
+  "expected": [
+   {
+    "id": "n:top",
+    "owner": "n",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 0
+    },
+    "state": "normal",
+    "contributors": [
+     "n:top"
+    ]
+   },
+   {
+    "id": "n:bottom",
+    "owner": "n",
+    "from": {
+     "x": 0,
+     "y": 10
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "n:bottom"
+    ]
+   },
+   {
+    "id": "n:left",
+    "owner": "n",
+    "from": {
+     "x": 0,
+     "y": 0
+    },
+    "to": {
+     "x": 0,
+     "y": 10
+    },
+    "state": "normal",
+    "contributors": [
+     "n:left"
+    ]
+   },
+   {
+    "id": "t:left",
+    "owner": "t",
+    "from": {
+     "x": 10,
+     "y": 0
+    },
+    "to": {
+     "x": 10,
+     "y": 10
+    },
+    "state": "hover",
+    "contributors": [
+     "n:right",
+     "t:left"
     ]
    }
   ]

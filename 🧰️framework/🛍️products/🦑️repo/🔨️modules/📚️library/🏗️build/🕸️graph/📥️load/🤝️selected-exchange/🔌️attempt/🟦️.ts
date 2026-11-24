@@ -1,7 +1,7 @@
 import {createHash,randomUUID} from "node:crypto";
 import {mkdir,readFile,rename,rm,writeFile} from "node:fs/promises";
 import {dirname} from "node:path";
-import {hostname} from "node:os";
+import {hostname,totalmem} from "node:os";
 import {hostOfRootV1,type ObservationRowV1} from "../../../../🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts";
 import {graphFleetClientV1,type GraphFleetClientV1} from "../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import {graphFleetSettingsV1} from "../../../../🪪️graph-state/🧶️nx/🟦️.ts";
@@ -24,7 +24,7 @@ export type SelectedAttemptPortV1<G>=Readonly<{
  facts:Readonly<{entries(scope:string):readonly Readonly<{suffix:string;facts:unknown;rows:readonly unknown[]}>[];seed(scope:string,suffix:string,facts:unknown,rows:readonly unknown[]):void}>;
  module:unknown;
  verdict(input:Readonly<{projects:unknown;rows:readonly unknown[]}>):unknown;
- client?:GraphFleetClientV1|undefined;environment?:Readonly<Record<string,string|undefined>>;platform?:string;owner?:string;
+ client?:GraphFleetClientV1|undefined;totalMegabytes?:number;environment?:Readonly<Record<string,string|undefined>>;platform?:string;owner?:string;
  say?:(line:string)=>void;signal?:AbortSignal;
 }>;
 
@@ -66,6 +66,7 @@ export async function loadSelectedThroughFleetV1<G>(port:SelectedAttemptPortV1<G
    const graphTemp=port.path+"."+randomUUID(),receiptTemp=port.authorityPath+"."+randomUUID();
    try{await writeFile(graphTemp,plan.fetched.graph,{flag:"wx"});await writeFile(receiptTemp,authority,{flag:"wx"});await rename(graphTemp,port.path);await rename(receiptTemp,port.authorityPath);}finally{await Promise.all([rm(graphTemp,{force:true}),rm(receiptTemp,{force:true})]);}
   },
+  readBesideMegabytes:port.totalMegabytes??Math.floor(totalmem()/1048576),
   signal:port.signal,alive:()=>sliceReadActiveV1(),step:sliceReadStepV1 as never,
   read:async()=>{ran=true;try{result=await port.attempt();}catch(error){failed=true;failure=error;throw error;}if(!port.sealed(result))return undefined;try{return await sealedOf();}catch{return undefined;}}
  }).catch(error=>{if(failed)throw failure;if(port.signal?.aborted)throw error;return undefined;});

@@ -21,7 +21,7 @@ fn find_id<'a>(value: &'a Value, id: &str) -> Option<&'a Value> {
 
 #[test]
 fn detached_sync_leaf_is_always_dockable_and_owns_all_three_choices() {
-    let shell = host_test_shell();
+    let mut shell = host_test_shell();
     let fixture = fixture();
     assert!(shell.sync.sync_backbone_uri.is_none());
     let dock = SessionCtx::of(&mut shell).default_dock();
@@ -115,6 +115,7 @@ fn task_manager_leaf_lists_the_runtime_actors_with_all_three_row_actions() {
 
 #[test]
 fn task_manager_actor_table_projects_to_retained_table_records_with_one_row_target() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     use semio_renderer_wgpu_shell_doc_open::{RuntimeActorSample, TaskManagerActionKind};
     let mut shell = host_test_shell();
     let actors: Vec<RuntimeActorSample> = doc_open_fixture()["snapshot"]["actors"].as_array().expect("actors").iter().map(|actor| serde_json::from_value(actor.clone()).expect("actor")).collect();
@@ -142,10 +143,10 @@ fn task_manager_actor_table_projects_to_retained_table_records_with_one_row_targ
 fn task_manager_actor_and_task_presses_queue_requests_for_the_runtime_bridge() {
     use semio_renderer_wgpu_shell_doc_open::{TaskManagerActionKind, TaskManagerRequest};
     let mut shell = host_test_shell();
-    for (action, args) in [("suspend", json_args("actorId", "actor-1")), ("resume", json_args("task", "toolRun:wfc#1"))] {
+    for (action, args) in [("suspend", json_args("actorId", "actor-1")), ("resume", json_args("task", "kernel:wfc#1")), ("resume", json_args("task", "toolRun:wfc#1"))] {
         semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: TASK_MANAGER_ID.into(), action: action.into(), args })).expect("task manager press");
     }
-    assert_eq!(shell.opening.take_task_manager_requests(), vec![TaskManagerRequest { kind: TaskManagerActionKind::Resume, actor_id: None, task_id: Some("toolRun:wfc#1".into()) }]);
+    assert_eq!(shell.opening.take_task_manager_requests(), vec![TaskManagerRequest { kind: TaskManagerActionKind::Resume, actor_id: None, task_id: Some("kernel:wfc#1".into()) }], "a tool run's press is answered with its own panel action, never left queued for the runtime bridge");
     let controls = semio_renderer_wgpu_host_base::take_actor_controls();
     assert!(controls.iter().any(|control| control.actor_id == "actor-1" && control.kind == semio_renderer_wgpu_host_base::ActorControlKind::Suspend), "the actor press reaches the kernel pool port");
 }
@@ -158,6 +159,7 @@ const TASK_MANAGER_ID: &str = "os.task-manager";
 
 #[test]
 fn unknown_shell_route_is_recorded_and_known_routes_clear_it() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = host_test_shell();
     for (uri, not_found) in [("/nope", Some("/nope")), ("/hub", None), ("/", None), ("/spaces/s1/extra/1", Some("/spaces/s1/extra/1"))] {
         let _ = semio_framework_async::block_on(ActionsCtx::of(&mut shell).apply_shell_uri(uri));
@@ -169,4 +171,5 @@ fn unknown_shell_route_is_recorded_and_known_routes_clear_it() {
     assert!(page.to_string().contains(fixture["routeNotFound"]["en"].as_str().expect("en")));
     let home = find_id(&page, "os.route-not-found.home").expect("home button").to_string();
     assert!(home.contains("navigateShellUri"));
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
 }

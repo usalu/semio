@@ -110,7 +110,7 @@ pub struct PendingToken(Arc<PendingImportCount>);
 impl Drop for PendingToken {
     fn drop(&mut self) {
         let previous = self.0.0.fetch_sub(1, Ordering::AcqRel);
-        assert!(previous != 0, "native import count must own this token");
+        assert!(std::thread::panicking()||(previous != 0), "native import count must own this token");
     }
 }
 

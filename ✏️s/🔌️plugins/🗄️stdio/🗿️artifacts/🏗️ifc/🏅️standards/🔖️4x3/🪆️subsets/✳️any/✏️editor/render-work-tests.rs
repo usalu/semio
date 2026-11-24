@@ -27,6 +27,7 @@ mod type_measure_select_guidance;
 
 #[test]
 fn contextual_details_body_uses_original_retained_work_only() {
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     assert!(Ifc4x3AnyEditor::uses_render_work(editing::SNAPSHOT_DETAILS_BODY_KEY));
     assert!(!Ifc4x3AnyEditor::uses_render_work(MeshWindowKit::KIND_ID));
     let mut caller = OriginalWorkFixture::new();
@@ -37,12 +38,14 @@ fn contextual_details_body_uses_original_retained_work_only() {
     caller.finish();
 }
 
+fn ifc4x3_header()->semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader{use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcHeader,IfcValue};IfcHeader{file_schema:vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3_ADD2".into())])],..IfcHeader::default()}}
 fn staged_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
 fn retire_staged<T:semio_framework_value::retirement::RetireOwned>(caller:&mut OriginalWorkFixture,owner:&mut Option<T>){if let Some(value)=owner.take(){caller.retire_owned(value,staged_grant());}}
 fn staged_view()->semio_plugin::ViewModel{let mut view=semio_plugin::ViewModel::new(semio_ui_locale::Locale::De,semio_ui_locale::Terminology::Native);view.window_id=Some("actual-details".into());view}
 fn staged_request(application:&serde_json::Value)->semio_plugin::action_staging::StagedFormRequest{let parsed=semio_framework_pack_json::parse(&application.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();semio_plugin::action_staging::StagedFormRequest{token:semio_plugin::action_staging::StagedFormToken{action:APPLY_TEMPLATE_ACTION.into(),generation:"1".into(),revision:"0".repeat(64),window:"actual-details".into()},args:semio_framework_pack_json::to_dsl_value(&parsed),locale:semio_ui_locale::Locale::De,page:None}}
 #[test]
 fn guided_controller_actual_hook_keeps_denied_and_wrong_context_donors_stationary(){
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🏷️templates/✍️apply/native-cases.json")).unwrap();let mut caller=OriginalWorkFixture::new();let view=staged_view();let mut work=caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::begin_render_work(semio_plugin::action_staging::STAGED_FORM_BODY_KEY,cx)).unwrap().unwrap();
     for key in ["window","locale","generation","action"]{let mut request=staged_request(&law["cases"][0]["application"]);match key{"window"=>request.token.window="other".into(),"locale"=>request.locale=semio_ui_locale::Locale::En,"action"=>request.token.action="caller-producer".into(),_=>request.token.generation="18446744073709551616".into()}let mut donor=Some(request);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::receive_render_work_request(&mut work,&mut donor,&view,cx)));assert!(result.is_err());assert!(donor.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
     let mut donor=Some(staged_request(&law["cases"][0]["application"]));for axis in 0..4{let stock=staged_grant();let grant=match axis{0=>RetainedCloneGrant{maximum_items:0,..stock},1=>RetainedCloneGrant{maximum_copy_bytes:0,..stock},2=>RetainedCloneGrant{maximum_capacity_bytes:0,..stock},_=>RetainedCloneGrant{maximum_depth:0,..stock}};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.work_turn(grant,1000,|cx|Ifc4x3AnyEditor::receive_render_work_request(&mut work,&mut donor,&view,cx)));assert!(result.unwrap().is_none());assert!(donor.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
@@ -50,6 +53,7 @@ fn guided_controller_actual_hook_keeps_denied_and_wrong_context_donors_stationar
 }
 #[test]
 fn guided_controller_builds_actual_owned_ready_and_incomplete_forms_without_publication(){
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     use semio_plugin::{AppRenderOperationContext,ChildContentView};use semio_ui_contract::{Component,ContainerRole,OriginalBuiltTreeRetirement};
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧬️schema/🏷️templates/✍️apply/native-cases.json")).unwrap();let row=&law["cases"][0];let snapshot=std::sync::Arc::new(crate::io::parse_ifc4x3_step(row["source"].as_str().unwrap()).unwrap());let history=semio_plugin::HistoryView::empty();let view=staged_view();
     for mode in ["ready","empty","partial","wrong-revision"]{let mut application=row["application"].clone();if mode=="empty"{application["identities"]=serde_json::json!([]);}else if mode=="partial"{application["identities"][0]["id"]="-".into();}let operation=AppRenderOperationContext{app_instance_id:17,base_revision:semio_framework_job::RevisionId(0),generation:semio_framework_job::Generation(1),canonical_base_revision:if mode=="wrong-revision"{[1;32]}else{[0;32]},mounted_policy:semio_plugin::artifact_app_laws::fixture_mounted_policy()};let doc=semio_framework_async::poll::resolve_ready(ArtifactView::with_render_context(snapshot.as_ref(),&history,ChildContentView::EMPTY,operation,"actual-source",None));let mut caller=OriginalWorkFixture::new();let mut work=caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::begin_render_work(semio_plugin::action_staging::STAGED_FORM_BODY_KEY,cx)).unwrap().unwrap();let mut donor=Some(staged_request(&application));let mut accepted=false;for _ in 0..16{if caller.work_turn(staged_grant(),1000,|cx|Ifc4x3AnyEditor::receive_render_work_request(&mut work,&mut donor,&view,cx)).unwrap().is_some(){accepted=true;break;}}assert!(accepted&&donor.is_none());let mut output=None;let mut refusal=None;

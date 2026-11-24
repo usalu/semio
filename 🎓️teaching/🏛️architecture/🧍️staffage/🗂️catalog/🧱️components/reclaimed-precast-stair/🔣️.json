@@ -1036,8 +1036,8 @@
        "kind": "poly",
        "points": [
         [
-         -0.15094,
-         0.153
+         -0.101295,
+         0.152405
         ],
         [
          -0.18151,
@@ -1048,8 +1048,8 @@
          0.16762
         ],
         [
-         -0.14941,
-         0.16289
+         -0.099765,
+         0.162295
         ]
        ],
        "closed": true
@@ -2620,6 +2620,35 @@
         ]
        ],
        "closed": false
+      },
+      {
+       "id": "bar-stub",
+       "bone": "flight",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         -0.101295,
+         0.152405
+        ],
+        [
+         -0.18151,
+         0.15774
+        ],
+        [
+         -0.17997,
+         0.16762
+        ],
+        [
+         -0.099765,
+         0.162295
+        ]
+       ],
+       "closed": true
       }
      ],
      "front": [
@@ -2946,6 +2975,62 @@
         ]
        ],
        "closed": false
+      },
+      {
+       "id": "bar-stub-1",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.405,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-2",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.135,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-3",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.125,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-4",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.395,
+       "w": 0.06421,
+       "h": 0.01
       }
      ]
     },
@@ -3384,6 +3469,35 @@
        "y": 0.0,
        "w": 0.12,
        "h": 0.12
+      },
+      {
+       "id": "bar-stub",
+       "bone": "flight",
+       "role": "body",
+       "z": 2.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "poly",
+       "points": [
+        [
+         -0.101295,
+         0.152405
+        ],
+        [
+         -0.18151,
+         0.15774
+        ],
+        [
+         -0.17997,
+         0.16762
+        ],
+        [
+         -0.099765,
+         0.162295
+        ]
+       ],
+       "closed": true
       }
      ],
      "front": [
@@ -3694,6 +3808,62 @@
         ]
        ],
        "closed": false
+      },
+      {
+       "id": "bar-stub-1",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.405,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-2",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": -0.135,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-3",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.125,
+       "w": 0.06421,
+       "h": 0.01
+      },
+      {
+       "id": "bar-stub-4",
+       "bone": "flight",
+       "role": "body",
+       "z": 1.5,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "kind": "rect",
+       "x": -0.2061,
+       "y": 0.395,
+       "w": 0.06421,
+       "h": 0.01
       }
      ]
     },
@@ -7056,6 +7226,86 @@
         0.0
        ]
       }
+     },
+     {
+      "id": "bar-stub-1",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-2",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-3",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-4",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
      }
     ],
     "thermal": [
@@ -7439,6 +7689,86 @@
         0.0
        ]
       }
+     },
+     {
+      "id": "bar-stub-1",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-2",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       -0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       -0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-3",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.13
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.13
+      ],
+      "r0": 0.005,
+      "r1": 0.005
+     },
+     {
+      "id": "bar-stub-4",
+      "kind": "capsule",
+      "bone": "flight",
+      "material": "steel",
+      "role": "body",
+      "tone": 0.22,
+      "p0": [
+       -0.10053,
+       0.15735,
+       0.4
+      ],
+      "p1": [
+       -0.18074,
+       0.16268,
+       0.4
+      ],
+      "r0": 0.005,
+      "r1": 0.005
      }
     ],
     "thermal": [

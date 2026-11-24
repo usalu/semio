@@ -1,0 +1,29 @@
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
+@@ -4,6 +4,7 @@
+ import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type NativeBuildStageCapacityV1}from"./🎟️stage/🟦️.ts";
+ import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
+ import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
++import {createUnitReuseTallyV1} from "../🧮️phase-ledger/🟦️.ts";
+ import {admitWarmCargoRetryGraphV1,classifyCargoGraphObservationFailureV1,failedCompilerMessageFilesV1,failedDependencyDriftV1,failedPassConcurrentEditV1,retryableWarmComponentPassV1,runCargoPassAttemptsV1,watchWarmCargoAttemptV1} from "./🔁️failure-churn/🟦️.ts";
+ import failureChurn from "./🔁️failure-churn/🔣️.json" with {type:"json"};
+ import {readPhysicalFileV1} from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
+@@ -478,6 +479,7 @@
+   const passRecords: { id: string; manifest: string; profile: string; target: string; startMs: number; endMs: number; exit: number; failed: string[] }[] = [];
+   const failureLines: string[] = [], echoed = new Set<string>(), errorCaptures: { pass: string; capture: ErrorCaptureV1 }[] = [], stderrTails: { pass: string; lines: string[] }[] = [], components = plan.passes.flatMap((pass) => pass.packages.map((row) => row.name));
+   const jobWatches = new Map<string, NativeBuildJobWatchV1>();
++  const unitReuse = options.environment.SEMIO_UNIT_CACHE_ROOT ? createUnitReuseTallyV1(options.environment.SEMIO_UNIT_CACHE_ROOT, options.environment.SEMIO_UNIT_CACHE_LANE ?? "d") : undefined;
+   let reusedUnits = 0, stagesRunning = 0, stagesWaiting = 0, lastMessageMs = Date.now(), stallReason: string | null = null;
+   log(`[native-build] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
+   let primaryFailed=false,dispose:undefined|(()=>Promise<void>);
+@@ -696,8 +698,8 @@
+   }, completion(`job:${job.id}`), job.workerProtocol==="jobserver"?"jobserver":job.workerProtocol==="exclusive"?"whole-host":"available");
+ 
+   const progress = setInterval(() => {
+-    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats();
+-    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits} reused, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
++    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats(), reuse = unitReuse?.read();
++    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits + (reuse ? reuse.local + reuse.fleet : 0)} reused${reuse && reuse.fleet > 0 ? ` (${reuse.local} local, ${reuse.fleet} fleet)` : ""}, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
+   }, options.progressMs ?? policy.progressMs);
+   let stallWork:Promise<void>|undefined;
+   const watchdog = setInterval(() => {

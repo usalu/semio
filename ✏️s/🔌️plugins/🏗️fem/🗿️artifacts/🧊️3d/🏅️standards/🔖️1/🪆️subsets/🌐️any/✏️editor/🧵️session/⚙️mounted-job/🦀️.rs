@@ -17,7 +17,7 @@ impl BoundedJob for MountedJob {
     /// publishes output, or the session leaves `Running`.
     fn step(&mut self, _original: &mut IoRunControl<'_, '_>, _snapshot: &mut SqliteSnapshotControl<'_>, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         let Ok(mut shell) = self.shell.try_borrow_mut() else { return Ok(JobStep::Running(None)); };
-        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { return Ok(JobStep::Failed(b"fem3d.visual-stale-shell".to_vec())); };
+        let Some(state) = shell.as_mut().filter(|state| state.identity == self.identity) else { eprintln!("[DEBUG] fem3d mounted job {:#x} stale shell", self.identity.job); return Ok(JobStep::Failed(b"fem3d.visual-stale-shell".to_vec())); };
         let started = semio_framework_job::default_now_us();
         let deadline = started.map(|started| started.saturating_add(STEP_CEILING_MS.saturating_mul(1_000)).min(cx.deadline_us()));
         let mut step = JobStep::Running(None);
@@ -27,6 +27,7 @@ impl BoundedJob for MountedJob {
             step = state.step(cx)?;
             if deadline.is_none() || !matches!(step, JobStep::Running(None)) { break; }
         }
+        if !matches!(&step, JobStep::Running(None)) { eprintln!("[DEBUG] fem3d mounted job {:#x} step {:?}", self.identity.job, match &step { JobStep::Done(_) => "done", JobStep::Failed(detail) => std::str::from_utf8(detail).unwrap_or("failed"), _ => "running-output" }); }
         if matches!(&step, JobStep::Done(_)) {
             record_terminal(self.identity, semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Validated);
             self.completed = true;

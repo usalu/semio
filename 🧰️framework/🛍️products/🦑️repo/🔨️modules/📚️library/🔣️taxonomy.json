@@ -31480,6 +31480,10 @@
               "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts"
             },
+            "@semio-tech/framework-kernel/plugin-registry": {
+              "manifestPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
+              "entryPath": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/🟦️.ts"
+            },
             "@semio-tech/framework-os": {
               "manifestPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
               "entryPath": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts"
@@ -31710,6 +31714,7 @@
             "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
             "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/⏳️on-demand-activation/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
@@ -31732,6 +31737,7 @@
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
+            "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
             "🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
@@ -32221,6 +32227,7 @@
         "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
         "🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/⏳️on-demand-activation/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
@@ -32245,6 +32252,7 @@
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
+        "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
         "🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",

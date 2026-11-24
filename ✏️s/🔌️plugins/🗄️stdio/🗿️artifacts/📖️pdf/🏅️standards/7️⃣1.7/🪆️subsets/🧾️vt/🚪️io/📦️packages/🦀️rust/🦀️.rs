@@ -82,32 +82,6 @@ pub mod standards {
                             pub mod insert_launch_action;
                         }
                     }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../💾️binary/🧬️mutations/🚫️remove-javascript-action/🦀️.rs"]
-                            pub mod remove_javascript_action;
-                            #[path = "../../💾️binary/🧬️mutations/🔒️insert-encryption-dictionary/🦀️.rs"]
-                            pub mod insert_encryption_dictionary;
-                            #[path = "../../💾️binary/🧬️mutations/🧺️remove-font-file/🦀️.rs"]
-                            pub mod remove_font_file;
-                            #[path = "../../💾️binary/🧬️mutations/📜️insert-javascript-action/🦀️.rs"]
-                            pub mod insert_javascript_action;
-                            #[path = "../../💾️binary/🧬️mutations/🔓️remove-encryption-dictionary/🦀️.rs"]
-                            pub mod remove_encryption_dictionary;
-                            #[path = "../../💾️binary/🧬️mutations/📐️set-trim-box/🦀️.rs"]
-                            pub mod set_trim_box;
-                            #[path = "../../💾️binary/🧬️mutations/🔤️embed-font-file/🦀️.rs"]
-                            pub mod embed_font_file;
-                            #[path = "../../💾️binary/🧬️mutations/🧽️remove-output-intent/🦀️.rs"]
-                            pub mod remove_output_intent;
-                            #[path = "../../💾️binary/🧬️mutations/🚀️insert-launch-action/🦀️.rs"]
-                            pub mod insert_launch_action;
-                            #[path = "../../💾️binary/🧬️mutations/🗂️set-dpart-root/🦀️.rs"]
-                            pub mod set_dpart_root;
-                        }
-                    }
                 }
             }
         }

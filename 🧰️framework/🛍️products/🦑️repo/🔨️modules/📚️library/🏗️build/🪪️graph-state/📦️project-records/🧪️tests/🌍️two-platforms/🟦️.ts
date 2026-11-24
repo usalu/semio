@@ -179,6 +179,22 @@ test("a record that names the root in a spelling that cannot be mapped is not sh
  }finally{await server.stop();}
 },60000);
 
+test("a Windows machine whose finished record names the root with backslashes keeps its claim honest: the refusal says the spelling, it is not a failure of the owner for the fleet, and the next claim is free",async()=>{
+ const {server,environment}=await world();
+ try{
+  const owner="b".repeat(64),broken=recordAt(WINDOWS,true,GENERATION_A,owner),image=JSON.parse(broken.image) as {targets:{build:{options:{command:string}}}};
+  image.targets.build.options.command="repo -- C:\\semio\\libs";(broken as {image:string}).image=JSON.stringify(image);
+  const windows=portHost(environment,WINDOWS,"win:1","win32-x64",GENERATION_A,[],"win"),other=portHost(environment,WINDOWS,"win:2","win32-x64",GENERATION_A,[],"win");
+  const claimed=await windows.claim(infoOf(WINDOWS,PLAIN,{record:broken}));expect(claimed.state).toBe("granted");
+  if(claimed.state!=="granted")throw new Error("claim");
+  expect(await claimed.publish()).toBe(false);
+  expect(claimed.code()).toBe("unshareable");expect(claimed.deterministic(),"a spelling of this machine is no verdict on the owner").toBe(false);
+  expect(claimed.why()).toContain("root spelled with backslashes");expect(claimed.why()).toContain("semio");
+  const next=await other.claim(infoOf(WINDOWS,PLAIN,{record:recordAt(WINDOWS,true,GENERATION_A,owner)}));expect(next.state).toBe("granted");
+  if(next.state==="granted"){expect(await next.publish()).toBe(true);}
+ }finally{await server.stop();}
+},60000);
+
 test("thirty neutral projects of a macOS machine are taken by a Windows machine with equal digests, the bound ones are refused",async()=>{
  const {server,environment}=await world();
  try{

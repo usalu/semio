@@ -26,6 +26,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -117,35 +118,6 @@ STAGES = tuple(zip(
 
 LOSS = tuple(value for _name, value, _colour in STAGES)
 LEVELS = tuple(Q_NUTZ + sum(LOSS[:k]) for k in range(5))  # 100, 104, 112, 119, 140 kWh
-
-
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-
-
-def _regroup(scene, group):
-    """🧲 Make ``group`` the scene's own entry for its parts, so a transition that consumes it removes every part and not just the group object."""
-    family = set(group.get_family())
-    scene.remove(*[m for m in scene.mobjects if m is not group and family.intersection(m.get_family())])
-    scene.add(group)
 
 
 def _math_note(tex: str, color: str = P_PRIMARY):
@@ -602,7 +574,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Emission, distribution, storage", "Übergabe, Verteilung, Speicherung"))
-        din = _din_ref(_references.cite(("din-ts-18599-5", "uebergabe")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-5", "uebergabe")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -790,7 +762,7 @@ class Beat3_Erzeugung(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Generation: efficiency or coefficient of performance", "Erzeugung: Wirkungsgrad oder Arbeitszahl"))
-        din = _din_ref(_references.cite(("din-ts-18599-5", "erzeuger"), ("vdi-4650-1", "jaz")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-5", "erzeuger"), ("vdi-4650-1", "jaz")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1019,7 +991,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The plant chain: from useful to final energy", "Die Anlagenkette: von Nutzenergie zu Endenergie"))
-        din = _din_ref(_references.cite(("din-ts-18599-5", "aufwandszahl"), ("din-ts-18599-1", "endenergie")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-5", "aufwandszahl"), ("din-ts-18599-1", "endenergie")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1119,7 +1091,6 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "einheit")
 
         caption = step(caption, "gas")
-        _regroup(self, eq)
         gas_label = body_text(tr("Gas boiler", "Gaskessel"), font_size=LABEL_FONT_SIZE, color=ERZ_AMBER).move_to(
             rows["eg"]["label"].get_left(), aligned_edge=LEFT)
         eq2, eq2_box, items2 = math_panel([

@@ -20,7 +20,7 @@ name = "unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
 [features]
-test-support = ["dep:serde", "semio-s-plugin-norm-compliance-core/compliance-testing"]
+test-support = ["dep:serde", "semio-s-plugin-norm-compliance-core/compliance-testing", "semio-s-plugin-norm-design-case/compliance-testing"]
 compliance-testing = ["semio-s-plugin-norm-compliance-core/compliance-testing", "semio-s-plugin-norm-design-case/compliance-testing", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
 
 [dependencies]

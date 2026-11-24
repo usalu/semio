@@ -657,3 +657,13 @@ fn example_switch_and_json_edit_load_a_document_instead_of_editing_one() {
     let unchanged = edit::handle(&edit::Edit { text: semio_framework_pack_json::to_json_string(&document) }, &view, &config_view).expect("an unchanged document");
     assert!(unchanged.artifact_mutations.is_empty() && unchanged.effects.is_empty(), "re-sending the open document mints nothing");
 }
+
+/// ⚖️ LAW: the canonical empty example id `""` replaces the open example with the empty document.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_empty_id_loads_the_empty_document() {
+    let mut app = new_app().await;
+    crate::unit_tests::context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
+    assert_ne!(app.snapshot().expect("snapshot"), Block3dSnapshot::default());
+    crate::unit_tests::context::load_example(&mut app, "").await;
+    assert_eq!(app.snapshot().expect("snapshot"), Block3dSnapshot::default());
+}

@@ -451,7 +451,7 @@ impl JobProgressCheckout<'_> {
 impl Drop for JobProgressCheckout<'_> {
     fn drop(&mut self) {
         assert_eq!(self.slot.epoch, self.epoch, "checked-out job preview ABA");
-        assert!(self.slot.checked_out && self.slot.preview.is_none(), "checked-out job preview slot changed before handback");
+        assert!(std::thread::panicking()||(self.slot.checked_out && self.slot.preview.is_none()), "checked-out job preview slot changed before handback");
         self.slot.preview = self.owner.take();
         self.slot.checked_out = false;
     }

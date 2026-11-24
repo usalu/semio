@@ -632,6 +632,11 @@
       "leases"
      ],
      [
+      "storage.image-detached",
+      "error",
+      "nx"
+     ],
+     [
       "storage.image-low",
       "error",
       "dependencies"
@@ -647,11 +652,6 @@
       "products"
      ],
      [
-      "storage.image-detached",
-      "info",
-      "nx"
-     ],
-     [
       "storage.publication-pending",
       "info",
       "diagnostics"
@@ -661,10 +661,18 @@
     "processes": [],
     "verdict": "blocked",
     "counts": {
-     "error": 5,
+     "error": 6,
      "warn": 1,
-     "info": 2
-    }
+     "info": 1
+    },
+    "imageRepairs": [
+     [
+      "nx",
+      [
+       "attach"
+      ]
+     ]
+    ]
    }
   },
   {
@@ -4036,16 +4044,16 @@
     "findings": [
      [
       "storage.image-detached-blocking",
-      "warn",
+      "error",
       "dependencies"
      ]
     ],
     "waits": [],
     "processes": [],
-    "verdict": "degraded",
+    "verdict": "blocked",
     "counts": {
-     "error": 0,
-     "warn": 1,
+     "error": 1,
+     "warn": 0,
      "info": 0
     },
     "imageRepairs": [
@@ -4220,17 +4228,17 @@
      ],
      [
       "storage.image-detached-blocking",
-      "warn",
+      "error",
       "graph"
      ],
      [
       "storage.image-detached-blocking",
-      "warn",
+      "error",
       "leases"
      ],
      [
       "storage.image-detached-blocking",
-      "warn",
+      "error",
       "tools"
      ]
     ],
@@ -4238,8 +4246,8 @@
     "processes": [],
     "verdict": "blocked",
     "counts": {
-     "error": 2,
-     "warn": 3,
+     "error": 5,
+     "warn": 0,
      "info": 0
     },
     "imageRepairs": [

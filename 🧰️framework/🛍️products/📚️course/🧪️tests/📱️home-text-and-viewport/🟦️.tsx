@@ -20,7 +20,8 @@ describe("🏠️ the layout in the learner's text size", () => {
 
   it("lets a card that is taller than its cell after all scroll inside the cell, never over the card below", () => {
     const cell = (property: string): string => new RegExp(`\\.course-home-cell \\{[^}]*\\b${property}: ([^;]+);`, "u").exec(stylesheet)?.[1] ?? "";
-    expect(cell("overflow")).toBe("hidden");
+    expect(cell("overflow")).toBe("clip");
+    expect(cell("overflow-clip-margin")).toBe("var(--stroke-hairline)");
     expect(cell("padding")).toBe("");
   });
 

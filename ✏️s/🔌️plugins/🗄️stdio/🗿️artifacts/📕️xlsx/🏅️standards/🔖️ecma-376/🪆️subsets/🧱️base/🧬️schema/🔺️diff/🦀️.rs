@@ -5,10 +5,9 @@
 //! **OPC diff**: the shared [`OpcDiff`] of `zip::opc::diff` (content-type entries, parts and relationship owners as positional list deltas); the XML parts are a
 //! positional list delta of the kernel (`protocol::list_delta`) whose patch carries the part's content type and its document diff.
 
-#[cfg(test)]
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxXmlPart};
-#[cfg(test)] use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet};
 use crate::standards::v_ecma_376::subsets::base::schema::vocabulary::{element_matches, expanded_element_name, namespace_scope, SML_NS, SML_NS_STRICT};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use framework_schema::ArtifactSchema;
@@ -17,12 +16,11 @@ use protocol::{MutationApplyError, MutationApplyResult, ColdMutationDiff, Mutati
 use semio_s_artifact_stdio_xml::schema::diff::XmlDiff;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml::{XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
-#[cfg(test)]
 use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use semio_s_artifact_stdio_contract::kernel::list_delta::RowPatch;
 use semio_s_artifact_stdio_contract::list_delta::compose_optional;
 pub use semio_s_artifact_stdio_zip::opc::diff::OpcDiff;
-#[cfg(test)] use std::collections::BTreeMap;
+use std::collections::BTreeMap;
 
 //#region 🔖️XmlPartDiffTypes
 /// 🩹 The sparse patch of one XML part: its content type and its document diff.
@@ -247,9 +245,8 @@ impl protocol::ColdDiffAlgebra<XlsxSnapshot> for XlsxDiff {
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests, same shape docx's own
 /// `snapshot_a()`/`snapshot_b()`/`demo_diff_cases()` establish (this wave's OPC pattern-setter).
 /// Promoted from the former test-only `sample_a`/`sample_b` (renamed for the same convention).
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn snapshot_a() -> XlsxSnapshot {
+pub fn snapshot_a() -> XlsxSnapshot {
     crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet { name: "Sheet1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
@@ -259,9 +256,8 @@ pub(crate) fn snapshot_a() -> XlsxSnapshot {
     })
 }
 
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn snapshot_b() -> XlsxSnapshot {
+pub fn snapshot_b() -> XlsxSnapshot {
     let mut snap = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
         sheets: vec![
             XlsxSheet {
@@ -285,9 +281,8 @@ pub(crate) fn snapshot_b() -> XlsxSnapshot {
 }
 
 /// 🧪️ The demo cases proper, built declaratively: `default()` (empty diff) and an archive comment edit.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<XlsxDiff> {
+pub fn demo_diff_cases() -> Vec<XlsxDiff> {
     vec![XlsxDiff::default(), XlsxDiff { opc: Some(OpcDiff { comment: Some("archive comment".into()), ..Default::default() }), xml_parts: None }]
 }
 //#endregion 🔖️DemoCases

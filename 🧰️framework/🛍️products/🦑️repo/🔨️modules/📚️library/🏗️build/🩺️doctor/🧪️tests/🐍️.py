@@ -143,7 +143,7 @@ def analyze(policy, facts):
             if p["state"] == "misplaced":
                 add("storage.image-misplaced", "error", p["id"])
             if p["state"] == "detached":
-                add("storage.image-detached-blocking", "warn", p["id"]) if storage.get("loaderBlocked") else add("storage.image-detached", "info", p["id"])
+                add("storage.image-detached-blocking", "error", p["id"]) if storage.get("loaderBlocked") else add("storage.image-detached", "error", p["id"])
             if p["publication"] != "none":
                 add("storage.publication-pending", "error" if (p["publicationAgeSeconds"] or 0) >= s["publicationErrorSeconds"] else "info", p["id"])
             if p["state"] == "mounted" and p["freeBytes"] is not None and p["capacityBytes"]:
@@ -283,14 +283,14 @@ def analyze(policy, facts):
 
 
 def image_repairs(storage):
-    """The partitions the storage-images repair touches and its steps: misplaced images detach from the stray mount then attach, detached images attach while the loader is blocked; the leases image goes first."""
+    """The partitions the storage-images repair touches and its steps: misplaced images detach from the stray mount then attach, detached images attach whether or not the loader is blocked; the leases image goes first."""
     plan = []
     for p in (storage or {}).get("partitions", []):
         if p["image"] == "damaged":
             continue
         if p["state"] == "misplaced":
             plan.append([p["id"], ["detach", "attach"]])
-        elif p["state"] == "detached" and storage.get("loaderBlocked"):
+        elif p["state"] == "detached":
             plan.append([p["id"], ["attach"]])
     return [r for r in plan if r[0] == "leases"] + [r for r in plan if r[0] != "leases"]
 

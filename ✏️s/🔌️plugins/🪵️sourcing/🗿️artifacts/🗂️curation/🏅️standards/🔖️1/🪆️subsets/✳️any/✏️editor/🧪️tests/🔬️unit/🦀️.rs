@@ -104,6 +104,14 @@ pub(crate) mod context {
         result
     }
 
+    /// 🌐️ Dispatches one UI action through the action endpoint with the JSON arguments the browser host delivers, then settles it.
+    pub async fn dispatch_wire(app: &mut SourcingTestApp, action: &str, arguments: &str) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
+        let args = Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(arguments, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire json")));
+        let result = semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await;
+        settle(app).await;
+        result
+    }
+
     /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
     pub async fn settle(app: &mut SourcingTestApp) -> Vec<semio_framework::kernel::Effect> {
         let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("complete original typed operation settlement");
@@ -346,12 +354,96 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: distilled })).is_ok());
 }
 
+/// 🧩️ A pack whose distilled roster outgrows the seal's one-page buffer, so the canonical seal must run its second hashing pass.
+fn two_pass_contributions_pack() -> String {
+    let entries: Vec<_> = (0..6)
+        .map(|index| semio_framework::ProgramContributionEntry {
+            plugin_id: format!("sourcing-module-extra-{index}"),
+            topic_contribution: Some(semio_framework::TopicContribution::new(
+                "sourcing.module",
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String(crate::standards::v1::subsets::any::schema::domain::SOURCING_CURATION_APP_ID.to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String(format!("sourcing-module-extra-{index}"))),
+                    ("label".to_string(), semio_framework::DslValue::String("m".repeat(160))),
+                    ("typologyJson".to_string(), semio_framework::DslValue::String("[]".to_string())),
+                    ("kindsJson".to_string(), semio_framework::DslValue::String("[]".to_string())),
+                ]),
+            )),
+        })
+        .collect();
+    semio_framework_pack_json::to_json_string(&entries)
+}
+
+/// 🎁️ LAW: a roster past the seal's one-page buffer settles through the same typed `setContributions` operation.
+#[semio_framework_async_macros::async_test]
+async fn a_two_pass_roster_settles_through_the_typed_set_contributions_operation() {
+    let mut app = new_app().await;
+    let pack = two_pass_contributions_pack();
+    let distilled = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert!(distilled.len() > 1_024, "the roster must outgrow the seal page ({} B)", distilled.len());
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: pack })).await;
+}
+
 /// 🎁️ LAW: the real demonstrator pack, dispatched as the typed `setContributions` operation, settles instead of stalling.
 #[semio_framework_async_macros::async_test]
 async fn the_real_demonstrator_pack_settles_through_the_typed_set_contributions_operation() {
     let mut app = new_app().await;
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: demonstrator_contributions_pack() })).await;
 }
+
+/// 🌐️ LAW: the real demonstrator pack settles through the typed `setContributions` operation under the browser host's per-turn grant (depth 64, 520 KB copy, 16 MiB capacity, 1 MiB release, 64 items) instead of the native fixture stock.
+#[semio_framework_async_macros::async_test]
+async fn the_real_demonstrator_pack_settles_under_the_browser_grant() {
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+    let mut app = new_app().await;
+    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
+    dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: demonstrator_contributions_pack() })).await;
+}
+/// 🧹️ Drives the runtime's live-cleanup clock the way the browser host does after every actor turn: one item and one page of bytes per maintenance unit, every unit required not to fault.
+fn drive_live_cleanup(app: &mut crate::editor_unit_tests::context::SourcingTestApp, units: usize) {
+    use semio_plugin::{MountedOwnerIdentityV1, MountedOwnerPhaseV1, MountedOwnerTurnV1};
+    for _ in 0..units {
+        let cx = app.1.cx();
+        let identity = MountedOwnerIdentityV1 { instance_id: 1, operation: cx.operation(), generation: cx.generation() };
+        let phase = app.0.mounted_owner_maintenance_phase().expect("maintenance phase");
+        let mut policy = semio_plugin::artifact_app_laws::fixture_mounted_policy();
+        let loan = match phase { MountedOwnerPhaseV1::Preparation => &mut policy.preparation, MountedOwnerPhaseV1::Maintenance => &mut policy.maintenance, MountedOwnerPhaseV1::Close => &mut policy.close };
+        loan.maximum_items = loan.maximum_items.min(1);
+        loan.maximum_copy_bytes = loan.maximum_copy_bytes.min(4096);
+        let Some(mut turn) = MountedOwnerTurnV1::admit(1, identity, phase, policy, cx).expect("maintenance admission") else { continue };
+        app.0.mounted_owner_maintenance_step(&mut turn).expect("[DEBUG] a live-cleanup maintenance unit never faults");
+    }
+}
+
+/// 🎚️ LAW: the minimum-availability filter, typed or stepped, settles under the browser host's per-turn grant, applies, and its retired owners clean up without faulting the instance.
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_filter_settles_under_the_browser_grant_and_keeps_the_instance_alive() {
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+    let mut app = new_app().await;
+    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
+    for payload in [set_filter_min_availability::SetFilterMinAvailability { delta: None, value: Some(3.0) }, set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }, set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }] {
+        dispatch(&mut app, SourcingCurationCommand::SetFilterMinAvailability(payload)).await;
+        drive_live_cleanup(&mut app, 256);
+    }
+    dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "timber".into() })).await;
+    drive_live_cleanup(&mut app, 256);
+}
+
+/// 🔢️ LAW: the minimum-availability input delivers its number over the wire — as a JSON number, a whole number, or the input's text — and every form applies, then cleans up without faulting the instance.
+#[semio_framework_async_macros::async_test]
+async fn the_min_availability_wire_payload_applies_in_every_number_form() {
+    use crate::editor_unit_tests::context::dispatch_wire;
+    let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 520 * 1024, maximum_capacity_bytes: 16 * 1024 * 1024, maximum_release_bytes: 1024 * 1024, maximum_depth: 64 };
+    let mut app = new_app().await;
+    let _browser = semio_plugin::artifact_app_laws::arm_host_turn_grant(stock);
+    for arguments in [r#"{"value":3}"#, r#"{"value":4.0}"#, r#"{"delta":1}"#, r#"{"delta":-1}"#, r#"{"value":"5"}"#, r#"{"value":6,"gesture":"input:1","commit":false}"#, r#"{"value":6,"gesture":"input:1","commit":true}"#, r#"{"value":7,"gesture":"input:2","commit":true}"#, r#"{"gesture":"input:3","abort":"blur"}"#] {
+        let outcome = dispatch_wire(&mut app, "setFilterMinAvailability", arguments).await;
+        println!("[DEBUG] min-availability {arguments} -> {:?}", outcome.as_ref().map(|_| ()).map_err(|fault| format!("{fault:?}")));
+        drive_live_cleanup(&mut app, 256);
+    }
+    dispatch(&mut app, SourcingCurationCommand::SetFilterQuery(set_filter_query::SetFilterQuery { value: "timber".into() })).await;
+}
+
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor_unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
 use semio_plugin::artifact_app_laws;
@@ -640,4 +732,18 @@ fn retained_table_lanes_restore_complete_neutral_owner() {
     assert_eq!(restored.rows_json, scene.rows_json);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.columns_json).unwrap(), fixture["columns"]);
     assert_eq!(serde_json::from_str::<serde_json::Value>(&restored.rows_json).unwrap(), fixture["rows"]);
+}
+
+/// 🖱️ A pick in the framework-owned `rows` domain owes a repaint to every window body that reads that selection: the Preview follows the pick, so its body is in the declared refresh scope, never left on its previous render until an unrelated edit dirties it.
+#[test]
+fn a_rows_pick_dirties_every_window_that_reads_the_rows_selection() {
+    use semio_plugin::{interaction_declared_refresh_scope, interaction_window_bodies_by_domain, panel_leaf_body_keys, InteractionVerb};
+    use semio_plugin::plugin_app_close_prelude::UiDirtyScope;
+    let definition = crate::editor::sourcing::create_sourcing_curation_app();
+    let by_domain = interaction_window_bodies_by_domain(&definition);
+    let panels = panel_leaf_body_keys(&definition);
+    let Some(UiDirtyScope::Partial { window_bodies, .. }) = interaction_declared_refresh_scope(InteractionVerb::Select, &["rows"], &by_domain, &panels) else { panic!("a rows pick answers a partial scope") };
+    for window in &definition.window_kinds {
+        assert!(window_bodies.contains(&window.body_key), "window body {} reads the rows selection but a rows pick would not repaint it", window.body_key);
+    }
 }

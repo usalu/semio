@@ -1,0 +1,14 @@
+{
+ "extends": "../../../../../../../tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "skipLibCheck": true,
+  "strict": true,
+  "incremental": false
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧭️node-kind-trigger/🟦️.ts",
+  "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧭️node-kind-trigger/🟦️.ts"
+ ]
+}

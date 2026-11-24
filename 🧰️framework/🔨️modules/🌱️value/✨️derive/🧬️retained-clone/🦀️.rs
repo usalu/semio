@@ -148,7 +148,7 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
     let (variants, arms): (Vec<_>, Vec<_>) = rows.iter().map(|(variant, fields, pattern, values)| {
         let fields: Vec<_> = fields.iter().zip(values).collect();
         let (ty, seed) = retirement_fields(&value_crate, &fields);
-        (quote!(#variant(#ty)), quote!(#pattern => #cursor_name { inner: #inner_name::#variant(#seed) }))
+        (quote!(#variant(#ty)), quote!(#pattern => #value_crate::retirement::ShellCursor(#cursor_name { inner: #inner_name::#variant(#seed) })))
     }).unzip();
     let (cursor_declaration,cursor_type,body)={
         let names=rows.iter().map(|(variant,_,_,_)|variant).collect::<Vec<_>>();
@@ -156,28 +156,11 @@ pub fn expand_retire_owned(input: &DeriveInput) -> syn::Result<TokenStream> {
         let declaration=quote!{
           #[doc(hidden)] #visibility struct #cursor_name #impl_generics #where_clause{inner:#inner_name #ty_generics}
           enum #inner_name #impl_generics #where_clause{#(#variants),*}
-          impl #impl_generics #value_crate::retirement::RetirementCursor for #cursor_name #ty_generics #where_clause{
-            fn terminal_is_empty(&self)->bool{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::terminal_is_empty(value)),*#tail}}
-            fn next_demand(&self,body:usize)->Result<#value_crate::RetirementDemand,#value_crate::ValueError>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_demand(value,body)),*#tail}}
-            fn next_computational_work(&self,body:usize)->Result<u64,#value_crate::ValueError>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_computational_work(value,body)),*#tail}}
-            fn close_into<'reply>(&mut self,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>,reply:#value_crate::retained_clone::OriginalEffectReply<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>)->Result<#value_crate::retained_clone::OriginalEffectReplyComplete<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>,#value_crate::ValueError>{match &mut self.inner{#(#inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::close_into(value,body,effect,reply)),*#tail}}
-            fn recover_close_into<'reply>(&mut self,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>,reply:#value_crate::retained_clone::OriginalEffectReply<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>)->Result<#value_crate::retained_clone::OriginalEffectReplyComplete<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>,#value_crate::ValueError>{match &mut self.inner{#(#inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::recover_close_into(value,body,effect,reply)),*#tail}}
-            fn close_original_into<'reply>(&mut self,original:&mut #value_crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>,reply:#value_crate::retained_clone::OriginalEffectReply<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>)->Result<#value_crate::retained_clone::OriginalEffectReplyComplete<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>,#value_crate::ValueError>{match &mut self.inner{#(#inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::close_original_into(value,original,body,effect,reply)),*#tail}}
-            fn recover_close_original_into<'reply>(&mut self,original:&mut #value_crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>,reply:#value_crate::retained_clone::OriginalEffectReply<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>)->Result<#value_crate::retained_clone::OriginalEffectReplyComplete<'reply,#value_crate::retirement::RetirementStep,#value_crate::OriginalRetirementFailure>,#value_crate::ValueError>{match &mut self.inner{#(#inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::recover_close_original_into(value,original,body,effect,reply)),*#tail}}
-            fn close_step_controlled(&mut self,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>,control:&mut dyn #value_crate::OriginalRetirementControl)->#value_crate::retirement::RetirementStep{match &mut self.inner{#(#inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::close_step_controlled(value,body,effect,control)),*#tail}}
-            fn requires_original_control(&self)->bool{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::requires_original_control(value)),*#tail}}
-            fn close_original_step(&mut self,original:&mut #value_crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut #value_crate::RetainedAllocationEffect<'_>)->#value_crate::retirement::RetirementStep{match &mut self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::close_original_step(value,original,body,effect)),*#tail}}
-            fn requires_original_birth(&self)->bool{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::requires_original_birth(value)),*#tail}}
-            fn close_original_birth_step(&mut self,original:&mut #value_crate::OriginalRetirementCloseLoan<'_>,grant:#value_crate::RetainedCloneGrant)->#value_crate::retirement::RetirementStep{match &mut self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::close_original_birth_step(value,original,grant)),*#tail}}
-            fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(::std::mem::size_of::<Self>())}
-            fn next_birth_bytes(&self,body:usize)->Option<usize>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_birth_bytes(value,body)),*#tail}}
-            fn next_close_byte_demand(&self)->Option<usize>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_close_byte_demand(value)),*#tail}}
-            fn next_depth_demand(&self)->Result<usize,#value_crate::ValueError>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_depth_demand(value)),*#tail}}
-            fn next_work_byte_demand(&self)->Result<usize,#value_crate::ValueError>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_work_byte_demand(value)),*#tail}}
-            fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,#value_crate::ValueError>{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::next_selected_work_byte_demand(value,body)),*#tail}}
-            fn allows_admitted_narrow_work(&self)->bool{match &self.inner{#( #inner_name::#names(value)=>#value_crate::retirement::RetirementCursor::allows_admitted_narrow_work(value)),*#tail}}
+          impl #impl_generics #value_crate::retirement::RetirementShell for #cursor_name #ty_generics #where_clause{
+            fn shell(&self)->&dyn #value_crate::retirement::RetirementCursor{match &self.inner{#( #inner_name::#names(value)=>value as &dyn #value_crate::retirement::RetirementCursor),*#tail}}
+            fn shell_mut(&mut self)->&mut dyn #value_crate::retirement::RetirementCursor{match &mut self.inner{#( #inner_name::#names(value)=>value as &mut dyn #value_crate::retirement::RetirementCursor),*#tail}}
           }
-        };(declaration,quote!(#cursor_name #ty_generics),quote!(match self{#(#arms),*}))
+        };(declaration,quote!(#value_crate::retirement::ShellCursor<#cursor_name #ty_generics>),quote!(match self{#(#arms),*}))
     };
     let components = field_types(input);
     let ready = match &input.data {

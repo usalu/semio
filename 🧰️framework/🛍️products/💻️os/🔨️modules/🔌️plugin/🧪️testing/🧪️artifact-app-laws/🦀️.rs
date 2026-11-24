@@ -94,7 +94,7 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             let mut output=None;
             let demand=mounted.result_page_presentation_demands()?;
-            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|{
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_plugin_ownership::bounded_ownership::original_lifecycle_source_effect_step(cx,grant,demand,|_,effect|{
                 let (page,progress)=mounted.take_result_page(effect)?;
                 let complete=page.is_some();output=page;
                 Ok((if complete{PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)},complete))
@@ -131,24 +131,15 @@ pub use super::{FixtureUiArena, OriginalFixtureCaller, OriginalFixtureScope, Ori
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    admit_document_archive_load, arm_host_lifetime, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock,
+    admit_document_archive_load, arm_host_lifetime, arm_host_turn_fuel, arm_host_turn_grant, fixture_end_turn, fixture_renew_turn, HostLifetimeGuard, HostLifetimeStock, HostTurnFuelGuard, HostTurnGrantGuard,
     dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, CallerIdentityWork, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
-    fixture_step_context_for, load_document, join_document, load_document_text, settle_document_archive_load, plugin_load_document,
+    fixture_step_context_for,fixture_step_context_funded, load_document, join_document, load_document_text, settle_document_archive_load, plugin_load_document,
     plugin_load_document_text, plugin_settle_store_constructor, with_document_view,
     FixtureStepOutcome, KeyedCancellationFixture, LAW_DOCUMENT_LOAD_OPERATION,
 };
 
-#[path = "🌳️fixture-tree-projection-and-scenes/🦀️.rs"]
-mod fixture_tree_projection_and_scenes;
-pub use fixture_tree_projection_and_scenes::{
-    built_carrier_text, built_surface_scene, decode_fixture_scene, decode_fixture_scene_with_lanes,
-    document_input_commit_findings, document_input_commit_lint, fixture_carrier_text,
-    fixture_scene_node, observe_and_retire_fixture_tree, project_and_retire_fixture_tree,
-    FIXTURE_TREE_MAX_DEPTH, FIXTURE_TREE_MAX_NODES, FIXTURE_TREE_RETIRE_STEPS,
-};
-use fixture_tree_projection_and_scenes::project_fixture_node;
 
 #[path = "🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs"]
 mod registered_app_construction_and_typed_operation_settlement;
@@ -158,38 +149,17 @@ pub use registered_app_construction_and_typed_operation_settlement::{
     new_app_with_registry_boxed, new_app_with_registry_boxed_and_members, new_registered_app, new_registered_app_boxed_with_members, new_registered_app_with_members,
     publish_framework_schemas,
     register_framework_reserved_action_factories, retain_original_ownership_receipts,
-    settle_extension_invocations, settle_registered_typed_operation, settle_store_constructor,
+    settle_extension_invocations, settle_registered_typed_operation, settle_registered_typed_operation_within, settle_store_constructor,
     settle_store_constructor_close, PendingExtensionInvocation, SettledExtensionInvocations,
     TypedOperationFixtureOwnershipReceipt, TypedOperationFixtureReceipt,
 };
 
-#[path = "👯️paired-apps-history-and-convergence-laws/🦀️.rs"]
-mod paired_apps_history_and_convergence_laws;
-pub use paired_apps_history_and_convergence_laws::{
-    assert_declared_actions_bridge_to_commands, assert_ingest_idempotent,
-    assert_proposes_transaction, assert_registered_ingest_idempotent,
-    assert_registered_ingest_idempotent_with_members, assert_transaction_commits_as_one_edit,
-    assert_transaction_rollback_leaves_state_untouched, assert_two_instances_converge,
-    assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members,
-    assert_undo_redo_round_trip, paired_apps, paired_registered_apps,
-    paired_registered_apps_boxed_with_members, paired_registered_apps_with_members, settle_history_verb, settle_history_verb_as,
-};
 
 #[path = "👥️presence-round-trip-law/🦀️.rs"]
 mod presence_round_trip_law;
 pub use presence_round_trip_law::{assert_presence_round_trip, publish_fixture_presence_roster};
 
-#[path = "🪧️pane-smoke-law/🦀️.rs"]
-mod pane_smoke_law;
-pub use pane_smoke_law::{assert_pane_smoke_by_example, PaneSmokeLanguage, PANE_SMOKE_LOCALES};
 
-#[path = "🔎️declared-verb-probing/🦀️.rs"]
-mod declared_verb_probing;
-pub use declared_verb_probing::{
-    agent_preview, assert_declared_verbs_honour_their_declarations,
-    dispatch_addressed_fixture_on_original, probe_agent_lane, probe_declared_verbs,
-    observe_registered_fixture_app, render_registered_fixture_app, render_registered_fixture_app_over, DeclaredVerbBoot,
-};
 
 #[path = "🔭️bounded-viewer-fixture-and-viewer-laws/🦀️.rs"]
 mod bounded_viewer_fixture_and_viewer_laws;

@@ -562,7 +562,7 @@ macro_rules! norm_live_acceptance {
                 use semio_s_plugin_norm_structural_scene::projection::ViewOptions;
                 let doc = Doc::default();
                 let domain = $crate::interaction_domain_id(VARIANT);
-                let topology = $crate::live_interaction_topology::<$app>(&doc, &domain).expect("the default document admits a topology");
+                let topology = $crate::live_interaction_topology_unfiltered::<$app>(&doc, &domain).expect("the default document admits a topology");
                 let known: std::collections::HashSet<&str> = topology.domains[&domain].ordered.iter().map(|node| node.id.as_str()).collect();
                 let scene = <$app as $crate::NormLiveEditor>::live_scene(&doc, ViewOptions::none());
                 assert!(!scene.entities.is_empty() && scene.entities.iter().all(|drawn| $crate::viewport3d::picking::entity_address(drawn.entity.kind, &drawn.entity.id).is_some_and(|address| known.contains(address.as_str()))), "every drawn entity is a node");
@@ -572,6 +572,7 @@ macro_rules! norm_live_acceptance {
 
             #[test]
             fn every_editor_action_is_reachable_by_touch_a_list_a_long_press_menu_and_nudge_buttons_in_both_languages() {
+                let _arena = $crate::law_ui_arena();
                 use $crate::device_profiles::{device_profile, PRIORITY};
                 use $crate::direct_manipulation::{nudge, writes_for, Modifiers};
                 use $crate::viewport3d::config::DeviceClass;
@@ -593,10 +594,10 @@ macro_rules! norm_live_acceptance {
                 let first = entities.first().expect("the default document offers an entity");
                 let (collection, ids) = $crate::selected_rows(&tree, std::slice::from_ref(&first.id)).expect("the first entity is a row of the document");
                 let context = $crate::HostContext { collection: collection.clone(), ids: ids.clone(), clip_json: Some("{}".to_owned()) };
-                let menu = $crate::touch_menu(ids.len(), true, None);
-                assert!(menu.iter().all(|entry| entry.enabled), "with a selection and a clip every entry of the Edit menu is on");
+                let menu = $crate::touch_menu(ids.len(), true, Some(0));
+                assert!(menu.iter().all(|entry| entry.enabled), "with a selection, a clip and a governing check every entry of the Edit menu is on");
                 let select_all = $crate::accessibility::focus_order::shortcut_action_id(&$crate::accessibility::focus_order::ShortcutAction::SelectAll);
-                for entry in menu.iter().filter(|entry| entry.action_id != select_all) {
+                for entry in menu.iter().filter(|entry| entry.action_id != select_all && entry.action_id != $crate::TOUCH_FOCUS_CHECK_ID) {
                     let (tool, args) = $crate::host_entity_call(&entry.action_id, &context).unwrap_or_else(|| panic!("{} is an entity route", entry.action_id)).unwrap_or_else(|message| panic!("{}: {message}", entry.action_id));
                     <$app as semio_plugin::ArtifactEditor>::command_from_action(tool, &mut Some(args), &mut None).unwrap_or_else(|fault| panic!("the editor refuses {tool} from the Edit menu: {fault:?}"));
                     assert!(!entry.label.en.is_empty() && !entry.label.de.is_empty() && entry.label.en != entry.label.de, "{}: labelled in both languages", entry.action_id);

@@ -367,6 +367,6 @@ impl RetainedPackSymbolTable {
 
 impl Drop for RetainedPackSymbolTable {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained symbol table reached Drop before terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained symbol table reached Drop before terminal-empty close");
     }
 }

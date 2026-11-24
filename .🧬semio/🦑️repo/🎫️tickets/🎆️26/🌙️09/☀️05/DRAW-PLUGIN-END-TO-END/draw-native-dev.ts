@@ -56,8 +56,9 @@ try {
       ...process.env,
       [SCRIPT_PROVIDERS_ENV]: writeScriptProviderMapV1(repositoryScriptProvidersV1()),
       SEMIO_BUILD_MODE: mode,
+      SEMIO_WORKSPACE_ROOT: root,
       SEMIO_LANGUAGE: "en",
-      SEMIO_OFFLOAD: process.env.SEMIO_OFFLOAD ?? "auto",
+      SEMIO_OFFLOAD: process.env.SEMIO_OFFLOAD ?? "distribute",
       SEMIO_PLUGIN_CATALOG: join(root, "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"),
     });
     const task = Bun.spawn(["repo", script, ...args], { cwd: workingDirectory, env, stdout: log.fd, stderr: log.fd });

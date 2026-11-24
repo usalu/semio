@@ -23,7 +23,7 @@ import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForL
 import { isSlug, roomScope, type Challenge, type Slug } from "@semio-tech/course";
 import { COURSE_LOCALES, isCourseLocale, courseText, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { isChallenge, isRecord, type LocalStore } from "../💾️persistence/🟦️.ts";
-import { BodyButton, CELL, CardAction, CardIcon, GROUP, PageFrame, CourseCard, RowList, Segments, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, GROUP, PageFrame, CourseCard, RowList, Segments, ToggleCell, cn, type PaneView } from "../🪟️chrome/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { PanePeers } from "../👥️presence/🟦️.tsx";
 import { OTHERS_CHOICES, type OthersChoice } from "../🗳️crowd/🟦️.tsx";
@@ -197,7 +197,7 @@ export function LanguageChoice(props: { readonly onChoose: (locale: CourseLocale
       <RowList>
         {COURSE_LOCALES.map((locale) => (
           <li key={locale} lang={locale} {...CELL} className="flex flex-col">
-            <BodyButton row onClick={() => props.onChoose(locale)}>{courseText(locale)(LOCALE_NAMES[locale])}</BodyButton>
+            <BodyButton icon="globe" row onClick={() => props.onChoose(locale)}>{courseText(locale)(LOCALE_NAMES[locale])}</BodyButton>
             <span className="px-double pb-double text-sm">{courseText(locale)("course.preferences.choose")}</span>
           </li>
         ))}
@@ -227,7 +227,6 @@ export function PreferencesPanel(props: { readonly preferences: CoursePreference
   const icons = effectiveIconMotion(preferences.animateIcons, preferences.iconsChosen);
   const row = "course-setting flex min-w-0 flex-col";
   const name = "course-setting-name text-xs text-muted-foreground";
-  const allowance = cn("course-target flex w-full items-center gap-single p-double text-sm", resting ? "cursor-not-allowed text-muted-foreground" : "cursor-pointer");
   const setting = (label: string, control: ReactElement, notes?: ReactElement | null): ReactElement => (
     <div {...GROUP} {...CELL} className={row}>
       <span {...CELL} className={cn(name, "px-double py-single")} aria-hidden="true">
@@ -256,14 +255,12 @@ export function PreferencesPanel(props: { readonly preferences: CoursePreference
           {cast.length === 0 ? null : note(text("course.preferences.petsCast", { names: cast.join(" · ") }))}
         </>,
       )}
-      <label {...CELL} className={allowance} data-pets-allow="play">
-        <input type="checkbox" className="course-check" checked={!resting && preferences.petsPlay} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsPlay: event.target.checked })} />
+      <ToggleCell icon="smile" className="w-full text-sm" data={{ "data-pets-allow": "play" }} checked={!resting && preferences.petsPlay} disabled={resting} describedBy={resting ? restingId : undefined} onChange={(petsPlay) => onChange({ ...preferences, petsPlay })}>
         {text("course.preferences.petsPlay")}
-      </label>
-      <label {...CELL} className={allowance} data-pets-allow="mischief">
-        <input type="checkbox" className="course-check" checked={!resting && preferences.petsMischief} disabled={resting} aria-describedby={resting ? restingId : undefined} onChange={(event) => onChange({ ...preferences, petsMischief: event.target.checked })} />
+      </ToggleCell>
+      <ToggleCell icon="sparkles" className="w-full text-sm" data={{ "data-pets-allow": "mischief" }} checked={!resting && preferences.petsMischief} disabled={resting} describedBy={resting ? restingId : undefined} onChange={(petsMischief) => onChange({ ...preferences, petsMischief })}>
         {text("course.preferences.petsMischief")}
-      </label>
+      </ToggleCell>
       {resting ? (
         <p id={restingId} {...CELL} className="m-0 p-double text-xs text-muted-foreground">
           {text("course.preferences.petsResting")}
@@ -271,14 +268,12 @@ export function PreferencesPanel(props: { readonly preferences: CoursePreference
       ) : null}
       <PetsPlay text={text} row={row} name={name} />
       {setting(text("course.preferences.others"), <Segments flush label={text("course.preferences.others")} options={OTHERS_CHOICES.map((choice) => ({ value: choice, label: text(OTHERS_CHOICE_LABELS[choice]), icon: OTHERS_CHOICE_ICONS[choice] }))} value={preferences.others} onChange={(others) => onChange({ ...preferences, others })} />)}
-      <label {...CELL} className="course-target flex w-full cursor-pointer items-center gap-single p-double text-sm">
-        <input type="checkbox" className="course-check" checked={preferences.showCursors} onChange={(event) => onChange({ ...preferences, showCursors: event.target.checked })} />
+      <ToggleCell icon="users" className="w-full text-sm" checked={preferences.showCursors} onChange={(showCursors) => onChange({ ...preferences, showCursors })}>
         {text("course.preferences.cursors")}
-      </label>
-      <label {...CELL} className="course-target flex w-full cursor-pointer items-center gap-single p-double text-sm">
-        <input type="checkbox" className="course-check" checked={icons} onChange={(event) => onChange(withIcons(preferences, event.target.checked))} />
+      </ToggleCell>
+      <ToggleCell icon="sparkles" className="w-full text-sm" checked={icons} onChange={(shown) => onChange(withIcons(preferences, shown))}>
         {text("course.preferences.motion")}
-      </label>
+      </ToggleCell>
     </div>
   );
 }
@@ -308,7 +303,7 @@ export function PreferencesCard(props: { readonly text: CourseText; readonly rev
       icon={<CardIcon icon="settings" />}
       title={text("course.preferences.title")}
       footerRight={
-        <CardAction primary onClick={onOpen}>
+        <CardAction icon="arrow-right" primary onClick={onOpen}>
           {text("course.home.openPage")}
         </CardAction>
       }

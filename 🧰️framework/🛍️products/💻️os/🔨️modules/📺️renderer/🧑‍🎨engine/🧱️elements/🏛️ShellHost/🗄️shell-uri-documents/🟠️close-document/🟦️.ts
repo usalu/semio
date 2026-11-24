@@ -324,7 +324,7 @@ export function useCloseDocumentState({ shellStateRef, openDocumentSessionsRef, 
   /** 🔁️ The person's own gesture reattaches the remembered folder; its archive is restored like a fresh load. */
   const reconnectLocalFolder = useCallback((binding: LocalFolderBinding) => {
     setFolderReconnectBusy(true);
-    void attachSyncTarget({ kind: "folder", path: binding.folder.path }).finally(() => setFolderReconnectBusy(false));
+    void attachSyncTarget({ kind: "folder", path: binding.folder.path, documentId: binding.documentId }).finally(() => setFolderReconnectBusy(false));
   }, [attachSyncTarget]);
 
   const browseSyncBackbonePath = useCallback(async (kind: "file" | "folder") => {

@@ -39,6 +39,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
 window_chip = _manim_module.window_chip
@@ -94,22 +95,6 @@ TITLE_DE = "Wie viel Luft?"
 
 
 #region Beat helpers
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in
-    ``1_introduction/scene_1.py`` and ``2_conduction/scene_2.py`` so every module
-    footnotes its norm identically. Module 3 is the ventilation-loss chain of
-    DIN EN 12831-1 (Q̇_V = V̇ · c_Luft · Δθ); the systems beat cites DIN 1946-6.
-    Beats whose diagram already prints the standard in full get no corner chip.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Shared visual motifs
 #region Moving air
 def _streams(streams, rt: float, *, speed: float = 0.8, waves: int = 3):
@@ -484,7 +469,7 @@ class Beat1_Innenvolumen(Scene):
         H = HOUSE
 
         subtitle = section_heading(tr("Gross volume and net volume", "Bruttovolumen und Nettovolumen"))
-        din = _din_ref(_references.cite("din-ts-18599-1", "din-en-12831-1"))
+        din = reference_chip(_references.cite("din-ts-18599-1", "din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -730,7 +715,7 @@ class Beat2_Luftwechselrate(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Air change rate n", "Luftwechselrate n"))
-        din = _din_ref(_references.cite("din-en-12831-1", "din-1946-4"))
+        din = reference_chip(_references.cite("din-en-12831-1", "din-1946-4"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "volume"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -928,7 +913,7 @@ class Beat3_Volumenstrom(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Volume flow: one airflow, two notations", "Volumenstrom: ein Luftstrom, zwei Schreibweisen"))
-        din = _din_ref(_references.cite("din-en-12831-1", "din-en-16798-1"))
+        din = reference_chip(_references.cite("din-en-12831-1", "din-en-16798-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "area"))
         self.play(FadeIn(caption), run_time=0.3)

@@ -78,17 +78,6 @@ pub mod standards {
                         pub mod set_trim_box;
                     }
                 }
-                #[path = "."]
-                pub mod io {
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../../../🖨️x/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/🦀️.rs"]
-                            pub mod set_output_intent;
-                        }
-                    }
-                }
             }
             #[path = "."]
             pub mod e {

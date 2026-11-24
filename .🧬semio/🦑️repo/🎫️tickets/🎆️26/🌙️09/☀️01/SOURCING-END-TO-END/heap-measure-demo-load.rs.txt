@@ -1,0 +1,35 @@
+
+#[semio_framework_async_macros::async_test]
+async fn tmp_demo_load_heap_measure() {
+    use semio_framework_trace::{peak_heap_bytes, reset_heap_peak, retained_heap_bytes};
+    let _ = &semio_framework_value_testing_allocator::OBSERVE_ALLOCATIONS;
+    let mark = |label: &str| eprintln!("[DEBUG] heap {label} retained={} peak={}", retained_heap_bytes(), peak_heap_bytes());
+    mark("start");
+    static ARMED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    static COUNT: [std::sync::atomic::AtomicUsize; 40] = [const { std::sync::atomic::AtomicUsize::new(0) }; 40];
+    static BYTES: [std::sync::atomic::AtomicUsize; 40] = [const { std::sync::atomic::AtomicUsize::new(0) }; 40];
+    unsafe extern "C" { fn backtrace(buffer: *mut *mut core::ffi::c_void, size: i32) -> i32; fn backtrace_symbols_fd(buffer: *const *mut core::ffi::c_void, size: i32, fd: i32); }
+    static SEEN: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    fn tap(layout: std::alloc::Layout) { if ARMED.load(std::sync::atomic::Ordering::Relaxed) { let size = layout.size(); let big = (131_072..262_144).contains(&size); let mid = (16_384..32_768).contains(&size); if big || (mid && SEEN.fetch_add(1, std::sync::atomic::Ordering::Relaxed) % 40 == 0) { let mut frames = [std::ptr::null_mut(); 48]; unsafe { eprintln!("[DEBUG] ALLOC {size}"); let n = backtrace(frames.as_mut_ptr(), 48); backtrace_symbols_fd(frames.as_ptr(), n, 2); } } let bucket = (usize::BITS - size.leading_zeros()) as usize; COUNT[bucket].fetch_add(1, std::sync::atomic::Ordering::Relaxed); BYTES[bucket].fetch_add(size, std::sync::atomic::Ordering::Relaxed); } }
+    semio_framework_value_testing_allocator::install_allocation_tap(tap, |_, _| {});
+    ARMED.store(true, std::sync::atomic::Ordering::Relaxed);
+    let mut app = new_app().await;
+    ARMED.store(false, std::sync::atomic::Ordering::Relaxed);
+    mark("booted");
+    for bucket in 0..40 { let count = COUNT[bucket].load(std::sync::atomic::Ordering::Relaxed); if count > 0 { eprintln!("[DEBUG] boot bucket 2^{bucket}: count={count} bytes={}", BYTES[bucket].load(std::sync::atomic::Ordering::Relaxed)); COUNT[bucket].store(0, std::sync::atomic::Ordering::Relaxed); BYTES[bucket].store(0, std::sync::atomic::Ordering::Relaxed); } }
+    reset_heap_peak();
+    app.bind_instance_id(7).await;
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    mark("dispatched");
+    let receipt = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example settlement");
+    mark("settled");
+    let (parent_pack, parent_spr) = receipt.effects.into_iter().find_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some((pack, spr)), _ => None }).expect("load");
+    eprintln!("[DEBUG] pack={} spr={}", parent_pack.len(), parent_spr.len());
+    semio_plugin::artifact_app_laws::admit_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }, app.1.cx()).expect("archive admission");
+    mark("admitted");
+    ARMED.store(true, std::sync::atomic::Ordering::Relaxed);
+    semio_plugin::artifact_app_laws::settle_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive load settles Ready");
+    ARMED.store(false, std::sync::atomic::Ordering::Relaxed);
+    mark("loaded");
+    for bucket in 0..40 { let count = COUNT[bucket].load(std::sync::atomic::Ordering::Relaxed); if count > 0 { eprintln!("[DEBUG] bucket 2^{bucket}: count={count} bytes={}", BYTES[bucket].load(std::sync::atomic::Ordering::Relaxed)); } }
+}

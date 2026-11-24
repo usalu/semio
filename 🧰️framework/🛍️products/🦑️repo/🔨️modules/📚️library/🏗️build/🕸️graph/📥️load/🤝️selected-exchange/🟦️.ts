@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {REAPI_V1,decodeProtobufV1,encodeProtobufV1} from "../../../🌐️remote-execution/📡️wire/📦️protobuf/🟦️.ts";
-import {neutralizeRootV1,expandRootV1,packGraphDocumentV1,unpackGraphDocumentsV1,graphDocumentLimitV1,type GraphDocumentV1,type GraphFleetClientV1} from "../../../🪪️graph-state/🛰️exchange/🟦️.ts";
+import {neutralizeRootV1,expandRootV1,packGraphDocumentV1,unpackGraphDocumentsV1,graphDocumentLimitV1,graphRetentionManifestV1,type GraphDocumentV1,type GraphFleetClientV1} from "../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import {neutralRowsV1,localizeRowsV1,portableRowsPolicyV1,type HostV1,type ObservationRowV1} from "../../../🪪️graph-state/📦️project-records/🧳️portable/🟦️.ts";
 
 /** 🏛️ The declared policy of the exchange of sealed selected generations: the semantics revision (part of every head key), the claim lease, the bounded wait and the limits.
@@ -64,13 +64,42 @@ const swapped=async(client:GraphFleetClientV1,key:string,result:Uint8Array,slot:
 export function buildSelectedGenerationV1(input:Readonly<{scope:string;platform:string;host:HostV1;sealed:SelectedSealedV1;ownerOf:(relative:string)=>string|undefined;now:number}>):Readonly<{head:SelectedHeadV1;documents:readonly GraphDocumentV1[]}>{
  const groups=selectedRowsByOwnerV1(input.sealed.rows,input.host,input.ownerOf),owners=selectedOwnerDigestsV1(groups);
  const move=(value:unknown)=>neutralizeRootV1(encode(value),input.host.root);
+ const index=new Map<string,number>(),shared:ObservationRowV1[]=[],entries=input.sealed.admission.map(entry=>({owner:entry.owner,suffix:entry.suffix,facts:entry.facts,rows:neutralRowsV1(entry.rows,input.host).map(row=>{const key=JSON.stringify(row),held=index.get(key);if(held!==undefined)return held;index.set(key,shared.length);shared.push(row);return shared.length-1;})}));
  const documents:GraphDocumentV1[]=[
   {name:"graph",bytes:neutralizeRootV1(Buffer.from(input.sealed.graph),input.host.root)},
   {name:"owners",bytes:encode({version:1,rows:Object.fromEntries(groups)})},
-  {name:"admission",bytes:move({version:1,entries:input.sealed.admission.map(entry=>({owner:entry.owner,suffix:entry.suffix,facts:entry.facts,rows:neutralRowsV1(entry.rows,input.host)}))})}
+  {name:"admission",bytes:move({version:2,rows:shared,entries})}
  ];
  const blobs=documents.flatMap(document=>packGraphDocumentV1(document)).map(blob=>({name:blob.name,hash:sha(blob.bytes),size:blob.bytes.length}));
  return{head:{version:1,revision:policy.revision,scope:input.scope,platform:input.platform,createdMs:input.now,membership:input.sealed.membership,owners,documents:blobs},documents};
+}
+
+/** 📌️ The manifest that declares a head to the cache server as an entry of the protected graph class (kind `graph`): never stale, kept in the class budget however many unit outputs press, replaced only by a newer head of its slot, so the head the whole fleet waits for outlives the churn of compile units.
+ * @see ../../../🪪️graph-state/🛰️exchange/🟦️.ts */
+export function retentionManifestV1():Readonly<{bytes:Uint8Array;hash:string}>{return graphRetentionManifestV1();}
+
+/** 🛡️ Whether the head the fleet holds carries the retention manifest of this code (declared into the protected graph class); a held head that does not is offered again, its documents unchanged, so the server learns the class. */
+async function declaredAsKeptV1(client:GraphFleetClientV1,key:string):Promise<boolean>{
+ try{
+  const answer=await client.getResult(key);if(typeof answer==="string")return false;
+  const files=(decodeProtobufV1(REAPI_V1.actionResult,answer).output_files??[]) as {path:string;digest:{hash:string}}[];
+  return files.some(file=>file.path===policy.retentionManifest&&file.digest.hash===retentionManifestV1().hash);
+ }catch{return false;}
+}
+
+/** 🛡️ Declares the head the fleet holds into the protected graph class without reading anything: the documents stay as they are, the manifest of this code replaces the held one by compare-and-swap, so a head published by an older code is protected from the next collection of the server on. Answers whether the held head carries the manifest afterwards; never throws. */
+export async function redeclareSelectedHeadV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string}>):Promise<boolean>{
+ const {client}=input;
+ try{
+  if(!client.settings.upload||!client.usable())return false;
+  const key=selectedHeadKeyV1(input),current=await client.getResult(key);
+  if(typeof current==="string"||headOf(current,input.scope,input.platform)===undefined)return false;
+  const result=decodeProtobufV1(REAPI_V1.actionResult,current),kept=retentionManifestV1(),files=(result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[];
+  if(files.some(file=>file.path===policy.retentionManifest&&file.digest.hash===kept.hash))return true;
+  if(await client.hasBlob(kept.hash)!==true&&!(await client.putBlob(kept.hash,kept.bytes)).stored)return false;
+  const next=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...files.filter(file=>file.path!==policy.retentionManifest),{path:policy.retentionManifest,digest:{hash:kept.hash,size_bytes:kept.bytes.length}}],stdout_raw:result.stdout_raw});
+  return (await client.putResult(key,next,selectedHeadSlotV1(input),sha(current))).stored;
+ }catch{return false;}
 }
 
 /** ⬆️ Offers a sealed generation to the fleet: the blobs first (those the cache lacks), the head last by compare-and-swap, so a reader never finds a head without its blobs and the newest writer wins. A head whose owner digests equal the held head is not written again. A machine without upload rights, an unreachable cache or an oversized generation never throws. */
@@ -81,16 +110,18 @@ export async function publishSelectedGenerationV1(input:Readonly<{client:GraphFl
   if(!client.usable())return{stored:false,reason:"breaker"};
   const built=buildSelectedGenerationV1({scope:input.scope,platform:input.platform,host:input.host,sealed:input.sealed,ownerOf:input.ownerOf,now:(input.now??Date.now)()});
   const same=input.held!==undefined&&JSON.stringify(input.held.owners)===JSON.stringify(built.head.owners)&&input.held.membership===built.head.membership;
-  if(same)return{stored:false,head:input.held,reason:"current"};
+  if(same&&await declaredAsKeptV1(client,selectedHeadKeyV1(input)))return{stored:false,head:input.held,reason:"current"};
   if(Object.keys(built.head.owners).length>policy.maximumOwners)return{stored:false,reason:"limit-owners"};
   const limit=graphDocumentLimitV1(built.documents);if(limit!==undefined)return{stored:false,reason:limit.code};
   for(const blob of built.documents.flatMap(document=>packGraphDocumentV1(document))){
    if(await client.hasBlob(sha(blob.bytes))===true)continue;
-   const put=await client.putBlob(sha(blob.bytes),blob.bytes);if(!put.stored)return{stored:false,reason:"blob"};
+   const put=await client.putBlob(sha(blob.bytes),blob.bytes);if(!put.stored)return{stored:false,reason:"blob: "+put.refusal.text.slice(0,100)};
   }
-  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:built.head.documents.map(row=>({path:row.name,digest:{hash:row.hash,size_bytes:row.size}})),stdout_raw:Buffer.from(JSON.stringify(built.head))});
+  const kept=retentionManifestV1();
+  if(await client.hasBlob(kept.hash)!==true){const put=await client.putBlob(kept.hash,kept.bytes);if(!put.stored)return{stored:false,reason:"blob: "+put.refusal.text.slice(0,100)};}
+  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...built.head.documents.map(row=>({path:row.name,digest:{hash:row.hash,size_bytes:row.size}})),{path:policy.retentionManifest,digest:{hash:kept.hash,size_bytes:kept.bytes.length}}],stdout_raw:Buffer.from(JSON.stringify(built.head))});
   const stored=await swapped(client,selectedHeadKeyV1(input),result,selectedHeadSlotV1(input));
-  return stored.stored?{stored:true,head:built.head}:{stored:false,reason:"head"};
+  return stored.stored?{stored:true,head:built.head}:{stored:false,reason:"head: "+stored.refusal.text.slice(0,100)};
  }catch(error){return{stored:false,reason:"network:"+String((error as Error)?.message??error).slice(0,120)};}
 }
 
@@ -99,14 +130,19 @@ const headOf=(bytes:Uint8Array,scope:string,platform:string):{head:SelectedHeadV
   const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),head=JSON.parse(Buffer.from(result.stdout_raw as Uint8Array).toString("utf8")) as SelectedHeadV1;
   if(validateJsonSchemaSubset({$ref:"#/definitions/Head"},head,schema).length)return undefined;
   if(head.revision!==policy.revision||head.scope!==scope||head.platform!==platform||Object.keys(head.owners).length>policy.maximumOwners)return undefined;
-  const entries=((result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[]).map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
+  const entries=((result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[]).filter(file=>file.path!==policy.retentionManifest).map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
   if(JSON.stringify(entries.map(row=>[row.path,row.hash,row.size]))!==JSON.stringify(head.documents.map(row=>[row.name,row.hash,row.size])))return undefined;
   return{head,entries};
  }catch{return undefined;}
 };
 
-/** 🔭️ Looks the head of a scope up and fetches its documents, every blob verified against its name and every owner digest against its rows, and puts the generation in the spelling of this machine. `"miss"` is no head or a head of another revision, scope or platform; `"fault"` is an unreachable, denied or damaged head (the caller reads itself). */
-export async function lookSelectedGenerationV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string;host:HostV1}>):Promise<SelectedFetchedV1|"miss"|"fault">{
+/** 🔭️ Looks the head of a scope up and fetches its documents, within `lookMaximumMilliseconds` (a fleet that does not answer in that time is a `"fault"`, so the caller reads itself), every blob verified against its name and every owner digest against its rows, and puts the generation in the spelling of this machine. `"miss"` is no head or a head of another revision, scope or platform; `"fault"` is an unreachable, denied or damaged head (the caller reads itself). */
+export async function lookSelectedGenerationV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string;host:HostV1;lookMaximumMilliseconds?:number;say?:Say}>):Promise<SelectedFetchedV1|"miss"|"fault">{
+ const limit=input.lookMaximumMilliseconds??policy.lookMaximumMilliseconds;let timer:ReturnType<typeof setTimeout>|undefined;
+ try{return await Promise.race([fetchSelectedGenerationV1(input),new Promise<"fault">(done=>{timer=setTimeout(()=>{input.say?.("look-bound",{seconds:Math.round(limit/1000)});done("fault");},limit);timer.unref?.();})]);}finally{clearTimeout(timer);}
+}
+
+async function fetchSelectedGenerationV1(input:Readonly<{client:GraphFleetClientV1;scope:string;platform:string;host:HostV1;say?:Say}>):Promise<SelectedFetchedV1|"miss"|"fault">{
  const {client}=input;
  try{
   if(!client.usable())return"fault";
@@ -115,13 +151,16 @@ export async function lookSelectedGenerationV1(input:Readonly<{client:GraphFleet
   if(typeof answer==="string")return"fault";
   const found=headOf(answer,input.scope,input.platform);if(found===undefined)return"miss";
   const blobs:GraphDocumentV1[]=[];
+  input.say?.("fetching",{documents:found.entries.length,owners:Object.keys(found.head.owners).length});
   for(const entry of found.entries){const bytes=await client.getBlob(entry.hash,entry.size);if(bytes===undefined||sha(bytes)!==entry.hash)return"fault";blobs.push({name:entry.path,bytes});}
   const documents=new Map(unpackGraphDocumentsV1(blobs).map(document=>[document.name,document.bytes])),own=(name:string)=>{const bytes=documents.get(name);if(bytes===undefined)throw Error("document missing: "+name);return expandRootV1(bytes,input.host.root);};
   const owners=JSON.parse(Buffer.from(documents.get("owners")!).toString("utf8")) as {rows:Record<string,ObservationRowV1[]>};
   for(const [owner,digest] of Object.entries(found.head.owners))if(selectedOwnerDigestV1(owners.rows[owner]??[])!==digest)return"fault";
   if(Object.keys(owners.rows).length!==Object.keys(found.head.owners).length)return"fault";
   const rowsByOwner=new Map(Object.entries(owners.rows).map(([owner,rows])=>[owner,localizeRowsV1(rows,input.host)]));
-  const admission=(JSON.parse(Buffer.from(own("admission")).toString("utf8")) as {entries:{owner:string;suffix:string;facts:unknown;rows:ObservationRowV1[]}[]}).entries.map(entry=>({...entry,rows:localizeRowsV1(entry.rows,input.host)}));
+  const sharedDocument=JSON.parse(Buffer.from(own("admission")).toString("utf8")) as {version:number;rows:ObservationRowV1[];entries:{owner:string;suffix:string;facts:unknown;rows:number[]}[]};
+  if(sharedDocument.version!==2)return"fault";
+  const local=localizeRowsV1(sharedDocument.rows,input.host),admission=sharedDocument.entries.map(entry=>({...entry,rows:entry.rows.map(position=>local[position]!)}));
   return{head:found.head,graph:Buffer.from(own("graph")).toString("utf8"),rowsByOwner,admission};
  }catch{return"fault";}
 }
@@ -162,7 +201,7 @@ export async function selectedGenerationV1(input:Readonly<{
  read:(differing:readonly string[]|undefined)=>Promise<SelectedSealedV1|undefined>;
  say?:Say;now?:()=>number;sleep?:(milliseconds:number)=>Promise<void>;signal?:AbortSignal;
  alive?:()=>boolean;step?:SelectedStepV1;
- claimTtlMilliseconds?:number;claimHeartbeatMilliseconds?:number;waitMaximumMilliseconds?:number;waitSliceMilliseconds?:number}>):Promise<SelectedOutcomeV1>{
+ claimTtlMilliseconds?:number;claimHeartbeatMilliseconds?:number;waitMaximumMilliseconds?:number;waitSliceMilliseconds?:number;lookMaximumMilliseconds?:number;readBesideMegabytes?:number}>):Promise<SelectedOutcomeV1>{
  const {client}=input,now=input.now??Date.now,started=now(),key=selectedHeadKeyV1(input),ttl=input.claimTtlMilliseconds??policy.claimTtlMilliseconds,beat=input.claimHeartbeatMilliseconds??policy.claimHeartbeatMilliseconds,limit=input.waitMaximumMilliseconds??policy.waitMaximumMilliseconds,slice=input.waitSliceMilliseconds??policy.waitSliceMilliseconds;
  const say=input.say??(()=>undefined),step:SelectedStepV1=input.step??((_id,run)=>run()),alive=input.alive??(()=>true),seconds=()=>Math.round((now()-started)/1000);
  const finish=(outcome:SelectedOutcomeV1["outcome"],held:number,differing:readonly string[],published:boolean):SelectedOutcomeV1=>({outcome,held,differing,waitedMilliseconds:now()-started,published});
@@ -170,6 +209,7 @@ export async function selectedGenerationV1(input:Readonly<{
   if(sealed===undefined)return false;
   const stored=await step("exchange-publish",()=>publishSelectedGenerationV1({client,scope:input.scope,platform:input.platform,host:input.host,sealed,ownerOf:input.ownerOf,now,held}));
   if(stored.stored)say("published",{owners:Object.keys(stored.head!.owners).length});
+  else if(stored.reason!==undefined&&stored.reason!=="current")say("not-published",{reason:stored.reason});
   return stored.stored;
  };
  const take=async(fetched:SelectedFetchedV1,through:"installed"|"waited"|"taken-over"):Promise<SelectedOutcomeV1>=>{
@@ -181,8 +221,8 @@ export async function selectedGenerationV1(input:Readonly<{
   return finish("repaired",verdict.matching.length,differing,published);
  };
  const readHere=async(outcome:SelectedOutcomeV1["outcome"],held:SelectedHeadV1|undefined):Promise<SelectedOutcomeV1>=>{const sealed=await input.read(undefined),published=await publish(sealed,held);return finish(outcome,0,[],published);};
- const first=await step("exchange-look",()=>lookSelectedGenerationV1(input));
- if(first!=="miss"&&first!=="fault")return take(first,"installed");
+ const first=await step("exchange-look",()=>lookSelectedGenerationV1({...input,say}));
+ if(first!=="miss"&&first!=="fault"){await Promise.race([redeclareSelectedHeadV1({client,scope:input.scope,platform:input.platform}),new Promise<void>(done=>{setTimeout(done,policy.redeclareMaximumMilliseconds).unref?.();})]);return take(first,"installed");}
  if(first==="fault"||!client.claimsUsable()||!client.settings.upload)return readHere("unreachable",undefined);
  let since:number|undefined,lapsed=false;
  for(let round=0;round<policy.maximumDocuments*8;round++){
@@ -191,14 +231,15 @@ export async function selectedGenerationV1(input:Readonly<{
   if(claim.state==="granted"){
    const hold=holdV1(client,key,input.owner,ttl,beat,alive);
    try{
-    const again=await lookSelectedGenerationV1(input);
+    const again=await lookSelectedGenerationV1({...input,say});
     if(again!=="miss"&&again!=="fault")return take(again,lapsed?"taken-over":"waited");
     if(lapsed)say("taken-over",{});
     return await readHere(lapsed?"taken-over":"read",undefined);
    }finally{await hold.release();}
   }
-  if(claim.state==="stored"){const again=await lookSelectedGenerationV1(input);if(again!=="miss"&&again!=="fault")return take(again,"waited");return readHere("unreachable",undefined);}
+  if(claim.state==="stored"){const again=await lookSelectedGenerationV1({...input,say});if(again!=="miss"&&again!=="fault")return take(again,"waited");return readHere("unreachable",undefined);}
   if(claim.state!=="held")return readHere("unreachable",undefined);
+  if((input.readBesideMegabytes??0)>=policy.readBesideMinimumTotalMegabytes){say("reading-beside",{by:String(claim.by??"?"),megabytes:input.readBesideMegabytes!});return readHere("read",undefined);}
   since??=now();
   const remaining=since+limit-now();
   if(remaining<=0)return readHere("unreachable",undefined);
@@ -206,7 +247,7 @@ export async function selectedGenerationV1(input:Readonly<{
   const waited=await step("exchange-wait",()=>client.await(key,Math.min(slice,remaining)),{who:String(claim.by??"?"),boundMilliseconds:limit}).catch(()=>"fault" as const);
   if(waited==="fault")return readHere("unreachable",undefined);
   if(waited==="lapsed"){lapsed=true;if(input.sleep)await input.sleep(50);continue;}
-  if(waited==="stored"){const again=await lookSelectedGenerationV1(input);if(again!=="miss"&&again!=="fault")return take(again,"waited");}
+  if(waited==="stored"){const again=await lookSelectedGenerationV1({...input,say});if(again!=="miss"&&again!=="fault")return take(again,"waited");}
  }
  return readHere("unreachable",undefined);
 }

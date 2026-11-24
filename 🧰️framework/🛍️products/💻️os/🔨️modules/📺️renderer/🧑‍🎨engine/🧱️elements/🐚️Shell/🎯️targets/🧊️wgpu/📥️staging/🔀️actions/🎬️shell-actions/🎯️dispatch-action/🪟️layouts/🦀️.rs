@@ -52,15 +52,15 @@ impl<'ctx> ActionsCtx<'ctx> {
 
     /// 📄️ Changes a semantic form page on its live window without invoking a guest action.
     pub(super) fn framework_set_form_page(&mut self, action: &ActionDescriptor) -> Result<(), String> {
-        let args = action.args.as_ref().ok_or("Form page needs an address")?;
-        let window_id = args.get("windowId").and_then(semio_framework_value::DslValue::as_str).ok_or("Form page needs a window")?;
+        let args = action.args.as_ref().ok_or("form-page.needs-address")?;
+        let window_id = args.get("windowId").and_then(semio_framework_value::DslValue::as_str).ok_or("form-page.needs-window")?;
         let page = args.get("page").and_then(semio_framework_value::DslValue::as_f64)
             .filter(|page| page.fract() == 0.0 && (0.0..=f64::from(u32::MAX)).contains(page))
-            .ok_or("Form page must be a nonnegative integer in range")?;
+            .ok_or("form-page.out-of-range")?;
         if self.dock.dock.window_kind_id(window_id).is_none() {
-            return Err("Form page window is no longer mounted".into());
+            return Err("form-page.window-unmounted".into());
         }
-        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("Form page window has no body")?;
+        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("form-page.window-no-body")?;
         self.dock.tree_windows.set_form_page(&body, window_id, page as u32);
         Ok(())
     }
@@ -68,21 +68,21 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🖼️ Requests a page from the live window body for its exact image and source revision.
     pub(super) fn framework_set_image_source_page(&mut self, action: &ActionDescriptor) -> Result<(), String> {
         use ui_contract::window_resource::WindowResourcePage;
-        let args = action.args.as_ref().ok_or("Image source page needs an address")?;
+        let args = action.args.as_ref().ok_or("image-source-page.needs-address")?;
         let text = |key| args.get(key).and_then(semio_framework_value::DslValue::as_str);
-        let window_id = text("windowId").ok_or("Image source page needs a window")?;
-        let generation: u64 = text("windowGeneration").and_then(|value| value.parse().ok()).ok_or("Image source page needs a mounted generation")?;
-        let image_id = text("imageId").ok_or("Image source page needs an image")?;
-        let key = text("resourceKey").ok_or("Image source page needs a resource")?;
-        let resource = WindowResourcePage::parse(&format!("{key}.1")).ok_or("Invalid image source resource")?.resource;
+        let window_id = text("windowId").ok_or("image-source-page.needs-window")?;
+        let generation: u64 = text("windowGeneration").and_then(|value| value.parse().ok()).ok_or("image-source-page.needs-generation")?;
+        let image_id = text("imageId").ok_or("image-source-page.needs-image")?;
+        let key = text("resourceKey").ok_or("image-source-page.needs-resource")?;
+        let resource = WindowResourcePage::parse(&format!("{key}.1")).ok_or("image-source-page.invalid-resource")?.resource;
         let page = args.get("page").and_then(semio_framework_value::DslValue::as_f64)
             .filter(|page| page.fract() == 0.0 && (0.0..=f64::from(resource.pages())).contains(page))
-            .ok_or("Image source page is out of range")? as u32;
+            .ok_or("image-source-page.out-of-range")? as u32;
         if !resource.matches_owner(window_id, image_id) || self.dock.dock.window_kind_id(window_id).is_none()
             || semio_renderer_wgpu_ui_engine::retained_document_consumer::ui_document_window_generation(window_id) != Some(generation) {
-            return Err("Image source page owner is no longer mounted".into());
+            return Err("image-source-page.owner-unmounted".into());
         }
-        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("Image source page window has no body")?;
+        let body = self.dock.document_body_key(window_id, &self.docs).ok_or("image-source-page.window-no-body")?;
         self.dock.tree_windows.set_form_page(&body, key, page);
         Ok(())
     }

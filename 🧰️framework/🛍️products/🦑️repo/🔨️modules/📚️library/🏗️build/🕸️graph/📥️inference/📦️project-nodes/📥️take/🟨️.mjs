@@ -46,6 +46,12 @@ export function takeLookConcurrencyV1(cutConcurrency = Infinity, policy = TAKE_P
   return Math.max(takeConcurrencyV1(cutConcurrency, policy), Math.min(policy.concurrency, policy.lookFloorConcurrency));
 }
 
+/** 🛬️ The looks at once of a lane whose owners are not stored here (their records come from the fleet): they wait for the cache and for the presence batch of the mounted image, not for memory, and one batch costs the same for 8 owners and for 48, so the lane runs `fetchConcurrency` looks (never fewer than the look floor); the footprint gate of {@link takeAdmittedV1} still bounds what they hold.
+ * @see ./🧪️tests/🛬️fetch-lanes/🟦️.ts */
+export function takeFetchConcurrencyV1(cutConcurrency = Infinity, policy = TAKE_POLICY_V1) {
+  return Math.max(takeLookConcurrencyV1(cutConcurrency, policy), policy.fetchConcurrency);
+}
+
 /** 🚦 A look admitted like an inference: before it starts, the footprint gate of the process (`gate()`, none installed: no wait) settles from its soft share of the grant and holds from its hard share until the footprint falls, so looks never pile up above the memory a plan may take, and a look that finds no other look in flight (`state.flying`, shared by every lane of the pass) is always admitted, so the pass can never starve behind a host that is short of memory (they had no admission at all: a burst of Rust owner looks moved the tree from 0.6 to 4.7 GB in seconds).
  * @see ./🧪️tests/🟦️.ts */
 export function takeAdmittedV1(attempt, gate, signal, state = { flying: 0 }) {
@@ -401,11 +407,11 @@ export async function takeBeforeInferV1({ name, listed, taken, look, counters })
 
 /** 🎣️ The take pass of a read that adopts before it looks: beside the lanes of `takePassV1` (own looks, slow under load) an adopt loop (`takePollV1` with `hotOnly`, `adoptConcurrency` looks at once, each owner again after `adoptRetryMilliseconds`) looks at every undecided owner that the fleet lists as stored as soon as it is listed, so a record the fleet delivers is taken within one poll of its publication and never waits for the lanes; the loop ends with the lanes or when `stop()` says every owner is decided. Answers what the adopt loop did.
  * @see ./🧪️tests/🎣️fetch-first/🟦️.ts */
-export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, attempt, adoptAttempt = attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
+export async function takeFetchFirstV1({ lanes, heavy = [], concurrency = TAKE_POLICY_V1.concurrency, fetchConcurrency = concurrency, fetches = () => false, attempt, adoptAttempt = attempt, signal, mark = () => {}, hot, queue, arrived, stop = () => false, now, sleep, policy = TAKE_POLICY_V1 }) {
   const adopting = new AbortController(), abort = signal === undefined ? adopting.signal : AbortSignal.any([signal, adopting.signal]);
   const adopt = takePollV1({ hot, hotOnly: true, queue, attempt: adoptAttempt, arrived, stop, signal: abort, now, sleep, concurrency: Math.min(policy.adoptConcurrency, concurrency), policy: { ...policy, hotRetryMilliseconds: policy.adoptRetryMilliseconds } }).catch(() => Object.freeze({ looks: 0, found: 0 }));
   try {
-    await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency, attempt, signal, mark })));
+    await Promise.all(lanes.map(lane => takePassV1({ names: lane, concurrency: fetches(lane) ? fetchConcurrency : concurrency, attempt, signal, mark })));
     await takePassV1({ names: heavy, concurrency: 1, attempt, signal, mark });
    } finally { adopting.abort(); await adopt; }
   return adopt;

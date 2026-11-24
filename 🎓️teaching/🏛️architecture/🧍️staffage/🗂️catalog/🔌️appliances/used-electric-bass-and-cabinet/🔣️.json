@@ -118,8 +118,8 @@
     "densityKgM3": 620,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 9000000000.0,
-    "strengthPa": 30000000.0,
+    "elasticModulusPa": 9000000000,
+    "strengthPa": 30000000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -134,8 +134,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -150,8 +150,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -166,8 +166,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -210,8 +210,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 150000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 150000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -226,8 +226,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -270,8 +270,8 @@
     "densityKgM3": 420,
     "conductivityWmK": 0.12,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 9500000000.0,
-    "strengthPa": 68000000.0,
+    "elasticModulusPa": 9500000000,
+    "strengthPa": 68000000,
     "source": "literature",
     "reference": "fpl-wood-handbook-2021"
    },
@@ -286,8 +286,8 @@
     "densityKgM3": 705,
     "conductivityWmK": 0.16,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 12600000000.0,
-    "strengthPa": 109000000.0,
+    "elasticModulusPa": 12600000000,
+    "strengthPa": 109000000,
     "source": "literature",
     "reference": "fpl-wood-handbook-2021"
    },
@@ -302,8 +302,8 @@
     "densityKgM3": 850,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11500000000.0,
-    "strengthPa": 110000000.0,
+    "elasticModulusPa": 11500000000,
+    "strengthPa": 110000000,
     "source": "literature",
     "reference": "fpl-wood-handbook-2021"
    },
@@ -318,8 +318,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -334,8 +334,8 @@
     "densityKgM3": 7800,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 2000000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 2000000000,
     "source": "authored-estimate",
     "reference": "daddario-tension-chart"
    },
@@ -378,8 +378,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 470,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "incropera-2018"
    },
@@ -441,8 +441,8 @@
       "reference": "stand-catalogue-typical"
      },
      "section": {
-      "areaM2": 5.58e-05,
-      "secondMomentM4": 1.49e-09,
+      "areaM2": 0.0000558,
+      "secondMomentM4": 1.49e-9,
       "extremeFibreM": 0.008,
       "material": "stand-steel",
       "title": {
@@ -470,14 +470,14 @@
      "mass": {
       "kg": 0.3,
       "comX": 0.33506,
-      "comY": -6e-05,
+      "comY": -0.00006,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "stand-catalogue-typical"
      },
      "section": {
-      "areaM2": 5.58e-05,
-      "secondMomentM4": 1.49e-09,
+      "areaM2": 0.0000558,
+      "secondMomentM4": 1.49e-9,
       "extremeFibreM": 0.008,
       "material": "stand-steel",
       "title": {
@@ -535,7 +535,7 @@
       "de": "Vordere linke Lenkrolle"
      },
      "x": 0.35,
-     "y": 0.0,
+     "y": 0,
      "z": 0.255,
      "angleDeg": -90,
      "lengthM": 0.0575,
@@ -570,8 +570,8 @@
      },
      "mass": {
       "kg": 0.1,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-12532-1999"
@@ -585,7 +585,7 @@
       "de": "Vordere rechte Lenkrolle"
      },
      "x": 0.35,
-     "y": 0.0,
+     "y": 0,
      "z": -0.255,
      "angleDeg": -90,
      "lengthM": 0.0575,
@@ -620,8 +620,8 @@
      },
      "mass": {
       "kg": 0.1,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-12532-1999"
@@ -635,7 +635,7 @@
       "de": "Hintere linke Lenkrolle"
      },
      "x": 0.07,
-     "y": 0.0,
+     "y": 0,
      "z": 0.255,
      "angleDeg": -90,
      "lengthM": 0.0575,
@@ -670,8 +670,8 @@
      },
      "mass": {
       "kg": 0.1,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-12532-1999"
@@ -685,7 +685,7 @@
       "de": "Hintere rechte Lenkrolle"
      },
      "x": 0.07,
-     "y": 0.0,
+     "y": 0,
      "z": -0.255,
      "angleDeg": -90,
      "lengthM": 0.0575,
@@ -720,8 +720,8 @@
      },
      "mass": {
       "kg": 0.1,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "en-12532-1999"
@@ -784,7 +784,7 @@
       "type": "prismatic",
       "axisDeg": 90,
       "minM": -0.05,
-      "maxM": 1.0
+      "maxM": 1
      }
     },
     {
@@ -796,7 +796,7 @@
      },
      "x": 0,
      "y": 0,
-     "angleDeg": 102.0,
+     "angleDeg": 102,
      "lengthM": 1.165,
      "joint": {
       "type": "revolute",
@@ -813,7 +813,7 @@
      },
      "section": {
       "areaM2": 0.00135,
-      "secondMomentM4": 6.5e-08,
+      "secondMomentM4": 6.5e-8,
       "extremeFibreM": 0.013,
       "material": "maple",
       "title": {
@@ -889,7 +889,7 @@
     "id": "stand-foot-l",
     "bone": "stand",
     "x": 0.02215,
-    "y": 0.0,
+    "y": 0,
     "z": 0.13,
     "kind": "contact",
     "title": {
@@ -905,7 +905,7 @@
     "id": "stand-foot-r",
     "bone": "stand",
     "x": 0.02215,
-    "y": 0.0,
+    "y": 0,
     "z": -0.13,
     "kind": "contact",
     "title": {
@@ -958,7 +958,7 @@
     "id": "strap-tail",
     "bone": "bass",
     "x": -0.013,
-    "y": 0.0,
+    "y": 0,
     "kind": "load",
     "title": {
      "en": "Tail strap button",
@@ -969,7 +969,7 @@
     "id": "strap-horn",
     "bone": "bass",
     "x": 0.51506,
-    "y": 0.0,
+    "y": 0,
     "kind": "load",
     "title": {
      "en": "Strap button on the horn",
@@ -1097,7 +1097,7 @@
    {
     "id": "fan-outlet",
     "bone": "head",
-    "x": 0.0,
+    "x": 0,
     "y": 0.13,
     "z": 0.15,
     "kind": "emitter",
@@ -1141,7 +1141,7 @@
        "id": "handle-l",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.55,
        "region": "cabinet-hardware",
@@ -1303,7 +1303,7 @@
        "material": "rubber",
        "kind": "rect",
        "x": 0.0225,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.01
       },
@@ -1318,7 +1318,7 @@
        "material": "rubber",
        "kind": "rect",
        "x": 0.2525,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.01
       },
@@ -1332,7 +1332,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.033,
        "w": 0.014,
        "h": 0.066
@@ -1347,7 +1347,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.033,
        "w": 0.014,
        "h": 0.066
@@ -1637,7 +1637,7 @@
        "material": "rubber",
        "kind": "rect",
        "x": 0.0225,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.01
       },
@@ -1652,7 +1652,7 @@
        "material": "rubber",
        "kind": "rect",
        "x": 0.2525,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.01
       },
@@ -1756,7 +1756,7 @@
        "region": "head-casing",
        "material": "plywood-tolex",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.01,
        "w": 0.3,
        "h": 0.24
@@ -1786,7 +1786,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.033,
        "w": 0.014,
        "h": 0.066
@@ -1801,7 +1801,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.033,
        "w": 0.014,
        "h": 0.066
@@ -2431,7 +2431,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -2527,7 +2527,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -3132,7 +3132,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -4071,7 +4071,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42801,
@@ -4382,8 +4382,8 @@
          0.01319
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -4491,7 +4491,7 @@
        "id": "jack-plate",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.6,
        "region": "cabinet-hardware",
@@ -4622,7 +4622,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2425,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -4637,7 +4637,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2675,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -4733,7 +4733,7 @@
          1.03592
         ],
         [
-         0.0,
+         0,
          1.037
         ],
         [
@@ -4777,7 +4777,7 @@
          1.02831
         ],
         [
-         0.0,
+         0,
          1.029
         ],
         [
@@ -4993,7 +4993,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2425,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -5008,7 +5008,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2675,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -5082,7 +5082,7 @@
        "region": "head-front-panel",
        "material": "knob-abs",
        "kind": "ellipse",
-       "cx": 0.0,
+       "cx": 0,
        "cy": 0.905,
        "rx": 0.0105,
        "ry": 0.0105
@@ -5898,7 +5898,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -6197,7 +6197,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -6293,7 +6293,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -7241,7 +7241,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42801,
@@ -7552,8 +7552,8 @@
          0.01319
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -7964,7 +7964,7 @@
        "points": [
         [
          0.83602,
-         0.0
+         0
         ],
         [
          0.83541,
@@ -7984,7 +7984,7 @@
         ],
         [
          0.82962,
-         0.0
+         0
         ],
         [
          0.83023,
@@ -8023,7 +8023,7 @@
        "points": [
         [
          0.75444,
-         0.0
+         0
         ],
         [
          0.75382,
@@ -8043,7 +8043,7 @@
         ],
         [
          0.74804,
-         0.0
+         0
         ],
         [
          0.74865,
@@ -8082,7 +8082,7 @@
        "points": [
         [
          0.68175,
-         0.0
+         0
         ],
         [
          0.68114,
@@ -8102,7 +8102,7 @@
         ],
         [
          0.67535,
-         0.0
+         0
         ],
         [
          0.67596,
@@ -8141,7 +8141,7 @@
        "points": [
         [
          0.61699,
-         0.0
+         0
         ],
         [
          0.61638,
@@ -8161,7 +8161,7 @@
         ],
         [
          0.61059,
-         0.0
+         0
         ],
         [
          0.6112,
@@ -8200,7 +8200,7 @@
        "points": [
         [
          0.46211,
-         0.0
+         0
         ],
         [
          0.4615,
@@ -8220,7 +8220,7 @@
         ],
         [
          0.45571,
-         0.0
+         0
         ],
         [
          0.45632,
@@ -8259,7 +8259,7 @@
        "points": [
         [
          0.42132,
-         0.0
+         0
         ],
         [
          0.42071,
@@ -8279,7 +8279,7 @@
         ],
         [
          0.41492,
-         0.0
+         0
         ],
         [
          0.41553,
@@ -8318,7 +8318,7 @@
        "points": [
         [
          0.38497,
-         0.0
+         0
         ],
         [
          0.38436,
@@ -8338,7 +8338,7 @@
         ],
         [
          0.37857,
-         0.0
+         0
         ],
         [
          0.37919,
@@ -8711,7 +8711,7 @@
        "id": "rear-cap",
        "bone": "stand-rear-leg",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.1,
        "region": "stand",
@@ -10184,7 +10184,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42801,
@@ -10495,8 +10495,8 @@
          0.01319
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -11105,7 +11105,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -11201,7 +11201,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -11940,7 +11940,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -12067,7 +12067,7 @@
        "id": "handle-l",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.55,
        "region": "cabinet-hardware",
@@ -12179,7 +12179,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.042,
        "w": 0.0635,
        "h": 0.054
@@ -12194,7 +12194,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.042,
        "w": 0.0635,
        "h": 0.054
@@ -12314,7 +12314,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.042,
        "w": 0.0635,
        "h": 0.054
@@ -12329,7 +12329,7 @@
        "region": "castors",
        "material": "zinc-steel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.042,
        "w": 0.0635,
        "h": 0.054
@@ -12750,7 +12750,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -13083,7 +13083,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -13817,7 +13817,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42693,
@@ -14024,8 +14024,8 @@
          0.01969
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -14071,7 +14071,7 @@
        "id": "corner-rear-bottom-r",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.68,
        "region": "cabinet-hardware",
@@ -14168,7 +14168,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2425,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -14183,7 +14183,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2675,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -14219,7 +14219,7 @@
          1.03353
         ],
         [
-         0.0,
+         0,
          1.035
         ],
         [
@@ -14263,7 +14263,7 @@
          1.01927
         ],
         [
-         0.0,
+         0,
          1.02
         ],
         [
@@ -14382,7 +14382,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2425,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -14397,7 +14397,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2675,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.075
       },
@@ -14890,7 +14890,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -15037,7 +15037,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -15697,7 +15697,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42693,
@@ -15904,8 +15904,8 @@
          0.01969
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -16204,7 +16204,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -16304,7 +16304,7 @@
        "id": "rear-cap",
        "bone": "stand-rear-leg",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.1,
        "region": "stand",
@@ -17360,7 +17360,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42693,
@@ -17567,8 +17567,8 @@
          0.01969
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -17782,7 +17782,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -18249,7 +18249,7 @@
          -0.057
         ],
         [
-         1.0,
+         1,
          -0.055
         ],
         [
@@ -18331,7 +18331,7 @@
        "id": "corner-rear-bottom-l",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.68,
        "region": "cabinet-hardware",
@@ -18397,7 +18397,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -18412,7 +18412,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -18502,7 +18502,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -18517,7 +18517,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -18995,7 +18995,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42581,
@@ -19150,8 +19150,8 @@
          0.02611
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -19168,7 +19168,7 @@
        "id": "corner-rear-bottom-r",
        "bone": "cabinet",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.68,
        "region": "cabinet-hardware",
@@ -19235,7 +19235,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2385,
-       "y": -0.0,
+       "y": 0,
        "w": 0.033,
        "h": 0.095
       },
@@ -19250,7 +19250,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2715,
-       "y": -0.0,
+       "y": 0,
        "w": 0.033,
        "h": 0.095
       },
@@ -19299,7 +19299,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2385,
-       "y": -0.0,
+       "y": 0,
        "w": 0.033,
        "h": 0.095
       },
@@ -19314,7 +19314,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2715,
-       "y": -0.0,
+       "y": 0,
        "w": 0.033,
        "h": 0.095
       },
@@ -19798,7 +19798,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42581,
@@ -19953,8 +19953,8 @@
          0.02611
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -20019,7 +20019,7 @@
         ],
         [
          0.344,
-         -0.0
+         0
         ],
         [
          0.34507,
@@ -20068,7 +20068,7 @@
        "id": "castor-front-l",
        "bone": "castor-front-l",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.32,
        "region": "castors",
@@ -20526,7 +20526,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42581,
@@ -20681,8 +20681,8 @@
          0.02611
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -20957,13 +20957,13 @@
        "id": "castor-front-l",
        "bone": "castor-front-l",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.32,
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -20978,7 +20978,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -21012,7 +21012,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -21027,7 +21027,7 @@
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.0625,
        "w": 0.095,
        "h": 0.075
@@ -21275,7 +21275,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42356,
@@ -21378,8 +21378,8 @@
          0.03875
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -21413,14 +21413,14 @@
        "id": "castor-rear-l",
        "bone": "castor-rear-l",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.32,
        "region": "castors",
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2175,
-       "y": -0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.095
       },
@@ -21435,7 +21435,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2925,
-       "y": -0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.095
       },
@@ -21469,7 +21469,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": 0.2175,
-       "y": -0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.095
       },
@@ -21484,7 +21484,7 @@
        "material": "pu-wheel",
        "kind": "rect",
        "x": -0.2925,
-       "y": -0.0,
+       "y": 0,
        "w": 0.075,
        "h": 0.095
       },
@@ -21748,7 +21748,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42356,
@@ -21851,8 +21851,8 @@
          0.03875
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -21869,7 +21869,7 @@
        "id": "castor-front-l",
        "bone": "castor-front-l",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.32,
        "region": "castors",
@@ -22110,7 +22110,7 @@
         ],
         [
          0.43,
-         0.0
+         0
         ],
         [
          0.42356,
@@ -22213,8 +22213,8 @@
          0.03875
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -22763,7 +22763,7 @@
        "de": "Schub am Seitengriff (20 N)"
       },
       "anchor": "push-handle",
-      "fxN": 20.0,
+      "fxN": 20,
       "fyN": 0,
       "source": "authored-estimate",
       "reference": "en-12532-1999"
@@ -22788,7 +22788,7 @@
       "dy": 0.7281
      },
      "bass": {
-      "abductionDeg": 65.0
+      "abductionDeg": 65
      }
     },
     "ground": "auto",
@@ -22936,7 +22936,7 @@
       },
       "anchor": "fretting-hand",
       "fxN": 0,
-      "fyN": 3.0,
+      "fyN": 3,
       "source": "authored-estimate",
       "reference": "din-33402-2-2020"
      },
@@ -23128,7 +23128,7 @@
        },
        "bass": {
         "abductionDeg": 66.5,
-        "angleDeg": -1.0
+        "angleDeg": -1
        }
       }
      },
@@ -23188,7 +23188,7 @@
     ],
     "events": [
      {
-      "t": 0.0,
+      "t": 0,
       "kind": "load-on",
       "title": {
        "en": "Note plucked",
@@ -23266,8 +23266,8 @@
       "ease": "linear",
       "keys": [
        {
-        "t": 0.0,
-        "v": 1.0
+        "t": 0,
+        "v": 1
        },
        {
         "t": 0.08,
@@ -23275,7 +23275,7 @@
        },
        {
         "t": 0.3,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 0.38,
@@ -23283,7 +23283,7 @@
        },
        {
         "t": 0.6,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 0.68,
@@ -23291,7 +23291,7 @@
        },
        {
         "t": 0.9,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 0.98,
@@ -23299,7 +23299,7 @@
        },
        {
         "t": 1.2,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 1.28,
@@ -23307,7 +23307,7 @@
        },
        {
         "t": 1.5,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 1.58,
@@ -23315,7 +23315,7 @@
        },
        {
         "t": 1.8,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 1.88,
@@ -23323,7 +23323,7 @@
        },
        {
         "t": 2.1,
-        "v": 1.0
+        "v": 1
        },
        {
         "t": 2.18,
@@ -23331,7 +23331,7 @@
        },
        {
         "t": 2.4,
-        "v": 1.0
+        "v": 1
        }
       ]
      }
@@ -23423,7 +23423,7 @@
      "heatCapacityJM2K": 17900,
      "operating": {
       "key": "drive",
-      "heatW": 12.0
+      "heatW": 12
      },
      "source": "authored-estimate",
      "reference": "cabinet-catalogue-typical"
@@ -23451,7 +23451,7 @@
        "kind": "metal",
        "material": "grille-steel",
        "thicknessM": 0.0015,
-       "resistanceM2KW": 3e-05,
+       "resistanceM2KW": 0.00003,
        "heatCapacityJM2K": 2770,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -23490,7 +23490,7 @@
        "kind": "metal",
        "material": "chrome-steel",
        "thicknessM": 0.001,
-       "resistanceM2KW": 2e-05,
+       "resistanceM2KW": 0.00002,
        "heatCapacityJM2K": 3690,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -23535,7 +23535,7 @@
      "heatCapacityJM2K": 14900,
      "operating": {
       "key": "amplifier",
-      "heatW": 25.0
+      "heatW": 25
      },
      "source": "authored-estimate",
      "reference": "iec-62368-1-2018"
@@ -23563,7 +23563,7 @@
        "kind": "metal",
        "material": "aluminium",
        "thicknessM": 0.003,
-       "resistanceM2KW": 1.9e-05,
+       "resistanceM2KW": 0.000019,
        "heatCapacityJM2K": 7290,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -23572,7 +23572,7 @@
      "heatCapacityJM2K": 7290,
      "operating": {
       "key": "amplifier",
-      "heatW": 10.0
+      "heatW": 10
      },
      "source": "authored-estimate",
      "reference": "iec-62368-1-2018"
@@ -23600,7 +23600,7 @@
        "kind": "metal",
        "material": "chassis-steel",
        "thicknessM": 0.0015,
-       "resistanceM2KW": 3e-05,
+       "resistanceM2KW": 0.00003,
        "heatCapacityJM2K": 5530,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -23609,7 +23609,7 @@
      "heatCapacityJM2K": 5530,
      "operating": {
       "key": "amplifier",
-      "heatW": 15.0
+      "heatW": 15
      },
      "ratedPowerW": 450,
      "ratedPowerBasis": "electrical-input",
@@ -23677,7 +23677,7 @@
        "kind": "metal",
        "material": "chrome-hardware",
        "thicknessM": 0.0015,
-       "resistanceM2KW": 3e-05,
+       "resistanceM2KW": 0.00003,
        "heatCapacityJM2K": 5530,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
@@ -23752,7 +23752,7 @@
      "diameterM": 0.06,
      "operatingKey": "amplifier",
      "volumeFlowM3S": 0.006,
-     "temperatureRiseK": 9.0,
+     "temperatureRiseK": 9,
      "source": "authored-estimate",
      "reference": "iec-62368-1-2018"
     }
@@ -23822,7 +23822,7 @@
        "translation": [
         0.204,
         0.33,
-        0.0
+        0
        ]
       }
      },
@@ -23891,7 +23891,7 @@
        "translation": [
         0.41,
         0.33,
-        0.0
+        0
        ]
       }
      },
@@ -24121,7 +24121,7 @@
        "translation": [
         -0.004,
         0.31,
-        0.0
+        0
        ]
       }
      },
@@ -24140,8 +24140,8 @@
       "transform": {
        "translation": [
         0.007,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -24161,7 +24161,7 @@
        "translation": [
         0.03875,
         -0.017,
-        0.0
+        0
        ]
       }
      },
@@ -24216,8 +24216,8 @@
       "transform": {
        "translation": [
         0.007,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -24237,7 +24237,7 @@
        "translation": [
         0.03875,
         -0.017,
-        0.0
+        0
        ]
       }
      },
@@ -24292,8 +24292,8 @@
       "transform": {
        "translation": [
         0.007,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -24313,7 +24313,7 @@
        "translation": [
         0.03875,
         -0.017,
-        0.0
+        0
        ]
       }
      },
@@ -24368,8 +24368,8 @@
       "transform": {
        "translation": [
         0.007,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -24389,7 +24389,7 @@
        "translation": [
         0.03875,
         -0.017,
-        0.0
+        0
        ]
       }
      },
@@ -24599,7 +24599,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": 0,
       "to": 0.3,
       "holes": [
        [
@@ -24638,7 +24638,7 @@
        "translation": [
         0.286,
         0.13,
-        0.0
+        0
        ]
       }
      },
@@ -24658,7 +24658,7 @@
        "translation": [
         0.016,
         0.13,
-        0.0
+        0
        ]
       }
      },
@@ -24839,7 +24839,7 @@
       "origin": [
        0.2985,
        0.15,
-       0.0
+       0
       ]
      },
      {
@@ -25112,7 +25112,7 @@
        ],
        [
         0.282,
-        0.0
+        0
        ],
        [
         0.28092,
@@ -25156,7 +25156,7 @@
        ],
        [
         0.274,
-        0.0
+        0
        ],
        [
         0.27331,
@@ -25513,7 +25513,7 @@
       "p0": [
        0.63098,
        -0.00107,
-       0.0
+       0
       ],
       "p1": [
        0.60598,
@@ -25840,7 +25840,7 @@
         0.43157
        ],
        [
-        0.0,
+        0,
         0.43
        ],
        [
@@ -26152,8 +26152,8 @@
         0.0001
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "zx",
@@ -26243,7 +26243,7 @@
         0.34507
        ],
        [
-        -0.0,
+        0,
         0.344
        ],
        [
@@ -26332,7 +26332,7 @@
         0.34507
        ],
        [
-        -0.0,
+        0,
         0.344
        ],
        [
@@ -26458,7 +26458,7 @@
        ],
        [
         -0.055,
-        1.0
+        1
        ],
        [
         -0.045,
@@ -27649,7 +27649,8 @@
        -0.0172
       ],
       "r0": 0.00133,
-      "r1": 0.00133
+      "r1": 0.00133,
+      "texture": true
      },
      {
       "id": "string-1-head",
@@ -27670,7 +27671,8 @@
        -0.037
       ],
       "r0": 0.00133,
-      "r1": 0.00133
+      "r1": 0.00133,
+      "texture": true
      },
      {
       "id": "string-2",
@@ -27691,7 +27693,8 @@
        -0.0057
       ],
       "r0": 0.00108,
-      "r1": 0.00108
+      "r1": 0.00108,
+      "texture": true
      },
      {
       "id": "string-2-head",
@@ -27712,7 +27715,8 @@
        -0.037
       ],
       "r0": 0.00108,
-      "r1": 0.00108
+      "r1": 0.00108,
+      "texture": true
      },
      {
       "id": "string-3",
@@ -27733,7 +27737,8 @@
        0.0057
       ],
       "r0": 0.00083,
-      "r1": 0.00083
+      "r1": 0.00083,
+      "texture": true
      },
      {
       "id": "string-3-head",
@@ -27754,7 +27759,8 @@
        -0.037
       ],
       "r0": 0.00083,
-      "r1": 0.00083
+      "r1": 0.00083,
+      "texture": true
      },
      {
       "id": "string-4",
@@ -27775,7 +27781,8 @@
        0.0172
       ],
       "r0": 0.00057,
-      "r1": 0.00057
+      "r1": 0.00057,
+      "texture": true
      },
      {
       "id": "string-4-head",
@@ -27796,7 +27803,8 @@
        -0.037
       ],
       "r0": 0.00057,
-      "r1": 0.00057
+      "r1": 0.00057,
+      "texture": true
      }
     ],
     "thermal": [
@@ -28445,7 +28453,7 @@
        "translation": [
         0.63565,
         0.00071,
-        0.0
+        0
        ]
       },
       "member": "stand-rear-leg",
@@ -28468,7 +28476,7 @@
        "translation": [
         0.21,
         0.009,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -28490,7 +28498,7 @@
        "translation": [
         0.21,
         0.651,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -28556,7 +28564,7 @@
        "translation": [
         0.009,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -28578,7 +28586,7 @@
        "translation": [
         0.394,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -28618,7 +28626,7 @@
        "translation": [
         0.09125,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-l",
@@ -28659,7 +28667,7 @@
        "translation": [
         0.09125,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-r",
@@ -28700,7 +28708,7 @@
        "translation": [
         0.09125,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-l",
@@ -28741,7 +28749,7 @@
        "translation": [
         0.09125,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-r",
@@ -28764,7 +28772,7 @@
        "translation": [
         0.15,
         0.0175,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -28786,7 +28794,7 @@
        "translation": [
         0.151,
         0.02575,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -28912,7 +28920,7 @@
        "translation": [
         0.26415,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -28934,7 +28942,7 @@
        "translation": [
         0.13,
         0.115,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -28956,7 +28964,7 @@
        "translation": [
         0.38973,
         -0.00821,
-        0.0
+        0
        ]
       },
       "member": "bass",
@@ -28978,7 +28986,7 @@
        "translation": [
         -0.04787,
         0.36211,
-        0.0
+        0
        ]
       },
       "member": "stand",
@@ -29021,7 +29029,7 @@
        "translation": [
         0.21,
         0.33,
-        0.0
+        0
        ]
       }
      },
@@ -29243,7 +29251,7 @@
        "translation": [
         0.03175,
         -0.015,
-        0.0
+        0
        ]
       }
      },
@@ -29299,7 +29307,7 @@
        "translation": [
         0.03175,
         -0.015,
-        0.0
+        0
        ]
       }
      },
@@ -29355,7 +29363,7 @@
        "translation": [
         0.03175,
         -0.015,
-        0.0
+        0
        ]
       }
      },
@@ -29411,7 +29419,7 @@
        "translation": [
         0.03175,
         -0.015,
-        0.0
+        0
        ]
       }
      },
@@ -29468,7 +29476,7 @@
        "translation": [
         0.15,
         0.125,
-        0.0
+        0
        ]
       }
      },
@@ -29502,7 +29510,7 @@
        ],
        [
         0.28,
-        0.0
+        0
        ],
        [
         0.27853,
@@ -29546,7 +29554,7 @@
        ],
        [
         0.265,
-        0.0
+        0
        ],
        [
         0.26427,
@@ -29863,7 +29871,7 @@
       "p0": [
        0.63098,
        -0.00107,
-       0.0
+       0
       ],
       "p1": [
        0.60598,
@@ -30086,7 +30094,7 @@
         0.43222
        ],
        [
-        0.0,
+        0,
         0.43
        ],
        [
@@ -30294,8 +30302,8 @@
         0.00037
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "zx",
@@ -30385,7 +30393,7 @@
         0.34507
        ],
        [
-        -0.0,
+        0,
         0.344
        ],
        [
@@ -30511,7 +30519,7 @@
        ],
        [
         -0.055,
-        1.0
+        1
        ],
        [
         -0.045,
@@ -31439,7 +31447,7 @@
        "translation": [
         0.42075,
         0.33,
-        0.0
+        0
        ]
       },
       "region": "cabinet-grille",
@@ -31461,7 +31469,7 @@
        "translation": [
         0.3015,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-front-panel",
@@ -31486,7 +31494,7 @@
        "translation": [
         -0.00075,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-rear-panel",
@@ -31662,8 +31670,8 @@
       "transform": {
        "translation": [
         0.63355,
-        -9e-05,
-        0.0
+        -0.00009,
+        0
        ]
       },
       "member": "stand-rear-leg",
@@ -31686,7 +31694,7 @@
        "translation": [
         0.21,
         0.009,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -31708,7 +31716,7 @@
        "translation": [
         0.21,
         0.651,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -31774,7 +31782,7 @@
        "translation": [
         0.009,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -31796,7 +31804,7 @@
        "translation": [
         0.394,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -31830,7 +31838,7 @@
        "translation": [
         0.0875,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-l",
@@ -31865,7 +31873,7 @@
        "translation": [
         0.0875,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-r",
@@ -31900,7 +31908,7 @@
        "translation": [
         0.0875,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-l",
@@ -31935,7 +31943,7 @@
        "translation": [
         0.0875,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-r",
@@ -31958,7 +31966,7 @@
        "translation": [
         0.15,
         0.0075,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -31981,7 +31989,7 @@
        "translation": [
         0.151,
         0.01575,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -32053,7 +32061,7 @@
        "translation": [
         0.26415,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -32075,7 +32083,7 @@
        "translation": [
         0.13,
         0.115,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -32097,7 +32105,7 @@
        "translation": [
         0.38973,
         -0.00821,
-        0.0
+        0
        ]
       },
       "member": "bass",
@@ -32119,7 +32127,7 @@
        "translation": [
         -0.04787,
         0.36211,
-        0.0
+        0
        ]
       },
       "member": "stand",
@@ -32161,7 +32169,7 @@
        "translation": [
         0.21,
         0.33,
-        0.0
+        0
        ]
       }
      },
@@ -32341,7 +32349,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -32361,7 +32369,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -32381,7 +32389,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -32401,7 +32409,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -32421,7 +32429,7 @@
        "translation": [
         0.15,
         0.125,
-        0.0
+        0
        ]
       }
      },
@@ -32441,7 +32449,7 @@
        "translation": [
         0.15,
         0.265,
-        0.0
+        0
        ]
       }
      },
@@ -32769,7 +32777,7 @@
         0.43281
        ],
        [
-        0.0,
+        0,
         0.43
        ],
        [
@@ -32925,8 +32933,8 @@
         0.00078
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "zx",
@@ -33200,7 +33208,7 @@
        "translation": [
         0.42075,
         0.33,
-        0.0
+        0
        ]
       },
       "region": "cabinet-grille",
@@ -33222,7 +33230,7 @@
        "translation": [
         0.3015,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-front-panel",
@@ -33247,7 +33255,7 @@
        "translation": [
         -0.00075,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-rear-panel",
@@ -33558,7 +33566,7 @@
        "translation": [
         0.62584,
         -0.00304,
-        0.0
+        0
        ]
       },
       "member": "stand-rear-leg",
@@ -33581,7 +33589,7 @@
        "translation": [
         0.21,
         0.009,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -33604,7 +33612,7 @@
        "translation": [
         0.21,
         0.651,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -33673,7 +33681,7 @@
        "translation": [
         0.009,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -33696,7 +33704,7 @@
        "translation": [
         0.394,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -33725,7 +33733,7 @@
        "translation": [
         0.08,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-l",
@@ -33754,7 +33762,7 @@
        "translation": [
         0.08,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-r",
@@ -33783,7 +33791,7 @@
        "translation": [
         0.08,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-l",
@@ -33812,7 +33820,7 @@
        "translation": [
         0.08,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-r",
@@ -33835,7 +33843,7 @@
        "translation": [
         0.15,
         0.007,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -33858,7 +33866,7 @@
        "translation": [
         0.151,
         0.01475,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -33924,7 +33932,7 @@
        "translation": [
         0.26415,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -33946,7 +33954,7 @@
        "translation": [
         0.13,
         0.115,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -33968,7 +33976,7 @@
        "translation": [
         0.38973,
         -0.00821,
-        0.0
+        0
        ]
       },
       "member": "bass",
@@ -33990,7 +33998,7 @@
        "translation": [
         -0.04787,
         0.36211,
-        0.0
+        0
        ]
       },
       "member": "stand",
@@ -34032,7 +34040,7 @@
        "translation": [
         0.21,
         0.33,
-        0.0
+        0
        ]
       }
      },
@@ -34052,7 +34060,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -34072,7 +34080,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -34092,7 +34100,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -34112,7 +34120,7 @@
        "translation": [
         0.0475,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -34132,7 +34140,7 @@
        "translation": [
         0.15,
         0.125,
-        0.0
+        0
        ]
       }
      },
@@ -34328,7 +34336,7 @@
         0.434
        ],
        [
-        0.0,
+        0,
         0.43
        ],
        [
@@ -34432,8 +34440,8 @@
         0.00206
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ]
       ],
       "plane": "zx",
@@ -34567,7 +34575,7 @@
        "translation": [
         0.42075,
         0.33,
-        0.0
+        0
        ]
       },
       "region": "cabinet-grille",
@@ -34589,7 +34597,7 @@
        "translation": [
         0.3015,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-front-panel",
@@ -34614,7 +34622,7 @@
        "translation": [
         -0.00075,
         0.13,
-        0.0
+        0
        ]
       },
       "region": "head-rear-panel",
@@ -35144,7 +35152,7 @@
        "translation": [
         0.60273,
         -0.01187,
-        0.0
+        0
        ]
       },
       "member": "stand-rear-leg",
@@ -35167,7 +35175,7 @@
        "translation": [
         0.21,
         0.009,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -35190,7 +35198,7 @@
        "translation": [
         0.21,
         0.651,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -35259,7 +35267,7 @@
        "translation": [
         0.009,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -35282,7 +35290,7 @@
        "translation": [
         0.394,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -35311,7 +35319,7 @@
        "translation": [
         0.0575,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-l",
@@ -35340,7 +35348,7 @@
        "translation": [
         0.0575,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-front-r",
@@ -35369,7 +35377,7 @@
        "translation": [
         0.0575,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-l",
@@ -35398,7 +35406,7 @@
        "translation": [
         0.0575,
         -0.025,
-        0.0
+        0
        ]
       },
       "member": "castor-rear-r",
@@ -35421,7 +35429,7 @@
        "translation": [
         0.15,
         0.007,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -35444,7 +35452,7 @@
        "translation": [
         0.151,
         0.01475,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -35510,7 +35518,7 @@
        "translation": [
         0.26415,
         0.33,
-        0.0
+        0
        ]
       },
       "member": "cabinet",
@@ -35532,7 +35540,7 @@
        "translation": [
         0.13,
         0.115,
-        0.0
+        0
        ]
       },
       "member": "head",
@@ -35554,7 +35562,7 @@
        "translation": [
         0.38973,
         -0.00821,
-        0.0
+        0
        ]
       },
       "member": "bass",
@@ -35576,7 +35584,7 @@
        "translation": [
         -0.04787,
         0.36211,
-        0.0
+        0
        ]
       },
       "member": "stand",

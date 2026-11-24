@@ -46,7 +46,7 @@ describe("Shell band borders", () => {
       const seam = () => [...band.querySelectorAll(":scope > [data-shared-border-overlay] > [data-shared-border-segment]")];
       const control = () => band.querySelectorAll('[data-slot="toggle-group"] [data-shared-border-state="hover"]');
       expect(band.getAttribute("data-shared-border-edges")).toBe(edge);
-      expect(band.getAttribute("data-shared-border-hover")).toBe("declared");
+      expect(band.hasAttribute("data-shared-border-hover")).toBe(true);
       await waitFor(() => expect(seam().some(path => path.getAttribute("data-shared-border-state") === "normal")).toBe(true));
       const centerline = () => new Set(seam().flatMap(path => [...(path.getAttribute("d") ?? "").matchAll(/[ML] ([\d.+-]+) ([\d.+-]+)/g)].map(point => Number(point[2]))));
       const normal = centerline();

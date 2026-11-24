@@ -100,7 +100,7 @@
    "heightM": 0.476,
    "widthM": 2.4,
    "depthM": 1.8,
-   "massKg": 108.4
+   "massKg": 108.6
   },
   "materials": [
    {
@@ -707,7 +707,7 @@
       "maxDeg": 15
      },
      "mass": {
-      "kg": 21.701,
+      "kg": 21.775,
       "comX": 0.0,
       "comY": -0.00215,
       "distribution": "point",
@@ -733,7 +733,7 @@
       "maxM": 0
      },
      "mass": {
-      "kg": 21.701,
+      "kg": 21.775,
       "comX": 0.0,
       "comY": -0.00215,
       "distribution": "point",
@@ -1945,7 +1945,7 @@
         ],
         "rx": 0.072,
         "ry": 0.372,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -1961,7 +1961,7 @@
         ],
         "rx": 0.09,
         "ry": 0.39,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -1977,7 +1977,7 @@
         ],
         "rx": 0.098,
         "ry": 0.398,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -1993,7 +1993,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2009,7 +2009,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2025,7 +2025,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2041,7 +2041,7 @@
         ],
         "rx": 0.09929,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2057,7 +2057,7 @@
         ],
         "rx": 0.09737,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2073,7 +2073,7 @@
         ],
         "rx": 0.09486,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2089,7 +2089,7 @@
         ],
         "rx": 0.09255,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2105,7 +2105,7 @@
         ],
         "rx": 0.09118,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2121,7 +2121,7 @@
         ],
         "rx": 0.09118,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2137,7 +2137,7 @@
         ],
         "rx": 0.09255,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2153,7 +2153,7 @@
         ],
         "rx": 0.09486,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2169,7 +2169,7 @@
         ],
         "rx": 0.09737,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2185,7 +2185,7 @@
         ],
         "rx": 0.09929,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2201,7 +2201,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2217,7 +2217,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2233,7 +2233,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2249,7 +2249,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2265,7 +2265,7 @@
         ],
         "rx": 0.098,
         "ry": 0.398,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2281,7 +2281,7 @@
         ],
         "rx": 0.09,
         "ry": 0.39,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2297,7 +2297,7 @@
         ],
         "rx": 0.072,
         "ry": 0.372,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2383,7 +2383,7 @@
         ],
         "rx": 0.072,
         "ry": 0.372,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2399,7 +2399,7 @@
         ],
         "rx": 0.09,
         "ry": 0.39,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2415,7 +2415,7 @@
         ],
         "rx": 0.098,
         "ry": 0.398,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2431,7 +2431,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2447,7 +2447,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2463,7 +2463,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2479,7 +2479,7 @@
         ],
         "rx": 0.09929,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2495,7 +2495,7 @@
         ],
         "rx": 0.09737,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2511,7 +2511,7 @@
         ],
         "rx": 0.09486,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2527,7 +2527,7 @@
         ],
         "rx": 0.09255,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2543,7 +2543,7 @@
         ],
         "rx": 0.09118,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2559,7 +2559,7 @@
         ],
         "rx": 0.09118,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2575,7 +2575,7 @@
         ],
         "rx": 0.09255,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2591,7 +2591,7 @@
         ],
         "rx": 0.09486,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2607,7 +2607,7 @@
         ],
         "rx": 0.09737,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2623,7 +2623,7 @@
         ],
         "rx": 0.09929,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2639,7 +2639,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2655,7 +2655,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2671,7 +2671,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2687,7 +2687,7 @@
         ],
         "rx": 0.1,
         "ry": 0.4,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2703,7 +2703,7 @@
         ],
         "rx": 0.098,
         "ry": 0.398,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2719,7 +2719,7 @@
         ],
         "rx": 0.09,
         "ry": 0.39,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -2735,7 +2735,7 @@
         ],
         "rx": 0.072,
         "ry": 0.372,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3045,7 +3045,7 @@
         ],
         "rx": 0.057,
         "ry": 0.357,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3061,7 +3061,7 @@
         ],
         "rx": 0.075,
         "ry": 0.375,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3077,7 +3077,7 @@
         ],
         "rx": 0.083,
         "ry": 0.383,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3093,7 +3093,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3109,7 +3109,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3125,7 +3125,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3141,7 +3141,7 @@
         ],
         "rx": 0.08429,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3157,7 +3157,7 @@
         ],
         "rx": 0.08237,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3173,7 +3173,7 @@
         ],
         "rx": 0.07986,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3189,7 +3189,7 @@
         ],
         "rx": 0.07755,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3205,7 +3205,7 @@
         ],
         "rx": 0.07618,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3221,7 +3221,7 @@
         ],
         "rx": 0.07618,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3237,7 +3237,7 @@
         ],
         "rx": 0.07755,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3253,7 +3253,7 @@
         ],
         "rx": 0.07986,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3269,7 +3269,7 @@
         ],
         "rx": 0.08237,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3285,7 +3285,7 @@
         ],
         "rx": 0.08429,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3301,7 +3301,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3317,7 +3317,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3333,7 +3333,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3349,7 +3349,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3365,7 +3365,7 @@
         ],
         "rx": 0.083,
         "ry": 0.383,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3381,7 +3381,7 @@
         ],
         "rx": 0.075,
         "ry": 0.375,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3397,7 +3397,7 @@
         ],
         "rx": 0.057,
         "ry": 0.357,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3427,7 +3427,7 @@
         ],
         "rx": 0.057,
         "ry": 0.357,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3443,7 +3443,7 @@
         ],
         "rx": 0.075,
         "ry": 0.375,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3459,7 +3459,7 @@
         ],
         "rx": 0.083,
         "ry": 0.383,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3475,7 +3475,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3491,7 +3491,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3507,7 +3507,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3523,7 +3523,7 @@
         ],
         "rx": 0.08429,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3539,7 +3539,7 @@
         ],
         "rx": 0.08237,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3555,7 +3555,7 @@
         ],
         "rx": 0.07986,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3571,7 +3571,7 @@
         ],
         "rx": 0.07755,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3587,7 +3587,7 @@
         ],
         "rx": 0.07618,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3603,7 +3603,7 @@
         ],
         "rx": 0.07618,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3619,7 +3619,7 @@
         ],
         "rx": 0.07755,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3635,7 +3635,7 @@
         ],
         "rx": 0.07986,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3651,7 +3651,7 @@
         ],
         "rx": 0.08237,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3667,7 +3667,7 @@
         ],
         "rx": 0.08429,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3683,7 +3683,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3699,7 +3699,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3715,7 +3715,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3731,7 +3731,7 @@
         ],
         "rx": 0.085,
         "ry": 0.385,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3747,7 +3747,7 @@
         ],
         "rx": 0.083,
         "ry": 0.383,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3763,7 +3763,7 @@
         ],
         "rx": 0.075,
         "ry": 0.375,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,
@@ -3779,7 +3779,7 @@
         ],
         "rx": 0.057,
         "ry": 0.357,
-        "exponent": 20,
+        "exponent": 60,
         "rotation": [
          0.5,
          0.5,

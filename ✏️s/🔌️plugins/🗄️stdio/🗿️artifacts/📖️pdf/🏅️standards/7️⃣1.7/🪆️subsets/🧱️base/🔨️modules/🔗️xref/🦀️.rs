@@ -9,7 +9,7 @@ use crate::standards::v1_7::subsets::base::modules::encryption::Decryptor;
 use crate::standards::v1_7::subsets::base::modules::filters::decode_stream_admitted;
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_i64, find_last_subslice, frame_indirect_with_length, ObjectScanCursor, ObjectScanStep, NormalObject, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, retain_stream_entry, CosGrant, CosLimits, CosStatus, Lexer};
 use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamBytes, PdfStreamFilter};
 use std::collections::{HashMap, HashSet};
 
 #[path = "🌐️file-structure/🦀️.rs"]
@@ -388,7 +388,7 @@ impl<'a> Resolver<'a> {
                         let raw = &self.data[span.start..span.end];
                         let stream_kind = dict.iter().find(|entry| entry.key == "Type").and_then(|entry| entry.value.as_name());
                         if project && matches!(stream_kind, Some("XRef" | "ObjStm")) { return Ok(None); }
-                        PdfObject::Stream { dict, data: raw.to_vec(), filters: Vec::new() }
+                        PdfObject::Stream { dict, data: stream_bytes(raw), filters: Vec::new() }
                     }
                     (value, _) => value,
                 };
@@ -412,7 +412,7 @@ impl<'a> Resolver<'a> {
             let source = self.cache.remove(&number).or_else(|| self.read_uncached(number))?;
             if source.dict_get("Type").and_then(PdfObject::as_name) != Some("ObjStm") { return None; }
             let PdfObject::Stream { dict, data, .. } = source else { return None; };
-            open_object_stream(&dict, &data)?
+            open_object_stream(&dict, &data.to_vec_owner())?
         } else {
             let XrefEntry::Normal { offset, gen } = *self.xref.get(&number)? else { return None; };
             if !self.resolving.insert(number) { return None; }
@@ -570,9 +570,10 @@ fn normalize_retained_object(value: PdfObject) -> PResult<PdfObject> {
     }
 }
 
-fn normalize_stream(dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStreamFilter>) -> PResult<PdfObject> {
+fn normalize_stream(dict: Vec<PdfDictEntry>, data: PdfStreamBytes, filters: Vec<PdfStreamFilter>) -> PResult<PdfObject> {
     let (data, filters, normalized) = if filters.is_empty() {
-        retained_stream_data(&dict, std::borrow::Cow::Owned(data))?
+        let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Owned(data.to_vec_owner()))?;
+        (stream_bytes(&data), filters, normalized)
     } else {
         (data, filters, true)
     };
@@ -585,6 +586,7 @@ fn normalize_stream(dict: Vec<PdfDictEntry>, data: Vec<u8>, filters: Vec<PdfStre
 
 fn normalize_framed_stream(dict: Vec<PdfDictEntry>, raw: &[u8]) -> PResult<PdfObject> {
     let (data, filters, normalized) = retained_stream_data(&dict, std::borrow::Cow::Borrowed(raw))?;
+    let data = stream_bytes(&data);
     let mut cursor = PdfStreamDictionaryCursor::new(dict, normalized);
     let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
     loop {
@@ -729,7 +731,7 @@ mod retained_graph_tests {
             PdfObject::Stream { data, filters, dict } => {
                 assert_eq!(filters.len(), 1);
                 assert!(!dict.iter().any(|entry| entry.key == "Filter" || entry.key == "Length"));
-                data.as_slice()
+                data.to_vec_owner()
             }
             _ => panic!("fixture object is a stream"),
         };

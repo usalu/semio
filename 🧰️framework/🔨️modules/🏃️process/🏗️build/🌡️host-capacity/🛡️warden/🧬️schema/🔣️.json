@@ -1,0 +1,358 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:host-capacity:warden",
+  "title": "Host warden: the one process per machine that acts on the memory of processes that already run (suspend, resume, cancel), from the same host sample and the same ladder the admission gates read.",
+  "definitions": {
+    "Policy": {
+      "description": "The authored numbers of the ladder and of the loop. Shares are basis points of the physical memory, bounded by a minimum and a maximum in megabytes, so a 4 GB host and a 128 GB host both get a usable line. defaultMode is the mode of a machine without a valid mode file: observe decides and alarms without signalling, enforce acts; the whole fleet is switched by changing this one value, every warden restarts itself on the changed source digest. ensureMilliseconds is the time a process trusts its own earlier ensure before it looks at the warden again.",
+      "descriptionDe": "Die festgelegten Zahlen der Leiter und der Schleife. defaultMode ist der Modus einer Maschine ohne gueltige mode-Datei: observe entscheidet und alarmiert ohne Signale, enforce handelt; die ganze Flotte wird durch diesen einen Wert umgeschaltet, jeder Waechter startet sich beim geaenderten Quelltext-Digest selbst neu. ensureMilliseconds ist die Zeit, in der ein Prozess seinem eigenen frueheren Ensure vertraut, bevor er wieder nach dem Waechter sieht.",
+      "const": {
+        "guardBasisPoints": 1000,
+        "guardMinimumMegabytes": 1024,
+        "guardMaximumMegabytes": 4096,
+        "dangerBasisPoints": 500,
+        "dangerMinimumMegabytes": 512,
+        "dangerMaximumMegabytes": 2048,
+        "resumeBasisPoints": 1500,
+        "swapActiveMegabytesPerSecond": 16,
+        "calmTicks": 3,
+        "suspendMaximumSeconds": 120,
+        "maximumSuspendsPerTick": 4,
+        "maximumCancelsPerTick": 2,
+        "keepRunning": 1,
+        "calmMilliseconds": 2000,
+        "tightMilliseconds": 500,
+        "idleMilliseconds": 600000,
+        "codeCheckMilliseconds": 60000,
+        "staleMilliseconds": 30000,
+        "commandMilliseconds": 5000,
+        "tickWindow": 64,
+        "lastAlarms": 8,
+        "alarmsMaximumBytes": 1048576,
+        "cancelRecordMaximumAgeMilliseconds": 3600000,
+        "directory": "warden",
+        "stateFile": "state.json",
+        "lockFile": "lock.json",
+        "alarmsFile": "alarms.jsonl",
+        "modeFile": "mode",
+        "protectFile": "protect.json",
+        "cancelledDirectory": "cancelled",
+        "logFile": "warden.log",
+        "logMaximumBytes": 4194304,
+        "defaultMode": "enforce",
+        "ensureMilliseconds": 15000,
+        "observeOnlyMilliseconds": 8000
+      }
+    },
+    "Kinds": {
+      "description": "Ordered kinds of subjects: the first entry whose pattern matches the command line of a process below a root names its kind. rank is the cost to redo (ascending = cheapest first), actions are what the warden may do, signal is what a cancel sends, scope is what a signal reaches (process: the pid, group: its process group, tree: the pid and every descendant, parent first). source is the repository path of the code that starts the process; a test proves every pattern names a path that exists there.",
+      "const": [
+        {"name": "remote-unit", "rank": 10, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?\\s.*/remote-execution/work/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/👷️worker/🟦️.ts"},
+        {"name": "local-unit", "rank": 20, "pattern": "^(?:\\S*/)?rustc(?:\\.exe)?(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts"},
+        {"name": "pool-child", "rank": 25, "pattern": "🌐️owner-pool/🧒️child/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs"},
+        {"name": "farm-worker", "rank": 30, "pattern": "🏊️project-farm/👷️worker/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"},
+        {"name": "warm-deriver", "rank": 35, "pattern": "🧮️derive/♨️warm/⌨️main/", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts"},
+        {"name": "heavy-question", "rank": 40, "pattern": "🪆️heavy-questions/📜️script.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts"},
+        {"name": "test", "rank": 50, "pattern": "^(?:\\S*/)?bun(?:\\.exe)?\\s+test(?:\\s|$)", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts"},
+        {"name": "slice-worker", "rank": 60, "pattern": "👷️slice-pool/👷️worker.ts", "actions": ["suspend", "cancel"], "signal": "SIGKILL", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"},
+        {"name": "stage", "rank": 90, "pattern": "🚦️ready/🏃️wrapper/🟦️.ts", "actions": ["cancel"], "signal": "SIGTERM", "scope": "tree", "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts"}
+      ]
+    },
+    "Roots": {
+      "description": "Patterns over the command line that mark a process as repo-started: the workspace's pinned Bun runtime, the user-level pinned Bun runtime and the native build scheduler. A subject has a root among itself and its ancestors.",
+      "const": [
+        "^\\S*/\\.cache/b/t/m/bun/",
+        "^\\S*/semio/runtimes/bun/",
+        "^(?:\\S*/)?semio-build-scheduler(?:\\.exe)?(?:\\s|$)"
+      ]
+    },
+    "Never": {
+      "description": "Patterns over the command line of processes that are never subjects, whatever they hold: the warden itself, the sidecar launcher and every sidecar role (cache server, agent, scheduler, graph, pool puller, Ready supervisor; the Ready stage wrapper below them is the one exception), the remote-execution entry, server and scheduler, the replica daemon and the fleet boot entry.",
+      "const": [
+        "🛡️warden/",
+        "🛰️sidecar/(?!🚦️ready/🏃️wrapper/)",
+        "🌐️remote-execution/(?:🏃️entry|🖥️server|🗓️scheduler)/",
+        "🔁️replica/",
+        "/semio/fleet/entry/"
+      ]
+    },
+    "Platforms": {
+      "description": "Where signals are sent. Windows has no SIGSTOP and no ps: the warden decides and alarms there, it never signals (observe only).",
+      "const": {"enforce": ["darwin", "linux"], "observeOnly": ["win32"]}
+    },
+    "Table": {
+      "description": "The command that reads the process table on unix, with the locale each platform needs to print non-ASCII command lines (ps escapes them otherwise). The full form prints every column; the loop reads the cheap columns every tick (pid, parent, group, resident, state, elapsed, start) and the expensive command line only of processes it has not seen yet (key: pid and start text), one `-p` list, or the whole table from commandAllMinimum new processes on (a process younger than commandSettledSeconds, or one still printed as `(name)`, may not have executed its program yet, so its command line is read again on the next tick instead of kept): the command line column costs about three times the rest of the table together.",
+      "const": {
+        "command": "ps",
+        "arguments": ["-A", "-ww", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart=,args="],
+        "quickArguments": ["-A", "-o", "pid=,ppid=,pgid=,rss=,state=,etime=,lstart="],
+        "commandArguments": ["-ww", "-o", "pid=,args="],
+        "commandAllMinimum": 64,
+        "commandSettledSeconds": 3,
+        "locale": {"darwin": "en_US.UTF-8", "linux": "C.UTF-8"},
+        "start": {"command": "ps", "arguments": ["-o", "lstart=", "-p"]}
+      }
+    },
+    "Mode": {"enum": ["observe", "enforce"]},
+    "Level": {"enum": ["calm", "guard", "danger"]},
+    "Pressure": {"enum": ["normal", "warn", "critical"]},
+    "Host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalMegabytes", "availableMegabytes", "swapUsedMegabytes", "swapOutMegabytesPerSecond", "compressedMegabytes", "pressure"],
+      "properties": {
+        "totalMegabytes": {"type": "integer", "minimum": 1},
+        "availableMegabytes": {"type": "integer", "minimum": 0},
+        "swapUsedMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "swapOutMegabytesPerSecond": {"type": ["number", "null"], "minimum": 0},
+        "compressedMegabytes": {"type": ["integer", "null"], "minimum": 0},
+        "pressure": {"$ref": "#/definitions/Pressure"}
+      }
+    },
+    "ProcessRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "parent", "group", "rssKilobytes", "stopped", "elapsedSeconds", "start", "command"],
+      "properties": {
+        "pid": {"type": "integer", "minimum": 1},
+        "parent": {"type": "integer", "minimum": 0},
+        "group": {"type": "integer", "minimum": 0},
+        "rssKilobytes": {"type": "integer", "minimum": 0},
+        "stopped": {"type": "boolean"},
+        "elapsedSeconds": {"type": "integer", "minimum": 0},
+        "start": {"type": "string"},
+        "command": {"type": "string"}
+      }
+    },
+    "Subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pid", "kind", "rank", "elapsedSeconds", "megabytes", "suspended", "suspendedSeconds", "canSuspend", "canCancel"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "pid": {"type": "integer", "minimum": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "rank": {"type": "integer", "minimum": 0},
+        "elapsedSeconds": {"type": "integer", "minimum": 0},
+        "megabytes": {"type": "integer", "minimum": 0},
+        "suspended": {"type": "boolean"},
+        "suspendedSeconds": {"type": "integer", "minimum": 0},
+        "canSuspend": {"type": "boolean"},
+        "canCancel": {"type": "boolean"},
+        "parent": {"type": "integer", "minimum": 0},
+        "start": {"type": "string"},
+        "owner": {"type": "string"},
+        "scope": {"enum": ["process", "group", "tree"]},
+        "signal": {"enum": ["SIGKILL", "SIGTERM"]}
+      }
+    },
+    "Previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "calmTicks"],
+      "properties": {
+        "level": {"$ref": "#/definitions/Level"},
+        "calmTicks": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "id", "reason"],
+      "properties": {
+        "action": {"enum": ["suspend", "resume", "cancel"]},
+        "id": {"type": "string", "minLength": 1},
+        "reason": {"enum": ["guard", "danger", "overdue", "calm"]}
+      }
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "calmTicks", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "actions"],
+      "properties": {
+        "level": {"$ref": "#/definitions/Level"},
+        "calmTicks": {"type": "integer", "minimum": 0},
+        "hold": {"type": "boolean"},
+        "guardMegabytes": {"type": "integer", "minimum": 0},
+        "dangerMegabytes": {"type": "integer", "minimum": 0},
+        "resumeMegabytes": {"type": "integer", "minimum": 0},
+        "actions": {"type": "array", "items": {"$ref": "#/definitions/Action"}}
+      }
+    },
+    "Alarm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "observed", "level", "action", "reason", "id", "pid", "kind", "owner", "megabytes", "host", "text"],
+      "properties": {
+        "version": {"const": 1},
+        "atMs": {"type": "integer", "minimum": 0},
+        "observed": {"type": "boolean"},
+        "level": {"$ref": "#/definitions/Level"},
+        "action": {"enum": ["suspend", "resume", "cancel"]},
+        "reason": {"enum": ["guard", "danger", "overdue", "calm"]},
+        "id": {"type": "string", "minLength": 1},
+        "pid": {"type": "integer", "minimum": 1},
+        "kind": {"type": "string", "minLength": 1},
+        "owner": {"type": "string"},
+        "megabytes": {"type": "integer", "minimum": 0},
+        "host": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["availableMegabytes", "guardMegabytes", "dangerMegabytes", "swapOutMegabytesPerSecond", "pressure"],
+          "properties": {
+            "availableMegabytes": {"type": "integer", "minimum": 0},
+            "guardMegabytes": {"type": "integer", "minimum": 0},
+            "dangerMegabytes": {"type": "integer", "minimum": 0},
+            "swapOutMegabytesPerSecond": {"type": ["number", "null"], "minimum": 0},
+            "pressure": {"$ref": "#/definitions/Pressure"}
+          }
+        },
+        "text": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": {"en": {"type": "string"}, "de": {"type": "string"}}
+        }
+      }
+    },
+    "Cancel": {
+      "description": "The record written before a cancel signal, so the owner of the process can tell a warden cancel from a crash and requeue instead of failing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "pid", "start", "kind", "owner", "command", "megabytes", "atMs", "reason"],
+      "properties": {
+        "version": {"const": 1},
+        "pid": {"type": "integer", "minimum": 1},
+        "start": {"type": "string"},
+        "kind": {"type": "string", "minLength": 1},
+        "owner": {"type": "string"},
+        "command": {"type": "string", "maxLength": 512},
+        "megabytes": {"type": "integer", "minimum": 0},
+        "atMs": {"type": "integer", "minimum": 0},
+        "reason": {"enum": ["guard", "danger", "overdue", "calm"]}
+      }
+    },
+    "Absent": {
+      "description": "The mirror record of a machine whose warden writes no fresh state: tells the coordinator no warden from no record.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "absent"],
+      "properties": {"version": {"const": 1}, "atMs": {"type": "integer", "minimum": 0}, "absent": {"const": true}}
+    },
+    "Mirror": {
+      "description": "What a worker mirrors to the group store as memory.json: the state of its warden as written, or the absent record.",
+      "oneOf": [{"$ref": "#/definitions/State"}, {"$ref": "#/definitions/Absent"}]
+    },
+    "Lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pid", "start"],
+      "properties": {"pid": {"type": "integer", "minimum": 1}, "start": {"type": "string"}}
+    },
+    "Protect": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "Suspended": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pid", "start", "kind", "sinceMs"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "pid": {"type": "integer", "minimum": 1},
+        "start": {"type": "string"},
+        "kind": {"type": "string", "minLength": 1},
+        "sinceMs": {"type": "integer", "minimum": 0}
+      }
+    },
+    "KindTotal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "megabytes"],
+      "properties": {"count": {"type": "integer", "minimum": 0}, "megabytes": {"type": "integer", "minimum": 0}}
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "atMs", "pid", "mode", "code", "host", "level", "hold", "guardMegabytes", "dangerMegabytes", "resumeMegabytes", "subjects", "suspended", "counters", "lastAlarms", "overhead"],
+      "properties": {
+        "version": {"const": 1},
+        "atMs": {"type": "integer", "minimum": 0},
+        "pid": {"type": "integer", "minimum": 1},
+        "mode": {"$ref": "#/definitions/Mode"},
+        "code": {"type": "string", "minLength": 1},
+        "host": {"$ref": "#/definitions/Host"},
+        "level": {"$ref": "#/definitions/Level"},
+        "hold": {"type": "boolean"},
+        "guardMegabytes": {"type": "integer", "minimum": 0},
+        "dangerMegabytes": {"type": "integer", "minimum": 0},
+        "resumeMegabytes": {"type": "integer", "minimum": 0},
+        "subjects": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["count", "megabytes", "byKind"],
+          "properties": {
+            "count": {"type": "integer", "minimum": 0},
+            "megabytes": {"type": "integer", "minimum": 0},
+            "byKind": {"type": "object", "additionalProperties": {"$ref": "#/definitions/KindTotal"}}
+          }
+        },
+        "suspended": {"type": "array", "items": {"$ref": "#/definitions/Suspended"}},
+        "counters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["suspended", "resumed", "cancelled", "ticks"],
+          "properties": {
+            "suspended": {"type": "integer", "minimum": 0},
+            "resumed": {"type": "integer", "minimum": 0},
+            "cancelled": {"type": "integer", "minimum": 0},
+            "ticks": {"type": "integer", "minimum": 0}
+          }
+        },
+        "lastAlarms": {"type": "array", "maxItems": 8, "items": {"$ref": "#/definitions/Alarm"}},
+        "overhead": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tickMillisecondsP50", "tickMillisecondsP95", "cpuBasisPoints", "residentMegabytes"],
+          "properties": {
+            "tickMillisecondsP50": {"type": "number", "minimum": 0},
+            "tickMillisecondsP95": {"type": "number", "minimum": 0},
+            "cpuBasisPoints": {"type": "number", "minimum": 0},
+            "residentMegabytes": {"type": "number", "minimum": 0}
+          }
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "alarm": "[warden] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; host {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap}, pressure {pressure}{observed}",
+          "actions": {"suspend": "suspended", "resume": "resumed", "cancel": "cancelled"},
+          "reasons": {"guard": "available memory is below the guard line", "danger": "available memory is below the danger line", "overdue": "suspended for too long", "calm": "memory is calm again"},
+          "pressures": {"normal": "normal", "warn": "warn", "critical": "critical"},
+          "observed": " [observe mode: nothing was signalled]",
+          "swapUnknown": "unknown",
+          "swapRate": "{rate} MB/s",
+          "started": "[warden] started: pid {pid}, mode {mode}, code {code}, directory {directory}",
+          "stopped": "[warden] stopped: {reason}",
+          "locked": "[warden] another warden holds the lock (pid {pid}); this one ends",
+          "left": "[warden] resumed {kind} pid {pid}, left suspended by a predecessor",
+          "observeOnly": "[warden] platform {platform} cannot suspend processes: observe mode only",
+          "reasonsStopped": {"idle": "no subject for {minutes} minutes", "code": "its own source changed", "signal": "termination requested", "locked": "lock held by another warden", "limit": "tick limit reached"}
+        },
+        "de": {
+          "alarm": "[Wächter] {action} {kind} pid {pid} ({owner}, {megabytes} MB): {reason}; Host {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap}, Druck {pressure}{observed}",
+          "actions": {"suspend": "angehalten", "resume": "fortgesetzt", "cancel": "abgebrochen"},
+          "reasons": {"guard": "der verfügbare Speicher liegt unter der Wachlinie", "danger": "der verfügbare Speicher liegt unter der Gefahrenlinie", "overdue": "zu lange angehalten", "calm": "der Speicher ist wieder ruhig"},
+          "pressures": {"normal": "normal", "warn": "Warnung", "critical": "kritisch"},
+          "observed": " [Beobachtungsmodus: nichts wurde signalisiert]",
+          "swapUnknown": "unbekannt",
+          "swapRate": "{rate} MB/s",
+          "started": "[Wächter] gestartet: pid {pid}, Modus {mode}, Code {code}, Verzeichnis {directory}",
+          "stopped": "[Wächter] beendet: {reason}",
+          "locked": "[Wächter] ein anderer Wächter hält die Sperre (pid {pid}); dieser endet",
+          "left": "[Wächter] {kind} pid {pid} fortgesetzt, von einem Vorgänger angehalten zurückgelassen",
+          "observeOnly": "[Wächter] Plattform {platform} kann Prozesse nicht anhalten: nur Beobachtungsmodus",
+          "reasonsStopped": {"idle": "seit {minutes} Minuten kein Subjekt", "code": "der eigene Quelltext hat sich geändert", "signal": "Beendigung angefordert", "locked": "Sperre von einem anderen Wächter gehalten", "limit": "Tick-Grenze erreicht"}
+        }
+      }
+    }
+  }
+}

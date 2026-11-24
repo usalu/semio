@@ -28,7 +28,7 @@ impl OriginalFloatFieldWork{
  pub fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let g=effect.grant();self.progress=Default::default();self.work=0;if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.raw.terminal_is_empty(){let turn=self.raw.close_step(effect);self.work=turn.work;self.progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};return turn}if self.origin.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=RetirementDemand{copy_bytes:size_of::<Option<(u64,u64,usize,usize)>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.origin=None;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};self.work=1;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.origin.is_none()&&self.raw.terminal_is_empty()}
 }
-impl Drop for OriginalFloatFieldWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original numeric field read must close actual source and output")}}
+impl Drop for OriginalFloatFieldWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original numeric field read must close actual source and output")}}
 #[cfg(test)]
 #[path="🧪️laws/🦀️.rs"]
 mod laws;

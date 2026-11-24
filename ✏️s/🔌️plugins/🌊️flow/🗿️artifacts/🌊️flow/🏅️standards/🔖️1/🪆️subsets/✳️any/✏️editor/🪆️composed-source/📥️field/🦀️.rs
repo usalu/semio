@@ -46,4 +46,4 @@ impl FieldWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.is_none()&&self.owners.output.is_none()&&self.owners.failure.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for FieldWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original composed field requires complete recipient and refusal closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
+impl Drop for FieldWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original composed field requires complete recipient and refusal closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}

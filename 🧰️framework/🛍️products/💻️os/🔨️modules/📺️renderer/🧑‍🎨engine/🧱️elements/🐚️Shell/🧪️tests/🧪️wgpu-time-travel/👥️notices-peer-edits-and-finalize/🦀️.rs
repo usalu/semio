@@ -128,7 +128,7 @@ fn the_shared_peer_history_edit_corpus_holds_on_wgpu() {
 }
 
 /// ⚖️ LAW: the shell's roster shows exactly the attached surface's editing peers — the footer chip paints the badge after
-/// the name and is announced with the activity text, and the history body's notes are what the shell hands the
+/// the name and is announced with the role word and the activity text, and the history body's notes are what the shell hands the
 /// retained UI; a peer on another surface is neither shown nor noted.
 #[test]
 fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
@@ -144,7 +144,7 @@ fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
     assert_eq!(rows.iter().map(|row| (row.actor.as_str(), row.activity.as_ref().map(|activity| activity.badge.as_str()))).collect::<Vec<_>>(), [("actor-ada", Some("⏪")), ("actor-cy", None), ("actor-bo", Some("⏪"))]);
     assert_eq!(semio_ui_wgpu_light::presence_bar::presence_bar_chip_text(&rows, None, Locale::De), "Ada ⏪ · Cy · Bo ⏪");
     let announced = PanelsViewCtx::of(&mut shell).footer_status_chips().into_iter().find(|(key, _)| *key == "s-presence-peers").expect("the roster is announced").1;
-    assert_eq!(announced, "Ada (Ada bearbeitet Skalieren im Verlauf) · Cy · Bo (Bo bearbeitet Drehen im Verlauf)");
+    assert_eq!(announced, "Ada (Bearbeitet, Ada bearbeitet Skalieren im Verlauf) · Cy (Bearbeitet) · Bo (Bearbeitet, Bo bearbeitet Drehen im Verlauf)");
     let expected: Vec<(String, String)> = case["expect"]["de"]["notes"].as_array().expect("notes").iter().map(|note| (note["key"].as_str().expect("key").into(), note["text"].as_str().expect("text").into())).collect();
     assert_eq!(shell.directory.peer_time_travel_presence(&shell.chrome, &shell.history, &shell.prefs).notes, expected, "a peer on another surface notes nothing");
 }

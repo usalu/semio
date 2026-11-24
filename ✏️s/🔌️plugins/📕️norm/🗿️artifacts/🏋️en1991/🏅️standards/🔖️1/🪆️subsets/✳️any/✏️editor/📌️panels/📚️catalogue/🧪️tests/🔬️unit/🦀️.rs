@@ -5,6 +5,7 @@ use semio_s_plugin_norm_compliance::AnnexChoice;
 use crate::unit_tests::context;
 use semio_s_artifact_norm_en1991_checks::part_1_1;
 use semio_s_artifact_norm_en1991_model::{En1991Snapshot, FloorArea};
+use semio_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

@@ -32,7 +32,7 @@ import { useId, useState, type FocusEvent, type ReactElement } from "react";
 import type { CompareHint, Hint, SheetSortingTask, Slug, SortingAnswer } from "@semio-tech/course";
 import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized } from "../🌐️i18n/🟦️.ts";
-import { BodyButton, CELL, CardSection, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardIcon, CardSection, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, compareText, describedBy, elementId, exampleGuess, hintName, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
@@ -151,7 +151,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
           <CardSection className="gap-single">
             <p className="m-0 text-xs text-muted-foreground">{text("course.sorting.keepHint")}</p>
           </CardSection>
-          <BodyButton row onClick={keep}>{text("course.sorting.keep")}</BodyButton>
+          <BodyButton icon="check" row onClick={keep}>{text("course.sorting.keep")}</BodyButton>
         </>
       ) : null}
       <p {...CELL} className="m-0 px-double py-single text-xs text-muted-foreground" aria-hidden="true">
@@ -208,10 +208,10 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
                     {keyText(index)}
                   </span>
                   <button type="button" id={elementId(scope, id, "up")} {...CELL} className={`course-sort-up ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.up", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === 0} onClick={() => move(index, index - 1, "up")}>
-                    ↑
+                    <CardIcon icon="arrow-up" />
                   </button>
                   <button type="button" id={elementId(scope, id, "down")} {...CELL} className={`course-sort-down ${ICON_BUTTON_CLASS}`} aria-label={text("course.sorting.down", { item: label(id) })} aria-describedby={described} aria-disabled={locked || index === order.length - 1} onClick={() => move(index, index + 1, "down")}>
-                    ↓
+                    <CardIcon icon="arrow-down" />
                   </button>
                 </>
               )}

@@ -1,11 +1,13 @@
 import { originalOperationWorkerSource } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
+import { pluginStagedGuestSource } from "../🎚️staged-guest/🟦️.ts";
 
 /** 🧩️ The closed actor module around one transpiled component: its host and WASI activation, plus the self-issued driver that lowers every `reactor.poll` and `jobs` invocation to the owned WIT. */
 export function browserActorModuleSource(component: string, imports: string, wasiRequired: boolean): string {
   return `import { createBrowserHostActivation } from "semio:actor-host";
 import { createBrowserWasiActivation } from "semio:actor-wasi";
-const OriginalSelfIssuedTurns = (() => { ${originalOperationWorkerSource()}
-return OriginalSelfIssuedTurns; })();
+const { OriginalSelfIssuedTurns, pluginStagedGuest } = (() => { ${originalOperationWorkerSource()}
+${pluginStagedGuestSource()}
+return { OriginalSelfIssuedTurns, pluginStagedGuest }; })();
 ${component}
 export async function activate(identity, port, control = {}) {
   const host = createBrowserHostActivation(identity, port, control.signal);
@@ -26,7 +28,7 @@ export async function activate(identity, port, control = {}) {
   }
   const active = new Set();
   let phase = "open", closing, turns;
-  const driver = () => turns ??= new OriginalSelfIssuedTurns(component, () => { const now = port.operationClockUs(); if (typeof now !== "bigint") throw new Error("browser actor bundle: original operation clock required"); return now; });
+  const driver = () => turns ??= new OriginalSelfIssuedTurns(pluginStagedGuest(component), () => { const now = port.operationClockUs(); if (typeof now !== "bigint") throw new Error("browser actor bundle: original operation clock required"); return now; });
   const driven = new Map([["reactor.poll", args => driver().poll(args[0], args[1])], ["jobs.startJob", args => driver().startJob(args[0], args[1], args[2])], ["jobs.stepJob", args => driver().stepJob(args[0], args[1], { signal: control.signal })], ["jobs.cancelJob", args => driver().cancelJob(args[0])]]);
   const close = () => {
     if (closing) return closing;

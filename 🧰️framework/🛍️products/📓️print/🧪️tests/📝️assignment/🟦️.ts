@@ -125,7 +125,9 @@ test("assignment cover arranges localized windows and keeps its settings local",
   const latex = readFileSync(new URL("../../🖋️latex/semio-assignment.sty", import.meta.url), "utf8");
   const cover = latex.slice(latex.indexOf("\\NewDocumentCommand \\makeassignmentcover"));
   for (const command of ["\\SemioAssignmentCoverFact { m m }", "\\SemioAssignmentCoverPartner { m +m }", "\\NewDocumentCommand \\makeassignmentcover { }"]) expect(latex).toContain(command);
-  for (const key of ["number", "faculty", "logo", "cover-image", "cover-title", "institution-label", "faculty-label"]) expect(latex).toContain(key + " .tl_set:N");
+  for (const key of ["number", "faculty", "logo", "cover-image", "cover-content", "cover-title", "institution-label", "faculty-label"]) expect(latex).toContain(key + " .tl_set:N");
+  expect(latex).toContain("cover-image-fit .choices:nn = { contain, cover, fill, none }");
+  expect(cover).toContain("image-fit=\\tl_use:N \\l_semio_assignment_cover_image_fit_tl");
   for (const label of ["{ course } { Course }", "{ title } { Title }", "{ faculty } { Faculty }", "{ course } { Lehrveranstaltung }", "{ title } { Titel }", "{ faculty } { Fakultät }"]) expect(latex).toContain(label);
   expect(cover.indexOf("\\group_begin:")).toBeGreaterThan(0);
   expect(cover.indexOf("\\group_begin:")).toBeLessThan(cover.indexOf("\\setlength { \\parskip } { 0pt }"));

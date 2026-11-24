@@ -5,7 +5,7 @@ import {closureLiteralSitesV1,closurePackageNameV1,closureSpecifierKindV1,closur
 import{constants}from"node:fs";
 import {createHash} from "node:crypto";
 import {lstat,open,opendir,readFile,realpath} from "node:fs/promises";
-import{nxAuthorizerMemoDirectoriesV1,nxAuthorizerMemoImplementationV1,readNxAuthorizerMemoV1,replayNxAuthorizerMemoV1,writeNxAuthorizerMemoV1,type NxAuthorizerObservationV1}from"./🧊️memo/🟦️.ts";
+import{nxAuthorizerMemoDirectoriesV1,nxAuthorizerMemoImplementationV1,readNxAuthorizerMemoV1,replayNxAuthorizerMemoPartialV1,replayNxAuthorizerMemoV1,writeNxAuthorizerMemoV1,type NxAuthorizerObservationV1}from"./🧊️memo/🟦️.ts";
 import {dirname,extname,isAbsolute,join,relative,resolve} from "node:path";
 import { runtimeResolveV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";
 import {refuseBootstrapV1} from "../../📖️texts/🟦️.ts";
@@ -88,19 +88,21 @@ async function installedMarkV1(root:string,inside:string,specifier:string,versio
  return closureTargetSchemesV1.installed+name+"@"+version;
 }
 /** 💾️ Remembers a finished capture together with the filesystem facts it depended on, so that the next process proves it instead of repeating it; a memo that cannot be written costs only that next capture. */
-    async function rememberCapturedV1(root:string,entry:string,installed:boolean,file:string,result:NxAuthorizerSourcesV1,marks:ReadonlyMap<string,string>,observations:readonly NxAuthorizerObservationV1[]):Promise<void>{
+    async function rememberCapturedV1(root:string,entry:string,installed:boolean,file:string,result:NxAuthorizerSourcesV1,marks:ReadonlyMap<string,string>,observations:readonly NxAuthorizerObservationV1[],shapes:ReadonlyMap<string,string>):Promise<void>{
      const directories=await nxAuthorizerMemoDirectoriesV1(root,result.manifest.sources.map(row=>row.path));
      if(!directories)return;
      const imports=nxAuthorizerImportProjectionV1(root,nxAuthorizerCapturedBytesV1(result),result.manifest.resolutions,capturedInstalled.get(result));
      capturedImports.set(result,imports);
-     await writeNxAuthorizerMemoV1(file,{version:1,installed,implementation:nxAuthorizerMemoImplementationV1(),root,entry,directories,observations,manifest:result.manifest,marks:Object.fromEntries([...marks].sort(([left],[right])=>compare(left,right))),imports:Object.fromEntries(imports)});
+     await writeNxAuthorizerMemoV1(file,{version:1,installed,implementation:nxAuthorizerMemoImplementationV1(),root,entry,directories,observations,manifest:result.manifest,marks:Object.fromEntries([...marks].sort(([left],[right])=>compare(left,right))),imports:Object.fromEntries(imports),shapes:Object.fromEntries([...shapes].sort(([left],[right])=>compare(left,right)))});
     }
-    /** ♻️ Serves a capture from its memo when the present tree proves every fact the memo rests on: file digests, ancestor identities, remembered absences and listings and each package resolution; otherwise nothing. */
-    async function replayCapturedV1(workspace:string,entry:string,signal:AbortSignal,installed:boolean,file:string):Promise<NxAuthorizerSourcesV1|undefined>{
-     const root=resolve(workspace),memo=await readNxAuthorizerMemoV1(file);
-     if(!memo||memo.entry!==entry||memo.root!==root||memo.installed!==installed)return undefined;
-     const contents=await replayNxAuthorizerMemoV1(root,memo,signal);
-     if(!contents)return undefined;
+    /** 🧬️ The import shape of one file: everything its bytes contribute to the closure (the literal import sites and the relative JSON paths it names), so a file whose bytes changed but whose shape did not leaves every other fact of the capture as it was. */
+    function fileShapeV1(path:string,bytes:Uint8Array,installed:boolean):string{
+     if(extname(path)===".json"||runtimeDataCompanionPathsV1.has(path))return hash("data");
+     const source=Buffer.from(bytes).toString("utf8").replace(/^#![^\r\n]*/u,"");
+     return hash(JSON.stringify([scannedImportRowsV1(path,source,installed),[...source.matchAll(/(["'\x60])(\.{1,2}\/[^"'\x60\\\r\n$]+\.json)\1/gu)].map(row=>row[2])]));
+    }
+    /** 📦️ Proves every package resolution a memo recorded against the present installation. */
+    async function packagesHoldV1(root:string,memo:{observations:readonly NxAuthorizerObservationV1[]},signal:AbortSignal,installed:boolean):Promise<boolean>{
      const versions=new Map<string,string>();
      for(const row of memo.observations){
       if(row.kind!=="package")continue;
@@ -110,15 +112,45 @@ async function installedMarkV1(root:string,inside:string,specifier:string,versio
        const actual=await realpath(located),physicalRoot=await realpath(root);signal.throwIfAborted();
        candidate=relative(physicalRoot,actual).replaceAll("\\","/");
        if(installed&&installedPathV1(candidate))mark=await installedMarkV1(root,candidate,row.specifier,versions,signal);
-      }catch(error){signal.throwIfAborted();if(row.candidate===null)continue;return undefined;}
-      if(row.candidate===null||candidate!==row.candidate||mark!==row.mark)return undefined;
+      }catch(error){signal.throwIfAborted();if(row.candidate===null)continue;return false;}
+      if(row.candidate===null||candidate!==row.candidate||mark!==row.mark)return false;
      }
+     return true;
+    }
+    /** 🏁️ Turns a proven memo and its file bytes into the capture it remembers. */
+    function servedFromMemoV1(memo:Awaited<ReturnType<typeof readNxAuthorizerMemoV1>>&{},contents:ReadonlyMap<string,Uint8Array>,installed:boolean):NxAuthorizerSourcesV1{
      const manifest:NxAuthorizerSourceManifestV1=Object.freeze({version:1,mode:"release",entry:memo.manifest.entry,resolutions:Object.freeze(memo.manifest.resolutions.map(row=>Object.freeze({specifier:row.specifier,path:row.path}))),sources:Object.freeze(memo.manifest.sources.map(row=>Object.freeze({path:row.path,sha256:row.sha256})))});
      const result=Object.freeze({manifest,digest:hash(JSON.stringify(manifest)+"\n")});
      capturedBytes.set(result,contents);
      if(installed)capturedInstalled.set(result,Object.freeze({installed:Object.freeze({...memo.marks}),roots:computedRoots}));
      capturedImports.set(result,new Map(Object.entries(memo.imports).map(([path,map])=>[path,Object.freeze({...map})] as const)));
      return result;
+    }
+    /** ♻️ Serves a capture from its memo when the present tree proves every fact the memo rests on: file digests, ancestor identities, remembered absences and listings and each package resolution; otherwise nothing. */
+    async function replayCapturedV1(workspace:string,entry:string,signal:AbortSignal,installed:boolean,file:string):Promise<NxAuthorizerSourcesV1|undefined>{
+     const root=resolve(workspace),memo=await readNxAuthorizerMemoV1(file);
+     if(!memo||memo.entry!==entry||memo.root!==root||memo.installed!==installed)return undefined;
+     const contents=await replayNxAuthorizerMemoV1(root,memo,signal);
+     if(!contents||!await packagesHoldV1(root,memo,signal,installed))return undefined;
+     return servedFromMemoV1(memo,contents,installed);
+    }
+    /** 🩹️ Serves a capture whose memo still holds except for the bytes of a few files, when each of those files keeps its import shape: only they are re-read and re-scanned, the memo is rewritten with their new digests, and a file whose shape moved (or vanished) sends the caller to a full walk. */
+    async function replayCapturedPartialV1(workspace:string,entry:string,signal:AbortSignal,installed:boolean,file:string,report?:(text:string)=>void):Promise<NxAuthorizerSourcesV1|undefined>{
+     const root=resolve(workspace),memo=await readNxAuthorizerMemoV1(file);
+     if(!memo||memo.entry!==entry||memo.root!==root||memo.installed!==installed)return undefined;
+     const partial=await replayNxAuthorizerMemoPartialV1(root,memo,signal);
+     if(!partial||!partial.changed.length||partial.changed.length>authorizerSchema.$defs.SourceReadAhead.const.maximumChangedFiles){if(partial)report?.("memo cannot be repaired: "+partial.changed.length+" changed file(s)");return undefined;}
+     if(!await packagesHoldV1(root,memo,signal,installed)){report?.("memo cannot be repaired: a package resolution moved");return undefined;}
+     const contents=new Map(partial.contents),digests=new Map<string,string>();
+     for(const path of partial.changed){
+      let bytes:Uint8Array;try{bytes=await readNxAuthorizerSourceV1(root,path,signal);}catch(error){signal.throwIfAborted();report?.("memo cannot be repaired: "+path+" cannot be read");return undefined;}
+      const shape=fileShapeV1(path,bytes,installed);if(shape!==(memo.shapes?.[path]??hash("data"))||memo.shapes?.[path]===undefined&&!(extname(path)===".json"||runtimeDataCompanionPathsV1.has(path))){report?.("memo cannot be repaired: the imports of "+path+" changed");return undefined;}
+      contents.set(path,bytes);digests.set(path,hash(bytes));
+     }
+     const updated={...memo,manifest:{...memo.manifest,sources:memo.manifest.sources.map(row=>digests.has(row.path)?{path:row.path,sha256:digests.get(row.path)!}:row)}};
+     report?.("memo held except "+partial.changed.length+" changed file(s) with unchanged imports, re-read only those");
+     await writeNxAuthorizerMemoV1(file,updated);
+     return servedFromMemoV1(updated,contents,installed);
     }
     /** 📊️ Reports metadata only; this value cannot authorize a compiler image or loader. */
 export interface NxAuthorizerCensusV1{readonly kind:"source-census";readonly version:1;readonly entry:string;readonly files:number;readonly sourceBytes:number;readonly snapshotBytes:number;readonly sources:readonly {readonly path:string;readonly bytes:number;readonly origin:string;readonly importer:string|null}[]}
@@ -138,14 +170,15 @@ async function traverseNxAuthorizerSourcesV1(workspace:string,entry:string,signa
 }
 async function walkNxAuthorizerSourcesV1(workspace:string,entry:string,signal:AbortSignal,options:NxAuthorizerCaptureOptionsV1,progress:((files:number,phase:"capture"|"projection")=>void)|undefined,attempt:number):Promise<NxAuthorizerSourcesV1|NxAuthorizerCensusV1>{
  const remembered=options.memo!==undefined&&options.roots===undefined?await replayCapturedV1(workspace,entry,signal,options.installed===true,options.memo.file):undefined;
- if(remembered){options.memo!.served?.("memo");return remembered;}
+ const incremental=remembered===undefined&&options.memo!==undefined&&options.roots===undefined?await replayCapturedPartialV1(workspace,entry,signal,options.installed===true,options.memo.file,options.report):undefined;
+ if(remembered??incremental){options.memo!.served?.("memo");return (remembered??incremental)!;}
  if(options.memo!==undefined&&options.roots===undefined)options.report?.("memo absent or stale, walking the tool closure");
- const installed=options.installed===true,roots=options.roots??computedRoots,root=resolve(workspace),files=new Map<string,string>(),contents=new Map<string,Uint8Array>(),pending=[entry],resolutions=new Map<string,string>(),marks=new Map<string,string>(),versions=new Map<string,string>(),observed:NxAuthorizerObservationV1[]=[],ancestry=createNxAuthorizerAncestryV1(),discovery:RuntimeDataDiscoveryV1={directories:new Set(),results:new Set(),observed,ancestry,...options.probe?{probe:(kind:"entry",path:string)=>options.probe!(kind,path,attempt)}:{},entries:0,bytes:0};let total=0;
+ const shapes=new Map<string,string>(),installed=options.installed===true,roots=options.roots??computedRoots,root=resolve(workspace),files=new Map<string,string>(),contents=new Map<string,Uint8Array>(),pending=[entry],resolutions=new Map<string,string>(),marks=new Map<string,string>(),versions=new Map<string,string>(),observed:NxAuthorizerObservationV1[]=[],ancestry=createNxAuthorizerAncestryV1(),discovery:RuntimeDataDiscoveryV1={directories:new Set(),results:new Set(),observed,ancestry,...options.probe?{probe:(kind:"entry",path:string)=>options.probe!(kind,path,attempt)}:{},entries:0,bytes:0};let total=0;
  const origins=new Map<string,{kind:string;importer:string|null;specifier?:string}>([[entry,{kind:"entry",importer:null}]]);
  const rememberOrigin=(target:string,origin:{kind:string;importer:string|null;specifier?:string})=>{if(!origins.has(target))origins.set(target,origin);};
  const reading=new Map<string,Promise<Uint8Array>>(),slots={free:authorizerSchema.$defs.SourceReadAhead.const.concurrency,queue:[] as (()=>void)[]},ahead=(path:string):Promise<Uint8Array>=>{let row=reading.get(path);if(!row){row=(async()=>{if(slots.free<=0)await new Promise<void>(go=>slots.queue.push(go));else slots.free--;try{await options.probe?.("read",path,attempt);return await readNxAuthorizerSourceV1(root,path,signal,ancestry);}finally{const next=slots.queue.shift();if(next)next();else slots.free++;}})();row.catch(()=>undefined);reading.set(path,row);}return row;};
  const capture=async(path:string)=>{if(contents.has(path))return contents.get(path)!;let bytes:Uint8Array;try{bytes=await ahead(path);reading.delete(path);}catch(error){const detail=error as NodeJS.ErrnoException;if(typeof error==="object"&&error!==null)Object.defineProperty(error,"lineage",{value:Object.freeze({root,entry,installed,operation:"required-source-read",request:path,origin:origins.get(path)??null,code:detail?.code??null,failedPath:detail?.path??null}),enumerable:false});throw error;}signal.throwIfAborted();files.set(path,hash(bytes));contents.set(path,new Uint8Array(bytes));total+=bytes.byteLength;if(files.size%authorizerSchema.$defs.SourceReadAhead.const.reportFiles===0)options.report?.("walked "+files.size+" files, now "+path);if(progress&&!nxAuthorizerCensusCapacityV1(files.size,total))throw Error("Authorizer source census capacity exceeded");if(progress&&files.size%authorizerSchema.$defs.SourceCensusPolicy.const.progressFiles===0){progress(files.size,"capture");signal.throwIfAborted();}if(!progress&&!buildSourceCapacityV1(files.size,total)){const policy=authorizerSchema.$defs.SourceCapacityDiagnostic.properties,chain:string[]=[];for(let at:string|undefined=path;at!==undefined&&!chain.includes(at)&&chain.length<policy.chain.maxItems;at=origins.get(at)?.importer??undefined)chain.push(at);const largest=[...contents].map(([path,bytes])=>Object.freeze({path,bytes:bytes.byteLength})).sort((left,right)=>right.bytes-left.bytes||compare(left.path,right.path)).slice(0,policy.largest.maxItems);const failure=Object.assign(Error(nxAuthorizerCapacityTextV1({files:files.size,bytes:total,path,chain})),{diagnostic:Object.freeze({version:1,path,origin:origins.get(path)?.kind??"unknown",chain:Object.freeze(chain),files:files.size,bytes:total,largest:Object.freeze(largest)})});Object.defineProperty(failure,"sourceCensus",{value:Object.freeze([...contents].slice(0,maximumSourceFiles+1).map(([path,bytes])=>Object.freeze({path,bytes:bytes.byteLength,origin:origins.get(path)?.kind??"unknown",importer:origins.get(path)?.importer??null}))),enumerable:false});throw failure;}return bytes;};
- while(pending.length){signal.throwIfAborted();const path=pending.pop()!;if(files.has(path))continue;const bytes=await capture(path);signal.throwIfAborted();
+ while(pending.length){signal.throwIfAborted();const path=pending.pop()!;if(files.has(path))continue;const bytes=await capture(path);signal.throwIfAborted();shapes.set(path,fileShapeV1(path,bytes,installed));
   for(const companion of [...(runtimeDataCompanions.get(path)??[]),...(options.roots?.get(path)??[])]){sourcePath(root,companion);rememberOrigin(companion,{kind:"declared-companion",importer:path});pending.push(companion);ahead(companion);}
   if(extname(path)===".json"){JSON.parse(Buffer.from(bytes).toString("utf8"));continue;}
   if(runtimeDataCompanionPathsV1.has(path))continue;
@@ -175,7 +208,7 @@ async function walkNxAuthorizerSourcesV1(workspace:string,entry:string,signal:Ab
  }
  const manifest:NxAuthorizerSourceManifestV1=Object.freeze({version:1,mode:"release",entry,resolutions:Object.freeze([...resolutions].sort(([left],[right])=>compare(left,right)).map(([specifier,path])=>Object.freeze({specifier,path}))),sources:Object.freeze([...files].sort(([left],[right])=>compare(left,right)).map(([path,sha256])=>Object.freeze({path,sha256})))});
  const result=Object.freeze({manifest,digest:hash(JSON.stringify(manifest)+"\n")});capturedBytes.set(result,contents);if(installed)capturedInstalled.set(result,Object.freeze({installed:Object.freeze(Object.fromEntries([...marks].sort(([left],[right])=>compare(left,right)))),roots}));
- if(options.memo!==undefined&&options.roots===undefined){options.memo.served?.("capture");await rememberCapturedV1(root,entry,installed,options.memo.file,result,marks,observed);}
+ if(options.memo!==undefined&&options.roots===undefined){options.memo.served?.("capture");await rememberCapturedV1(root,entry,installed,options.memo.file,result,marks,observed,shapes);}
  return result;
 }
 /** 🕸️ Resolves only executable compiler imports against the same privately captured byte census; with installed markers it also resolves third-party packages and computed-site roots. */

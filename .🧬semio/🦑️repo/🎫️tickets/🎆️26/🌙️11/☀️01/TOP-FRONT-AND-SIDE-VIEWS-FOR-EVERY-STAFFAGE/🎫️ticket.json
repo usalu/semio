@@ -1,8 +1,9 @@
 {
   "title": "Top Front and Side Views for Every Staffage",
   "emoji": "🧊️",
-  "status": "open",
+  "status": "closed",
   "description": "Every staffage must have a top view, front view and side view for all poses, clips, scales, etc. Make plan (top) and front geometry mandatory for every authored representation of every catalog asset next to the elevation (side), remove the optional viewpoint list, handcraft the missing front and plan drawings for all ~135 assets at every authored scale, guard it with a language-agnostic orthographic-consistency test checked by a third-party oracle, and make every consumer (depiction, print suitability, copy check, exporter, casts, React app, site) offer all three views.",
+  "summary": "Front and plan are mandatory in the schema and drawn by hand for every authored representation (1,416 representations of 375 assets, no gap); the viewpoint list is gone; depiction, suitability, copy check, exports, sheets, casts and viewer offer the three views. On 2026-11-23 the three-views guard passed 774 of 775 in a full run, and the last red asset, walking-commuter, was redrawn afterwards and passes its sweep (8 findings to 0) with plan-projection 13 of 13; the full suite was not run again after that redraw. 27 assets were corrected today so that side, front and plan agree in every pose and clip. Section pins follow the sections the assets declare. Evidence: older-tickets.md, three-views-1/2/3.md, small-reds.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2779"
   },
@@ -21,6 +22,20 @@
       "prompt": "Every staffage must have a top view, front view and side view for all poses, clips, scales, etc. Make plan (top) and front geometry mandatory for every authored representation of every catalog asset next to the elevation (side), remove the optional viewpoint list, handcraft the missing front and plan drawings for all ~135 assets at every authored scale, guard it with a language-agnostic orthographic-consistency test checked by a third-party oracle, and make every consumer (depiction, print suitability, copy check, exporter, casts, React app, site) offer all three views.",
       "llm": "opus-4-7",
       "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 15:24:13",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Front and plan are mandatory in the schema and drawn by hand for every authored representation (1,416 representations of 375 assets, no gap); the viewpoint list is gone; depiction, suitability, copy check, exports, sheets, casts and viewer offer the three views. On 2026-11-23 the three-views guard passed 774 of 775 in a full run, and the last red asset, walking-commuter, was redrawn afterwards and passes its sweep (8 findings to 0) with plan-projection 13 of 13; the full suite was not run again after that redraw. 27 assets were corrected today so that side, front and plan agree in every pose and clip. Section pins follow the sections the assets declare. Evidence: older-tickets.md, three-views-1/2/3.md, small-reds.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        }
+      ]
     }
   ]
 }

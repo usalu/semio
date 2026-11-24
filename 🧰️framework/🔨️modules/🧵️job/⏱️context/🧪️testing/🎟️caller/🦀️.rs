@@ -5,7 +5,10 @@ use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 use std::mem::ManuallyDrop;
 use semio_framework_job_context::{RetainedCloneStep,RetirementDemand};
 use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
-pub struct OriginalJobFixtureCaller{operation:OperationId,generation:Generation,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,clock:fn()->Option<u64>,clock_binding:u64,deadline:u64,fuel:u64,clock_stride:semio_framework_job_context::ClockStride,stock:RetainedCloneGrant,spent:RetainedCloneProgress,born:usize,audit:bool,roots_released:usize,served:usize,last:RetainedCloneProgress,business:RetainedCloneProgress,construction:RetainedCloneProgress,birth:semio_framework_job_native_turn::OriginalJobReturnBirth,dispatch:Option<semio_framework_job_context::OriginalSourceTurn>}
+pub struct OriginalJobFixtureCaller{operation:OperationId,generation:Generation,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,clock:fn()->Option<u64>,clock_binding:u64,deadline:u64,fuel:u64,clock_stride:semio_framework_job_context::ClockStride,stock:RetainedCloneGrant,spent:RetainedCloneProgress,born:usize,audit:bool,roots_released:usize,served:usize,last:RetainedCloneProgress,business:RetainedCloneProgress,construction:RetainedCloneProgress,birth:semio_framework_job_native_turn::OriginalJobReturnBirth,dispatch:Option<semio_framework_job_context::OriginalSourceTurn>,renewal:Option<TurnRenewal>}
+/// ⛽️ Renews every turn's fuel the way a host issues it while the whole operation draws on one finite lifetime stock.
+#[derive(Clone,Copy)]
+struct TurnRenewal{turn_fuel:u64,lifetime_fuel:u64}
 impl OriginalJobFixtureCaller{
     pub fn admit(operation:OperationId,generation:Generation,source:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,business_fuel:u64)->Self{
         let mut fuel=2+OriginalCallerSourceAdmission::backing_work_demand();let mut spent=RetainedCloneProgress::default();let mut born=0;let mut clock_stride=semio_framework_job_context::ClockStride::new();
@@ -22,7 +25,7 @@ impl OriginalJobFixtureCaller{
         let(receipt,work,heap)=paid(spent,fuel,OriginalCallerSourceAdmission::backing_demand().expect("original Source backing quote"),OriginalCallerSourceAdmission::backing_work_demand(),&mut|e|admission.admit_backing(e));fuel-=u64::try_from(work).expect("original source work fits its u64 fuel");spent=spent.checked_add(receipt).unwrap();born+=heap.0;
         let(receipt,work,heap)=paid(spent,fuel,OriginalCallerSourceAdmission::publish_demand(),1,&mut|e|admission.publish(&mut parent,e));fuel-=u64::try_from(work).expect("original source work fits its u64 fuel");spent=spent.checked_add(receipt).unwrap();born+=heap.0;
         let parent=parent.expect("original fixture Source parent published");assert!(spent.fits(source));
-        Self{operation,generation,parent:ManuallyDrop::new(Some(parent)),sequence:0,clock,clock_binding:semio_framework_trace::allocate_operation_id().0,deadline,fuel:business_fuel,clock_stride,stock:source,spent,born,audit:false,roots_released:0,served:0,last:RetainedCloneProgress::default(),business:RetainedCloneProgress::default(),construction:RetainedCloneProgress::default(),birth:Default::default(),dispatch:None}
+        Self{operation,generation,parent:ManuallyDrop::new(Some(parent)),sequence:0,clock,clock_binding:semio_framework_trace::allocate_operation_id().0,deadline,fuel:business_fuel,clock_stride,stock:source,spent,born,audit:false,roots_released:0,served:0,last:RetainedCloneProgress::default(),business:RetainedCloneProgress::default(),construction:RetainedCloneProgress::default(),birth:Default::default(),dispatch:None,renewal:None}
     }
     /// 🌱️ Advances the resident return birth driver turn by turn until the Source parent has its table and publisher.
     /// 🎫️ Keeps one Source dispatch for every later turn, as the production owned caller does across Pending.
@@ -85,15 +88,20 @@ impl OriginalJobFixtureCaller{
     pub fn retirement_turn<R>(&mut self,grant:RetainedCloneGrant,retire:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         self.turn_original(grant,None,false,|cx|cx.with_original_retirement(retire))
     }
+    /// ♻️ Borrows the live Source and its explicitly supplied original decoder to retire native-control owners without servicing new return births.
+    pub fn retirement_turn_with_decoder<R>(&mut self,grant:RetainedCloneGrant,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,retire:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
+        let(items,copy,_)=semio_framework_job_context::original_receiving_service_scope_headroom();let widened=RetainedCloneGrant{maximum_items:grant.maximum_items+items,maximum_copy_bytes:grant.maximum_copy_bytes+copy,..grant};
+        self.turn_original(widened,Some(decoder),false,|cx|cx.with_original_retirement(|cx|{let mut value=None;cx.with_retained_loan(grant,|cx|{value=Some(retire(cx)?);Ok(())})?;Ok(value.expect("original fixture callback returned its value"))}))
+    }
     /// 🛬️ Borrows the same caller turn and its explicitly supplied original decoder without issuing authority.
     pub fn turn_with_decoder<R>(&mut self,grant:RetainedCloneGrant,decoder:&mut semio_framework_job_context::OriginalJobDecodeOwner,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{let(items,copy,_)=semio_framework_job_context::original_receiving_service_scope_headroom();let widened=RetainedCloneGrant{maximum_items:grant.maximum_items+items,maximum_copy_bytes:grant.maximum_copy_bytes+copy,..grant};self.turn_original(widened,Some(decoder),true,|cx|{let mut value=None;cx.with_retained_loan(grant,|cx|{value=Some(advance(cx)?);Ok(())})?;Ok(value.expect("original fixture callback returned its value"))})}
     fn turn_original<R>(&mut self,grant:RetainedCloneGrant,decoder:Option<&mut semio_framework_job_context::OriginalJobDecodeOwner>,serve:bool,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
-        let before=self.spent;let issued_fuel=self.fuel;let mut value=None;let mut served=0usize;let mut served_released=0usize;self.clock_stride.begin((self.clock)());
+        if let Some(renewal)=self.renewal{self.fuel=renewal.turn_fuel.min(renewal.lifetime_fuel);}let before=self.spent;let issued_fuel=self.fuel;let mut value=None;let mut served=0usize;let mut served_released=0usize;self.clock_stride.begin((self.clock)());
         let parent=self.parent.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original fixture parent has already closed"))?;let budget=StepBudget::new(self.fuel,self.deadline,self.stock);let mut cx=match self.dispatch.as_ref(){Some(turn)=>parent.borrow_context_for_turn(turn,budget,self.clock,&mut self.sequence,&mut self.spent),None=>parent.borrow_context(budget,self.clock,&mut self.sequence,&mut self.spent)}?;
         if let Some(decoder)=decoder{cx=cx.with_original_decoder(decoder);}
         cx.bind_original_clock_binding(self.clock_binding)?;cx.restore_clock_stride(self.clock_stride);assert_eq!(cx.operation(),self.operation);assert_eq!(cx.generation(),self.generation);
         let birth=&mut self.birth;let run=||std::panic::catch_unwind(std::panic::AssertUnwindSafe(||cx.with_retained_loan(grant,|cx|{if serve{let funded=cx.retained_progress().retained_capacity_bytes;let freed=cx.retained_progress().released_bytes;let work=cx.original_work_units_spent();let kept=cx.retained_progress();birth.service(cx)?;cx.exclude_original_birth(work,kept);served+=cx.retained_progress().retained_capacity_bytes-funded;served_released+=cx.retained_progress().released_bytes-freed;}value=Some(advance(cx)?);Ok(())})));let(result,observed)=if self.audit{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(result,Some(heap))}else{(run(),None)};
-        self.fuel=cx.original_source_fuel_remaining().min(issued_fuel);self.clock_stride=cx.clock_stride();let reserved=cx.reserved_return_progress();self.construction=cx.receiving_child_progress();self.born=(self.born+served).saturating_sub(served_released);self.served=served;drop(cx);self.last=fixture_delta(before,self.spent);if let Some(heap)=observed{assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(self.last.retained_capacity_bytes,self.last.released_bytes),"an allocation of this turn was not receipted in it")}
+        self.fuel=cx.original_source_fuel_remaining().min(issued_fuel);if let Some(renewal)=self.renewal.as_mut(){renewal.lifetime_fuel=renewal.lifetime_fuel.saturating_sub(issued_fuel-self.fuel);}self.clock_stride=cx.clock_stride();let reserved=cx.reserved_return_progress();self.construction=cx.receiving_child_progress();self.born=(self.born+served).saturating_sub(served_released);self.served=served;drop(cx);self.last=fixture_delta(before,self.spent);if let Some(heap)=observed{assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(self.last.retained_capacity_bytes,self.last.released_bytes),"an allocation of this turn was not receipted in it")}
         match result{Ok(result)=>{if result.is_ok(){assert!(fixture_delta(reserved,self.last).fits(grant));assert!(self.spent.fits(self.stock));}result.map(|()|value.expect("original fixture callback returned its original value"))},Err(payload)=>std::panic::resume_unwind(payload)}
     }
     /// 🏦️ Funds the Source's own physical closure after its return is settled, without changing what its admissions could use.
@@ -113,13 +121,18 @@ impl OriginalJobFixtureCaller{
         cx
     }
     /// ⛽️ Records the fuel a lent context left, so later retirement spends only what remains.
-    pub fn settle_lent_fuel(&mut self,remaining:u64){self.fuel=self.fuel.min(remaining)}
+    /// 🎫️ Adopts the absolute stock of the last initiating event the lent context was issued ([`semio_framework_job_context::testkit::issue_initiating_event`]), so retirement is funded by that event and never by a per-lifetime stock.
+    pub fn settle_lent_fuel(&mut self,remaining:u64){self.fuel=self.fuel.min(remaining);if let Some(issued)=semio_framework_job_context::testkit::take_issued_event_stock(self.clock_binding){self.stock=issued}}
     pub fn stock(&self)->RetainedCloneGrant{self.stock}
     pub fn cumulative_receipt(&self)->RetainedCloneProgress{self.spent}
     /// 🧮️ Derives a turn grant from the finite Source stock left, so a test names its need and never a literal above the stock.
     pub fn within_stock(&self,requested:RetainedCloneGrant)->RetainedCloneGrant{let left=self.remaining_grant();RetainedCloneGrant{maximum_items:requested.maximum_items.min(left.maximum_items),maximum_copy_bytes:requested.maximum_copy_bytes.min(left.maximum_copy_bytes),maximum_capacity_bytes:requested.maximum_capacity_bytes.min(left.maximum_capacity_bytes),maximum_release_bytes:requested.maximum_release_bytes.min(left.maximum_release_bytes),maximum_depth:requested.maximum_depth.min(left.maximum_depth)}}
     pub fn remaining_grant(&self)->RetainedCloneGrant{fixture_remaining(self.stock,self.spent)}
     pub fn fuel_remaining(&self)->u64{self.fuel}
+    /// 🌐️ Issues every later turn a fresh `turn_fuel` like the host does, while all turns together may spend at most `lifetime_fuel`; a turn after the lifetime is spent gets none.
+    pub fn renew_each_turn(&mut self,turn_fuel:u64,lifetime_fuel:u64){self.renewal=Some(TurnRenewal{turn_fuel,lifetime_fuel});}
+    /// 🧮️ The lifetime fuel still available to renewed turns, if renewal is armed.
+    pub fn lifetime_fuel_remaining(&self)->Option<u64>{self.renewal.map(|renewal|renewal.lifetime_fuel)}
     pub fn terminal_is_empty(&self)->bool{self.parent.is_none()&&self.birth.terminal_is_empty()}
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{self.parent.as_ref().map_or(Ok(Default::default()),OriginalCallerSourceParent::retirement_demands)}
     pub fn receipt(&self)->RetainedCloneProgress{self.last}
@@ -168,7 +181,7 @@ impl OriginalJobFixtureCaller{
 impl Drop for OriginalJobFixtureCaller{fn drop(&mut self){assert!(std::thread::panicking()||self.parent.is_none(),"original fixed fixture caller requires paid terminal closure")}}
 
 fn fixture_work_open(clock:fn()->Option<u64>,deadline:u64,fuel:u64,stride:&mut semio_framework_job_context::ClockStride)->bool{if fuel==0{return false}stride.begin(clock());stride.read(clock).is_some_and(|now|now<deadline)}
-fn fixture_remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{if !spent.fits(stock){eprintln!("[DEBUG] stock {stock:?} spent {spent:?}");}assert!(spent.fits(stock),"original fixture recipient exceeds its one issued stock");RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,..stock}}
+fn fixture_remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{assert!(spent.fits(stock),"original fixture recipient exceeds its one issued stock: spent {spent:?} stock {stock:?}");RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,..stock}}
 fn fixture_delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items.checked_sub(before.copied_items).expect("original fixture metadata recipient is monotone"),copied_bytes:after.copied_bytes.checked_sub(before.copied_bytes).expect("original fixture copy recipient is monotone"),retained_capacity_bytes:after.retained_capacity_bytes.checked_sub(before.retained_capacity_bytes).expect("original fixture capacity recipient is monotone"),released_bytes:after.released_bytes.checked_sub(before.released_bytes).expect("original fixture release recipient is monotone")}}
 
 /// 🏦️ Runs one funded original action against the bank, posts its exact physical receipt once and returns the Work verdict.

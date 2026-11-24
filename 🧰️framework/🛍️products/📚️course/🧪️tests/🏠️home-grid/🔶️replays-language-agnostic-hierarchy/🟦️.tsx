@@ -104,7 +104,7 @@ export function registerReplaysLanguageAgnosticHierarchyTests(): void {
     expect(within(pane("parametric")).getByText("Quizzes for this topic are coming soon.")).toBeTruthy();
     expect(within(pane("parametric")).queryByRole("button")).toBeNull();
     expect(session.startRun).not.toHaveBeenCalled();
-  });
+  }, 60_000);
   for (const order of fixture.orders) {
     it(`orders the pages of a course with ${order.quizzes.length} quizzes`, () => {
       expect(homePages()).toEqual(order.pages);

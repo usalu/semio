@@ -378,6 +378,17 @@ export function iconSvgMarkup(name: IconName): string {
 
 const ICON_MASK_CACHE = ephemeralMap<string, string>("framework.modules.ui.elements.Icons.component.tsx.ICON_MASK_CACHE");
 
+const ICON_MARKUP_CACHE = new Map<string, string>();
+
+/** 🧽️ An icon's SVG without the line breaks and indentation of its source: inlined into a control, that whitespace would become part of the control's text (`textContent`, a copied label) although no glyph shows it. */
+export function iconInlineMarkup(svgMarkup: string): string {
+  const cached = ICON_MARKUP_CACHE.get(svgMarkup);
+  if (cached !== undefined) return cached;
+  const compact = svgMarkup.replace(/>\s+</gu, "><").replace(/\s*\n\s*/gu, " ").trim();
+  ICON_MARKUP_CACHE.set(svgMarkup, compact);
+  return compact;
+}
+
 /** 🩻️ Alpha-mask image for an icon's own resolved SVG — lets CSS paint gradients (e.g. the celebrate conic) through the glyph instead of behind it. `currentColor` is baked to opaque black because a mask image renders in its own context and only its alpha channel is read. */
 export function iconMaskImage(svgMarkup: string): string {
   const cached = ICON_MASK_CACHE.get(svgMarkup);
@@ -412,7 +423,7 @@ export function CatalogIcon({ icon, size = "base", className, title }: CatalogIc
   const name = catalogIconName(icon)!;
   const svgMarkup = resolveCatalogIconSvgFromTheme(name, themeIcons);
   const boxStyle = iconBoxStyle(size);
-  return <span className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", iconBoxClassName(size, className))} style={{ ...boxStyle, ["--icon-mask" as string]: iconMaskImage(svgMarkup) }} title={title} data-icon={name} data-icon-kind="catalog" dangerouslySetInnerHTML={{ __html: svgMarkup }} aria-hidden={title ? undefined : true} />;
+  return <span className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", iconBoxClassName(size, className))} style={{ ...boxStyle, ["--icon-mask" as string]: iconMaskImage(svgMarkup) }} title={title} data-icon={name} data-icon-kind="catalog" dangerouslySetInnerHTML={{ __html: iconInlineMarkup(svgMarkup) }} aria-hidden={title ? undefined : true} />;
 }
 
 /** 🎨️ Renders canonical icons without depending on an external icon library. */
@@ -472,7 +483,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
       title={title}
       data-icon={normalized.kind === "catalog" ? normalized.key : normalized.kind === "themed" ? normalized.key : undefined}
       data-icon-kind={normalized.kind === "catalog" ? "catalog" : normalized.kind === "themed" ? "themed" : "svg"}
-      dangerouslySetInnerHTML={{ __html: svgMarkup }}
+      dangerouslySetInnerHTML={{ __html: iconInlineMarkup(svgMarkup) }}
       aria-hidden={title ? undefined : true}
     />
   );

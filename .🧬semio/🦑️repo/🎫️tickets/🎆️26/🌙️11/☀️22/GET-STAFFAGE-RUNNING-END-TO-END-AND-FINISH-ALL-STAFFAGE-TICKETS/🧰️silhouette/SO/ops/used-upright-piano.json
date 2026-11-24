@@ -1,0 +1,5 @@
+[
+{"op": "shape-add", "scale": "50", "view": "front", "after": "knee-board", "shape": {"id": "pedal-slot-soft", "bone": "case", "role": "detail", "z": 4.1, "filled": true, "tone": 0.1, "kind": "rect", "x": -0.14, "y": 0.173, "w": 0.04, "h": 0.055, "region": "case", "material": "walnut-veneer-aged"}},
+{"op": "shape-add", "scale": "50", "view": "front", "after": "knee-board", "shape": {"id": "pedal-slot-mute", "bone": "case", "role": "detail", "z": 4.1, "filled": true, "tone": 0.1, "kind": "rect", "x": -0.02, "y": 0.173, "w": 0.04, "h": 0.055, "region": "case", "material": "walnut-veneer-aged"}},
+{"op": "shape-add", "scale": "50", "view": "front", "after": "knee-board", "shape": {"id": "pedal-slot-sustain", "bone": "case", "role": "detail", "z": 4.1, "filled": true, "tone": 0.1, "kind": "rect", "x": 0.1, "y": 0.173, "w": 0.04, "h": 0.055, "region": "case", "material": "walnut-veneer-aged"}}
+]

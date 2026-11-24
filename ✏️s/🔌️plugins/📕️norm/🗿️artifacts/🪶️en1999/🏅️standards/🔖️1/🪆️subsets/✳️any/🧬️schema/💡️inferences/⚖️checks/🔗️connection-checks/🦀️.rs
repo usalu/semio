@@ -72,9 +72,25 @@ fn count_remedies(conn: &AluminiumConnection, u: f64) -> Vec<Remedy> {
     ]
 }
 
+/// 🧭 The governing effects a connection check reads: bolt shear, block tearing and plate tension the shear force, bolt tension and punching the axial force and the moments, the pin checks and the weld the axial force and the shear force (the weld and the interaction also the moments).
+fn reads_of<'a>(id: &str, g: &GoverningEffects) -> Vec<(&'a str, f64)> {
+    let shear = [("vYK", g.v_y_ed), ("vZK", g.v_z_ed)];
+    let moments = [("mYK", g.m_y_ed), ("mZK", g.m_z_ed)];
+    let axial = ("nK", g.n_ed);
+    if id.ends_with("tension") || id.ends_with("punch") {
+        [("nK", g.n_ed.max(0.0))].into_iter().chain(moments).collect()
+    } else if id.ends_with("weld") || id.ends_with("vt") {
+        [axial].into_iter().chain(shear).chain(moments).collect()
+    } else if id.contains(".pin.") || id.ends_with("haz") {
+        [axial].into_iter().chain(shear).collect()
+    } else {
+        shear.into_iter().collect()
+    }
+}
+
 fn emit(out: &mut Vec<CheckResult>, conn: &AluminiumConnection, annex: AnnexChoice, g: &GoverningEffects, id: &str, sec: &str, title: (&str, &str), path: &str, computed: Quantity, limit: Quantity, expl: String, mut remedies: Vec<Remedy>) {
     let u = if limit.value > 0.0 { computed.value.abs() / limit.value } else { 0.0 };
-    remedies.extend(leaf_remedies("connections", &conn.id, &conn.actions, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", if id.ends_with("tension") || id.ends_with("punch") { "nK" } else { "vZK" }));
+    remedies.extend(leaf_remedies("connections", &conn.id, &conn.actions, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", &reads_of(id, g)));
     out.push(utilization_check(
         format!("{id}.{}", conn.id),
         "DIN EN 1999-1-1",
@@ -269,26 +285,28 @@ fn welded_checks(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de:
 fn connection_sls(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de::AnnexParams, alloy: &part_1_1::AlloyProps, kind: semio_s_artifact_norm_en1999_model::ConnectionKind, g: &GoverningEffects) -> Option<CheckResult> {
     use semio_s_artifact_norm_en1999_model::ConnectionKind as K;
     let d = demand(g);
-    let mut cap = f64::INFINITY;
+    let (mut cap, mut fasteners_govern) = (f64::INFINITY, false);
+    let mut limit = |value: f64, fasteners: bool| if value < cap { cap = value; fasteners_govern = fasteners; };
     if matches!(kind, K::Bolted | K::Combined) {
         let bt = bolting(conn, alloy, params, &d);
-        cap = cap.min(bt.n_bolts * bt.f_v_rd.min(bt.f_b_rd));
+        limit(bt.n_bolts * bt.f_v_rd.min(bt.f_b_rd), true);
     }
     if kind == K::Pinned {
         let n_pins = (f64::from(conn.bolts.rows) * f64::from(conn.bolts.bolts_per_row)).max(1.0);
-        cap = cap.min(2.0 * n_pins * joints::pin_shear_resistance(&conn.bolts.material, conn.bolts.diameter, params.gamma_m2));
+        limit(2.0 * n_pins * joints::pin_shear_resistance(&conn.bolts.material, conn.bolts.diameter, params.gamma_m2), true);
     }
     if matches!(kind, K::Welded | K::Combined) {
         let w = &conn.welds;
         let f_w = joints::filler_fw_pa(&w.filler_alloy, alloy.f_u_pa);
         let (metal, haz) = joints::weld_resistance_per_length(w.throat, w.beta_w, f_w, alloy.f_u_pa, alloy.rho_u_haz, params.gamma_mw, params.gamma_m2);
-        cap = cap.min(metal.min(haz) * w.length);
+        limit(metal.min(haz) * w.length, false);
     }
     if !cap.is_finite() { return None; }
     let f_ed = d.v + d.n.abs();
     let u = f_ed / cap.max(1e-9);
-    let mut rem = leaf_remedies("connections", &conn.id, &conn.actions, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", "vZK");
-    rem.extend(count_remedies(conn, u));
+    let carried = weighted_actions(&conn.actions, |a| { let psi = part_en1990::psi_row(a.category); psi.psi_1.max(psi.psi_2) });
+    let mut rem = leaf_remedies("connections", &conn.id, &carried, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", &[("nK", d.n), ("vYK", g.v_y_ed), ("vZK", g.v_z_ed)]);
+    if fasteners_govern { rem.extend(count_remedies(conn, u)); }
     Some(utilization_check(
         format!("en1999.8.sls-freq.{}", conn.id), "DIN EN 1999-1-1", ClauseId::new("EN 1990", "§6.5.3", "6.5.3"), conn_subject(conn, "bolts.rows"),
         loc("Connection under the frequent combination", "Anschluss unter häufiger Kombination"),

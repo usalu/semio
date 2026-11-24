@@ -1,0 +1,23 @@
+[
+{"op": "dims", "set": {"depthM": 1.015}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z M 1.8655 0.2685 L 1.8655 -0.2685 L 0.0015 -0.2685 L 0.0015 0.2685 Z"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z M 1.8655 -0.005 L 1.8655 -0.271 L 0.0015 -0.271 L 0.0015 -0.005 Z"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z M 1.8655 0.271 L 1.8655 0.005 L 0.0015 0.005 L 0.0015 0.271 Z"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "side-panel", "set": {"h": 1.897}},
+{"op": "shape-set", "scale": "100", "view": "elevation", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z M 1.8655 0.2685 L 1.8655 -0.2685 L 0.0015 -0.2685 L 0.0015 0.2685 Z"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "door-frame", "set": {"d": "M 0 0.27 L 0 -0.27 L 1.867 -0.27 L 1.867 0.27 Z"}},
+{"op": "shape-set", "scale": "100", "view": "elevation", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z M 1.8655 -0.005 L 1.8655 -0.271 L 0.0015 -0.271 L 0.0015 -0.005 Z"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "rear-door-a-frame", "set": {"d": "M 0 -0.0035 L 0 -0.2725 L 1.867 -0.2725 L 1.867 -0.0035 Z"}},
+{"op": "shape-set", "scale": "100", "view": "elevation", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z M 1.8655 0.271 L 1.8655 0.005 L 0.0015 0.005 L 0.0015 0.271 Z"}},
+{"op": "shape-set", "scale": "100", "view": "plan", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "rear-door-b-frame", "set": {"d": "M 0 0.2725 L 0 0.0035 L 1.867 0.0035 L 1.867 0.2725 Z"}},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "side-panel", "set": {"h": 1.897}}
+]

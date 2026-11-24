@@ -2,7 +2,7 @@ import { writeSync } from "node:fs";
 import { isAbsolute, join, sep } from "node:path";
 
 import { buildMicroCommitMessage, clearStaleTemplatesBeforePrepare, handlePrepareCommitMsg, wipeAfterCommit, writeMicroCommitTemplates } from "../📄️prepared-message/🟦️.ts";
-import { git, gitDir, gitEmail, gitRepoRoot } from "../🌳️git/🟦️.ts";
+import { git, gitDir, gitEmail, gitRepoRoot, gitShallow } from "../🌳️git/🟦️.ts";
 import { installMicroCommitGitHooks } from "../🪝️hooks/🟦️.ts";
 import { branchValidationError, currentBranch, findContributor, loadLevel } from "../👤️contributor/🟦️.ts";
 import { listCachedPaths, readDiffBulletsInput, validateBulletEmojis, validateBulletsAgainstStaged, validateBulletSpacing, writePreparedBullets } from "../🔸️bullets/🟦️.ts";
@@ -53,6 +53,10 @@ export function runMicroCommit(root: string, segments: string[]): void {
   const branchError = branchValidationError("micro-commit", currentBranch(root));
   if (branchError) {
     console.error(branchError);
+    process.exit(1);
+  }
+  if (gitShallow(root)) {
+    sayCommitV1("micro.history-is-shallow",{},"error");
     process.exit(1);
   }
   const contributor = findContributor(root);

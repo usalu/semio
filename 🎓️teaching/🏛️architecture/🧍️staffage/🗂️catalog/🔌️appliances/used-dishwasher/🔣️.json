@@ -103,8 +103,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-10130"
    },
@@ -119,8 +119,8 @@
     "densityKgM3": 7700,
     "conductivityWmK": 25,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 260000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 260000000,
     "source": "literature",
     "reference": "en-10088-2"
    },
@@ -135,8 +135,8 @@
     "densityKgM3": 1200,
     "conductivityWmK": 15,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 260000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 260000000,
     "source": "authored-estimate",
     "reference": "en-10088-2"
    },
@@ -179,8 +179,8 @@
     "densityKgM3": 300,
     "conductivityWmK": 0.06,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "used-appliance-market"
    },
@@ -223,8 +223,8 @@
     "densityKgM3": 680,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
-    "elasticModulusPa": 2500000000.0,
-    "strengthPa": 12000000.0,
+    "elasticModulusPa": 2500000000,
+    "strengthPa": 12000000,
     "source": "literature",
     "reference": "en-312"
    },
@@ -281,8 +281,8 @@
     "densityKgM3": 7000,
     "conductivityWmK": 40,
     "specificHeatJKgK": 500,
-    "elasticModulusPa": 200000000000.0,
-    "strengthPa": 400000000.0,
+    "elasticModulusPa": 200000000000,
+    "strengthPa": 400000000,
     "source": "authored-estimate",
     "reference": "iso-10456-2007"
    },
@@ -353,8 +353,8 @@
     "densityKgM3": 420,
     "conductivityWmK": 0.13,
     "specificHeatJKgK": 1600,
-    "elasticModulusPa": 11000000000.0,
-    "strengthPa": 24000000.0,
+    "elasticModulusPa": 11000000000,
+    "strengthPa": 24000000,
     "source": "literature",
     "reference": "en-338"
    }
@@ -370,10 +370,10 @@
       "en": "Floor reference",
       "de": "Bodenbezug"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
-     "lengthM": 0.0,
+     "lengthM": 0,
      "joint": {
       "type": "fixed"
      }
@@ -386,7 +386,7 @@
       "de": "Düsseldorfer Halbpalette unter der Maschine"
      },
      "x": -0.1,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.8,
      "joint": {
@@ -405,7 +405,7 @@
      },
      "section": {
       "areaM2": 0.022,
-      "secondMomentM4": 8.1862e-05,
+      "secondMomentM4": 0.000081862,
       "extremeFibreM": 0.061,
       "material": "pallet-spruce",
       "title": {
@@ -421,10 +421,10 @@
       "en": "Lift of the machine off its base",
       "de": "Anheben der Maschine von ihrer Unterlage"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.144,
      "angleDeg": 0,
-     "lengthM": 0.0,
+     "lengthM": 0,
      "joint": {
       "type": "prismatic",
       "axisDeg": 90,
@@ -439,8 +439,8 @@
       "en": "Machine, tilt about the rear bottom edge",
       "de": "Maschine, Neigung um die hintere Unterkante"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.04,
      "joint": {
@@ -456,8 +456,8 @@
       "en": "Base pan with pumps, heater and feet",
       "de": "Bodenwanne mit Pumpen, Heizung und Füßen"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0.525,
      "joint": {
@@ -473,7 +473,7 @@
      },
      "section": {
       "areaM2": 0.00024,
-      "secondMomentM4": 2.4e-08,
+      "secondMomentM4": 2.4e-8,
       "extremeFibreM": 0.01,
       "material": "painted-steel",
       "title": {
@@ -489,7 +489,7 @@
       "en": "Left side panel",
       "de": "Linke Seitenwand"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.02,
      "z": 0.2997,
      "angleDeg": 90,
@@ -523,7 +523,7 @@
       "en": "Right side panel",
       "de": "Rechte Seitenwand"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.02,
      "z": -0.2997,
      "angleDeg": 90,
@@ -567,7 +567,7 @@
      "mass": {
       "kg": 2.256,
       "comX": 0.4,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "used-appliance-market"
@@ -590,7 +590,7 @@
       "en": "Removable worktop",
       "de": "Abnehmbare Arbeitsplatte"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.82,
      "angleDeg": 0,
      "lengthM": 0.6,
@@ -607,7 +607,7 @@
      },
      "section": {
       "areaM2": 0.018,
-      "secondMomentM4": 1.35e-06,
+      "secondMomentM4": 0.00000135,
       "extremeFibreM": 0.015,
       "material": "laminate-chipboard",
       "title": {
@@ -698,7 +698,7 @@
      },
      "section": {
       "areaM2": 0.000598,
-      "secondMomentM4": 4.5224e-07,
+      "secondMomentM4": 4.5224e-7,
       "extremeFibreM": 0.0275,
       "material": "door-composite",
       "title": {
@@ -734,7 +734,7 @@
      },
      "section": {
       "areaM2": 0.00015394,
-      "secondMomentM4": 1.0225e-06,
+      "secondMomentM4": 0.0000010225,
       "extremeFibreM": 0.0815,
       "material": "coated-wire",
       "title": {
@@ -770,7 +770,7 @@
      },
      "section": {
       "areaM2": 0.00015394,
-      "secondMomentM4": 1.0862e-06,
+      "secondMomentM4": 0.0000010862,
       "extremeFibreM": 0.084,
       "material": "coated-wire",
       "title": {
@@ -787,7 +787,7 @@
       "de": "Unterer Sprüharm auf seiner Nabe"
      },
      "x": 0.246,
-     "y": 0.0,
+     "y": 0,
      "angleDeg": 90,
      "lengthM": 0.03,
      "joint": {
@@ -800,7 +800,7 @@
      "mass": {
       "kg": 0.266,
       "comX": 0.0156,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "used-appliance-market"
@@ -827,7 +827,7 @@
      "mass": {
       "kg": 0.193,
       "comX": 0.009,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "used-appliance-market"
@@ -840,7 +840,7 @@
       "en": "Hose and cable coils taped to the back",
       "de": "An die Rückwand geklebte Schlauch- und Kabelringe"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.3,
      "angleDeg": 0,
      "lengthM": 0.03,
@@ -863,7 +863,7 @@
     "id": "foot-rear",
     "bone": "body",
     "x": 0.05,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Rear feet on their base",
@@ -879,7 +879,7 @@
     "id": "foot-front",
     "bone": "body",
     "x": 0.505,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Adjustable front feet on their base",
@@ -894,8 +894,8 @@
    {
     "id": "grip-rear",
     "bone": "body",
-    "x": 0.0,
-    "y": 0.0,
+    "x": 0,
+    "y": 0,
     "kind": "support",
     "title": {
      "en": "Rear mover's hands under the back edge",
@@ -909,7 +909,7 @@
     "id": "grip-front",
     "bone": "body",
     "x": 0.525,
-    "y": 0.0,
+    "y": 0,
     "kind": "support",
     "title": {
      "en": "Front mover's hands under the base behind the plinth",
@@ -923,7 +923,7 @@
     "id": "pallet-floor",
     "bone": "pallet",
     "x": 0.4,
-    "y": 0.0,
+    "y": 0,
     "kind": "contact",
     "title": {
      "en": "Pallet on the floor",
@@ -969,12 +969,12 @@
        "id": "pallet-bottom",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.8,
        "h": 0.022,
        "region": "pallet",
@@ -984,11 +984,11 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078,
@@ -1003,7 +1003,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.145,
        "h": 0.022,
@@ -1014,7 +1014,7 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -1044,7 +1044,7 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -1078,7 +1078,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 0.8,
        "h": 0.022,
@@ -1094,7 +1094,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": 0.034,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.02,
        "region": "base",
@@ -1109,7 +1109,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": 0.489,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.02,
        "region": "base",
@@ -1141,11 +1141,11 @@
        "points": [
         [
          0.012,
-         0.0
+         0
         ],
         [
          0.015,
-         0.0
+         0
         ],
         [
          0.015,
@@ -1160,11 +1160,11 @@
          0.115
         ],
         [
-         0.0,
+         0,
          0.115
         ],
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -1180,11 +1180,11 @@
        "id": "side-r",
        "bone": "side-r",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.545,
        "w": 0.8,
        "h": 0.545,
@@ -1195,12 +1195,12 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.6,
        "h": 0.03,
        "region": "worktop",
@@ -1485,11 +1485,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -1810,12 +1810,12 @@
        "id": "pallet-bottom-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -1825,7 +1825,7 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -1840,12 +1840,12 @@
        "id": "pallet-bottom-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -1855,7 +1855,7 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -1870,12 +1870,12 @@
        "id": "pallet-bottom-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -1885,7 +1885,7 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -2020,7 +2020,7 @@
        "id": "plinth",
        "bone": "plinth",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
@@ -2035,7 +2035,7 @@
        "id": "cabinet",
        "bone": "back",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
@@ -2050,7 +2050,7 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
@@ -2220,11 +2220,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.301
         ],
         [
-         0.0,
+         0,
          0.464
         ]
        ],
@@ -2293,11 +2293,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -2707,7 +2707,7 @@
        "id": "pallet-top-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -2722,7 +2722,7 @@
        "id": "pallet-top-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -2737,7 +2737,7 @@
        "id": "pallet-top-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -2752,7 +2752,7 @@
        "id": "pallet-top-4",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -2767,7 +2767,7 @@
        "id": "pallet-top-5",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -2986,13 +2986,13 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.3
         ],
         [
@@ -3012,7 +3012,7 @@
          0.3
         ],
         [
-         0.0,
+         0,
          0.3
         ]
        ],
@@ -3071,11 +3071,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.69,
        "h": 0.055,
@@ -3113,7 +3113,7 @@
        "id": "drain-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -3128,7 +3128,7 @@
        "id": "inlet-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -3143,7 +3143,7 @@
        "id": "cable-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -3443,12 +3443,12 @@
        "id": "pallet-bottom",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.8,
        "h": 0.022,
        "region": "pallet",
@@ -3458,11 +3458,11 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.022,
        "w": 0.145,
        "h": 0.078,
@@ -3477,7 +3477,7 @@
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.145,
        "h": 0.022,
@@ -3488,7 +3488,7 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -3518,7 +3518,7 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -3552,7 +3552,7 @@
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.122,
        "w": 0.8,
        "h": 0.022,
@@ -3568,7 +3568,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": 0.034,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.02,
        "region": "base",
@@ -3583,7 +3583,7 @@
        "tone": 0.3,
        "kind": "rect",
        "x": 0.489,
-       "y": 0.0,
+       "y": 0,
        "w": 0.032,
        "h": 0.02,
        "region": "base",
@@ -3615,11 +3615,11 @@
        "points": [
         [
          0.012,
-         0.0
+         0
         ],
         [
          0.015,
-         0.0
+         0
         ],
         [
          0.015,
@@ -3634,11 +3634,11 @@
          0.115
         ],
         [
-         0.0,
+         0,
          0.115
         ],
         [
-         0.0,
+         0,
          0.1
         ],
         [
@@ -3654,11 +3654,11 @@
        "id": "side-r",
        "bone": "side-r",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.545,
        "w": 0.8,
        "h": 0.545,
@@ -3669,12 +3669,12 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.6,
        "h": 0.03,
        "region": "worktop",
@@ -3917,11 +3917,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -4086,12 +4086,12 @@
        "id": "pallet-bottom-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -4101,7 +4101,7 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -4116,12 +4116,12 @@
        "id": "pallet-bottom-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -4131,7 +4131,7 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -4146,12 +4146,12 @@
        "id": "pallet-bottom-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.022,
        "region": "pallet",
@@ -4161,7 +4161,7 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
@@ -4296,7 +4296,7 @@
        "id": "plinth",
        "bone": "plinth",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
@@ -4311,7 +4311,7 @@
        "id": "cabinet",
        "bone": "back",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
@@ -4326,7 +4326,7 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
@@ -4496,11 +4496,11 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.301
         ],
         [
-         0.0,
+         0,
          0.464
         ]
        ],
@@ -4569,11 +4569,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -4657,7 +4657,7 @@
        "id": "pallet-top-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -4672,7 +4672,7 @@
        "id": "pallet-top-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -4687,7 +4687,7 @@
        "id": "pallet-top-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -4702,7 +4702,7 @@
        "id": "pallet-top-4",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -4717,7 +4717,7 @@
        "id": "pallet-top-5",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.62,
        "kind": "rect",
@@ -4777,11 +4777,11 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.3,
        "w": 0.6,
        "h": 0.6,
@@ -4839,11 +4839,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.69,
        "h": 0.055,
@@ -4881,7 +4881,7 @@
        "id": "drain-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -4896,7 +4896,7 @@
        "id": "inlet-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -4911,7 +4911,7 @@
        "id": "cable-coil",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "rect",
@@ -5023,12 +5023,12 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.145,
        "h": 0.1,
        "region": "pallet",
@@ -5038,12 +5038,12 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
        "x": 0.3275,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.1,
        "region": "pallet",
@@ -5053,12 +5053,12 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
        "x": 0.655,
-       "y": 0.0,
+       "y": 0,
        "w": 0.145,
        "h": 0.1,
        "region": "pallet",
@@ -5072,7 +5072,7 @@
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": 0.1,
        "w": 0.8,
        "h": 0.044,
@@ -5088,7 +5088,7 @@
        "tone": 0.4,
        "kind": "rect",
        "x": 0.0006,
-       "y": 0.0,
+       "y": 0,
        "w": 0.5094,
        "h": 0.11,
        "region": "base",
@@ -5103,7 +5103,7 @@
        "tone": 0.85,
        "kind": "rect",
        "x": -0.015,
-       "y": 0.0,
+       "y": 0,
        "w": 0.035,
        "h": 0.115,
        "region": "plinth",
@@ -5113,11 +5113,11 @@
        "id": "side-r",
        "bone": "side-r",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.545,
        "w": 0.8,
        "h": 0.545,
@@ -5128,12 +5128,12 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.6,
        "h": 0.03,
        "region": "worktop",
@@ -5226,11 +5226,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -5277,7 +5277,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.14
         ],
         [
@@ -5297,7 +5297,7 @@
          0.447
         ],
         [
-         0.0,
+         0,
          0.447
         ]
        ],
@@ -5311,12 +5311,12 @@
        "id": "pallet-block-1",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
        "x": -0.3,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1,
        "region": "pallet",
@@ -5326,12 +5326,12 @@
        "id": "pallet-block-2",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
        "x": -0.05,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1,
        "region": "pallet",
@@ -5341,12 +5341,12 @@
        "id": "pallet-block-3",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.5,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.1,
        "h": 0.1,
        "region": "pallet",
@@ -5386,7 +5386,7 @@
        "id": "plinth",
        "bone": "plinth",
        "role": "body",
-       "z": 3.0,
+       "z": 3,
        "filled": true,
        "tone": 0.85,
        "kind": "rect",
@@ -5401,7 +5401,7 @@
        "id": "cabinet",
        "bone": "back",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.88,
        "kind": "rect",
@@ -5416,7 +5416,7 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
@@ -5524,11 +5524,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.61,
        "h": 0.055,
@@ -5583,7 +5583,7 @@
        "id": "pallet-deck",
        "bone": "pallet",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.6,
        "kind": "rect",
@@ -5598,11 +5598,11 @@
        "id": "worktop",
        "bone": "worktop",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.75,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.3,
        "w": 0.6,
        "h": 0.6,
@@ -5645,11 +5645,11 @@
        "id": "door-leaf",
        "bone": "door",
        "role": "body",
-       "z": 4.0,
+       "z": 4,
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.055,
        "w": 0.69,
        "h": 0.055,
@@ -5666,13 +5666,13 @@
        "id": "hose-bundle",
        "bone": "hoses",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.45,
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.24
         ],
         [
@@ -5692,7 +5692,7 @@
          0.274
         ],
         [
-         0.0,
+         0,
          0.274
         ]
        ],
@@ -5784,40 +5784,40 @@
      },
      "regions": {
       "cabinet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "worktop": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "tub": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "racks": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "hoses": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "pallet": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.15,
         "tempC": 19
@@ -5861,40 +5861,40 @@
      },
      "regions": {
       "cabinet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "worktop": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "tub": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "racks": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "hoses": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "pallet": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.15,
         "tempC": 19
@@ -5938,44 +5938,44 @@
      },
      "regions": {
       "cabinet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "worktop": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
         "tempC": 21
        }
       },
       "tub": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "racks": {
-       "exposedFraction": 0.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 0,
+       "sunlitFraction": 0
       },
       "hoses": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "pallet": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.15,
         "tempC": 21
@@ -6082,24 +6082,24 @@
      },
      "regions": {
       "cabinet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "worktop": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
         "tempC": 21
@@ -6107,19 +6107,19 @@
       },
       "tub": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "racks": {
        "exposedFraction": 0.8,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "hoses": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "pallet": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.15,
         "tempC": 21
@@ -6205,24 +6205,24 @@
      },
      "regions": {
       "cabinet": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "worktop": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "door": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "plinth": {
-       "exposedFraction": 1.0,
-       "sunlitFraction": 0.0
+       "exposedFraction": 1,
+       "sunlitFraction": 0
       },
       "base": {
        "exposedFraction": 0.6,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.05,
         "tempC": 21
@@ -6230,19 +6230,19 @@
       },
       "tub": {
        "exposedFraction": 0.15,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "racks": {
        "exposedFraction": 0.1,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "hoses": {
        "exposedFraction": 0.9,
-       "sunlitFraction": 0.0
+       "sunlitFraction": 0
       },
       "pallet": {
        "exposedFraction": 0.85,
-       "sunlitFraction": 0.0,
+       "sunlitFraction": 0,
        "contact": {
         "fraction": 0.15,
         "tempC": 21
@@ -6306,7 +6306,7 @@
      "en": "The two movers take hold under the back edge and under the base pan, lift the machine off the pallet and tilt it back 6 degrees for the walk to the van; the pallet stays behind.",
      "de": "Die zwei Träger fassen unter die Hinterkante und unter die Bodenwanne, heben die Maschine von der Palette und neigen sie für den Weg zum Transporter 6 Grad nach hinten; die Palette bleibt stehen."
     },
-    "durationS": 6.0,
+    "durationS": 6,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -6317,12 +6317,12 @@
       "ease": "smooth"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "stored",
       "ease": "smooth"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "pose": "carried",
       "ease": "smooth",
       "bones": {
@@ -6332,12 +6332,12 @@
       }
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "carried",
       "ease": "smooth"
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "carried",
       "ease": "smooth"
      }
@@ -6346,34 +6346,34 @@
      {
       "anchor": "foot-rear",
       "fromS": 0,
-      "toS": 1.0
+      "toS": 1
      },
      {
       "anchor": "foot-front",
       "fromS": 0,
-      "toS": 1.0
+      "toS": 1
      },
      {
       "anchor": "grip-rear",
-      "fromS": 1.0,
-      "toS": 6.0
+      "fromS": 1,
+      "toS": 6
      },
      {
       "anchor": "grip-front",
-      "fromS": 1.0,
-      "toS": 6.0
+      "fromS": 1,
+      "toS": 6
      },
      {
       "anchor": "pallet-floor",
       "fromS": 0,
-      "toS": 6.0
+      "toS": 6
      }
     ],
     "phases": [
      {
       "id": "take-hold",
       "fromS": 0,
-      "toS": 1.0,
+      "toS": 1,
       "title": {
        "en": "Taking hold",
        "de": "Anfassen"
@@ -6381,8 +6381,8 @@
      },
      {
       "id": "lift",
-      "fromS": 1.0,
-      "toS": 3.0,
+      "fromS": 1,
+      "toS": 3,
       "title": {
        "en": "Lifting off the pallet",
        "de": "Von der Palette heben"
@@ -6390,8 +6390,8 @@
      },
      {
       "id": "tilt",
-      "fromS": 3.0,
-      "toS": 5.0,
+      "fromS": 3,
+      "toS": 5,
       "title": {
        "en": "Tilting back",
        "de": "Nach hinten neigen"
@@ -6399,8 +6399,8 @@
      },
      {
       "id": "carry",
-      "fromS": 5.0,
-      "toS": 6.0,
+      "fromS": 5,
+      "toS": 6,
       "title": {
        "en": "Carrying",
        "de": "Tragen"
@@ -6409,7 +6409,7 @@
     ],
     "events": [
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-off",
       "title": {
        "en": "Off the pallet",
@@ -6418,7 +6418,7 @@
       "target": "foot-front"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-on",
       "title": {
        "en": "Hands take the load",
@@ -6427,7 +6427,7 @@
       "target": "grip-front"
      },
      {
-      "t": 3.0,
+      "t": 3,
       "kind": "motion",
       "title": {
        "en": "Lifted 0.10 m",
@@ -6447,7 +6447,7 @@
      "en": "In the kitchen the door is let down, the lower and then the upper basket are pulled out for loading, pushed back in and the door is closed again.",
      "de": "In der Küche wird die Tür heruntergeklappt, erst der Unter- und dann der Oberkorb zum Beladen herausgezogen, wieder hineingeschoben und die Tür geschlossen."
     },
-    "durationS": 10.0,
+    "durationS": 10,
     "fps": 25,
     "loop": true,
     "rootMotion": "none",
@@ -6469,7 +6469,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "door-open",
       "ease": "smooth",
       "bones": {
@@ -6492,7 +6492,7 @@
       }
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "door-open",
       "ease": "smooth"
      },
@@ -6502,7 +6502,7 @@
       "ease": "smooth"
      },
      {
-      "t": 8.0,
+      "t": 8,
       "pose": "door-open",
       "ease": "smooth",
       "bones": {
@@ -6515,7 +6515,7 @@
       }
      },
      {
-      "t": 10.0,
+      "t": 10,
       "pose": "door-open",
       "ease": "smooth",
       "bones": {
@@ -6535,24 +6535,24 @@
      {
       "anchor": "foot-rear",
       "fromS": 0,
-      "toS": 10.0
+      "toS": 10
      },
      {
       "anchor": "foot-front",
       "fromS": 0,
-      "toS": 10.0
+      "toS": 10
      },
      {
       "anchor": "pallet-floor",
       "fromS": 0,
-      "toS": 10.0
+      "toS": 10
      }
     ],
     "phases": [
      {
       "id": "door-down",
       "fromS": 0,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Letting the door down",
        "de": "Tür herunterklappen"
@@ -6560,8 +6560,8 @@
      },
      {
       "id": "baskets-out",
-      "fromS": 2.0,
-      "toS": 5.0,
+      "fromS": 2,
+      "toS": 5,
       "title": {
        "en": "Pulling the baskets out",
        "de": "Körbe herausziehen"
@@ -6569,7 +6569,7 @@
      },
      {
       "id": "loading",
-      "fromS": 5.0,
+      "fromS": 5,
       "toS": 6.5,
       "title": {
        "en": "Loading",
@@ -6579,7 +6579,7 @@
      {
       "id": "baskets-in",
       "fromS": 6.5,
-      "toS": 8.0,
+      "toS": 8,
       "title": {
        "en": "Pushing the baskets in",
        "de": "Körbe hineinschieben"
@@ -6587,8 +6587,8 @@
      },
      {
       "id": "door-up",
-      "fromS": 8.0,
-      "toS": 10.0,
+      "fromS": 8,
+      "toS": 10,
       "title": {
        "en": "Closing the door",
        "de": "Tür schließen"
@@ -6597,7 +6597,7 @@
     ],
     "events": [
      {
-      "t": 0.0,
+      "t": 0,
       "kind": "motion",
       "title": {
        "en": "Door unlatched",
@@ -6606,7 +6606,7 @@
       "target": "door"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "kind": "motion",
       "title": {
        "en": "Lower basket rolls out",
@@ -6624,7 +6624,7 @@
       "target": "basket-upper"
      },
      {
-      "t": 10.0,
+      "t": 10,
       "kind": "motion",
       "title": {
        "en": "Door latched",
@@ -6640,19 +6640,19 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 2.0,
+        "t": 2,
         "v": 0.6
        },
        {
-        "t": 8.0,
+        "t": 8,
         "v": 0.6
        },
        {
-        "t": 10.0,
-        "v": 0.0
+        "t": 10,
+        "v": 0
        }
       ]
      },
@@ -6662,14 +6662,14 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 2.0,
+        "t": 2,
         "v": 0.4
        },
        {
-        "t": 5.0,
+        "t": 5,
         "v": 0.8
        },
        {
@@ -6677,12 +6677,12 @@
         "v": 0.8
        },
        {
-        "t": 8.0,
+        "t": 8,
         "v": 0.4
        },
        {
-        "t": 10.0,
-        "v": 0.0
+        "t": 10,
+        "v": 0
        }
       ]
      }
@@ -6698,7 +6698,7 @@
      "en": "Door closed, the heater draws its 2 kW and the circulation pump drives the two spray arms one full turn in 4 s in opposite senses (15 turns a minute, the slow start of the wash phase).",
      "de": "Tür geschlossen, die Heizung nimmt ihre 2 kW auf und die Umwälzpumpe dreht die zwei Sprüharme gegensinnig um eine volle Umdrehung in 4 s (15 Umdrehungen je Minute, der langsame Anlauf des Spülgangs)."
     },
-    "durationS": 4.0,
+    "durationS": 4,
     "fps": 25,
     "loop": false,
     "rootMotion": "none",
@@ -6717,7 +6717,7 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -6730,7 +6730,7 @@
       }
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "in-use",
       "ease": "linear",
       "bones": {
@@ -6747,24 +6747,24 @@
      {
       "anchor": "foot-rear",
       "fromS": 0,
-      "toS": 4.0
+      "toS": 4
      },
      {
       "anchor": "foot-front",
       "fromS": 0,
-      "toS": 4.0
+      "toS": 4
      },
      {
       "anchor": "pallet-floor",
       "fromS": 0,
-      "toS": 4.0
+      "toS": 4
      }
     ],
     "phases": [
      {
       "id": "spraying",
       "fromS": 0,
-      "toS": 4.0,
+      "toS": 4,
       "title": {
        "en": "Heating and spraying",
        "de": "Heizen und Sprühen"
@@ -6773,7 +6773,7 @@
     ],
     "events": [
      {
-      "t": 0.0,
+      "t": 0,
       "kind": "operating",
       "title": {
        "en": "Heater on",
@@ -6792,7 +6792,7 @@
         "v": 1
        },
        {
-        "t": 4.0,
+        "t": 4,
         "v": 1
        }
       ]
@@ -6809,7 +6809,7 @@
      "en": "The last rinse has heated the tub; the heater is off, at 30 s the door is opened 10 degrees and the residual heat dries the dishes for ten minutes while warm vapour leaves over the door.",
      "de": "Der letzte Klarspülgang hat den Behälter aufgeheizt; die Heizung ist aus, nach 30 s wird die Tür 10 Grad geöffnet und die Restwärme trocknet das Geschirr zehn Minuten lang, während warmer Dampf über der Tür austritt."
     },
-    "durationS": 600.0,
+    "durationS": 600,
     "fps": 1,
     "loop": false,
     "rootMotion": "none",
@@ -6825,7 +6825,7 @@
       }
      },
      {
-      "t": 30.0,
+      "t": 30,
       "pose": "drying-ajar",
       "ease": "smooth",
       "bones": {
@@ -6835,12 +6835,12 @@
       }
      },
      {
-      "t": 35.0,
+      "t": 35,
       "pose": "drying-ajar",
       "ease": "smooth"
      },
      {
-      "t": 600.0,
+      "t": 600,
       "pose": "drying-ajar",
       "ease": "smooth"
      }
@@ -6849,24 +6849,24 @@
      {
       "anchor": "foot-rear",
       "fromS": 0,
-      "toS": 600.0
+      "toS": 600
      },
      {
       "anchor": "foot-front",
       "fromS": 0,
-      "toS": 600.0
+      "toS": 600
      },
      {
       "anchor": "pallet-floor",
       "fromS": 0,
-      "toS": 600.0
+      "toS": 600
      }
     ],
     "phases": [
      {
       "id": "closed",
       "fromS": 0,
-      "toS": 30.0,
+      "toS": 30,
       "title": {
        "en": "Programme ended, door closed",
        "de": "Programm beendet, Tür zu"
@@ -6874,8 +6874,8 @@
      },
      {
       "id": "ajar",
-      "fromS": 30.0,
-      "toS": 600.0,
+      "fromS": 30,
+      "toS": 600,
       "title": {
        "en": "Door ajar, drying",
        "de": "Tür angelehnt, Trocknen"
@@ -6884,7 +6884,7 @@
     ],
     "events": [
      {
-      "t": 30.0,
+      "t": 30,
       "kind": "motion",
       "title": {
        "en": "Door opened 10 degrees",
@@ -6893,7 +6893,7 @@
       "target": "door"
      },
      {
-      "t": 30.0,
+      "t": 30,
       "kind": "thermal",
       "title": {
        "en": "Vapour escapes",
@@ -6909,18 +6909,18 @@
       "keys": [
        {
         "t": 0,
-        "v": 1.0
+        "v": 1
        },
        {
-        "t": 30.0,
-        "v": 1.0
+        "t": 30,
+        "v": 1
        },
        {
-        "t": 300.0,
+        "t": 300,
         "v": 0.5
        },
        {
-        "t": 600.0,
+        "t": 600,
         "v": 0.2
        }
       ]
@@ -6931,22 +6931,22 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 30.0,
-        "v": 0.0
+        "t": 30,
+        "v": 0
        },
        {
-        "t": 40.0,
-        "v": 1.0
+        "t": 40,
+        "v": 1
        },
        {
-        "t": 300.0,
+        "t": 300,
         "v": 0.5
        },
        {
-        "t": 600.0,
+        "t": 600,
         "v": 0.15
        }
       ]
@@ -6957,18 +6957,18 @@
       "keys": [
        {
         "t": 0,
-        "v": 0.0
+        "v": 0
        },
        {
-        "t": 30.0,
-        "v": 0.0
+        "t": 30,
+        "v": 0
        },
        {
-        "t": 35.0,
+        "t": 35,
         "v": 0.15
        },
        {
-        "t": 600.0,
+        "t": 600,
         "v": 0.15
        }
       ]
@@ -7060,7 +7060,7 @@
        "kind": "metal",
        "material": "painted-steel",
        "thicknessM": 0.0006,
-       "resistanceM2KW": 1.2e-05,
+       "resistanceM2KW": 0.000012,
        "heatCapacityJM2K": 2166.6,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -7100,12 +7100,12 @@
        "material": "laminate-chipboard",
        "thicknessM": 0.03,
        "resistanceM2KW": 0.214286,
-       "heatCapacityJM2K": 34680.0,
+       "heatCapacityJM2K": 34680,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 34680.0,
+     "heatCapacityJM2K": 34680,
      "source": "authored-estimate",
      "reference": "en-312"
     },
@@ -7133,12 +7133,12 @@
        "material": "door-composite",
        "thicknessM": 0.055,
        "resistanceM2KW": 0.916667,
-       "heatCapacityJM2K": 14850.0,
+       "heatCapacityJM2K": 14850,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 14850.0,
+     "heatCapacityJM2K": 14850,
      "operating": {
       "key": "heater",
       "heatW": 25
@@ -7170,12 +7170,12 @@
        "material": "pp-plinth",
        "thicknessM": 0.003,
        "resistanceM2KW": 0.013636,
-       "heatCapacityJM2K": 4590.0,
+       "heatCapacityJM2K": 4590,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 4590.0,
+     "heatCapacityJM2K": 4590,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7191,7 +7191,7 @@
      "areaM2": 0.52,
      "characteristicLengthM": 0.52,
      "geometry": "horizontal-plate-down",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "pan-wall",
@@ -7203,12 +7203,12 @@
        "material": "base-unit",
        "thicknessM": 0.003,
        "resistanceM2KW": 0.013636,
-       "heatCapacityJM2K": 1248.0,
+       "heatCapacityJM2K": 1248,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 1248.0,
+     "heatCapacityJM2K": 1248,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7224,7 +7224,7 @@
      "areaM2": 4.9,
      "characteristicLengthM": 0.55,
      "geometry": "vertical-plate",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "tub-wall",
@@ -7235,13 +7235,13 @@
        "kind": "metal",
        "material": "stainless-steel",
        "thicknessM": 0.0005,
-       "resistanceM2KW": 2e-05,
-       "heatCapacityJM2K": 1771.0,
+       "resistanceM2KW": 0.00002,
+       "heatCapacityJM2K": 1771,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 1771.0,
+     "heatCapacityJM2K": 1771,
      "operating": {
       "key": "drying",
       "heatW": 250
@@ -7265,7 +7265,7 @@
      "areaM2": 0.61,
      "characteristicLengthM": 0.2,
      "geometry": "cylinder",
-     "skyViewFactor": 0.0,
+     "skyViewFactor": 0,
      "layers": [
       {
        "id": "wire",
@@ -7277,12 +7277,12 @@
        "material": "coated-wire",
        "thicknessM": 0.004,
        "resistanceM2KW": 0.0001,
-       "heatCapacityJM2K": 14000.0,
+       "heatCapacityJM2K": 14000,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 14000.0,
+     "heatCapacityJM2K": 14000,
      "hidden": {
       "en": "Inside the wash tub behind the closed door: the baskets show when the door is open and they are pulled out.",
       "de": "Im Spülbehälter hinter der geschlossenen Tür: die Körbe zeigen sich bei offener Tür und herausgezogen."
@@ -7314,12 +7314,12 @@
        "material": "pvc-hose",
        "thicknessM": 0.002,
        "resistanceM2KW": 0.011765,
-       "heatCapacityJM2K": 1170.0,
+       "heatCapacityJM2K": 1170,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 1170.0,
+     "heatCapacityJM2K": 1170,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -7347,12 +7347,12 @@
        "material": "pallet-spruce",
        "thicknessM": 0.022,
        "resistanceM2KW": 0.169231,
-       "heatCapacityJM2K": 14784.0,
+       "heatCapacityJM2K": 14784,
        "source": "literature",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 14784.0,
+     "heatCapacityJM2K": 14784,
      "source": "authored-estimate",
      "reference": "en-13698-2"
     }
@@ -7448,8 +7448,8 @@
       "repeat": {
        "count": 5,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.125
        ]
       }
@@ -7470,15 +7470,15 @@
        "translation": [
         0.0725,
         0.111,
-        0.0
+        0
        ]
       },
       "repeat": {
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -7505,8 +7505,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -7526,15 +7526,15 @@
        "translation": [
         0.0725,
         0.061,
-        0.0
+        0
        ]
       },
       "repeat": {
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -7561,8 +7561,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -7588,8 +7588,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.25
        ]
       }
@@ -7610,7 +7610,7 @@
        "translation": [
         0.2628,
         0.065,
-        0.0
+        0
        ]
       }
      },
@@ -7623,7 +7623,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -7638,7 +7638,7 @@
       ],
       "origin": [
        0.05,
-       0.0,
+       0,
        -0.25
       ],
       "repeat": {
@@ -7659,7 +7659,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -7674,7 +7674,7 @@
       ],
       "origin": [
        0.505,
-       0.0,
+       0,
        -0.25
       ],
       "repeat": {
@@ -7696,11 +7696,11 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.015,
-        0.0
+        0
        ],
        [
         0.015,
@@ -7715,11 +7715,11 @@
         0.115
        ],
        [
-        0.0,
+        0,
         0.115
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
@@ -7747,7 +7747,7 @@
        "translation": [
         0.4,
         -0.2725,
-        -0.0
+        0
        ]
       },
       "sheet": true
@@ -7768,7 +7768,7 @@
        "translation": [
         0.4,
         -0.2725,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -7788,8 +7788,8 @@
       "transform": {
        "translation": [
         0.4,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "sheet": true
@@ -7804,7 +7804,7 @@
       "profile": [
        [
         -0.3,
-        0.0
+        0
        ],
        [
         -0.3,
@@ -7824,11 +7824,11 @@
        ],
        [
         0.3,
-        0.0
+        0
        ]
       ],
       "plane": "zx",
-      "from": 0.0,
+      "from": 0,
       "to": 0.03
      },
      {
@@ -7847,7 +7847,7 @@
        "translation": [
         0.246,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -7868,7 +7868,7 @@
        "translation": [
         0.246,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -7931,7 +7931,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -7945,11 +7945,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -7961,11 +7961,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -8079,7 +8079,7 @@
        "translation": [
         0.245,
         0.6575,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -8107,8 +8107,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -8165,8 +8165,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -8281,8 +8281,8 @@
       "repeat": {
        "count": 12,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.042727
        ]
       }
@@ -8332,8 +8332,8 @@
        "count": 10,
        "translation": [
         0.042222,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8382,8 +8382,8 @@
        "count": 10,
        "translation": [
         0.042222,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8502,8 +8502,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -8531,8 +8531,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -8589,8 +8589,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -8763,8 +8763,8 @@
       "repeat": {
        "count": 10,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.05
        ]
       }
@@ -8779,12 +8779,12 @@
       "p0": [
        0.008,
        0.002,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        0.002,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -8800,12 +8800,12 @@
       "p0": [
        0.035,
        0.002,
-       0.0
+       0
       ],
       "p1": [
        0.035,
        0.105,
-       0.0
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015,
@@ -8814,8 +8814,8 @@
        "count": 9,
        "translation": [
         0.04,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8828,7 +8828,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -8842,9 +8842,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8862,8 +8862,8 @@
       "transform": {
        "translation": [
         0.016,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8876,7 +8876,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -8890,9 +8890,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -8910,8 +8910,8 @@
       "transform": {
        "translation": [
         0.008,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -8931,7 +8931,7 @@
        "translation": [
         0.305,
         -0.0275,
-        0.0
+        0
        ]
       }
      },
@@ -8981,7 +8981,7 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
+        0,
         0.021
        ],
        [
@@ -9033,7 +9033,7 @@
         0.146413
        ],
        [
-        0.0,
+        0,
         0.147
        ],
        [
@@ -9073,7 +9073,7 @@
         0.123587
        ],
        [
-        -0.0,
+        0,
         0.123
        ],
        [
@@ -9106,8 +9106,7 @@
        -0.012,
        0.3,
        -0.06
-      ],
-      "slender": true
+      ]
      },
      {
       "id": "inlet-coil",
@@ -9138,7 +9137,7 @@
         0.124511
        ],
        [
-        0.0,
+        0,
         0.125
        ],
        [
@@ -9178,7 +9177,7 @@
         0.105489
        ],
        [
-        -0.0,
+        0,
         0.105
        ],
        [
@@ -9211,8 +9210,7 @@
        -0.01,
        0.02,
        0.06
-      ],
-      "slender": true
+      ]
      },
      {
       "id": "cable-coil",
@@ -9243,7 +9241,7 @@
         0.073804
        ],
        [
-        0.0,
+        0,
         0.074
        ],
        [
@@ -9283,7 +9281,7 @@
         0.066196
        ],
        [
-        -0.0,
+        0,
         0.066
        ],
        [
@@ -9489,7 +9487,7 @@
        "translation": [
         0.246,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -9511,7 +9509,7 @@
        "translation": [
         0.246,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -9577,7 +9575,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -9592,11 +9590,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -9608,11 +9606,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -9731,7 +9729,7 @@
        "translation": [
         0.245,
         0.6575,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -9760,8 +9758,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -9820,8 +9818,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -9940,8 +9938,8 @@
       "repeat": {
        "count": 12,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.042727
        ]
       },
@@ -9993,8 +9991,8 @@
        "count": 10,
        "translation": [
         0.042222,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -10045,8 +10043,8 @@
        "count": 10,
        "translation": [
         0.042222,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -10169,8 +10167,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -10199,8 +10197,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -10259,8 +10257,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -10439,8 +10437,8 @@
       "repeat": {
        "count": 10,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.05
        ]
       },
@@ -10456,12 +10454,12 @@
       "p0": [
        0.008,
        0.002,
-       0.0
+       0
       ],
       "p1": [
        0.45,
        0.002,
-       0.0
+       0
       ],
       "r0": 0.002,
       "r1": 0.002,
@@ -10478,12 +10476,12 @@
       "p0": [
        0.035,
        0.002,
-       0.0
+       0
       ],
       "p1": [
        0.035,
        0.105,
-       0.0
+       0
       ],
       "r0": 0.0015,
       "r1": 0.0015,
@@ -10492,8 +10490,8 @@
        "count": 9,
        "translation": [
         0.04,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -10507,7 +10505,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -10521,9 +10519,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "racks"
      },
@@ -10542,8 +10540,8 @@
       "transform": {
        "translation": [
         0.016,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -10557,7 +10555,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -10571,9 +10569,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "racks"
      },
@@ -10592,8 +10590,8 @@
       "transform": {
        "translation": [
         0.008,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -10629,7 +10627,7 @@
        "translation": [
         0.68625,
         -0.02,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -10716,7 +10714,7 @@
        "translation": [
         0.4,
         0.004,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -10887,8 +10885,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.29
        ]
       },
@@ -10909,8 +10907,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.29
        ]
       },
@@ -10933,7 +10931,7 @@
        "translation": [
         0.3,
         0.36,
-        0.0
+        0
        ]
       },
       "member": "base",
@@ -10977,8 +10975,8 @@
       "repeat": {
        "count": 5,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.125
        ]
       }
@@ -10999,15 +10997,15 @@
        "translation": [
         0.0725,
         0.111,
-        0.0
+        0
        ]
       },
       "repeat": {
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -11034,8 +11032,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -11055,15 +11053,15 @@
        "translation": [
         0.0725,
         0.061,
-        0.0
+        0
        ]
       },
       "repeat": {
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -11090,8 +11088,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -11117,8 +11115,8 @@
       "repeat": {
        "count": 3,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.25
        ]
       }
@@ -11139,7 +11137,7 @@
        "translation": [
         0.2628,
         0.065,
-        0.0
+        0
        ]
       }
      },
@@ -11152,7 +11150,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -11167,7 +11165,7 @@
       ],
       "origin": [
        0.05,
-       0.0,
+       0,
        -0.25
       ],
       "repeat": {
@@ -11188,7 +11186,7 @@
       "tone": 0.3,
       "profile": [
        [
-        0.0,
+        0,
         0.016
        ],
        [
@@ -11203,7 +11201,7 @@
       ],
       "origin": [
        0.505,
-       0.0,
+       0,
        -0.25
       ],
       "repeat": {
@@ -11225,11 +11223,11 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.015,
-        0.0
+        0
        ],
        [
         0.015,
@@ -11244,11 +11242,11 @@
         0.115
        ],
        [
-        0.0,
+        0,
         0.115
        ],
        [
-        0.0,
+        0,
         0.1
        ],
        [
@@ -11276,7 +11274,7 @@
        "translation": [
         0.4,
         -0.2725,
-        -0.0
+        0
        ]
       },
       "sheet": true
@@ -11297,7 +11295,7 @@
        "translation": [
         0.4,
         -0.2725,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11317,8 +11315,8 @@
       "transform": {
        "translation": [
         0.4,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "sheet": true
@@ -11339,7 +11337,7 @@
        "translation": [
         0.3,
         0.015,
-        0.0
+        0
        ]
       }
      },
@@ -11359,7 +11357,7 @@
        "translation": [
         0.2425,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11380,7 +11378,7 @@
        "translation": [
         0.2425,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11443,7 +11441,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11457,11 +11455,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -11473,11 +11471,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -11591,7 +11589,7 @@
        "translation": [
         0.245,
         0.6575,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11619,8 +11617,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -11677,8 +11675,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -11793,8 +11791,8 @@
       "repeat": {
        "count": 6,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.094
        ]
       }
@@ -11844,8 +11842,8 @@
        "count": 5,
        "translation": [
         0.095,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -11894,8 +11892,8 @@
        "count": 5,
        "translation": [
         0.095,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -12014,8 +12012,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -12043,8 +12041,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -12101,8 +12099,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -12275,8 +12273,8 @@
       "repeat": {
        "count": 5,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1125
        ]
       }
@@ -12290,7 +12288,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -12304,9 +12302,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -12324,8 +12322,8 @@
       "transform": {
        "translation": [
         0.016,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -12338,7 +12336,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -12352,9 +12350,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -12372,8 +12370,8 @@
       "transform": {
        "translation": [
         0.008,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -12393,7 +12391,7 @@
        "translation": [
         0.305,
         -0.0275,
-        0.0
+        0
        ]
       }
      },
@@ -12443,7 +12441,7 @@
       "tone": 0.45,
       "profile": [
        [
-        0.0,
+        0,
         0.021
        ],
        [
@@ -12495,7 +12493,7 @@
         0.146413
        ],
        [
-        0.0,
+        0,
         0.147
        ],
        [
@@ -12535,7 +12533,7 @@
         0.123587
        ],
        [
-        -0.0,
+        0,
         0.123
        ],
        [
@@ -12600,7 +12598,7 @@
         0.124511
        ],
        [
-        0.0,
+        0,
         0.125
        ],
        [
@@ -12640,7 +12638,7 @@
         0.105489
        ],
        [
-        -0.0,
+        0,
         0.105
        ],
        [
@@ -12705,7 +12703,7 @@
         0.073804
        ],
        [
-        0.0,
+        0,
         0.074
        ],
        [
@@ -12745,7 +12743,7 @@
         0.066196
        ],
        [
-        -0.0,
+        0,
         0.066
        ],
        [
@@ -12909,7 +12907,7 @@
        "translation": [
         0.2425,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -12931,7 +12929,7 @@
        "translation": [
         0.2425,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -12997,7 +12995,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -13012,11 +13010,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -13028,11 +13026,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -13151,7 +13149,7 @@
        "translation": [
         0.245,
         0.6575,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -13180,8 +13178,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -13240,8 +13238,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -13360,8 +13358,8 @@
       "repeat": {
        "count": 6,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.094
        ]
       },
@@ -13413,8 +13411,8 @@
        "count": 5,
        "translation": [
         0.095,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -13465,8 +13463,8 @@
        "count": 5,
        "translation": [
         0.095,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -13589,8 +13587,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -13619,8 +13617,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -13679,8 +13677,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -13859,8 +13857,8 @@
       "repeat": {
        "count": 5,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.1125
        ]
       },
@@ -13875,7 +13873,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -13889,9 +13887,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "racks"
      },
@@ -13910,8 +13908,8 @@
       "transform": {
        "translation": [
         0.016,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -13925,7 +13923,7 @@
       "tone": 0.35,
       "profile": [
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -13939,9 +13937,9 @@
        0
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "region": "racks"
      },
@@ -13960,8 +13958,8 @@
       "transform": {
        "translation": [
         0.008,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "racks"
@@ -13997,7 +13995,7 @@
        "translation": [
         0.6825,
         -0.02,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -14084,7 +14082,7 @@
        "translation": [
         0.4,
         0.0075,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -14255,8 +14253,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.2885
        ]
       },
@@ -14277,8 +14275,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.2885
        ]
       },
@@ -14301,7 +14299,7 @@
        "translation": [
         0.3,
         0.36,
-        0.0
+        0
        ]
       },
       "member": "base",
@@ -14339,7 +14337,7 @@
        "translation": [
         0.4,
         0.122,
-        0.0
+        0
        ]
       }
      },
@@ -14366,8 +14364,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -14387,15 +14385,15 @@
        "translation": [
         0.0725,
         0.05,
-        0.0
+        0
        ]
       },
       "repeat": {
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -14422,8 +14420,8 @@
        "count": 3,
        "translation": [
         0.3275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -14443,7 +14441,7 @@
        "translation": [
         0.2553,
         0.055,
-        0.0
+        0
        ]
       }
      },
@@ -14463,7 +14461,7 @@
        "translation": [
         0.0025,
         0.0575,
-        0.0
+        0
        ]
       }
      },
@@ -14483,7 +14481,7 @@
        "translation": [
         0.4,
         -0.2725,
-        -0.0
+        0
        ]
       },
       "sheet": true
@@ -14504,7 +14502,7 @@
        "translation": [
         0.4,
         -0.2725,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14524,8 +14522,8 @@
       "transform": {
        "translation": [
         0.4,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "sheet": true
@@ -14546,7 +14544,7 @@
        "translation": [
         0.3,
         0.015,
-        0.0
+        0
        ]
       }
      },
@@ -14566,7 +14564,7 @@
        "translation": [
         0.235,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14587,7 +14585,7 @@
        "translation": [
         0.235,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14650,7 +14648,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14664,11 +14662,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -14680,11 +14678,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -14723,8 +14721,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -14781,8 +14779,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       }
@@ -14888,8 +14886,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.542
        ]
       }
@@ -14917,8 +14915,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -14975,8 +14973,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       }
@@ -15142,7 +15140,7 @@
        "translation": [
         0.305,
         -0.0275,
-        0.0
+        0
        ]
       }
      },
@@ -15204,7 +15202,7 @@
         0.146413
        ],
        [
-        0.0,
+        0,
         0.147
        ],
        [
@@ -15244,7 +15242,7 @@
         0.123587
        ],
        [
-        -0.0,
+        0,
         0.123
        ],
        [
@@ -15309,7 +15307,7 @@
         0.124511
        ],
        [
-        0.0,
+        0,
         0.125
        ],
        [
@@ -15349,7 +15347,7 @@
         0.105489
        ],
        [
-        -0.0,
+        0,
         0.105
        ],
        [
@@ -15414,7 +15412,7 @@
         0.073804
        ],
        [
-        0.0,
+        0,
         0.074
        ],
        [
@@ -15454,7 +15452,7 @@
         0.066196
        ],
        [
-        -0.0,
+        0,
         0.066
        ],
        [
@@ -15598,7 +15596,7 @@
        "translation": [
         0.235,
         -0.00025,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -15620,7 +15618,7 @@
        "translation": [
         0.235,
         0.65525,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -15686,7 +15684,7 @@
        "translation": [
         -0.00025,
         0.3275,
-        0.0
+        0
        ]
       },
       "sheet": true,
@@ -15701,11 +15699,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
+        0,
         -0.2994
        ],
        [
-        0.0,
+        0,
         -0.275
        ],
        [
@@ -15717,11 +15715,11 @@
         0.275
        ],
        [
-        0.0,
+        0,
         0.275
        ],
        [
-        0.0,
+        0,
         0.2994
        ],
        [
@@ -15761,8 +15759,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -15821,8 +15819,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.516
        ]
       },
@@ -15932,8 +15930,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.542
        ]
       },
@@ -15962,8 +15960,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -16022,8 +16020,8 @@
       "repeat": {
        "count": 2,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.5
        ]
       },
@@ -16205,7 +16203,7 @@
        "translation": [
         0.675,
         -0.02,
-        0.0
+        0
        ]
       },
       "tags": [
@@ -16280,7 +16278,7 @@
        "translation": [
         0.4,
         0.015,
-        0.0
+        0
        ]
       },
       "member": "pallet",
@@ -16415,8 +16413,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.281
        ]
       },
@@ -16437,8 +16435,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.281
        ]
       },
@@ -16461,7 +16459,7 @@
        "translation": [
         0.3,
         0.36,
-        0.0
+        0
        ]
       },
       "member": "base",

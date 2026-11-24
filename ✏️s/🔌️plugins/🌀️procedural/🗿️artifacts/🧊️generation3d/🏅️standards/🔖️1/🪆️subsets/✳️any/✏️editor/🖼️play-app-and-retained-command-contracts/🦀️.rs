@@ -256,7 +256,7 @@ pub struct Generation3dPreviewCommandWork {
 }
 
 impl Generation3dPreviewCommandWork {
-    pub(super) fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(tool_id: &'static str, instance_owner: semio_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner, emit: None, emit_retirement: None, started: false, complete: false, closing: false }
     }
 

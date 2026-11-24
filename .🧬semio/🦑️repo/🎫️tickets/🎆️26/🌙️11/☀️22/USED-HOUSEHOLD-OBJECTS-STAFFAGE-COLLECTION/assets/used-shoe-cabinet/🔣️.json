@@ -2118,6 +2118,43 @@
        "material": "chipboard-foil"
       },
       {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0.0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "material": "zinc-plated-steel"
+      },
+      {
        "id": "flap-1-front",
        "bone": "flap-1",
        "role": "body",
@@ -2570,6 +2607,49 @@
        "material": "chipboard-foil"
       },
       {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0.0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3125,
+        "z1": -0.2875
+       },
+       "material": "zinc-plated-steel"
+      },
+      {
        "id": "flap-1-front",
        "bone": "flap-1",
        "role": "body",
@@ -2967,6 +3047,49 @@
        },
        "region": "carcass",
        "material": "chipboard-foil"
+      },
+      {
+       "id": "bracket",
+       "bone": "carcass",
+       "role": "body",
+       "z": 9,
+       "filled": true,
+       "tone": 0.3,
+       "kind": "poly",
+       "points": [
+        [
+         0.0,
+         1.45
+        ],
+        [
+         0.04,
+         1.45
+        ],
+        [
+         0.04,
+         1.465
+        ],
+        [
+         0.015,
+         1.465
+        ],
+        [
+         0.015,
+         1.475
+        ],
+        [
+         0.0,
+         1.475
+        ]
+       ],
+       "closed": true,
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": -0.3125,
+        "z1": -0.2875
+       },
+       "material": "zinc-plated-steel"
       },
       {
        "id": "flap-1-front",
@@ -8568,6 +8691,43 @@
       "to": 0.384
      },
      {
+      "id": "bracket",
+      "kind": "extrude",
+      "bone": "carcass",
+      "material": "zinc-plated-steel",
+      "role": "body",
+      "tone": 0.3,
+      "profile": [
+       [
+        0.0,
+        1.45
+       ],
+       [
+        0.04,
+        1.45
+       ],
+       [
+        0.04,
+        1.465
+       ],
+       [
+        0.015,
+        1.465
+       ],
+       [
+        0.015,
+        1.475
+       ],
+       [
+        0.0,
+        1.475
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.3125,
+      "to": -0.2875
+     },
+     {
       "id": "flap-1-front",
       "kind": "extrude",
       "bone": "flap-1",
@@ -9000,6 +9160,12 @@
       "of": "back",
       "member": "carcass",
       "part": "member"
+     },
+     {
+      "id": "j-bracket",
+      "of": "bracket",
+      "member": "carcass",
+      "part": "joint"
      },
      {
       "id": "m-flap-1-front",

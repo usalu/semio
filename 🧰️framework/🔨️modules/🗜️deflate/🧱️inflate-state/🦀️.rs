@@ -172,7 +172,7 @@ impl RetainedInflateHistory {
 
 impl Drop for RetainedInflateHistory {
     fn drop(&mut self) {
-        assert!(self.physical_closed && self.allocated_bytes() == 0, "retained inflate history reached Drop before exact physical release");
+        assert!(std::thread::panicking()||(self.physical_closed && self.allocated_bytes() == 0), "retained inflate history reached Drop before exact physical release");
     }
 }
 

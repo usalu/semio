@@ -117,8 +117,8 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        let printed = protocol::OpText::print_op(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }
 }
@@ -130,7 +130,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// of the three payload shapes involves the per-standard `En1993Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
-    let hex = |command: &En1993Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let hex = |command: &En1993Command| semio_os_kernel::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     assert_eq!(hex(&En1993Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
     assert_eq!(hex(&En1993Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }

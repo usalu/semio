@@ -1,0 +1,215 @@
+{
+ "machines": [
+  {
+   "name": "a",
+   "root": "/srv/ci-a/semio",
+   "cache": "/srv/ci-a/semio/.cache/b",
+   "snapshot": "/srv/ci-a/semio/.cache/b/t/sealed/0f3a0f3a0f3a0f3a",
+   "generation": "a3f9a3f9a3f9a3f9a3f9a3f9a3f9a3f9",
+   "provider": "9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b",
+   "stamp": [
+    1700000000111.5,
+    1700000000222.5,
+    1001
+   ],
+   "record": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "authority": [],
+    "observations": [
+     {
+      "kind": "lstat",
+      "path": "/",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "/srv",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "/srv/ci-a",
+      "fact": "directory"
+     },
+     {
+      "kind": "file",
+      "path": "/srv/ci-a/semio/libs/x/project.json",
+      "fact": {
+       "size": 12,
+       "mtimeMs": 1700000000111.5,
+       "ctimeMs": 1700000000222.5,
+       "ino": 1001,
+       "sha256": "1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b"
+      }
+     },
+     {
+      "kind": "exists",
+      "path": "/srv/ci-a/semio/libs/x/Cargo.toml",
+      "fact": true
+     },
+     {
+      "kind": "analysis",
+      "path": "/srv/ci-a/semio/tools/a.ts",
+      "fact": {
+       "provider": "build:command-imports:v1:9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b9d2b",
+       "revision": "5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f",
+       "source": {
+        "size": 30,
+        "mtimeMs": 1700000000112.5,
+        "ctimeMs": 1700000000223.5,
+        "ino": 1002,
+        "sha256": "2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c"
+       },
+       "resultSha256": "4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e",
+       "nestedObservations": [
+        {
+         "kind": "file",
+         "path": "/srv/ci-a/semio/tools/b.ts",
+         "fact": {
+          "size": 7,
+          "mtimeMs": 1700000000113.5,
+          "ctimeMs": 1700000000224.5,
+          "ino": 1003,
+          "sha256": "3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "kind": "closure",
+      "path": "[\"/srv/ci-a/semio\",\"1b1eccca685c95826e8db2615b4c6e6ca649463a292f63a93e408b170a59f84f\",[\"generated\"]]",
+      "fact": "[]"
+     }
+    ],
+    "image": "{\"name\":\"x\",\"root\":\"libs/x\",\"closureRecipes\":{\"1b1eccca685c95826e8db2615b4c6e6ca649463a292f63a93e408b170a59f84f\":{\"fn\":\"closure-of\",\"entries\":[\"tools/a.ts\"],\"workspaceRoot\":\"/srv/ci-a/semio\"}},\"command\":\"bun /srv/ci-a/semio/tools/a.ts\"}",
+    "machineLocal": [
+     {
+      "kind": "file",
+      "path": "/srv/ci-a/semio/.cache/b/t/sealed/0f3a0f3a0f3a0f3a/mod.ts",
+      "fact": {
+       "size": 5,
+       "mtimeMs": 1700000000111.5,
+       "ctimeMs": 1700000000222.5,
+       "ino": 1001,
+       "sha256": "6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a"
+      }
+     },
+     {
+      "kind": "exists",
+      "path": "/srv/ci-a/semio/.cache/b/f/x",
+      "fact": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "b",
+   "root": "/home/dev-b/work/semio",
+   "cache": "/var/lib/semio-b/.cache",
+   "snapshot": "/opt/semio-tools/sealed/b7d2b7d2b7d2b7d2",
+   "generation": "7c1e7c1e7c1e7c1e7c1e7c1e7c1e7c1e",
+   "provider": "e41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41c",
+   "stamp": [
+    1800000000333.25,
+    1800000000444.25,
+    2002
+   ],
+   "record": {
+    "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "authority": [],
+    "observations": [
+     {
+      "kind": "lstat",
+      "path": "/",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "/home",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "/home/dev-b",
+      "fact": "directory"
+     },
+     {
+      "kind": "lstat",
+      "path": "/home/dev-b/work",
+      "fact": "directory"
+     },
+     {
+      "kind": "file",
+      "path": "/home/dev-b/work/semio/libs/x/project.json",
+      "fact": {
+       "size": 12,
+       "mtimeMs": 1800000000333.25,
+       "ctimeMs": 1800000000444.25,
+       "ino": 2002,
+       "sha256": "1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b"
+      }
+     },
+     {
+      "kind": "exists",
+      "path": "/home/dev-b/work/semio/libs/x/Cargo.toml",
+      "fact": true
+     },
+     {
+      "kind": "analysis",
+      "path": "/home/dev-b/work/semio/tools/a.ts",
+      "fact": {
+       "provider": "build:command-imports:v1:e41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41ce41c",
+       "revision": "5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f",
+       "source": {
+        "size": 30,
+        "mtimeMs": 1800000000334.25,
+        "ctimeMs": 1800000000445.25,
+        "ino": 2003,
+        "sha256": "2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c"
+       },
+       "resultSha256": "4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e",
+       "nestedObservations": [
+        {
+         "kind": "file",
+         "path": "/home/dev-b/work/semio/tools/b.ts",
+         "fact": {
+          "size": 7,
+          "mtimeMs": 1800000000335.25,
+          "ctimeMs": 1800000000446.25,
+          "ino": 2004,
+          "sha256": "3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d"
+         }
+        }
+       ]
+      }
+     },
+     {
+      "kind": "closure",
+      "path": "[\"/home/dev-b/work/semio\",\"fa3c62f84fc558fe94233f5f7c83ddcbf0ddc46dd55435ff583049f4be8be9e1\",[\"generated\"]]",
+      "fact": "[]"
+     }
+    ],
+    "image": "{\"name\":\"x\",\"root\":\"libs/x\",\"closureRecipes\":{\"fa3c62f84fc558fe94233f5f7c83ddcbf0ddc46dd55435ff583049f4be8be9e1\":{\"fn\":\"closure-of\",\"entries\":[\"tools/a.ts\"],\"workspaceRoot\":\"/home/dev-b/work/semio\"}},\"command\":\"bun /home/dev-b/work/semio/tools/a.ts\"}",
+    "machineLocal": [
+     {
+      "kind": "file",
+      "path": "/opt/semio-tools/sealed/b7d2b7d2b7d2b7d2/mod.ts",
+      "fact": {
+       "size": 5,
+       "mtimeMs": 1800000000333.25,
+       "ctimeMs": 1800000000444.25,
+       "ino": 2002,
+       "sha256": "6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a6a"
+      }
+     },
+     {
+      "kind": "exists",
+      "path": "/var/lib/semio-b/.cache/f/x",
+      "fact": true
+     }
+    ]
+   }
+  }
+ ]
+}

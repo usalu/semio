@@ -27,6 +27,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_card = _manim_module.window_card
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -99,6 +100,8 @@ F_P_HOLZ, F_P_UMWELT = 0.2, 0.0
 # by hand; half-up because round() is banker's rounding.
 Q_PRIM_GAS = int(Q_END_GAS * F_P_GAS + 0.5)    # 154 kWh/(m²·a)
 Q_PRIM_WP = int(Q_END_WP * F_P_STROM + 0.5)    #  56 kWh/(m²·a)
+E_P_GAS = Q_PRIM_GAS / Q_NUTZ                  # 1,54
+E_P_WP = Q_PRIM_WP / Q_NUTZ                    # 0,56
 Q_LOSS_GAS = Q_END_GAS - Q_NUTZ                #  40 kWh/(m²·a) Anlagenverluste
 WP_GEN_OUT = Q_NUTZ * 1.04 * 1.08 * 1.06       # 119 kWh/(m²·a) Erzeugerabgabe
 Q_AMBIENT_WP = round(Q_NUTZ * (1.0 - Q_END_WP * 1.0 / WP_GEN_OUT))  #  74 kWh/(m²·a) Umweltwärme-Anteil der Nutzenergie
@@ -113,31 +116,14 @@ EE_SHARE = 0.65
 
 UNIT = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
 
+def _de(value: float, digits: int = 2) -> str:
+    """🔢 Decimal comma in braces for narration TeX."""
+    return f"{value:.{digits}f}".replace(".", "{,}")
+
+
 def _eq(product: float) -> str:
     """🟰 '=' only when the shown product is exact — 140 · 1,1 = 154 but 31 · 1,8 ≈ 56."""
     return "=" if abs(product - round(product)) < 1e-9 else r"\approx"
-
-
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
 
 
 def _math_note(tex: str, color: str = P_PRIMARY):
@@ -413,8 +399,8 @@ class Beat1_DreiBilanzgrenzen(Scene):
          "Last comes transport, all the way to the meter.",
          "Zuletzt der Transport — bis zum Zähler."),
         ("geg",
-         r"That is why the building energy act caps the primary energy demand $Q_{P} = Q_{E} \cdot f_{P}$.",
-         r"Deshalb begrenzt das Gebäudeenergiegesetz den Primärenergiebedarf $Q_{P} = Q_{E} \cdot f_{P}$."),
+         r"That is why the Building Modernisation Act caps the primary energy demand $Q_{P} = Q_{E} \cdot f_{P}$.",
+         r"Deshalb begrenzt das Gebäudemodernisierungsgesetz den Primärenergiebedarf $Q_{P} = Q_{E} \cdot f_{P}$."),
         ("vergleich",
          "Because the primary energy factor puts different energy carriers on one common scale.",
          "Denn der Primärenergiefaktor bringt verschiedene Energieträger auf einen gemeinsamen Maßstab."),
@@ -425,7 +411,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Three system boundaries", "Drei Bilanzgrenzen"))
-        din = _din_ref(_references.cite(("din-ts-18599-1", "energiearten")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-1", "energiearten")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -606,8 +592,8 @@ class Beat2_Primaerenergiefaktor(Scene):
          "Its generation mix still has a large fossil share.",
          "Sein Erzeugungsmix hat noch einen großen fossilen Anteil."),
         ("strom_geg",
-         "The value is fixed by law: Annex 4 of the building energy act.",
-         "Der Wert ist gesetzlich festgelegt: Anlage 4 des Gebäudeenergiegesetzes."),
+         "The value is fixed by law: Annex 4 of the Building Modernisation Act.",
+         "Der Wert ist gesetzlich festgelegt: Anlage 4 des Gebäudemodernisierungsgesetzes."),
         ("gas",
          r"Gas and oil sit just above one: $f_{P} = 1.1$.",
          r"Gas und Öl liegen knapp über eins: $f_{P} = 1{,}1$."),
@@ -636,7 +622,7 @@ class Beat2_Primaerenergiefaktor(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The non-renewable primary energy factor", "Der nicht erneuerbare Primärenergiefaktor"))
-        din = _din_ref(_references.cite(("gmodg", "p22")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p22")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -916,20 +902,20 @@ class Beat3_Rechenbeispiel(Scene):
          "Now the whole chain on one building.",
          "Jetzt die ganze Kette an einem Gebäude."),
         ("nutz",
-         r"The same $100\,\mathrm{kWh/(m^2\,a)}$ of useful energy $Q_{h}$ as in the last chapter.",
-         r"Dieselben $100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie $Q_{h}$ wie im letzten Kapitel."),
+         rf"The same ${Q_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ of useful energy $Q_{{h}}$ as in the last chapter.",
+         rf"Dieselben ${Q_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ Nutzenergie $Q_{{h}}$ wie im letzten Kapitel."),
         ("anlage",
          r"The plant turns that useful energy into final energy $Q_{E}$.",
          r"Die Anlage macht aus dieser Nutzenergie Endenergie $Q_{E}$."),
         ("end_gas",
-         r"The gas boiler draws $140\,\mathrm{kWh/(m^2\,a)}$.",
-         r"Der Gaskessel nimmt $140\,\mathrm{kWh/(m^2\,a)}$ auf."),
+         rf"The gas boiler draws ${Q_END_GAS}\,\mathrm{{kWh/(m^2\,a)}}$.",
+         rf"Der Gaskessel nimmt ${Q_END_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ auf."),
         ("end_wp",
-         r"The heat pump needs only $31\,\mathrm{kWh/(m^2\,a)}$ of electricity, its final energy.",
-         r"Die Wärmepumpe braucht nur $31\,\mathrm{kWh/(m^2\,a)}$ Strom als Endenergie."),
+         rf"The heat pump needs only ${Q_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ of electricity, its final energy.",
+         rf"Die Wärmepumpe braucht nur ${Q_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ Strom als Endenergie."),
         ("end_umwelt",
-         r"Of the useful energy, $74\,\mathrm{kWh/(m^2\,a)}$ come free from the ambient air, and only $26\,\mathrm{kWh/(m^2\,a)}$ are driven by electricity.",
-         r"Von der Nutzenergie liefert die Umweltwärme der Luft $74\,\mathrm{kWh/(m^2\,a)}$ kostenlos, nur $26\,\mathrm{kWh/(m^2\,a)}$ gehen auf den Strom zurück."),
+         rf"Of the useful energy, ${Q_AMBIENT_WP}\,\mathrm{{kWh/(m^2\,a)}}$ come free from the ambient air, and only ${Q_POWER_SHARE}\,\mathrm{{kWh/(m^2\,a)}}$ are driven by electricity.",
+         rf"Von der Nutzenergie liefert die Umweltwärme der Luft ${Q_AMBIENT_WP}\,\mathrm{{kWh/(m^2\,a)}}$ kostenlos, nur ${Q_POWER_SHARE}\,\mathrm{{kWh/(m^2\,a)}}$ gehen auf den Strom zurück."),
         ("end_rest",
          r"The remaining $5\,\mathrm{kWh/(m^2\,a)}$ of electricity cover the losses of emission, distribution and storage.",
          r"Die übrigen $5\,\mathrm{kWh/(m^2\,a)}$ Strom decken die Verluste von Übergabe, Verteilung und Speicherung."),
@@ -952,8 +938,8 @@ class Beat3_Rechenbeispiel(Scene):
          "Because the factor is applied to a final energy that was already more than three quarters smaller.",
          "Weil der Faktor auf eine Endenergie trifft, die schon gut drei Viertel kleiner war."),
         ("anlagenzahl",
-         r"Primary over useful energy is the primary-energy expenditure figure $e_{P} = e_{E}\cdot f_{P} = Q_{P}/Q_{h}$: $1.54$ against $0.56$.",
-         r"Primärenergie durch Nutzenergie ist die primärenergetische Aufwandszahl $e_{P} = e_{E}\cdot f_{P} = Q_{P}/Q_{h}$: $1{,}54$ gegen $0{,}56$."),
+         rf"Primary over useful energy is the primary-energy expenditure figure $e_{{P}} = e_{{E}}\cdot f_{{P}} = Q_{{P}}/Q_{{h}}$: ${E_P_GAS:.2f}$ against ${E_P_WP:.2f}$.",
+         rf"Primärenergie durch Nutzenergie ist die primärenergetische Aufwandszahl $e_{{P}} = e_{{E}}\cdot f_{{P}} = Q_{{P}}/Q_{{h}}$: ${_de(E_P_GAS)}$ gegen ${_de(E_P_WP)}$."),
         ("effizienz",
          "Efficiency beats the factor.",
          "Effizienz schlägt den Faktor."),
@@ -964,7 +950,7 @@ class Beat3_Rechenbeispiel(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("One building, two systems", "Ein Gebäude, zwei Anlagen"))
-        din = _din_ref(_references.cite(("gmodg", "p20-22"), ("din-ts-18599-1", "primaerenergie")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p20-22"), ("din-ts-18599-1", "primaerenergie")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1125,8 +1111,8 @@ class Beat3_Rechenbeispiel(Scene):
             ("w_qp", label_number(Q_PRIM_WP) + unit_tail, PRIM_VIOLET),
         ]
         row, box, items = math_panel(parts)
-        ep_note = _math_note(tr(r"e_{P}=Q_{P}/Q_{h}:\;1.54\;\text{(gas)},\;0.56\;\text{(heat pump)}\;\cdot\;e_{P}\;\text{and}\;f_{P}\;\text{are dimensionless}", r"e_{P}=Q_{P}/Q_{h}:\;1{,}54\;\text{(Gas)},\;0{,}56\;\text{(Wärmepumpe)}\;\cdot\;e_{P}\;\text{und}\;f_{P}\;\text{sind dimensionslos}"))
-        say("anlagenzahl", (0.6, [FadeOut(legend_unit), *[FadeOut(w) for w in words.values()]]), (1.2, [FadeIn(ep_note)]))
+        ep_note = _math_note(tr(rf"e_{{P}}=Q_{{P}}/Q_{{h}}:\;{E_P_GAS:.2f}\;\text{{(gas)}},\;{E_P_WP:.2f}\;\text{{(heat pump)}}\;\cdot\;e_{{P}}\;\text{{and}}\;f_{{P}}\;\text{{are dimensionless}}", rf"e_{{P}}=Q_{{P}}/Q_{{h}}:\;{_de(E_P_GAS)}\;\text{{(Gas)}},\;{_de(E_P_WP)}\;\text{{(Wärmepumpe)}}\;\cdot\;e_{{P}}\;\text{{und}}\;f_{{P}}\;\text{{sind dimensionslos}}"))
+        say("anlagenzahl", (0.6, [FadeOut(legend_unit), *[FadeOut(w) for w in words.values()], *[FadeOut(m) for p in panels for m in p["kinds"].values()]]), (1.2, [FadeIn(ep_note)]))
         copies = []
         for p, tag, name in ((gas, "g", "gas"), (wp, "w", "heat-pump")):
             copies += [
@@ -1139,12 +1125,13 @@ class Beat3_Rechenbeispiel(Scene):
             (1.8, [Create(box), *copies]),
             (1.0, [Indicate(VGroup(items["g_qp"], items["w_qp"]), color=P_YELLOW, scale_factor=1.04)]))
 
+        moved = {id(m) for p in panels for m in (p["static"]["e"]["num"], p["static"]["f"], p["static"]["q"]["num"])}
         everything = [
-            caption, box, row, ghost_q, ghost_e, legend_unit, ep_note, *words.values(),
+            caption, box, row, ghost_q, ghost_e, ep_note,
             *[m for p in panels for m in (
-                p["ground"], p["meter"], p["head"], p["pipes"]["up"], *p["kinds"].values(),
+                p["ground"], p["meter"], p["head"], p["pipes"]["up"],
                 p["rect_h"], p["bars"]["e"], p["bars"]["q"], p["gauge"]["track"], p["gauge"]["fill"], p["tick"],
-                *[m for tag in p["static"].values() for m in (tag.values() if isinstance(tag, dict) else [tag])],
+                *[m for tag in p["static"].values() for m in (tag.values() if isinstance(tag, dict) else [tag]) if id(m) not in moved],
             )],
         ]
         self.play(*[FadeOut(m) for m in everything], run_time=0.6)
@@ -1173,14 +1160,14 @@ class Beat4_Referenzgebaeude(Scene):
          "And it fills it with the technical reference specification from Annex 1: the reference building.",
          "Und es füllt sie mit der technischen Referenzausführung nach Anlage 1: das Referenzgebäude."),
         ("grenze",
-         r"Its calculated primary energy $Q_{P}$ sets the benchmark: $120\,\mathrm{kWh/(m^2\,a)}$ in this schematic example.",
-         r"Dessen Primärenergiebedarf $Q_{P}$ setzt den Maßstab: im schematischen Beispiel $120\,\mathrm{kWh/(m^2\,a)}$."),
+         rf"Its calculated primary energy $Q_{{P}}$ sets the benchmark: ${Q_REF}\,\mathrm{{kWh/(m^2\,a)}}$ in this schematic example.",
+         rf"Dessen Primärenergiebedarf $Q_{{P}}$ setzt den Maßstab: im schematischen Beispiel ${Q_REF}\,\mathrm{{kWh/(m^2\,a)}}$."),
         ("anteil",
-         r"A new residential building may reach at most $0.55$ of it, that is $66\,\mathrm{kWh/(m^2\,a)}$.",
-         r"Ein neues Wohngebäude darf höchstens das $0{,}55$-Fache davon erreichen, also $66\,\mathrm{kWh/(m^2\,a)}$."),
+         rf"A new residential building may reach at most ${REF_SHARE:.2f}$ of it, that is ${Q_LIMIT}\,\mathrm{{kWh/(m^2\,a)}}$.",
+         rf"Ein neues Wohngebäude darf höchstens das ${_de(REF_SHARE)}$-Fache davon erreichen, also ${Q_LIMIT}\,\mathrm{{kWh/(m^2\,a)}}$."),
         ("waermepumpe",
-         r"In this example the heat pump, $56\,\mathrm{kWh/(m^2\,a)}$, clears the line.",
-         r"Im Beispiel unterschreitet die Wärmepumpe mit $56\,\mathrm{kWh/(m^2\,a)}$ die Linie."),
+         rf"In this example the heat pump, ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, clears the line.",
+         rf"Im Beispiel unterschreitet die Wärmepumpe mit ${Q_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$ die Linie."),
         ("gaskessel",
          rf"The gas boiler, ${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$, misses it by more than a factor of two.",
          rf"Der Gaskessel verfehlt sie mit ${Q_PRIM_GAS}\,\mathrm{{kWh/(m^2\,a)}}$ um mehr als das Doppelte."),
@@ -1197,7 +1184,7 @@ class Beat4_Referenzgebaeude(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The limit: the reference building", "Der Grenzwert: das Referenzgebäude"))
-        din = _din_ref(_references.cite(("gmodg", "p71")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p71")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

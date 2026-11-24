@@ -164,10 +164,7 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
         action: Some(ActionDescriptor {
             controller_id: expected_action["controllerId"].as_str().unwrap().into(),
             action: expected_action["action"].as_str().unwrap().into(),
-            args: semio_renderer_wgpu_host_base::action_args_json!({
-                "surfaceId": retained_surface.as_str(),
-                "id": expected_action["args"]["id"].as_str().unwrap()
-            }),
+            args: Some(semio_framework::dsl_value!({ "surfaceId": retained_surface.as_str(), "id": expected_action["args"]["id"].as_str().unwrap() })),
         }),
     };
     semio_renderer_wgpu_scene_feeds::stage_event_feed_accessibility_controls(&retained_host, vec![control.clone()]);

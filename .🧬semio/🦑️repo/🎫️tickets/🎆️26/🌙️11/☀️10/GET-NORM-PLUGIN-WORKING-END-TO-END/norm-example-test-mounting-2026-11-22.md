@@ -39,3 +39,15 @@ en1992, en1996, din18599 cooled-office.
 
 ## Open
 Fix the en1999 purlin example (see above). Remove every `[DEBUG]` dump test (en1993, en1994, en1998) after converting them to verdict assertions; run each family once.
+
+## en1993, en1994, en1998 verdict assertions (VERIFIED, 2026-11-23)
+All `[DEBUG]` dump tests are gone. Compliant examples assert zero failing checks and at least one pass (`decoded_example_has_no_failing_check`, failure message lists id, utilisation, computed and limit); failing examples assert the claimed failing checks and a remedy on every failure. Runs via `run-family.sh <family> <dir>` (nohup, retries while other writers leave the shared tree uncompilable), logs in `🗑️generated/<family>-assert.log`.
+
+- en1993 (4 passed): `heb240-compliant` complies. The examples crate lacked the `semio-s-artifact-norm-en1993-io` dev-dependency (compile error); added.
+- en1994 (3 passed): two "compliant" examples genuinely failed and were fixed in the authored assets, pack twins regenerated from the decoded DSL.
+  - `composite-floor-beam`: `en1994.6.7.4.introduction.col-C1` (tau_Ed over the 0.40 MPa Table 6.6 value for a filled rectangular section). Column enlarged to 400 x 20 mm SHS (steel 0.0304 m2, concrete 0.1296 m2, I 7.34e-4 m4) so the steel share carries about 80 percent of N_Ed.
+  - `composite-bridge-girder`: 8 failing checks (HEB400 over 20 m, continuous, 1 lane LM1 u 2.35, eta 0.37). Redesigned as HEB500, 12 m continuous 2-span, 25 mm x 140 mm studs in pairs at 0.13 m (5d spacing, h_sc >= h_p + 2d), bottom 500 and top 400 mm2/m transverse steel, hogging 1200 mm2/m at 100 mm, steel self-weight 524 Pa. Chosen from a 54-variant grid (section x span x support x stud layout); the grid test was temporary and removed.
+  - `composite-floor-beam-failing`: asserts at least two failing checks incl. Mrd/beff/crack/ltb family ids, all with remedies (unchanged by this pass).
+- en1998 (10 passed): `seismic-rc-frame` and `seismic-multipart` comply, `seismic-rc-frame-fail` and `seismic-multipart-fail` fail with remedies. `seismic-multipart` failed `en1998.4.si-1.wall` (N_Ed about 4.7 MN vs N_Rd 2.0 MN); silo N_Rd set to 8 MN in the DSL asset and in `seismic_multipart::snapshot()` (the shared `compliant_de_multipart()` constructor is untouched because many check-outcome fixtures use `si-1`).
+
+Not run: en1994 editor asset tests, compliance-report tests and the `.ts` example tests that also read the changed bridge and floor-beam assets.

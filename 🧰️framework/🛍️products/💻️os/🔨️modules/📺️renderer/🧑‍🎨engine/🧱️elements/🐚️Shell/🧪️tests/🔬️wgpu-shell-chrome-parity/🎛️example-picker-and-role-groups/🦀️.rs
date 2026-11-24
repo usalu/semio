@@ -106,7 +106,7 @@ fn the_boot_example_query_reaches_the_picker_through_the_shared_resolver() {
     let body = &chrome[..["\n    fn ", "\n    pub(crate) fn "].iter().filter_map(|marker| chrome.find(marker)).min().unwrap_or(chrome.len())];
     assert!(body.contains("shell_offered_examples("), "boot and role sync use the declared example offer authority");
     assert!(body.contains("resolve_boot_example_id("), "sync_session_chrome resolves through the shared predicate, never its own inline rule");
-    assert!(body.contains("crate::boot_app_example()"), "`?example=` is the declared default the resolver is handed");
+    assert!(body.contains("semio_renderer_wgpu_host_base::boot_app_example()"), "`?example=` is the declared default the resolver is handed");
     let apply = WGPU_SHELL_SOURCE().split("async fn announce_session_example").nth(1).expect("the shell declares announce_session_example");
     let apply_body = apply.split("\n    /// ").next().expect("the body of announce_session_example");
     assert!(apply_body.contains("\"setActiveExample\""), "the resolved example is ANNOUNCED to the guest, not only painted on the trigger");

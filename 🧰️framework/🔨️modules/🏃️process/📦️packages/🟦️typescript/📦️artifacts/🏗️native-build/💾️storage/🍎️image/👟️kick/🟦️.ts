@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/process/artifacts/native-build/storage/image/kick` entry: explicit re-exports of the source module that owns each member. */
+export { createNativeImageDarwinKickPortV1, createNativeImageKickPortV1, createNativeImageLinuxKickPortV1, kickNativeImageV1, nativeImageKickCanaryReturnedV1, nativeImageKickReturnedBytesV1, nativeImageKickDueV1, nativeImageKickIneffectiveTextV1, nativeImageKickMechanismV1, NATIVE_IMAGE_KICK_V1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts";
+export type { NativeImageKickHooksV1, NativeImageKickOutcomeV1, NativeImageKickPortV1 } from "../../../../../../../📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts";

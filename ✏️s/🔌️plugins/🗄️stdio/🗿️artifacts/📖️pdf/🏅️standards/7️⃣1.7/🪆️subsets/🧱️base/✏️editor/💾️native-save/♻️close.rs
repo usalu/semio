@@ -12,17 +12,20 @@ use crate::standards::v1_7::subsets::base::{
     modules::{lexer::CosGrant, lift::{ControlledLiftEvent, ControlledLiftPartial}},
     schema::snapshot::{PdfDictEntry, PdfPage, PdfSnapshot},
 };
-use super::{graph::PinnedPdfGraph, ordinary_graft::OrdinaryRows};
+use super::{graph::PinnedPdfGraph, increment::IncrementRows, ordinary_graft::OrdinaryRows};
 use super::program::ClassicPdfSaveRetirement;
 
 #[derive(RetireOwned)]
 struct OwnedGraphParts {
     graph: PinnedPdfGraph,
+    reference: Option<PinnedPdfGraph>,
+    increment: Option<IncrementRows>,
     pending_rows: OrdinaryRows,
     typed_projection: Option<PdfSnapshot>,
     partial_page: Option<PdfPage>,
     control_trailer: Option<Vec<PdfDictEntry>>,
     scratch: Option<Vec<u8>>,
+    offsets: Option<Vec<u32>>,
 }
 
 pub struct ProgramClose {
@@ -46,6 +49,8 @@ impl ProgramClose {
         };
         if !active.control_birth.terminal_is_empty() { return active.control_birth.close_demand(body); }
         if !active.scratch_birth.terminal_is_empty() { return active.scratch_birth.close_demand(body); }
+        if !active.reference_birth.terminal_is_empty() { return active.reference_birth.close_demand(body); }
+        if !active.offsets_birth.terminal_is_empty() { return active.offsets_birth.close_demand(body); }
         if !self.proof_closed {
             return Ok(RetirementDemand { release_bytes: self.release, depth: 1, ..Default::default() });
         }
@@ -56,6 +61,8 @@ impl ProgramClose {
         if let Some(active) = self.active.as_mut() {
             if let Some(progress) = active.control_birth.close_step(cx)? { return Ok(InteractiveJobCloseStep::Pending { progress }); }
             if let Some(progress) = active.scratch_birth.close_step(cx)? { return Ok(InteractiveJobCloseStep::Pending { progress }); }
+            if let Some(progress) = active.reference_birth.close_step(cx)? { return Ok(InteractiveJobCloseStep::Pending { progress }); }
+            if let Some(progress) = active.offsets_birth.close_step(cx)? { return Ok(InteractiveJobCloseStep::Pending { progress }); }
         }
         let demand = self.demands(cx.retained_grant().maximum_copy_bytes)?;
         close_original_retained_effect_step(cx, demand, |effect| self.close_one(effect))
@@ -83,8 +90,8 @@ impl ProgramClose {
             }
             let mut active = self.active.take().ok_or_else(|| ValueError::invariant("PDF graph close lost its original owner"))?;
             let ControlledLiftPartial { snapshot, page } = active.proof.take_partial();
-            *self.owned = Some(OwnedGraphParts { graph: active.graph, pending_rows: active.pending_graft.take_partial(),
-                typed_projection: snapshot, partial_page: page, control_trailer: active.control_trailer.map(|trailer| trailer.into_entries()), scratch: active.scratch });
+            *self.owned = Some(OwnedGraphParts { graph: active.graph, reference: active.reference, increment: active.increment, pending_rows: active.pending_graft.take_partial(),
+                typed_projection: snapshot, partial_page: page, control_trailer: active.control_trailer.map(|trailer| trailer.into_entries()), scratch: active.scratch, offsets: active.offsets });
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,
                 copied_bytes: demand.copy_bytes, ..Default::default() }));
         }

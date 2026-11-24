@@ -41,7 +41,7 @@ impl OpeningState {
         let answer = ShellDetached::spawn(async move {
             if worker_cancel.is_cancelled_now() { return Ok(NativeSaveOutcome::Cancelled); }
             let owner = program.read_app_document_identity(instance).await.map_err(|error| error.to_string())?;
-            if owner.parent_document_id.is_none() { return Err("Save requires an attached document".into()); }
+            if owner.parent_document_id.is_none() { return Err("save.requires-attached-document".into()); }
             if worker_cancel.is_cancelled_now() { return Ok(NativeSaveOutcome::Cancelled); }
             let extension = declaration.extension().unwrap_or("dat");
             let request = ui_host::NativeFileDialogRequest::save(declaration.filename(), [extension]);

@@ -7,10 +7,10 @@ use pack::snapshot::ArtifactDsl;
 
 /// 🎬️ The ids this verb answers. The navbar example picker dispatches a REGISTERED example id, and
 /// `demo` is the only example this subset registers, so that id must resolve or every navbar pick is
-/// inert. `default` names the blank rule `resetRule` builds, for the catalogue's own rows.
+/// inert. `""` is the canonical empty example id and `default` names the blank rule `resetRule` builds, for the catalogue's own rows.
 pub fn set_active_example_document(example_id: &str) -> Option<RewritingSnapshot> {
     match example_id {
-        "default" | "blank" => Some(crate::editor::rewriting::document::default_rule_state()),
+        "" | "default" | "blank" => Some(crate::editor::rewriting::document::default_rule_state()),
         id if id == crate::examples::demo::ID => RewritingSnapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).ok(),
         _ => None,
     }

@@ -65,6 +65,31 @@ row; full-bleed images run under it. Every page fragment of a split window carri
 Profiles that forbid transparency (PDF/A-1) switch every chip to the opaque chip surface with one
 call, `\SemioChipTransparency{false}`.
 
+## Shared borders
+
+A page is split into closed rectangles, and two neighbours share the edge between them; nothing
+bordered is separated from another bordered thing by a gap.
+
+- The text column is a frame: the navbar rule is its top edge, the footer rule its bottom edge, and
+  two side borders run between them. Prose is inset from the sides like the body of a window;
+  frames span the column edge to edge.
+- A heading opens the frame of its section. Its chips are in-content: only the frame's top edge runs
+  across the column, in the heading's colour, and nothing runs below the chip row.
+- A frame that directly follows another frame (heading, window, figure, table, register, list) starts
+  on that frame's bottom edge, one hairline shared by both. The shared edge takes the accent colour
+  when one of the two has one. A paragraph or authored vertical space in between keeps them apart.
+- A frame that starts or ends a page shares the navbar or footer rule; the parts of a window split
+  across pages fill the page down to the footer rule.
+- The tiles of a `WindowRow` or `WindowColumn` overlap by one hairline instead of leaving a gap.
+- A list is split into one cell per point: a hairline opens it, separates neighbouring points and
+  closes it.
+
+Deutsch: Eine Seite ist in geschlossene Rechtecke geteilt, und zwei Nachbarn teilen sich die Kante
+zwischen ihnen. Die Textspalte ist selbst ein Rahmen zwischen Kopf- und Fußlinie; Überschriften
+öffnen den Rahmen ihres Abschnitts, ihre Chips liegen im Inhalt, und unter der Chipzeile verläuft
+keine Linie. Aufeinanderfolgende Rahmen, die Kacheln einer Zeile oder Spalte und die Punkte einer
+Liste teilen sich jeweils genau eine Haarlinie.
+
 ## The assignment kind
 
 Assignments use the new `assignment` class, sharing semio fonts, tokens and page chrome in an inline-title, one-sided A4 article layout

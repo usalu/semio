@@ -84,5 +84,5 @@ impl<T:FlowPublicationTarget> FlowWorkPublication<T>{
  }
  pub fn terminal_is_empty(&self)->bool{self.sources.is_none()&&self.retirement.is_none()&&self.displaced.is_none()}
 }
-impl<T:FlowPublicationTarget> Drop for FlowWorkPublication<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Work publication requires paid closure")}}
+impl<T:FlowPublicationTarget> Drop for FlowWorkPublication<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Work publication requires paid closure")}}
 

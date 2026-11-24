@@ -216,5 +216,5 @@ fn original_clipboard_session_admission_is_paid_before_birth_and_preserves_denie
     owner.finish();
 }
 
-#[path="../../../🧵️job/🧪️testing/♻️close/🦀️.rs"]
+#[path="../../../🧵️job/🧪️tests/♻️close/🦀️.rs"]
 pub(crate) mod close_source;

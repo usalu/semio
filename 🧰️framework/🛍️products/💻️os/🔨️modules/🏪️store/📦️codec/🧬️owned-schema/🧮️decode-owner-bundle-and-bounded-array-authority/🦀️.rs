@@ -315,8 +315,8 @@ impl<T: Send + Sync + 'static> OwnedSchemaBoundedArrayAuthority<T> {
 
 impl<T> Drop for OwnedSchemaBoundedArrayAuthority<T> {
     fn drop(&mut self) {
-        assert!(
-            self.values.is_none() && self.reservation.is_none() && self.rejected.is_none() && self.active_decoder.is_none() && self.active_retirement.is_none() && self.entry_depth == 0 && self.taken && self.ledger_retirement.is_none() && self.retirement_factory.is_none() && self.decoder.is_none() && self.factories_close.iter().all(Option::is_none),
+        assert!(std::thread::panicking()||(
+            self.values.is_none() && self.reservation.is_none() && self.rejected.is_none() && self.active_decoder.is_none() && self.active_retirement.is_none() && self.entry_depth == 0 && self.taken && self.ledger_retirement.is_none() && self.retirement_factory.is_none() && self.decoder.is_none() && self.factories_close.iter().all(Option::is_none)),
             "bounded history array reached Drop before every exact entry owner was taken or cursor-retired"
         );
     }

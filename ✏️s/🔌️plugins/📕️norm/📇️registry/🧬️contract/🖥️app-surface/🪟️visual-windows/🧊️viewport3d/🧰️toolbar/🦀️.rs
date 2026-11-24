@@ -249,8 +249,14 @@ pub fn render_touch_controls(view: &ViewportView, device: Option<crate::viewport
         let close = row(controller_id, "norm-viewport.touch.close".into(), chrome("Close menu", "Menü schließen", locale), VIEW_ACTION_MENU, None, Some(0.0))?;
         tree = tree.section(format!("{VIEWPORT_TOUCH_ID}.edit"), None, true, ui_node_list([crate::render_touch_menu(&entries, controller_id, locale)?, close].into_iter().map(Ok))?)?;
     }
-    if !nudges.is_empty() {
-        tree = tree.section(format!("{VIEWPORT_TOUCH_ID}.nudge"), Some(norm_ui_label(chrome("Handles", "Griffe", locale))?), true, ui_node_list(nudges.into_iter().map(Ok))?)?;
+    let mut pending = nudges.into_iter().peekable();
+    for page in 0.. {
+        if pending.peek().is_none() {
+            break;
+        }
+        let rows = ui_node_list(pending.by_ref().take(semio_ui_contract::UI_FIXED_LIST_ITEMS).map(Ok))?;
+        let id = if page == 0 { format!("{VIEWPORT_TOUCH_ID}.nudge") } else { format!("{VIEWPORT_TOUCH_ID}.nudge.{page}") };
+        tree = tree.section(id, Some(norm_ui_label(chrome("Handles", "Griffe", locale))?), true, rows)?;
     }
     tree.build().map(Some)
 }

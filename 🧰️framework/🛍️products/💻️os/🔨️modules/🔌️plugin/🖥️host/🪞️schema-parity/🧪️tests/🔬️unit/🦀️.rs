@@ -233,16 +233,24 @@ mod tests {
     }
 
     #[test]
-    fn every_actor_export_is_async() {
+    fn every_actor_export_is_async_except_the_sync_budget_stages() {
         let source = source();
         let mut seen = BTreeSet::new();
+        let staged = ["reactor.stage-actor-context-budget", "reactor.stage-cold-pair-page", "jobs.stage-job-budget"];
         for interface_name in ["reactor", "jobs", "checkpoint", "describe", "codec"] {
             for function in functions(named_block(&source, "interface", interface_name)).into_values() {
-                assert!(function.is_async, "{interface_name}.{} must be async", function.name);
-                seen.insert(format!("{interface_name}.{}", function.name));
+                let qualified = format!("{interface_name}.{}", function.name);
+                if staged.contains(&qualified.as_str()) {
+                    assert!(!function.is_async, "{qualified} must be a sync export so wit-bindgen frees its indirect parameter area");
+                    assert_eq!(function.params.len(), 1, "{qualified} stages exactly one record");
+                } else {
+                    assert!(function.is_async, "{qualified} must be async");
+                    assert!(!function.params.iter().any(|field| field.ty.ends_with("budget")), "{qualified} takes its budget through its sync stage export");
+                }
+                seen.insert(qualified);
             }
         }
-        let expected = ["checkpoint.checkpoint", "checkpoint.restore", "codec.apply-ops", "codec.genesis", "codec.pack-schema-hash", "codec.print-mirror", "codec.replay-envelopes", "codec.sqlite-close", "codec.sqlite-export", "codec.sqlite-import", "codec.sqlite-retirement", "codec.sqlite-schema", "codec.sqlite-take-file", "codec.sqlite-take-payload", "describe.describe", "jobs.acknowledge-actor-failure", "jobs.acknowledge-job-output", "jobs.cancel-job", "jobs.close-jobs", "jobs.publish-actor-failure", "jobs.read-actor-failure", "jobs.read-job-output", "jobs.start-job", "jobs.step-job", "jobs.take-segmented-download-chunk", "reactor.admit-actor-context", "reactor.admit-actor-input", "reactor.channel-version", "reactor.close-actor-context", "reactor.close-actor-output", "reactor.poll", "reactor.stage-cold-pair-page", "reactor.stage-command-page"].into_iter().map(String::from).collect();
+        let expected = ["checkpoint.checkpoint", "checkpoint.restore", "codec.apply-ops", "codec.genesis", "codec.pack-schema-hash", "codec.print-mirror", "codec.replay-envelopes", "codec.sqlite-close", "codec.sqlite-export", "codec.sqlite-import", "codec.sqlite-retirement", "codec.sqlite-schema", "codec.sqlite-take-file", "codec.sqlite-take-payload", "describe.describe", "jobs.acknowledge-actor-failure", "jobs.acknowledge-job-output", "jobs.cancel-job", "jobs.close-jobs", "jobs.publish-actor-failure", "jobs.read-actor-failure", "jobs.read-job-output", "jobs.stage-job-budget", "jobs.start-job", "jobs.step-job", "jobs.take-segmented-download-chunk", "reactor.admit-actor-context", "reactor.admit-actor-input", "reactor.channel-version", "reactor.close-actor-context", "reactor.close-actor-output", "reactor.poll", "reactor.stage-actor-context-budget", "reactor.stage-cold-pair-page", "reactor.stage-command-page"].into_iter().map(String::from).collect();
         assert_eq!(seen, expected);
         let pure = functions(named_block(&source, "interface", "pure"));
         for name in ["log", "now-ms", "trace-span"] {

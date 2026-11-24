@@ -4,7 +4,7 @@ import {tmpdir} from "node:os";
 import {join,resolve} from "node:path";
 import {evictOwnerFactsReferencingV1,selectedAdmissionFactsV1} from "../../🟦️.ts";
 import {buildGraphMembershipV1} from "../../../🟦️.ts";
-import {followedPathsV1,graphInventoryTextV1,graphRetryTextV1,membershipChangePathsV1,vanishedMemberPathV1} from "../../🧲️membership-follow/🟦️.ts";
+import {followedPathsV1,graphInventoryTextV1,graphRetryTextV1,membershipChangePathsV1,untoleratedFollowedPathsV1,vanishedMemberPathV1} from "../../🧲️membership-follow/🟦️.ts";
 import {independentGlobV1} from "../../../../🧪️tests/🕸️graph/🧰️support/🟦️.ts";
 
 const row=(kind:string,path:string)=>({kind,path,fact:kind==="readdir"?"digest":{version:1}});
@@ -76,4 +76,13 @@ test("a path that vanished under the inventory walk names a member below the roo
   expect(vanishedMemberPathV1(root,null)).toBeUndefined();
   expect(followedPathsV1(root,Object.assign(new Error("wrapped"),{cause:raw}))).toEqual([gone]);
  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test("an owner failure whose paths are all tolerated is not followed any more, a path elsewhere still is",()=>{
+ const root=resolve("/w"),gone=Object.assign(new Error("lstat"),{code:"ENOENT",path:join(root,"a","b","Cargo.toml")});
+ expect(untoleratedFollowedPathsV1(root,gone,new Set())).toEqual([gone.path]);
+ expect(untoleratedFollowedPathsV1(root,gone,new Set(["a/b/Cargo.toml"]))).toEqual([]);
+ expect(untoleratedFollowedPathsV1(root,gone,new Set(["a/b"]))).toEqual([]);
+ expect(untoleratedFollowedPathsV1(root,gone,new Set(["a/bb","c"]))).toEqual([gone.path]);
+ expect(untoleratedFollowedPathsV1(root,new Error("boom"),new Set(["a"]))).toEqual([]);
 });

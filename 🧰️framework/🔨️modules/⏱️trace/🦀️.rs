@@ -69,10 +69,10 @@ pub use operations_and_trace::*;
 #[path = "🧮️memory/🦀️.rs"]
 mod guest_memory;
 pub use guest_memory::{
-    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, peak_heap_bytes_on_this_thread, reset_heap_peak, reset_heap_peak_on_this_thread,
-    observe_heap_allocations_on_this_thread, heap_allocation_observation_on_this_thread, HeapAllocationObservation, debug_tag, debug_turn,
+    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_over_refusal_ceiling, guest_linear_memory_percent, guest_linear_memory_refusal_ceiling_bytes, peak_heap_bytes, peak_heap_bytes_on_this_thread, reset_heap_peak, reset_heap_peak_on_this_thread,
+    observe_heap_allocations_on_this_thread, heap_allocation_observation_on_this_thread, HeapAllocationObservation,
     retained_heap_bytes, retained_heap_bytes_on_this_thread, HeapWitness, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
-    GUEST_LINEAR_MEMORY_STACK_BYTES,
+    GUEST_LINEAR_MEMORY_REFUSAL_PERCENT, GUEST_LINEAR_MEMORY_STACK_BYTES,
 };
 //#endregion 🧮️GuestMemory
 

@@ -57,7 +57,7 @@ impl FlowSceneCache{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&!self.pending()&&self.owners.scene.is_none()&&self.owners.children.is_none()&&self.key.is_none()&&self.instance.is_none()}
 }
-impl Drop for FlowSceneCache{fn drop(&mut self){assert!(self.terminal_is_empty(),"Flow cache must retire its original scene and child root");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
+impl Drop for FlowSceneCache{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"Flow cache must retire its original scene and child root");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
 
 #[cfg(test)]
 #[path="🧪️.rs"]mod laws;

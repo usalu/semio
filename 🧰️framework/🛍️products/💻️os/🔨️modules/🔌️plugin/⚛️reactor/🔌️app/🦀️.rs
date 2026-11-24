@@ -561,6 +561,8 @@ pub trait PluginApp: Send + 'static {
     }
     /// 🚧️ A document owner must make progress before the armed effects owner can borrow its snapshot.
     fn pending_effects_waits_for_document(&self) -> bool { false }
+    /// 🚪️ The typed refusal of ONE input `verb` by the app's current state (a whole-document load still running): answered at the input boundary before any retained source is staged, so it is a per-input `AppFrame::Error` reply and never a turn failure.
+    fn input_refusal(&self, _verb: &str) -> Option<Fault> { None }
 
     /// ⏱️ Object-safe counterpart to `ArtifactApp::pending_effects`. `Ok(None)` keeps the owner armed across a document change, turn yield or retained snapshot-read preparation.
     async fn pending_effects(&mut self, _view: Option<&ViewModel>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Vec<Effect>>, semio_framework_job::OriginalTurnFailure> {

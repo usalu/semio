@@ -87,7 +87,7 @@ pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str
     let mut tree = semio_ui_contract::tree().try_id("pdf-thumbnails").map_err(|_| error("pdf.thumbnails.root-id"))?;
     for thumbnail in thumbnails(snapshot, THUMBNAIL_EDGE) {
         let page = thumbnail.page;
-        let mut text = format!("{} {} / {count} ({}x{})", label(locale, "Page", "Seite"), page + 1, thumbnail.width, thumbnail.height);
+        let mut text = format!("{} {} / {count} ({}x{})", label(locale, "Page", "Seite"), page_number(page), thumbnail.width, thumbnail.height);
         let here = peers(page);
         if !here.is_empty() {
             text.push_str(&format!(" - {}: {}", label(locale, "here", "hier"), here.join(", ")));
@@ -98,15 +98,15 @@ pub fn render_thumbnail_strip_marked(snapshot: &PdfSnapshot, controller_id: &str
             selection.try_insert(key.to_owned(), UiValue::Text(UiText::clipped(value))).map_err(|_| error("pdf.thumbnails.selection"))?;
         }
         let mut drag = semio_ui_contract::UiFixedMap::default();
-        drag.try_push(UiText::clipped(THUMBNAIL_DRAG_KEY), UiText::clipped(&page.to_string())).map_err(|_| error("pdf.thumbnails.drag"))?;
+        drag.try_push(UiText::clipped(THUMBNAIL_DRAG_KEY), UiText::clipped(&page_number(page).to_string())).map_err(|_| error("pdf.thumbnails.drag"))?;
         let mut row = semio_ui_contract::tree_item(ui::Label(UiText::clipped(&text))).try_id(format!("pdf-thumbnail-{page}")).map_err(|_| error("pdf.thumbnails.entry-id"))?
             .default_open(false).draggable(true).drag_data(drag)
             .try_on_with(ui::Trigger::Activate, action(semio_plugin::INTERACTION_SELECT_ACTION_ID)?, UiValue::Map(selection.finish())).map_err(|_| error("pdf.thumbnails.selection"))?
-            .try_on_with(ui::Trigger::Drop, action("move-page")?, numbers(&[("x", page as f64)])?).map_err(|_| error("pdf.thumbnails.drop"))?;
+            .try_on_with(ui::Trigger::Drop, action("move-page")?, numbers(&[("x", page_number(page) as f64)])?).map_err(|_| error("pdf.thumbnails.drop"))?;
         for (id, text, to) in [("earlier", label(locale, "Move page earlier", "Seite nach vorne"), page.checked_sub(1)), ("later", label(locale, "Move page later", "Seite nach hinten"), Some(page + 1))] {
             let Some((from, to)) = to.and_then(|to| reorder_args(count, page, to)) else { continue };
             let item = semio_ui_contract::tree_item(ui::Label(UiText::clipped(&text))).try_id(format!("pdf-thumbnail-{page}-{id}")).map_err(|_| error("pdf.thumbnails.move-id"))?
-                .try_on_with(ui::Trigger::Activate, action("move-page")?, numbers(&[("page", from as f64), ("x", to as f64)])?).map_err(|_| error("pdf.thumbnails.move"))?
+                .try_on_with(ui::Trigger::Activate, action("move-page")?, numbers(&[("page", page_number(from) as f64), ("x", page_number(to) as f64)])?).map_err(|_| error("pdf.thumbnails.move"))?
                 .try_build().map_err(|_| error("pdf.thumbnails.move"))?;
             row = row.try_child(item).map_err(|_| error("pdf.thumbnails.child"))?;
         }

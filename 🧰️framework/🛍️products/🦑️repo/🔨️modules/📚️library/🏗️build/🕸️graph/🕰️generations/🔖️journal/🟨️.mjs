@@ -8,8 +8,8 @@ import{createRowLogV1}from"../🗃️row-log/🟨️.mjs";
 import{readGenerationManifestV1}from"../📖️documents/🟨️.mjs";
 import{derivedOwnerNameV1,isDerivedOwnerV1,isDerivedRowV1}from"../✂️cutoff/🟨️.mjs";
 
-/** 📏️ The declared limits of the build journal: the directory under the store root, the version and the rows one line of a rows file carries at most. */
-export const BUILD_JOURNAL_V1=Object.freeze({directory:"j",version:1,rowsPerLine:4096,maximumOwners:200000});
+/** 📏️ The declared limits of the build journal: the directory under the store root, the version, the rows one line of a rows file carries at most and the bytes after which a wave starts its next rows file (a wave never holds more than one part of its rows). */
+export const BUILD_JOURNAL_V1=Object.freeze({directory:"j",version:1,rowsPerLine:4096,partBytes:8388608,maximumOwners:200000});
 
 /** 🔑️ The name of the journal of one build: the digest of what the build starts from (the generation it refines, the identity, the implementation, the membership and the owners it has to derive). */
 export const buildJournalKeyV1=input=>createHash("sha256").update(canonicalJsonV1(input)).digest("hex");
@@ -71,7 +71,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
  const directory=join(root,BUILD_JOURNAL_V1.directory),path=key=>join(directory,key+".json");
  const load=async key=>{const bytes=await fs.read(path(key));if(!bytes)return undefined;try{const header=readBuildJournalV1(bytes);return header.key===key?header:undefined;}catch{await fs.remove(path(key));return undefined;}};
  const clear=async key=>{for(const name of await fs.names(directory))if(name.startsWith(key))await fs.remove(join(directory,name));};
- const rowsOf=async list=>{if(Array.isArray(list))return list;const rows=[];for await(const batch of list.batches())rows.push(...batch);return rows;};
+ const batchesOf=async function*(list){if(Array.isArray(list)){for(let at=0;at<list.length;at+=BUILD_JOURNAL_V1.rowsPerLine)yield list.slice(at,at+BUILD_JOURNAL_V1.rowsPerLine);return;}yield*list.batches();};
  const header=({key,current,repair,identity,implementation,steps})=>({version:BUILD_JOURNAL_V1.version,key,parent:current?.pointer.manifest??null,generation:(current?.pointer.generation??-1)+1,...repair?{repair}:{},identity,implementation,steps});
  const save=header=>fs.write(path(header.key),Buffer.from(canonicalJsonV1(header)));
  const filesHold=async manifest=>{
@@ -83,12 +83,11 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   const parent=current.manifest;
   if(saved.env.digest!==parent.env||found.envStale||found.added.length||found.removed.length||saved.dropped.length)return undefined;
   const raw=rows=>rows.filter(row=>!isDerivedRowV1(row)),holds=async rows=>{const list=raw(rows);return list.length===0||await hold(list,signal);};
-  const returned=new Set(saved.returned),verdict=new Map(),refs=new Map(),pseudo=new Map(),files=[];
+  const returned=new Set(saved.returned),verdict=new Map(),refs=new Map(),pseudo=new Map();
   for(const file of saved.rows){
    const bytes=await fs.read(join(directory,file.file));
    if(!bytes||sha256(bytes)!==file.sha256)return undefined;
-   const entries=decodeJournalRowsV1(bytes);files.push(entries);
-   for(const entry of entries){
+   for(const entry of decodeJournalRowsV1(bytes)){
     aborted(signal);
     if(entry.mode==="a")return undefined;
     if(isDerivedOwnerV1(entry.name)){pseudo.set(entry.name,(pseudo.get(entry.name)??true)&&await holds(entry.rows));continue;}
@@ -102,7 +101,7 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   const reused=new Set(reusable),needed=new Set(reusable.flatMap(name=>[...refs.get(name)??[]])),keepEntry=entry=>isDerivedOwnerV1(entry.name)?needed.has(entry.name):reused.has(entry.name);
   const log=createRowLogV1({path:join(tmpdir(),"semio-row-logs","resume-"+saved.key.slice(0,16)+"-"+process.pid+".rows")}),upserts=new Map(),rewritten=[];
   for(let at=0;at<saved.rows.length;at++){
-   const kept=files[at].filter(keepEntry),bytes=encodeJournalRowsV1(kept.map(entry=>({name:entry.name,mode:entry.mode,rows:entry.rows})));
+   const kept=decodeJournalRowsV1(await fs.read(join(directory,saved.rows[at].file))).filter(keepEntry),bytes=encodeJournalRowsV1(kept.map(entry=>({name:entry.name,mode:entry.mode,rows:entry.rows})));
    await fs.write(join(directory,saved.rows[at].file),bytes);rewritten.push({file:saved.rows[at].file,sha256:sha256(bytes),bytes:bytes.length});
    for(const entry of kept){const known=upserts.get(entry.name);upserts.set(entry.name,known?known.concat(entry.rows):log.append(entry.rows));}
   }
@@ -115,11 +114,13 @@ export function createBuildJournalV1({fs,root,manifestPath,publish,settler,say,s
   clear,
   sealed:input=>save({...header(input),state:"sealed",manifest:input.manifest,derived:input.derived}),
   async wave({key,current,repair,identity,implementation,carry,steps,upserts,append,owners,env}){
-   const entries=[];
-   for(const[name,list]of upserts)if(name!==P.envOwner)entries.push({name,mode:"u",rows:await rowsOf(list)});
-   for(const[name,list]of append)entries.push({name,mode:"a",rows:await rowsOf(list)});
-   const bytes=encodeJournalRowsV1(entries),file=key+"."+carry.waves+".rows";
-   await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});
+   const first=carry.files.length;let pending=[],pendingBytes=0;
+   const flush=async()=>{const bytes=Buffer.from(pending.length?pending.join(""):"\n","utf8"),file=key+"."+carry.files.length+".rows";pending=[];pendingBytes=0;await fs.write(join(directory,file),bytes);carry.files.push({file,sha256:sha256(bytes),bytes:bytes.length});};
+   const put=async line=>{pending.push(line);pendingBytes+=line.length;if(pendingBytes>=BUILD_JOURNAL_V1.partBytes)await flush();};
+   const putOwner=async(name,mode,list)=>{let any=false;for await(const batch of batchesOf(list)){if(!batch.length)continue;any=true;await put(JSON.stringify({o:name,m:mode,r:batch})+"\n");}if(!any)await put(JSON.stringify({o:name,m:mode,r:[]})+"\n");};
+   for(const[name,list]of upserts)if(name!==P.envOwner)await putOwner(name,"u",list);
+   for(const[name,list]of append)await putOwner(name,"a",list);
+   if(pending.length||carry.files.length===first)await flush();
    await save({...header({key,current,repair,identity,implementation,steps}),state:"waves",names:carry.names,done:carry.done,owners,dropped:[...carry.dropped],returned:[...carry.returned],derived:[...carry.derived],rows:carry.files,env,...carry.membership===undefined?{}:{membership:carry.membership}});
   },
   async resume({key,current,repair,identity,implementation,found,signal,claim,qualify,verify,ordered=[],membership,hold}){

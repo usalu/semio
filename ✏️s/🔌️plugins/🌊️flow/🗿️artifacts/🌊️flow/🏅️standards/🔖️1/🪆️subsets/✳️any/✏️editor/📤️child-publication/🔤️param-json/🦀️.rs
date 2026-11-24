@@ -36,7 +36,7 @@ impl<T:ArtifactCanonicalJsonTree+RetireOwned> ParamJsonWork<T>{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.origin.is_none()}
 }
-impl<T:ArtifactCanonicalJsonTree+RetireOwned> Drop for ParamJsonWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow parameter JSON requires terminal typed-field and output custody");unsafe{ManuallyDrop::drop(&mut self.output)}}}
+impl<T:ArtifactCanonicalJsonTree+RetireOwned> Drop for ParamJsonWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow parameter JSON requires terminal typed-field and output custody");unsafe{ManuallyDrop::drop(&mut self.output)}}}
 
 /// 🔡️ The canonical tree cursor emits only JSON punctuation, ASCII scalar words, and escaped original UTF-8 text.
 fn canonical_text(bytes:Vec<u8>)->String{unsafe{String::from_utf8_unchecked(bytes)}}

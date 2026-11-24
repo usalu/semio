@@ -38,6 +38,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_chip = _manim_module.window_chip
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -84,20 +85,6 @@ if _VO_TIMING.is_file():
 
 # 🏔️ Persistent chapter title — Write once on Beat1, self.add() on later beats.
 TITLE_DE = "Was die Luft trägt"
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in the Heating and Cooling series: a dim ``P_PRIMARY``
-    footnote that never competes with the diagram.
-    """
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Running example
@@ -301,7 +288,7 @@ class Beat1_Luftwaerme(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Heat capacity of air", "Wärmekapazität der Luft"))
-        din = _din_ref(_references.cite("din-en-12831-1"))
+        din = reference_chip(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "cube"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -315,12 +302,12 @@ class Beat1_Luftwaerme(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "mass"))
         xl, xq = -6.45, 1.55
         mass = ValueTracker(0.0)
-        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.25, 0]),
+        rho_lbl = math_label(rf"\rho \approx {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(20\,°\mathrm{{C}})", np.array([xl, 2.55, 0]),
                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
-        rho_note = math_label(rf"{label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.2, 0]),
-                              size=LABEL_FONT_SIZE, color=P_CYAN, edge="left")
+        rho_note = math_label(rf"\rho \approx {label_number(1.27, 2)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}\;(5\,°\mathrm{{C}})", np.array([xl, 1.75, 0]),
+                              size=BODY_FONT_SIZE, color=P_CYAN, edge="left")
         m_read = math_readout(lambda: rf"m = {label_number(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}} \cdot 1\,\mathrm{{m^{{3}}}} = {label_number(mass.get_value(), 2)}\,\mathrm{{kg}}",
-                              np.array([xl, 1.72, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
+                              np.array([xl, 1.0, 0]), size=BODY_FONT_SIZE, color=P_CYAN)
         self.play(FadeIn(rho_lbl), run_time=0.5)
         self.add(m_read)
         self.play(mass.animate.set_value(RHO_AIR), Indicate(cube, color=P_CYAN, scale_factor=1.04), run_time=1.4)
@@ -338,7 +325,7 @@ class Beat1_Luftwaerme(Scene):
             heat = [ripples(heat_spots, r_max=0.42, rings=2, cycles=rt / 1.2, color=P_RED)]
             return heat + ([flow_animation([(rise, P_BLUE, P_ORANGE)], waves=3, cycles=0.45 * rt)] if convect else [])
 
-        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}", np.array([xl, 0.55, 0]),
+        cp_lbl = math_label(rf"c_{{p}} = {label_number(CP_AIR)}\,\frac{{\mathrm{{J}}}}{{\mathrm{{kg\,K}}}}", np.array([xl, 0.10, 0]),
                             size=BODY_FONT_SIZE, color=P_RED, edge="left")
         self.play(Create(coil), FadeIn(coil_label), FadeIn(cp_lbl), run_time=1.5)
         hold_for(self, N, "coil", during=lambda rt: warming(rt, convect=False))
@@ -347,7 +334,7 @@ class Beat1_Luftwaerme(Scene):
         theta = ValueTracker(20.0)
         thermo = thermometer_glyph(np.array([-1.65, -0.22, 0]), height=1.8, color=P_RED, level=0.35)
         thermo["column"].add_updater(lambda m: thermo["level"].set_value(0.35 + 0.45 * (theta.get_value() - 20.0)))
-        th_read = math_readout(lambda: rf"\theta = {label_number(theta.get_value(), 1)}\,°\mathrm{{C}}", np.array([xl, -0.1, 0]),
+        th_read = math_readout(lambda: rf"\theta = {label_number(theta.get_value(), 1)}\,°\mathrm{{C}}", np.array([xl, -0.55, 0]),
                                size=BODY_FONT_SIZE, color=P_ORANGE)
         q_read = math_readout(
             lambda: rf"Q = {label_number(RHO_AIR, 1)}\,\mathrm{{kg}} \cdot {label_number(CP_AIR)}\,\mathrm{{\frac{{J}}{{kg\,K}}}} \cdot {label_number(theta.get_value() - 20.0, 1)}\,\mathrm{{K}}",
@@ -476,7 +463,7 @@ class Beat2_SensibleWaerme(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Sensible heat", "Sensible Wärme"))
-        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+        din = reference_chip(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -620,7 +607,7 @@ class Beat3_LatenteLast(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Latent load from moisture", "Latente Last durch Feuchte"))
-        din = _din_ref(_references.cite("vdi-2078"))
+        din = reference_chip(_references.cite("vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -783,7 +770,7 @@ class Beat4_WinterUndSommer(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The same formula, two seasons", "Dieselbe Formel, zwei Jahreszeiten"))
-        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+        din = reference_chip(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)

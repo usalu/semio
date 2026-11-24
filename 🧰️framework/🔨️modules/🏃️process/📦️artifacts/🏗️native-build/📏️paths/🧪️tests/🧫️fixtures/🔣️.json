@@ -1759,6 +1759,12 @@
       "profile": "prototype"
     },
     {
+      "packageName": "semio-plugin-decl-natural-file-media",
+      "crateName": "semio_plugin_decl_natural_file_media",
+      "platform": "wasm32-wasip2",
+      "profile": "prototype"
+    },
+    {
       "packageName": "semio-plugin-decl-registry",
       "crateName": "semio_plugin_decl_registry",
       "platform": "wasm32-wasip2",

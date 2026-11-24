@@ -77,8 +77,8 @@ async fn mounted_eigenvalues_match_the_independent_cantilever() {
         session.source = (family == ResultMode::Buckling).then_some(ResolvedResultSource::LoadCase(0));
         session.stage = MountedStage::PrepareAssembly;
         session.visual_dirty = false;
-        session.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, identity.operation(), 1));
-        let mut original = OriginalNumericalFixture::new(identity.operation());
+        session.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, identity.operation(identity.operation, identity.generation), 1));
+        let mut original = OriginalNumericalFixture::new(identity.operation(identity.operation, identity.generation));
         for _ in 0..200_000 {
             if session.stage == MountedStage::CommitReady { break; }
             let step = original.turn(GRANT, 128, u64::MAX, |cx| session.step(cx)).expect("mounted numerical turn");

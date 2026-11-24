@@ -1,6 +1,6 @@
 //! 📥️ Small source-choice requests receive the actual native value through original retained copying.
 use super::*;
-use super::source_loan::replied;
+use super::source_loan::{close_quote,replied};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::size_of;
@@ -209,7 +209,7 @@ impl EnumerationEdit {
     }
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if !self.cursor.terminal_is_empty() {
-            return self.cursor.close_demands(body);
+            return close_quote(&self.cursor, body);
         }
         if !self.retirement.is_empty() || self.received.is_some() {
             return self.retirement.next_owner_demands::<IfcValue>(self.received.is_some(), &None, body);
@@ -234,7 +234,13 @@ impl EnumerationEdit {
         if !self.cursor.terminal_is_empty() {
             let body = 4096;
             let cursor = &mut self.cursor;
-            let reply = if self.recover { replied(effect, |effect, reply| cursor.recover_close_into(body, effect, reply)) } else { replied(effect, |effect, reply| cursor.close_into(body, effect, reply)) };
+            let reply = if !cursor.close_started() {
+                if self.recover { replied(effect, |effect, reply| cursor.recover_begin_close_into(effect, reply)) } else { replied(effect, |effect, reply| cursor.begin_close_into(effect, reply)) }
+            } else if self.recover {
+                replied(effect, |effect, reply| cursor.recover_close_into(body, effect, reply))
+            } else {
+                replied(effect, |effect, reply| cursor.close_into(body, effect, reply))
+            };
             return match reply {
                 Ok(Some(result)) => {
                     self.recover = false;

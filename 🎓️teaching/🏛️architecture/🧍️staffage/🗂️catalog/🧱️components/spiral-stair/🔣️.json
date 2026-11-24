@@ -731,6 +731,114 @@
               "closed": true
             },
             {
+              "id": "anchor-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "column-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  0.08513
+                ],
+                [
+                  0.036,
+                  0.08513
+                ],
+                [
+                  0.036,
+                  0.09099
+                ],
+                [
+                  0.042,
+                  0.09099
+                ],
+                [
+                  0.044,
+                  0.09299
+                ],
+                [
+                  0.044,
+                  0.10499
+                ],
+                [
+                  0.042,
+                  0.10699
+                ],
+                [
+                  0.036,
+                  0.10699
+                ],
+                [
+                  0.036,
+                  0.11285
+                ],
+                [
+                  0.02,
+                  0.11285
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "anchor-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "column-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.02,
+                  -0.11285
+                ],
+                [
+                  0.036,
+                  -0.11285
+                ],
+                [
+                  0.036,
+                  -0.10699
+                ],
+                [
+                  0.042,
+                  -0.10699
+                ],
+                [
+                  0.044,
+                  -0.10499
+                ],
+                [
+                  0.044,
+                  -0.09299
+                ],
+                [
+                  0.042,
+                  -0.09099
+                ],
+                [
+                  0.036,
+                  -0.09099
+                ],
+                [
+                  0.036,
+                  -0.08513
+                ],
+                [
+                  0.02,
+                  -0.08513
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "sleeve-1",
               "bone": "column",
               "role": "texture",
@@ -1302,6 +1410,44 @@
               "closed": false
             },
             {
+              "id": "baluster-1b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.95245,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.74911,
+                  0.18667
+                ],
+                [
+                  0.77111,
+                  0.18667
+                ],
+                [
+                  0.77111,
+                  0.19067
+                ],
+                [
+                  0.76611,
+                  0.19567
+                ],
+                [
+                  0.75411,
+                  0.19567
+                ],
+                [
+                  0.74911,
+                  0.19067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-1c",
               "bone": "balustrade",
               "role": "detail",
@@ -1323,6 +1469,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-1c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.88928,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.72287,
+                  0.18667
+                ],
+                [
+                  0.74487,
+                  0.18667
+                ],
+                [
+                  0.74487,
+                  0.19067
+                ],
+                [
+                  0.73987,
+                  0.19567
+                ],
+                [
+                  0.72787,
+                  0.19567
+                ],
+                [
+                  0.72287,
+                  0.19067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-2a",
@@ -1348,6 +1532,44 @@
               "closed": false
             },
             {
+              "id": "baluster-2a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.82886,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.68408,
+                  0.37333
+                ],
+                [
+                  0.70608,
+                  0.37333
+                ],
+                [
+                  0.70608,
+                  0.37733
+                ],
+                [
+                  0.70108,
+                  0.38233
+                ],
+                [
+                  0.68908,
+                  0.38233
+                ],
+                [
+                  0.68408,
+                  0.37733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-2b",
               "bone": "balustrade",
               "role": "detail",
@@ -1369,6 +1591,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-2b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.77221,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.63339,
+                  0.37333
+                ],
+                [
+                  0.65539,
+                  0.37333
+                ],
+                [
+                  0.65539,
+                  0.37733
+                ],
+                [
+                  0.65039,
+                  0.38233
+                ],
+                [
+                  0.63839,
+                  0.38233
+                ],
+                [
+                  0.63339,
+                  0.37733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-2c",
@@ -1394,6 +1654,44 @@
               "closed": false
             },
             {
+              "id": "baluster-2c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.72033,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.57168,
+                  0.37333
+                ],
+                [
+                  0.59368,
+                  0.37333
+                ],
+                [
+                  0.59368,
+                  0.37733
+                ],
+                [
+                  0.58868,
+                  0.38233
+                ],
+                [
+                  0.57668,
+                  0.38233
+                ],
+                [
+                  0.57168,
+                  0.37733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-3a",
               "bone": "balustrade",
               "role": "detail",
@@ -1415,6 +1713,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-3a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.67408,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.49999,
+                  0.56
+                ],
+                [
+                  0.52199,
+                  0.56
+                ],
+                [
+                  0.52199,
+                  0.564
+                ],
+                [
+                  0.51699,
+                  0.569
+                ],
+                [
+                  0.50499,
+                  0.569
+                ],
+                [
+                  0.49999,
+                  0.564
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-3b",
@@ -1440,6 +1776,44 @@
               "closed": false
             },
             {
+              "id": "baluster-3b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.63427,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.41957,
+                  0.56
+                ],
+                [
+                  0.44157,
+                  0.56
+                ],
+                [
+                  0.44157,
+                  0.564
+                ],
+                [
+                  0.43657,
+                  0.569
+                ],
+                [
+                  0.42457,
+                  0.569
+                ],
+                [
+                  0.41957,
+                  0.564
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-3c",
               "bone": "balustrade",
               "role": "detail",
@@ -1461,6 +1835,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-3c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.60156,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.33177,
+                  0.56
+                ],
+                [
+                  0.35377,
+                  0.56
+                ],
+                [
+                  0.35377,
+                  0.564
+                ],
+                [
+                  0.34877,
+                  0.569
+                ],
+                [
+                  0.33677,
+                  0.569
+                ],
+                [
+                  0.33177,
+                  0.564
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-4a",
@@ -1486,6 +1898,44 @@
               "closed": false
             },
             {
+              "id": "baluster-4a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.57653,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.23812,
+                  0.74667
+                ],
+                [
+                  0.26012,
+                  0.74667
+                ],
+                [
+                  0.26012,
+                  0.75067
+                ],
+                [
+                  0.25512,
+                  0.75567
+                ],
+                [
+                  0.24312,
+                  0.75567
+                ],
+                [
+                  0.23812,
+                  0.75067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-4b",
               "bone": "balustrade",
               "role": "detail",
@@ -1507,6 +1957,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-4b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.55961,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.14019,
+                  0.74667
+                ],
+                [
+                  0.16219,
+                  0.74667
+                ],
+                [
+                  0.16219,
+                  0.75067
+                ],
+                [
+                  0.15719,
+                  0.75567
+                ],
+                [
+                  0.14519,
+                  0.75567
+                ],
+                [
+                  0.14019,
+                  0.75067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-4c",
@@ -1532,6 +2020,44 @@
               "closed": false
             },
             {
+              "id": "baluster-4c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.55107,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.03969,
+                  0.74667
+                ],
+                [
+                  0.06169,
+                  0.74667
+                ],
+                [
+                  0.06169,
+                  0.75067
+                ],
+                [
+                  0.05669,
+                  0.75567
+                ],
+                [
+                  0.04469,
+                  0.75567
+                ],
+                [
+                  0.03969,
+                  0.75067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-5a",
               "bone": "balustrade",
               "role": "detail",
@@ -1553,6 +2079,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-5a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.55107,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.06169,
+                  0.93333
+                ],
+                [
+                  -0.03969,
+                  0.93333
+                ],
+                [
+                  -0.03969,
+                  0.93733
+                ],
+                [
+                  -0.04469,
+                  0.94233
+                ],
+                [
+                  -0.05669,
+                  0.94233
+                ],
+                [
+                  -0.06169,
+                  0.93733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-5b",
@@ -1578,6 +2142,44 @@
               "closed": false
             },
             {
+              "id": "baluster-5b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.55961,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.16219,
+                  0.93333
+                ],
+                [
+                  -0.14019,
+                  0.93333
+                ],
+                [
+                  -0.14019,
+                  0.93733
+                ],
+                [
+                  -0.14519,
+                  0.94233
+                ],
+                [
+                  -0.15719,
+                  0.94233
+                ],
+                [
+                  -0.16219,
+                  0.93733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-5c",
               "bone": "balustrade",
               "role": "detail",
@@ -1599,6 +2201,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-5c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.57653,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.26012,
+                  0.93333
+                ],
+                [
+                  -0.23812,
+                  0.93333
+                ],
+                [
+                  -0.23812,
+                  0.93733
+                ],
+                [
+                  -0.24312,
+                  0.94233
+                ],
+                [
+                  -0.25512,
+                  0.94233
+                ],
+                [
+                  -0.26012,
+                  0.93733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-6a",
@@ -1624,6 +2264,44 @@
               "closed": false
             },
             {
+              "id": "baluster-6a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.60156,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.35377,
+                  1.12
+                ],
+                [
+                  -0.33177,
+                  1.12
+                ],
+                [
+                  -0.33177,
+                  1.124
+                ],
+                [
+                  -0.33677,
+                  1.129
+                ],
+                [
+                  -0.34877,
+                  1.129
+                ],
+                [
+                  -0.35377,
+                  1.124
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-6b",
               "bone": "balustrade",
               "role": "detail",
@@ -1645,6 +2323,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-6b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.63427,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.44157,
+                  1.12
+                ],
+                [
+                  -0.41957,
+                  1.12
+                ],
+                [
+                  -0.41957,
+                  1.124
+                ],
+                [
+                  -0.42457,
+                  1.129
+                ],
+                [
+                  -0.43657,
+                  1.129
+                ],
+                [
+                  -0.44157,
+                  1.124
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-6c",
@@ -1670,6 +2386,44 @@
               "closed": false
             },
             {
+              "id": "baluster-6c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.67408,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.52199,
+                  1.12
+                ],
+                [
+                  -0.49999,
+                  1.12
+                ],
+                [
+                  -0.49999,
+                  1.124
+                ],
+                [
+                  -0.50499,
+                  1.129
+                ],
+                [
+                  -0.51699,
+                  1.129
+                ],
+                [
+                  -0.52199,
+                  1.124
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-7a",
               "bone": "balustrade",
               "role": "detail",
@@ -1691,6 +2445,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-7a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.72033,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.59368,
+                  1.30667
+                ],
+                [
+                  -0.57168,
+                  1.30667
+                ],
+                [
+                  -0.57168,
+                  1.31067
+                ],
+                [
+                  -0.57668,
+                  1.31567
+                ],
+                [
+                  -0.58868,
+                  1.31567
+                ],
+                [
+                  -0.59368,
+                  1.31067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-7b",
@@ -1716,6 +2508,44 @@
               "closed": false
             },
             {
+              "id": "baluster-7b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.77221,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.65539,
+                  1.30667
+                ],
+                [
+                  -0.63339,
+                  1.30667
+                ],
+                [
+                  -0.63339,
+                  1.31067
+                ],
+                [
+                  -0.63839,
+                  1.31567
+                ],
+                [
+                  -0.65039,
+                  1.31567
+                ],
+                [
+                  -0.65539,
+                  1.31067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-7c",
               "bone": "balustrade",
               "role": "detail",
@@ -1737,6 +2567,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-7c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.82886,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.70608,
+                  1.30667
+                ],
+                [
+                  -0.68408,
+                  1.30667
+                ],
+                [
+                  -0.68408,
+                  1.31067
+                ],
+                [
+                  -0.68908,
+                  1.31567
+                ],
+                [
+                  -0.70108,
+                  1.31567
+                ],
+                [
+                  -0.70608,
+                  1.31067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-8a",
@@ -1762,6 +2630,44 @@
               "closed": false
             },
             {
+              "id": "baluster-8a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.88928,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.74487,
+                  1.49333
+                ],
+                [
+                  -0.72287,
+                  1.49333
+                ],
+                [
+                  -0.72287,
+                  1.49733
+                ],
+                [
+                  -0.72787,
+                  1.50233
+                ],
+                [
+                  -0.73987,
+                  1.50233
+                ],
+                [
+                  -0.74487,
+                  1.49733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-8b",
               "bone": "balustrade",
               "role": "detail",
@@ -1783,6 +2689,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-8b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 1.95245,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.77111,
+                  1.49333
+                ],
+                [
+                  -0.74911,
+                  1.49333
+                ],
+                [
+                  -0.74911,
+                  1.49733
+                ],
+                [
+                  -0.75411,
+                  1.50233
+                ],
+                [
+                  -0.76611,
+                  1.50233
+                ],
+                [
+                  -0.77111,
+                  1.49733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-8c",
@@ -1808,6 +2752,44 @@
               "closed": false
             },
             {
+              "id": "baluster-8c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.0173,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.78434,
+                  1.49333
+                ],
+                [
+                  -0.76234,
+                  1.49333
+                ],
+                [
+                  -0.76234,
+                  1.49733
+                ],
+                [
+                  -0.76734,
+                  1.50233
+                ],
+                [
+                  -0.77934,
+                  1.50233
+                ],
+                [
+                  -0.78434,
+                  1.49733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-9a",
               "bone": "balustrade",
               "role": "detail",
@@ -1829,6 +2811,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-9a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.0827,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.78434,
+                  1.68
+                ],
+                [
+                  -0.76234,
+                  1.68
+                ],
+                [
+                  -0.76234,
+                  1.684
+                ],
+                [
+                  -0.76734,
+                  1.689
+                ],
+                [
+                  -0.77934,
+                  1.689
+                ],
+                [
+                  -0.78434,
+                  1.684
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-9b",
@@ -1854,6 +2874,44 @@
               "closed": false
             },
             {
+              "id": "baluster-9b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.14755,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.77111,
+                  1.68
+                ],
+                [
+                  -0.74911,
+                  1.68
+                ],
+                [
+                  -0.74911,
+                  1.684
+                ],
+                [
+                  -0.75411,
+                  1.689
+                ],
+                [
+                  -0.76611,
+                  1.689
+                ],
+                [
+                  -0.77111,
+                  1.684
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-9c",
               "bone": "balustrade",
               "role": "detail",
@@ -1875,6 +2933,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-9c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.21072,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.74487,
+                  1.68
+                ],
+                [
+                  -0.72287,
+                  1.68
+                ],
+                [
+                  -0.72287,
+                  1.684
+                ],
+                [
+                  -0.72787,
+                  1.689
+                ],
+                [
+                  -0.73987,
+                  1.689
+                ],
+                [
+                  -0.74487,
+                  1.684
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-10a",
@@ -1900,6 +2996,44 @@
               "closed": false
             },
             {
+              "id": "baluster-10a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.27114,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.70608,
+                  1.86667
+                ],
+                [
+                  -0.68408,
+                  1.86667
+                ],
+                [
+                  -0.68408,
+                  1.87067
+                ],
+                [
+                  -0.68908,
+                  1.87567
+                ],
+                [
+                  -0.70108,
+                  1.87567
+                ],
+                [
+                  -0.70608,
+                  1.87067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-10b",
               "bone": "balustrade",
               "role": "detail",
@@ -1921,6 +3055,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-10b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.32779,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.65539,
+                  1.86667
+                ],
+                [
+                  -0.63339,
+                  1.86667
+                ],
+                [
+                  -0.63339,
+                  1.87067
+                ],
+                [
+                  -0.63839,
+                  1.87567
+                ],
+                [
+                  -0.65039,
+                  1.87567
+                ],
+                [
+                  -0.65539,
+                  1.87067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-10c",
@@ -1946,6 +3118,44 @@
               "closed": false
             },
             {
+              "id": "baluster-10c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.37967,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.59368,
+                  1.86667
+                ],
+                [
+                  -0.57168,
+                  1.86667
+                ],
+                [
+                  -0.57168,
+                  1.87067
+                ],
+                [
+                  -0.57668,
+                  1.87567
+                ],
+                [
+                  -0.58868,
+                  1.87567
+                ],
+                [
+                  -0.59368,
+                  1.87067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-11a",
               "bone": "balustrade",
               "role": "detail",
@@ -1967,6 +3177,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-11a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.42592,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.52199,
+                  2.05333
+                ],
+                [
+                  -0.49999,
+                  2.05333
+                ],
+                [
+                  -0.49999,
+                  2.05733
+                ],
+                [
+                  -0.50499,
+                  2.06233
+                ],
+                [
+                  -0.51699,
+                  2.06233
+                ],
+                [
+                  -0.52199,
+                  2.05733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-11b",
@@ -1992,6 +3240,44 @@
               "closed": false
             },
             {
+              "id": "baluster-11b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.46573,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.44157,
+                  2.05333
+                ],
+                [
+                  -0.41957,
+                  2.05333
+                ],
+                [
+                  -0.41957,
+                  2.05733
+                ],
+                [
+                  -0.42457,
+                  2.06233
+                ],
+                [
+                  -0.43657,
+                  2.06233
+                ],
+                [
+                  -0.44157,
+                  2.05733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-11c",
               "bone": "balustrade",
               "role": "detail",
@@ -2013,6 +3299,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-11c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.49844,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.35377,
+                  2.05333
+                ],
+                [
+                  -0.33177,
+                  2.05333
+                ],
+                [
+                  -0.33177,
+                  2.05733
+                ],
+                [
+                  -0.33677,
+                  2.06233
+                ],
+                [
+                  -0.34877,
+                  2.06233
+                ],
+                [
+                  -0.35377,
+                  2.05733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-12a",
@@ -2038,6 +3362,44 @@
               "closed": false
             },
             {
+              "id": "baluster-12a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.52347,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.26012,
+                  2.24
+                ],
+                [
+                  -0.23812,
+                  2.24
+                ],
+                [
+                  -0.23812,
+                  2.244
+                ],
+                [
+                  -0.24312,
+                  2.249
+                ],
+                [
+                  -0.25512,
+                  2.249
+                ],
+                [
+                  -0.26012,
+                  2.244
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-12b",
               "bone": "balustrade",
               "role": "detail",
@@ -2059,6 +3421,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-12b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.54039,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.16219,
+                  2.24
+                ],
+                [
+                  -0.14019,
+                  2.24
+                ],
+                [
+                  -0.14019,
+                  2.244
+                ],
+                [
+                  -0.14519,
+                  2.249
+                ],
+                [
+                  -0.15719,
+                  2.249
+                ],
+                [
+                  -0.16219,
+                  2.244
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-12c",
@@ -2084,6 +3484,44 @@
               "closed": false
             },
             {
+              "id": "baluster-12c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.54893,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.06169,
+                  2.24
+                ],
+                [
+                  -0.03969,
+                  2.24
+                ],
+                [
+                  -0.03969,
+                  2.244
+                ],
+                [
+                  -0.04469,
+                  2.249
+                ],
+                [
+                  -0.05669,
+                  2.249
+                ],
+                [
+                  -0.06169,
+                  2.244
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-13a",
               "bone": "balustrade",
               "role": "detail",
@@ -2105,6 +3543,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-13a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.54893,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.03969,
+                  2.42667
+                ],
+                [
+                  0.06169,
+                  2.42667
+                ],
+                [
+                  0.06169,
+                  2.43067
+                ],
+                [
+                  0.05669,
+                  2.43567
+                ],
+                [
+                  0.04469,
+                  2.43567
+                ],
+                [
+                  0.03969,
+                  2.43067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-13b",
@@ -2130,6 +3606,44 @@
               "closed": false
             },
             {
+              "id": "baluster-13b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.54039,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.14019,
+                  2.42667
+                ],
+                [
+                  0.16219,
+                  2.42667
+                ],
+                [
+                  0.16219,
+                  2.43067
+                ],
+                [
+                  0.15719,
+                  2.43567
+                ],
+                [
+                  0.14519,
+                  2.43567
+                ],
+                [
+                  0.14019,
+                  2.43067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-13c",
               "bone": "balustrade",
               "role": "detail",
@@ -2151,6 +3665,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-13c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.52347,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.23812,
+                  2.42667
+                ],
+                [
+                  0.26012,
+                  2.42667
+                ],
+                [
+                  0.26012,
+                  2.43067
+                ],
+                [
+                  0.25512,
+                  2.43567
+                ],
+                [
+                  0.24312,
+                  2.43567
+                ],
+                [
+                  0.23812,
+                  2.43067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-14a",
@@ -2176,6 +3728,44 @@
               "closed": false
             },
             {
+              "id": "baluster-14a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.49844,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.33177,
+                  2.61333
+                ],
+                [
+                  0.35377,
+                  2.61333
+                ],
+                [
+                  0.35377,
+                  2.61733
+                ],
+                [
+                  0.34877,
+                  2.62233
+                ],
+                [
+                  0.33677,
+                  2.62233
+                ],
+                [
+                  0.33177,
+                  2.61733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-14b",
               "bone": "balustrade",
               "role": "detail",
@@ -2199,6 +3789,44 @@
               "closed": false
             },
             {
+              "id": "baluster-14b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.46573,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.41957,
+                  2.61333
+                ],
+                [
+                  0.44157,
+                  2.61333
+                ],
+                [
+                  0.44157,
+                  2.61733
+                ],
+                [
+                  0.43657,
+                  2.62233
+                ],
+                [
+                  0.42457,
+                  2.62233
+                ],
+                [
+                  0.41957,
+                  2.61733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-14c",
               "bone": "balustrade",
               "role": "detail",
@@ -2220,6 +3848,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-14c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.3,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 2.42592,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.49999,
+                  2.61333
+                ],
+                [
+                  0.52199,
+                  2.61333
+                ],
+                [
+                  0.52199,
+                  2.61733
+                ],
+                [
+                  0.51699,
+                  2.62233
+                ],
+                [
+                  0.50499,
+                  2.62233
+                ],
+                [
+                  0.49999,
+                  2.61733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-o1",
@@ -3294,6 +4960,114 @@
               "h": 0.02
             },
             {
+              "id": "anchor-b",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "column-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.08513,
+                  0.02
+                ],
+                [
+                  0.08513,
+                  0.036
+                ],
+                [
+                  0.09099,
+                  0.036
+                ],
+                [
+                  0.09099,
+                  0.042
+                ],
+                [
+                  0.09299,
+                  0.044
+                ],
+                [
+                  0.10499,
+                  0.044
+                ],
+                [
+                  0.10699,
+                  0.042
+                ],
+                [
+                  0.10699,
+                  0.036
+                ],
+                [
+                  0.11285,
+                  0.036
+                ],
+                [
+                  0.11285,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "anchor-a",
+              "bone": "column",
+              "role": "detail",
+              "z": 1.1,
+              "filled": true,
+              "tone": 0.25,
+              "region": "column-steel",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.11285,
+                  0.02
+                ],
+                [
+                  -0.11285,
+                  0.036
+                ],
+                [
+                  -0.10699,
+                  0.036
+                ],
+                [
+                  -0.10699,
+                  0.042
+                ],
+                [
+                  -0.10499,
+                  0.044
+                ],
+                [
+                  -0.09299,
+                  0.044
+                ],
+                [
+                  -0.09099,
+                  0.042
+                ],
+                [
+                  -0.09099,
+                  0.036
+                ],
+                [
+                  -0.08513,
+                  0.036
+                ],
+                [
+                  -0.08513,
+                  0.02
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "sleeve-1",
               "bone": "column",
               "role": "texture",
@@ -3865,6 +5639,44 @@
               "closed": false
             },
             {
+              "id": "baluster-1b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 6.03079,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.14019,
+                  0.18667
+                ],
+                [
+                  0.16219,
+                  0.18667
+                ],
+                [
+                  0.16219,
+                  0.19067
+                ],
+                [
+                  0.15719,
+                  0.19567
+                ],
+                [
+                  0.14519,
+                  0.19567
+                ],
+                [
+                  0.14019,
+                  0.19067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-1c",
               "bone": "balustrade",
               "role": "detail",
@@ -3886,6 +5698,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-1c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.99693,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.23812,
+                  0.18667
+                ],
+                [
+                  0.26012,
+                  0.18667
+                ],
+                [
+                  0.26012,
+                  0.19067
+                ],
+                [
+                  0.25512,
+                  0.19567
+                ],
+                [
+                  0.24312,
+                  0.19567
+                ],
+                [
+                  0.23812,
+                  0.19067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-2a",
@@ -3911,6 +5761,44 @@
               "closed": false
             },
             {
+              "id": "baluster-2a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.94687,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.33177,
+                  0.37333
+                ],
+                [
+                  0.35377,
+                  0.37333
+                ],
+                [
+                  0.35377,
+                  0.37733
+                ],
+                [
+                  0.34877,
+                  0.38233
+                ],
+                [
+                  0.33677,
+                  0.38233
+                ],
+                [
+                  0.33177,
+                  0.37733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-2b",
               "bone": "balustrade",
               "role": "detail",
@@ -3932,6 +5820,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-2b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.88147,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.41957,
+                  0.37333
+                ],
+                [
+                  0.44157,
+                  0.37333
+                ],
+                [
+                  0.44157,
+                  0.37733
+                ],
+                [
+                  0.43657,
+                  0.38233
+                ],
+                [
+                  0.42457,
+                  0.38233
+                ],
+                [
+                  0.41957,
+                  0.37733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-2c",
@@ -3957,6 +5883,44 @@
               "closed": false
             },
             {
+              "id": "baluster-2c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.80184,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.49999,
+                  0.37333
+                ],
+                [
+                  0.52199,
+                  0.37333
+                ],
+                [
+                  0.52199,
+                  0.37733
+                ],
+                [
+                  0.51699,
+                  0.38233
+                ],
+                [
+                  0.50499,
+                  0.38233
+                ],
+                [
+                  0.49999,
+                  0.37733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-3a",
               "bone": "balustrade",
               "role": "detail",
@@ -3978,6 +5942,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-3a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.70935,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.57168,
+                  0.56
+                ],
+                [
+                  0.59368,
+                  0.56
+                ],
+                [
+                  0.59368,
+                  0.564
+                ],
+                [
+                  0.58868,
+                  0.569
+                ],
+                [
+                  0.57668,
+                  0.569
+                ],
+                [
+                  0.57168,
+                  0.564
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-3b",
@@ -4003,6 +6005,44 @@
               "closed": false
             },
             {
+              "id": "baluster-3b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.60557,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.63339,
+                  0.56
+                ],
+                [
+                  0.65539,
+                  0.56
+                ],
+                [
+                  0.65539,
+                  0.564
+                ],
+                [
+                  0.65039,
+                  0.569
+                ],
+                [
+                  0.63839,
+                  0.569
+                ],
+                [
+                  0.63339,
+                  0.564
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-3c",
               "bone": "balustrade",
               "role": "detail",
@@ -4024,6 +6064,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-3c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.49229,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.68408,
+                  0.56
+                ],
+                [
+                  0.70608,
+                  0.56
+                ],
+                [
+                  0.70608,
+                  0.564
+                ],
+                [
+                  0.70108,
+                  0.569
+                ],
+                [
+                  0.68908,
+                  0.569
+                ],
+                [
+                  0.68408,
+                  0.564
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-4a",
@@ -4049,6 +6127,44 @@
               "closed": false
             },
             {
+              "id": "baluster-4a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.37144,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.72287,
+                  0.74667
+                ],
+                [
+                  0.74487,
+                  0.74667
+                ],
+                [
+                  0.74487,
+                  0.75067
+                ],
+                [
+                  0.73987,
+                  0.75567
+                ],
+                [
+                  0.72787,
+                  0.75567
+                ],
+                [
+                  0.72287,
+                  0.75067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-4b",
               "bone": "balustrade",
               "role": "detail",
@@ -4070,6 +6186,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-4b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.24509,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.74911,
+                  0.74667
+                ],
+                [
+                  0.77111,
+                  0.74667
+                ],
+                [
+                  0.77111,
+                  0.75067
+                ],
+                [
+                  0.76611,
+                  0.75567
+                ],
+                [
+                  0.75411,
+                  0.75567
+                ],
+                [
+                  0.74911,
+                  0.75067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-4c",
@@ -4095,6 +6249,44 @@
               "closed": false
             },
             {
+              "id": "baluster-4c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.1154,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.76234,
+                  0.74667
+                ],
+                [
+                  0.78434,
+                  0.74667
+                ],
+                [
+                  0.78434,
+                  0.75067
+                ],
+                [
+                  0.77934,
+                  0.75567
+                ],
+                [
+                  0.76734,
+                  0.75567
+                ],
+                [
+                  0.76234,
+                  0.75067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-5a",
               "bone": "balustrade",
               "role": "detail",
@@ -4116,6 +6308,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-5a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.9846,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.76234,
+                  0.93333
+                ],
+                [
+                  0.78434,
+                  0.93333
+                ],
+                [
+                  0.78434,
+                  0.93733
+                ],
+                [
+                  0.77934,
+                  0.94233
+                ],
+                [
+                  0.76734,
+                  0.94233
+                ],
+                [
+                  0.76234,
+                  0.93733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-5b",
@@ -4141,6 +6371,44 @@
               "closed": false
             },
             {
+              "id": "baluster-5b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.85491,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.74911,
+                  0.93333
+                ],
+                [
+                  0.77111,
+                  0.93333
+                ],
+                [
+                  0.77111,
+                  0.93733
+                ],
+                [
+                  0.76611,
+                  0.94233
+                ],
+                [
+                  0.75411,
+                  0.94233
+                ],
+                [
+                  0.74911,
+                  0.93733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-5c",
               "bone": "balustrade",
               "role": "detail",
@@ -4162,6 +6430,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-5c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.72856,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.72287,
+                  0.93333
+                ],
+                [
+                  0.74487,
+                  0.93333
+                ],
+                [
+                  0.74487,
+                  0.93733
+                ],
+                [
+                  0.73987,
+                  0.94233
+                ],
+                [
+                  0.72787,
+                  0.94233
+                ],
+                [
+                  0.72287,
+                  0.93733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-6a",
@@ -4187,6 +6493,44 @@
               "closed": false
             },
             {
+              "id": "baluster-6a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.60771,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.68408,
+                  1.12
+                ],
+                [
+                  0.70608,
+                  1.12
+                ],
+                [
+                  0.70608,
+                  1.124
+                ],
+                [
+                  0.70108,
+                  1.129
+                ],
+                [
+                  0.68908,
+                  1.129
+                ],
+                [
+                  0.68408,
+                  1.124
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-6b",
               "bone": "balustrade",
               "role": "detail",
@@ -4208,6 +6552,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-6b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.49443,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.63339,
+                  1.12
+                ],
+                [
+                  0.65539,
+                  1.12
+                ],
+                [
+                  0.65539,
+                  1.124
+                ],
+                [
+                  0.65039,
+                  1.129
+                ],
+                [
+                  0.63839,
+                  1.129
+                ],
+                [
+                  0.63339,
+                  1.124
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-6c",
@@ -4233,6 +6615,44 @@
               "closed": false
             },
             {
+              "id": "baluster-6c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.39065,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.57168,
+                  1.12
+                ],
+                [
+                  0.59368,
+                  1.12
+                ],
+                [
+                  0.59368,
+                  1.124
+                ],
+                [
+                  0.58868,
+                  1.129
+                ],
+                [
+                  0.57668,
+                  1.129
+                ],
+                [
+                  0.57168,
+                  1.124
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-7a",
               "bone": "balustrade",
               "role": "detail",
@@ -4254,6 +6674,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-7a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.29816,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.49999,
+                  1.30667
+                ],
+                [
+                  0.52199,
+                  1.30667
+                ],
+                [
+                  0.52199,
+                  1.31067
+                ],
+                [
+                  0.51699,
+                  1.31567
+                ],
+                [
+                  0.50499,
+                  1.31567
+                ],
+                [
+                  0.49999,
+                  1.31067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-7b",
@@ -4279,6 +6737,44 @@
               "closed": false
             },
             {
+              "id": "baluster-7b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.21853,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.41957,
+                  1.30667
+                ],
+                [
+                  0.44157,
+                  1.30667
+                ],
+                [
+                  0.44157,
+                  1.31067
+                ],
+                [
+                  0.43657,
+                  1.31567
+                ],
+                [
+                  0.42457,
+                  1.31567
+                ],
+                [
+                  0.41957,
+                  1.31067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-7c",
               "bone": "balustrade",
               "role": "detail",
@@ -4300,6 +6796,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-7c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.15313,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.33177,
+                  1.30667
+                ],
+                [
+                  0.35377,
+                  1.30667
+                ],
+                [
+                  0.35377,
+                  1.31067
+                ],
+                [
+                  0.34877,
+                  1.31567
+                ],
+                [
+                  0.33677,
+                  1.31567
+                ],
+                [
+                  0.33177,
+                  1.31067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-8a",
@@ -4325,6 +6859,44 @@
               "closed": false
             },
             {
+              "id": "baluster-8a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.10307,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.23812,
+                  1.49333
+                ],
+                [
+                  0.26012,
+                  1.49333
+                ],
+                [
+                  0.26012,
+                  1.49733
+                ],
+                [
+                  0.25512,
+                  1.50233
+                ],
+                [
+                  0.24312,
+                  1.50233
+                ],
+                [
+                  0.23812,
+                  1.49733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-8b",
               "bone": "balustrade",
               "role": "detail",
@@ -4346,6 +6918,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-8b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.06921,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.14019,
+                  1.49333
+                ],
+                [
+                  0.16219,
+                  1.49333
+                ],
+                [
+                  0.16219,
+                  1.49733
+                ],
+                [
+                  0.15719,
+                  1.50233
+                ],
+                [
+                  0.14519,
+                  1.50233
+                ],
+                [
+                  0.14019,
+                  1.49733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-8c",
@@ -4371,6 +6981,44 @@
               "closed": false
             },
             {
+              "id": "baluster-8c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.05214,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  0.03969,
+                  1.49333
+                ],
+                [
+                  0.06169,
+                  1.49333
+                ],
+                [
+                  0.06169,
+                  1.49733
+                ],
+                [
+                  0.05669,
+                  1.50233
+                ],
+                [
+                  0.04469,
+                  1.50233
+                ],
+                [
+                  0.03969,
+                  1.49733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-9a",
               "bone": "balustrade",
               "role": "detail",
@@ -4392,6 +7040,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-9a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.05214,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.06169,
+                  1.68
+                ],
+                [
+                  -0.03969,
+                  1.68
+                ],
+                [
+                  -0.03969,
+                  1.684
+                ],
+                [
+                  -0.04469,
+                  1.689
+                ],
+                [
+                  -0.05669,
+                  1.689
+                ],
+                [
+                  -0.06169,
+                  1.684
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-9b",
@@ -4417,6 +7103,44 @@
               "closed": false
             },
             {
+              "id": "baluster-9b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.06921,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.16219,
+                  1.68
+                ],
+                [
+                  -0.14019,
+                  1.68
+                ],
+                [
+                  -0.14019,
+                  1.684
+                ],
+                [
+                  -0.14519,
+                  1.689
+                ],
+                [
+                  -0.15719,
+                  1.689
+                ],
+                [
+                  -0.16219,
+                  1.684
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-9c",
               "bone": "balustrade",
               "role": "detail",
@@ -4438,6 +7162,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-9c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.10307,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.26012,
+                  1.68
+                ],
+                [
+                  -0.23812,
+                  1.68
+                ],
+                [
+                  -0.23812,
+                  1.684
+                ],
+                [
+                  -0.24312,
+                  1.689
+                ],
+                [
+                  -0.25512,
+                  1.689
+                ],
+                [
+                  -0.26012,
+                  1.684
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-10a",
@@ -4463,6 +7225,44 @@
               "closed": false
             },
             {
+              "id": "baluster-10a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.15313,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.35377,
+                  1.86667
+                ],
+                [
+                  -0.33177,
+                  1.86667
+                ],
+                [
+                  -0.33177,
+                  1.87067
+                ],
+                [
+                  -0.33677,
+                  1.87567
+                ],
+                [
+                  -0.34877,
+                  1.87567
+                ],
+                [
+                  -0.35377,
+                  1.87067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-10b",
               "bone": "balustrade",
               "role": "detail",
@@ -4484,6 +7284,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-10b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.21853,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.44157,
+                  1.86667
+                ],
+                [
+                  -0.41957,
+                  1.86667
+                ],
+                [
+                  -0.41957,
+                  1.87067
+                ],
+                [
+                  -0.42457,
+                  1.87567
+                ],
+                [
+                  -0.43657,
+                  1.87567
+                ],
+                [
+                  -0.44157,
+                  1.87067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-10c",
@@ -4509,6 +7347,44 @@
               "closed": false
             },
             {
+              "id": "baluster-10c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.29816,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.52199,
+                  1.86667
+                ],
+                [
+                  -0.49999,
+                  1.86667
+                ],
+                [
+                  -0.49999,
+                  1.87067
+                ],
+                [
+                  -0.50499,
+                  1.87567
+                ],
+                [
+                  -0.51699,
+                  1.87567
+                ],
+                [
+                  -0.52199,
+                  1.87067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-11a",
               "bone": "balustrade",
               "role": "detail",
@@ -4530,6 +7406,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-11a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.39065,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.59368,
+                  2.05333
+                ],
+                [
+                  -0.57168,
+                  2.05333
+                ],
+                [
+                  -0.57168,
+                  2.05733
+                ],
+                [
+                  -0.57668,
+                  2.06233
+                ],
+                [
+                  -0.58868,
+                  2.06233
+                ],
+                [
+                  -0.59368,
+                  2.05733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-11b",
@@ -4555,6 +7469,44 @@
               "closed": false
             },
             {
+              "id": "baluster-11b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.49443,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.65539,
+                  2.05333
+                ],
+                [
+                  -0.63339,
+                  2.05333
+                ],
+                [
+                  -0.63339,
+                  2.05733
+                ],
+                [
+                  -0.63839,
+                  2.06233
+                ],
+                [
+                  -0.65039,
+                  2.06233
+                ],
+                [
+                  -0.65539,
+                  2.05733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-11c",
               "bone": "balustrade",
               "role": "detail",
@@ -4576,6 +7528,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-11c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.60771,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.70608,
+                  2.05333
+                ],
+                [
+                  -0.68408,
+                  2.05333
+                ],
+                [
+                  -0.68408,
+                  2.05733
+                ],
+                [
+                  -0.68908,
+                  2.06233
+                ],
+                [
+                  -0.70108,
+                  2.06233
+                ],
+                [
+                  -0.70608,
+                  2.05733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-12a",
@@ -4601,6 +7591,44 @@
               "closed": false
             },
             {
+              "id": "baluster-12a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.72856,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.74487,
+                  2.24
+                ],
+                [
+                  -0.72287,
+                  2.24
+                ],
+                [
+                  -0.72287,
+                  2.244
+                ],
+                [
+                  -0.72787,
+                  2.249
+                ],
+                [
+                  -0.73987,
+                  2.249
+                ],
+                [
+                  -0.74487,
+                  2.244
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-12b",
               "bone": "balustrade",
               "role": "detail",
@@ -4622,6 +7650,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-12b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.85491,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.77111,
+                  2.24
+                ],
+                [
+                  -0.74911,
+                  2.24
+                ],
+                [
+                  -0.74911,
+                  2.244
+                ],
+                [
+                  -0.75411,
+                  2.249
+                ],
+                [
+                  -0.76611,
+                  2.249
+                ],
+                [
+                  -0.77111,
+                  2.244
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-12c",
@@ -4647,6 +7713,44 @@
               "closed": false
             },
             {
+              "id": "baluster-12c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 4.9846,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.78434,
+                  2.24
+                ],
+                [
+                  -0.76234,
+                  2.24
+                ],
+                [
+                  -0.76234,
+                  2.244
+                ],
+                [
+                  -0.76734,
+                  2.249
+                ],
+                [
+                  -0.77934,
+                  2.249
+                ],
+                [
+                  -0.78434,
+                  2.244
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-13a",
               "bone": "balustrade",
               "role": "detail",
@@ -4668,6 +7772,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-13a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.1154,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.78434,
+                  2.42667
+                ],
+                [
+                  -0.76234,
+                  2.42667
+                ],
+                [
+                  -0.76234,
+                  2.43067
+                ],
+                [
+                  -0.76734,
+                  2.43567
+                ],
+                [
+                  -0.77934,
+                  2.43567
+                ],
+                [
+                  -0.78434,
+                  2.43067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-13b",
@@ -4693,6 +7835,44 @@
               "closed": false
             },
             {
+              "id": "baluster-13b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.24509,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.77111,
+                  2.42667
+                ],
+                [
+                  -0.74911,
+                  2.42667
+                ],
+                [
+                  -0.74911,
+                  2.43067
+                ],
+                [
+                  -0.75411,
+                  2.43567
+                ],
+                [
+                  -0.76611,
+                  2.43567
+                ],
+                [
+                  -0.77111,
+                  2.43067
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-13c",
               "bone": "balustrade",
               "role": "detail",
@@ -4714,6 +7894,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-13c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.37144,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.74487,
+                  2.42667
+                ],
+                [
+                  -0.72287,
+                  2.42667
+                ],
+                [
+                  -0.72287,
+                  2.43067
+                ],
+                [
+                  -0.72787,
+                  2.43567
+                ],
+                [
+                  -0.73987,
+                  2.43567
+                ],
+                [
+                  -0.74487,
+                  2.43067
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-14a",
@@ -4739,6 +7957,44 @@
               "closed": false
             },
             {
+              "id": "baluster-14a-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.49229,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.70608,
+                  2.61333
+                ],
+                [
+                  -0.68408,
+                  2.61333
+                ],
+                [
+                  -0.68408,
+                  2.61733
+                ],
+                [
+                  -0.68908,
+                  2.62233
+                ],
+                [
+                  -0.70108,
+                  2.62233
+                ],
+                [
+                  -0.70608,
+                  2.61733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-14b",
               "bone": "balustrade",
               "role": "detail",
@@ -4762,6 +8018,44 @@
               "closed": false
             },
             {
+              "id": "baluster-14b-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.60557,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.65539,
+                  2.61333
+                ],
+                [
+                  -0.63339,
+                  2.61333
+                ],
+                [
+                  -0.63339,
+                  2.61733
+                ],
+                [
+                  -0.63839,
+                  2.62233
+                ],
+                [
+                  -0.65039,
+                  2.62233
+                ],
+                [
+                  -0.65539,
+                  2.61733
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "baluster-14c",
               "bone": "balustrade",
               "role": "detail",
@@ -4783,6 +8077,44 @@
                 ]
               ],
               "closed": false
+            },
+            {
+              "id": "baluster-14c-foot",
+              "bone": "balustrade",
+              "role": "detail",
+              "tone": 0.35,
+              "region": "balustrade-steel",
+              "material": "steel",
+              "z": 5.70935,
+              "kind": "poly",
+              "filled": true,
+              "points": [
+                [
+                  -0.59368,
+                  2.61333
+                ],
+                [
+                  -0.57168,
+                  2.61333
+                ],
+                [
+                  -0.57168,
+                  2.61733
+                ],
+                [
+                  -0.57668,
+                  2.62233
+                ],
+                [
+                  -0.58868,
+                  2.62233
+                ],
+                [
+                  -0.59368,
+                  2.61733
+                ]
+              ],
+              "closed": true
             },
             {
               "id": "baluster-o1",
@@ -7060,6 +10392,158 @@
                 [
                   0.01246,
                   -0.08802
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-fix-packer-1",
+              "bone": "tread-15",
+              "role": "detail",
+              "z": 2.25,
+              "filled": true,
+              "tone": 0.25,
+              "region": "treads",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.65054,
+                  0.48083
+                ],
+                [
+                  0.76368,
+                  0.3677
+                ],
+                [
+                  0.76933,
+                  0.37335
+                ],
+                [
+                  0.6562,
+                  0.48649
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-fix-bolt-1",
+              "bone": "tread-15",
+              "role": "detail",
+              "z": 2.25,
+              "filled": true,
+              "tone": 0.25,
+              "region": "treads",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.691192,
+                  0.421788
+                ],
+                [
+                  0.696849,
+                  0.427444
+                ],
+                [
+                  0.699324,
+                  0.424969
+                ],
+                [
+                  0.750943,
+                  0.476588
+                ],
+                [
+                  0.759428,
+                  0.468103
+                ],
+                [
+                  0.707809,
+                  0.416484
+                ],
+                [
+                  0.710284,
+                  0.414009
+                ],
+                [
+                  0.704628,
+                  0.408352
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-fix-packer-2",
+              "bone": "tread-15",
+              "role": "detail",
+              "z": 2.25,
+              "filled": true,
+              "tone": 0.25,
+              "region": "treads",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.93338,
+                  0.19799
+                ],
+                [
+                  1.04652,
+                  0.08486
+                ],
+                [
+                  1.05217,
+                  0.09051
+                ],
+                [
+                  0.93904,
+                  0.20365
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "tread-fix-bolt-2",
+              "bone": "tread-15",
+              "role": "detail",
+              "z": 2.25,
+              "filled": true,
+              "tone": 0.25,
+              "region": "treads",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.974032,
+                  0.138948
+                ],
+                [
+                  0.979689,
+                  0.144604
+                ],
+                [
+                  0.982164,
+                  0.142129
+                ],
+                [
+                  1.033783,
+                  0.193748
+                ],
+                [
+                  1.042268,
+                  0.185263
+                ],
+                [
+                  0.990649,
+                  0.133644
+                ],
+                [
+                  0.993124,
+                  0.131169
+                ],
+                [
+                  0.987468,
+                  0.125512
                 ]
               ],
               "closed": true

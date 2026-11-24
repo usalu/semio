@@ -1,0 +1,11 @@
+{
+  "rows": [
+    {"name": "ensure with a missing environment", "mode": "ensure", "selection": "all", "missing": true, "due": true},
+    {"name": "ensure with a synchronized environment", "mode": "ensure", "selection": "all", "missing": false, "due": false},
+    {"name": "sync all with a synchronized environment", "mode": "sync", "selection": "all", "missing": false, "due": true},
+    {"name": "sync all with a missing environment", "mode": "sync", "selection": "all", "missing": true, "due": true},
+    {"name": "scoped sync", "mode": "sync", "selection": "scope", "missing": true, "due": false},
+    {"name": "lock all", "mode": "lock", "selection": "all", "missing": true, "due": false},
+    {"name": "lock of one scope", "mode": "lock", "selection": "scope", "missing": true, "due": false}
+  ]
+}

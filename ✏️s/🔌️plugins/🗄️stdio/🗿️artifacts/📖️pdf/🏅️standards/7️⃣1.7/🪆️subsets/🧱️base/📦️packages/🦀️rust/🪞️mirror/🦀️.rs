@@ -90,54 +90,6 @@ pub mod standards {
                 pub mod io {
                     pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error;
                     pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::foreign_artifacts;
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🌈️set-color-space/🦀️.rs"]
-                            pub mod set_color_space;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/📐️set-page-media-box/🦀️.rs"]
-                            pub mod set_page_media_box;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🧩️set-pattern/🦀️.rs"]
-                            pub mod set_pattern;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🌄️remove-shading/🦀️.rs"]
-                            pub mod remove_shading;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🔄️set-page-rotation/🦀️.rs"]
-                            pub mod set_page_rotation;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🔀️move-page/🦀️.rs"]
-                            pub mod move_page;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🚪️set-open-action/🦀️.rs"]
-                            pub mod set_open_action;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🪡️remove-pattern/🦀️.rs"]
-                            pub mod remove_pattern;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🗑️remove-page/🦀️.rs"]
-                            pub mod remove_page;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/📦️insert-object/🦀️.rs"]
-                            pub mod insert_object;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🛠️set-viewer-preferences/🦀️.rs"]
-                            pub mod set_viewer_preferences;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/📏️set-page-user-unit/🦀️.rs"]
-                            pub mod set_page_user_unit;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🗣️set-language/🦀️.rs"]
-                            pub mod set_language;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/✂️set-page-crop-box/🦀️.rs"]
-                            pub mod set_page_crop_box;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🏞️set-image/🦀️.rs"]
-                            pub mod set_image;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🎯️set-named-destination/🦀️.rs"]
-                            pub mod set_named_destination;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/📄️set-form/🦀️.rs"]
-                            pub mod set_form;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🗂️set-catalog-entry/🦀️.rs"]
-                            pub mod set_catalog_entry;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🔏️set-mark-info/🦀️.rs"]
-                            pub mod set_mark_info;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/🎚️remove-ext-g-state/🦀️.rs"]
-                            pub mod remove_ext_g_state;
-                            #[path = "../../../🚪️io/💾️binary/🧬️mutations/📝️set-annotation/🦀️.rs"]
-                            pub mod set_annotation;
-                        }
-                    }
                 }
             }
         }

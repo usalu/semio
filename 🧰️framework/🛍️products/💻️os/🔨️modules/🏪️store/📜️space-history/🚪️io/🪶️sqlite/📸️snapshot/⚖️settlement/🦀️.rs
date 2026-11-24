@@ -40,13 +40,13 @@ pub fn decode_typed<T:semio_framework_value::retirement::RetireOwned>(control:&m
     let mut construct=Some(construct);
     let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<T,crate::lifted_serialization::SnapshotReceivingOutput<T>,semio_framework_io_control::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
         let before_work=native.actual_work();
-        let operation=(||->Result<T,ValueError>{
+        let attempt=(||->Result<T,ValueError>{
             let value=construct.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"typed snapshot construction was already consumed"))?(native)?;
             body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<T>(),maximum_depth:1,..Default::default()})?;
             *slot=Some(value);
             body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()})?;
             slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"typed snapshot receiving slot was lost"))
-        })().map_err(semio_framework_io_control::NativeSnapshotFailure::from);
+        })();let operation=attempt.map_err(|error|settlement.refused(native.owned_bytes(),error)).map_err(semio_framework_io_control::NativeSnapshotFailure::from);
         let settled=settlement.finish_body(native.owned_bytes());
         *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
         RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
@@ -72,14 +72,14 @@ pub fn encode_typed(control:&mut SqliteSnapshotControl<'_>,native_owner:&mut sem
     let mut construct=Some(construct);
     let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<IoPayload,crate::lifted_serialization::SnapshotReceivingOutput<IoPayload>,semio_framework_io_control::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
         let before_work=native.actual_work();
-        let operation=(||->Result<IoPayload,ValueError>{
+        let attempt=(||->Result<IoPayload,ValueError>{
             let payload=construct.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"typed payload construction was already consumed"))?(native)?;
             let capacity=match &payload{IoPayload::Binary(bytes)=>bytes.capacity(),IoPayload::Text(text)=>text.capacity()};
             body.admit_frontier(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<IoPayload>(),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1})?;
             *slot=Some(payload);
             body.record_progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<IoPayload>(),retained_capacity_bytes:capacity,released_bytes:0})?;
             slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"typed payload receiving slot was lost"))
-        })().map_err(semio_framework_io_control::NativeSnapshotFailure::from);
+        })();let operation=attempt.map_err(|error|settlement.refused(native.owned_bytes(),error)).map_err(semio_framework_io_control::NativeSnapshotFailure::from);
         let settled=settlement.finish_body(native.owned_bytes());
         *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
         RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}

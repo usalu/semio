@@ -1,13 +1,14 @@
-use crate::standards::v1_7::subsets::x::schema::mutations::PdfXMutation;
-#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::x::schema::mutations::{InsertEncryptionDictionary, PdfXMutation};
 use protocol::OpBinary;
-use crate::standards::v1_7::subsets::x::io::binary::mutations::*;
 
 #[test]
-fn canonical_framing_round_trips_and_checks_identity() {
-    let mutation = PdfXMutation::InsertEncryptionDictionary(crate::standards::v1_7::subsets::x::schema::mutations::InsertEncryptionDictionary { version: 0, revision: 0, placements: Vec::new() });
-    let mut bytes = mutation.encode_op().unwrap();
+fn pack_document_round_trips_and_refuses_damaged_bytes() {
+    let mutation = PdfXMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: 0, revision: 0, placements: Vec::new() });
+    let bytes = mutation.encode_op().unwrap();
     assert_eq!(PdfXMutation::decode_op(&bytes).unwrap(), mutation);
-    bytes[1] = crate::standards::v1_7::subsets::x::io::binary::mutations::remove_encryption_dictionary::TAG;
-    assert!(PdfXMutation::decode_op(&bytes).is_err());
+    assert_eq!(PdfXMutation::decode_op(&bytes).unwrap().encode_op().unwrap(), bytes);
+    let mut damaged = bytes.clone();
+    damaged[0] ^= 0xff;
+    assert!(PdfXMutation::decode_op(&damaged).is_err());
+    assert!(PdfXMutation::decode_op(&bytes[..bytes.len() - 1]).is_err());
 }

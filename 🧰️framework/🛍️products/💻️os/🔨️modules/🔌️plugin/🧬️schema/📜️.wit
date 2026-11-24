@@ -15,6 +15,12 @@ package semio:framework@1.0.0;
 /// requires, so the seven exports had to go async together — there is no staged path). This world
 /// is no longer a "sync/poll compatibility backend" for anything — it is the only backend, on
 /// native wasmtime and on jco/web alike.
+///
+/// 🎚️ The one exception is the pair of sync budget stages, `reactor.stage-actor-context-budget` and
+/// `jobs.stage-job-budget`. A 19-value budget cannot ride an async-lifted export's parameters
+/// (`wit-bindgen` never frees that indirect area), so a sync export stages it and every async export
+/// takes at most 16 flat values. Hosts call a sync export on the async Store like any other export
+/// (`call_async` / `call_concurrent` on wasmtime, a plain call on jco).
 world actor {
   import pure;
   import host-async;

@@ -82,6 +82,17 @@
           "minimum": 1,
           "maximum": 1800000
         },
+        "launches": {
+          "description": "Declared nested Repo launches every child birth receives beside the caller's own launches, each the exact argument vector of one launch.",
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 40,
+            "items": { "type": "string", "minLength": 1, "maxLength": 1024 }
+          }
+        },
         "capabilities": {
           "type": "object",
           "maxProperties": 8,

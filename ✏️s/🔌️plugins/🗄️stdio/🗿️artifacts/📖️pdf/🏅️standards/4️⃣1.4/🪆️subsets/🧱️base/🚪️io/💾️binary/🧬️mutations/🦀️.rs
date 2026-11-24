@@ -1,80 +1,23 @@
-//! 💾️ PDF 1.4 mutation binary framing and executable direct-leaf registry.
+//! 🧾️ Semio Pack representation for PDF 1.4 mutations.
 
 use crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation;
-use protocol::OpBinary;
+use protocol::{OpBinary, ProtocolError};
+use semio_framework_value::{FromValue, ToValue};
+use store::os_pack::pack_rt::{decode_pack_value, encode_pack_value, renormalize_whole_number_floats};
 
-//#region 🔖️Protocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
-//#endregion 🔖️Protocol
-
-//#region 🔖️Registry
-type Encoder = fn(&PdfMutation) -> Option<Result<Vec<u8>, String>>;
-type Decoder = fn(&[u8]) -> Result<PdfMutation, String>;
-pub const REGISTRY: &[(u8, Encoder, Decoder)] = &[
-    (insert_page::TAG, insert_page::encode, insert_page::decode),
-    (remove_page::TAG, remove_page::encode, remove_page::decode),
-    (move_page::TAG, move_page::encode, move_page::decode),
-    (resize_page::TAG, resize_page::encode, resize_page::decode),
-    (replace_page_text::TAG, replace_page_text::encode, replace_page_text::decode),
-];
-//#endregion 🔖️Registry
-
-pub use semio_s_artifact_stdio_pdf_snapshot::standards::v1_4::subsets::base::io::binary::mutations::wire;
-
-//#region 🔖️Framing
-fn malformed(detail: String) -> protocol::ProtocolError {
-    protocol::ProtocolError::Malformed { what: "PDF 1.4 mutation", offset: 0, detail }
-}
 
 impl OpBinary for PdfMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let (tag, payload) = REGISTRY.iter().find_map(|(tag, encode, _)| encode(self).map(|result| (*tag, result))).ok_or_else(|| malformed("Missing mutation encoder".into()))?;
-        let mut bytes = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        bytes.extend(payload.map_err(malformed)?);
-        Ok(bytes)
+    fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
+        Ok(encode_pack_value(&self.to_value()))
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        if bytes.first() != Some(&store::pack_rt::OP_BINARY_FORMAT) {
-            return Err(malformed("Unknown or missing binary format".into()));
-        }
-        let tag = *bytes.get(1).ok_or_else(|| malformed("Missing mutation tag".into()))?;
-        let (_, _, decode) = REGISTRY.iter().find(|(identity, _, _)| *identity == tag).ok_or_else(|| malformed("Unknown mutation tag".into()))?;
-        decode(&bytes[2..]).map_err(malformed)
-    }
-}
-//#endregion 🔖️Framing
 
-#[path = "📥️receiving/🦀️.rs"]
-mod receiving;
-pub use receiving::{Pdf14OperationReceiving, Pdf14ReceivingRetirement};
-
-impl protocol::OpBinaryReceiving for PdfMutation {
-    type DomainFailure = semio_framework_value::ValueError;
-    type Receiving = Pdf14OperationReceiving;
-
-    fn admit_receiving(
-        source: &[u8], range: (usize, usize), grant: semio_framework_value::RetainedCloneGrant,
-    ) -> semio_framework_value::RetainedWorkOutcome<Option<(Self::Receiving, semio_framework_value::RetainedCloneProgress)>> {
-        Pdf14OperationReceiving::admit(source, range, grant)
+    fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
+        let malformed = |detail| ProtocolError::Malformed { what: "PdfMutation", offset: 0, detail };
+        let value = decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        Self::from_value(renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
 
-
-#[path="🫳️borrowed/🦀️.rs"]
-mod borrowed_operation_source;
-
-#[path = "🔀️move-page/🦀️.rs"]
-pub mod move_page;
-
-#[path = "🗑️remove-page/🦀️.rs"]
-pub mod remove_page;
-
-#[path = "♻️replace-page-text/🦀️.rs"]
-pub mod replace_page_text;
-
-#[path = "📥️insert-page/🦀️.rs"]
-pub mod insert_page;
-
-#[path = "📐️resize-page/🦀️.rs"]
-pub mod resize_page;
+dsl::original_pack_value_operation_receiving!(PdfMutation);

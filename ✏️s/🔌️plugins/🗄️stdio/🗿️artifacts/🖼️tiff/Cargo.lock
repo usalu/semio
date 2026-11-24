@@ -3670,12 +3670,22 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-job-publication",
- "semio-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-tool-machine",
+ "semio-framework-tool-run",
+ "semio-framework-tool-run-presentation",
+ "semio-framework-tool-typing-edit",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
  "semio-plugin-actor-host",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-media",
+ "semio-plugin-decl-natural-file-media",
  "semio-plugin-decl-tool-contract",
  "semio-plugin-decl-views",
  "semio-plugin-interaction",
@@ -3686,19 +3696,10 @@ dependencies = [
  "semio-plugin-window-config",
  "semio-plugin-window-kits",
  "semio-plugin-window-transient",
- "semio-framework-replication",
- "semio-framework-schema-composition",
- "semio-framework-schema-registry",
- "semio-framework-tool-machine",
- "semio-framework-tool-run",
- "semio-framework-tool-run-presentation",
- "semio-framework-tool-typing-edit",
  "semio-ui-contract",
  "semio-ui-layout",
  "semio-ui-locale",
  "semio-ui-runtime",
- "semio-framework-value",
- "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -3739,6 +3740,23 @@ dependencies = [
  "semio-plugin-ownership",
  "semio-framework-value",
  "serde_json",
+]
+
+[[package]]
+name = "semio-plugin-decl-natural-file-media"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-async",
+ "semio-framework-job",
+ "semio-framework-pack",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-os-kernel",
+ "semio-plugin-decl-emission",
+ "semio-plugin-decl-media",
+ "semio-plugin-ownership",
+ "semio-ui-locale",
 ]
 
 [[package]]

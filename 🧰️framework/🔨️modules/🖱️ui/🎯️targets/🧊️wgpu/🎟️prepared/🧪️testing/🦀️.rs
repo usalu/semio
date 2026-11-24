@@ -274,5 +274,5 @@ pub fn render_mailbox_is_empty() -> bool {
     PREPARED_RENDER_MAILBOX.iter().all(|slot| slot.packet.load(std::sync::atomic::Ordering::Acquire).is_null())
 }
 
-#[path="../../../../../🧵️job/🧪️testing/♻️close/🦀️.rs"]
+#[path="../../../../../🧵️job/🧪️tests/♻️close/🦀️.rs"]
 pub mod close_source;

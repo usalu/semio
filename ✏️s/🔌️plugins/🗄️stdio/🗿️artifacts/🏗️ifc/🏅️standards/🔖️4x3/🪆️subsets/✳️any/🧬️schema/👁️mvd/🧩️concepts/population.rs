@@ -1,9 +1,9 @@
 //! 🪢️ One original population owner lends a completed source and stable index for a single clause turn.
 use super::native::ShapeCursor;
 use semio_framework_job::{OriginalConstructionDemand, OriginalConstructionAdmission, OriginalSourceBinding, OriginalTurnFailure, StepContext, admit_original_construction_settled};
-use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, StagedSourceAdmission, retained_clone_grant_admits};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned};
-use super::lease::{Lease, funded_turn};
+use super::lease::{Lease, SourceStaging, funded_turn};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot, IfcValue};
 use std::{mem::size_of, sync::Arc};
 use super::source_index::{IdMatch, IfcSourceIndex};
@@ -11,7 +11,7 @@ use super::source_index::{IdMatch, IfcSourceIndex};
 #[path = "population-tests.rs"]
 mod tests;
 type SnapshotSource = RetainedCloneSource<IfcSnapshot, Lease<IfcSnapshot>>;
-type SnapshotAdmission = StagedSourceAdmission<IfcSnapshot, Lease<IfcSnapshot>>;
+type SnapshotAdmission = SourceStaging<IfcSnapshot, Lease<IfcSnapshot>>;
 pub(super) type IfcMvdPopulationRequestSource<R> = RetainedCloneSource<R, Lease<R>>;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum IfcMvdPopulationStatus { Pending, Unavailable, Prepared }

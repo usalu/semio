@@ -13,6 +13,7 @@ fn multiple_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn multiple_required_references_use_the_original_controller_and_keep_supplied_fields_editable() {
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     use semio_plugin::{AppRenderOperationContext, ChildContentView};
     use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
@@ -29,7 +30,7 @@ fn multiple_required_references_use_the_original_controller_and_keep_supplied_fi
                 complex: input["complex"].as_array().unwrap().iter().map(|part| IfcComplexType { name: part["name"].as_str().unwrap().into(), args: part["args"].as_array().unwrap().iter().map(multiple_value).collect() }).collect(),
             })
             .collect();
-        let snapshot = std::sync::Arc::new(IfcSnapshot { entities, ..Default::default() });
+        let snapshot = std::sync::Arc::new(IfcSnapshot { entities, header: ifc4x3_header(), ..Default::default() });
         let history = semio_plugin::HistoryView::empty();
         let view = staged_view();
         let mut request = staged_request(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":row["target"],"$ifcInputs":row["initial"]}}));

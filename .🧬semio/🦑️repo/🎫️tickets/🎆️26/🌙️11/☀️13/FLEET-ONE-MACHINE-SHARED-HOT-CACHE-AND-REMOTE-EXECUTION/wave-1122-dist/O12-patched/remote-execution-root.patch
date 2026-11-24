@@ -1,0 +1,20 @@
+--- a/🟦️.ts	2026-11-23 19:01:51
++++ b/🟦️.ts	2026-11-23 19:01:51
+@@ -109,3 +109,17 @@
+  const family=platform==="darwin"?"macos":platform==="win32"?"windows":platform,cpu=arch==="x64"?"amd64":arch;
+  return [{name:"Arch",value:cpu},{name:"OSFamily",value:family},...toolchain?.target?[{name:"semio-target",value:toolchain.target}]:[],...toolchain?.toolchain?[{name:"semio-toolchain",value:toolchain.toolchain}]:[]];
+ }
++
++/** 🏷️ The type of the auxiliary metadata entry in which a worker returns the measured peak resident megabytes of an action (the value is the decimal text); other clients and servers ignore an entry they do not know. */
++export const REMOTE_EXECUTION_PEAK_TYPE_URL_V1="type.semio.dev/peak-memory-megabytes";
++
++/** 📤️ The auxiliary metadata entry that carries a measured peak. */
++export function remoteExecutionPeakEntryV1(megabytes:number):Readonly<{type_url:string;value:Uint8Array}>{
++ return Object.freeze({type_url:REMOTE_EXECUTION_PEAK_TYPE_URL_V1,value:new TextEncoder().encode(String(Math.max(1,Math.ceil(megabytes))))});
++}
++
++/** 📥️ The measured peak megabytes in the auxiliary metadata of an action result, or nothing when the worker returned none. */
++export function remoteExecutionPeakOfMetadataV1(entries:readonly Readonly<{type_url:string;value:Uint8Array}>[]|undefined):number|undefined{
++ for(const entry of entries??[])if(entry.type_url===REMOTE_EXECUTION_PEAK_TYPE_URL_V1){const megabytes=Number(new TextDecoder().decode(entry.value));if(Number.isSafeInteger(megabytes)&&megabytes>0)return megabytes;}
++ return undefined;
++}

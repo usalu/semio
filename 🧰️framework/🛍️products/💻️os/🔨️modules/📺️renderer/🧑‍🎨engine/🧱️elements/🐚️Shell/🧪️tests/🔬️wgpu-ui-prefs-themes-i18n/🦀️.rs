@@ -267,10 +267,10 @@ fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
     let engine = semio_renderer_wgpu_test_support::engine_root();
     let read = |relative: &str| std::fs::read_to_string(engine.join(relative)).unwrap_or_else(|error| panic!("read {relative}: {error}"));
     assert!(read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs").contains("js_name = semioWgpuSetHostLocale"), "the renderer exports the locale door");
-    assert!(read("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts").contains("semioWgpuSetHostLocale?.(message.locale)"), "the frame Worker forwards the page's read before the shell boots");
+    assert!([read("🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts"), read("🎯️targets/🧊️wgpu/🎞️frame-worker/📨️receive/🟦️.ts")].join("\n").contains("semioWgpuSetHostLocale?.(message.locale)"), "the frame Worker forwards the page's read before the shell boots");
     let embed = read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts");
     assert!(embed.contains("Locale.fromLanguageTag(descriptor.locks.locale || navigator.language)"), "the embeddable door reads the page's language under the declared lock");
-    assert!(embed.contains("return mountWgpuBrowserHost(root, { descriptor, locale,"), "the embeddable door passes the admitted language to its browser host");
+    assert!(embed.contains("descriptor, locale, mountId: rootId"), "the embeddable door passes the admitted language to its browser host");
 }
 
 /// 🌱️ LAW (live fault F10, the first wgpu probe run): a first visit — an empty profile, no lock — boots: the locale is

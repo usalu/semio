@@ -354,6 +354,10 @@
       "en": "The disk is full: partition {partition} cannot take the write (its free space cannot be read). Free space with `{command}` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition {partition} kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
     },
+    "disk.admission-insufficient": {
+      "en": "Not enough disk space for this build: partition {partition} has {free} free, the build needs about {need} of new space ({plan} planned, {credit} of it assumed to reuse space the cache image already holds) plus a {reserve} reserve, so {missing} are missing. Nothing was started, so no hour of work is lost. Free at least {missing} with `{command}` (it works on a full disk) or wait for other builds to finish, then run the command again.",
+      "de": "Nicht genug Speicherplatz für diesen Build: Partition {partition} hat noch {free} frei, der Build braucht etwa {need} neuen Platz ({plan} geplant, davon {credit} als bereits im Cache-Image gehaltener Platz angenommen) plus {reserve} Reserve, es fehlen also {missing}. Nichts wurde gestartet, es geht also keine Arbeitsstunde verloren. Schaffe mindestens {missing} frei mit `{command}` (es arbeitet auch auf vollem Datenträger) oder warte, bis andere Builds enden, und führe den Befehl erneut aus."
+    },
     "disk.collecting": {
       "en": "Partition {partition} is {usedPercent}% used (limit {limitPercent}%): freeing the least recently used cache objects before the command starts.",
       "de": "Partition {partition} ist zu {usedPercent} % belegt (Grenze {limitPercent} %): die am längsten ungenutzten Cache-Objekte werden freigegeben, bevor der Befehl startet."

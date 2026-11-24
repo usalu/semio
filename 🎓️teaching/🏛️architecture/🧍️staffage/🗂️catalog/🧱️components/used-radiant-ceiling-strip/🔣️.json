@@ -7947,6 +7947,21 @@
        "h": 0.07
       },
       {
+       "id": "return-stub",
+       "bone": "panel",
+       "role": "body",
+       "z": 4.5957,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel",
+       "region": "headers",
+       "kind": "rect",
+       "x": -0.31685,
+       "y": 0.13,
+       "w": 0.0337,
+       "h": 0.07
+      },
+      {
        "id": "flow-cap",
        "bone": "panel",
        "role": "body",
@@ -7957,6 +7972,21 @@
        "region": "headers",
        "kind": "rect",
        "x": 0.278,
+       "y": 0.2,
+       "w": 0.044,
+       "h": 0.015
+      },
+      {
+       "id": "return-cap",
+       "bone": "panel",
+       "role": "body",
+       "z": 4.6008,
+       "filled": true,
+       "tone": 0.22,
+       "material": "steel",
+       "region": "headers",
+       "kind": "rect",
+       "x": -0.322,
        "y": 0.2,
        "w": 0.044,
        "h": 0.015
@@ -9113,6 +9143,21 @@
        "region": "headers",
        "kind": "rect",
        "x": 0.278,
+       "y": 0.13,
+       "w": 0.044,
+       "h": 0.085
+      },
+      {
+       "id": "return-stub",
+       "bone": "panel",
+       "role": "body",
+       "z": 4.6008,
+       "filled": true,
+       "tone": 0.4,
+       "material": "steel",
+       "region": "headers",
+       "kind": "rect",
+       "x": -0.322,
        "y": 0.13,
        "w": 0.044,
        "h": 0.085

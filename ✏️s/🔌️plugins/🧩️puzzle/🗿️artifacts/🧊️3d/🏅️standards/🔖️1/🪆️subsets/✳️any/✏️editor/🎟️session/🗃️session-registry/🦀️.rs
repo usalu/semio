@@ -313,11 +313,11 @@ impl Puzzle3dSession {
     /// `instance_record_fingerprint` moved are re-serialized; the mesh declarations and the outliner
     /// memo stay keyed on the (now allocation-free) whole-scene_snapshot `scene_geometry_fingerprint`, which
     /// is what actually changes when the catalogs or the mesh set do.
-    pub fn geometry_jsons(&self, scene_snapshot: &Puzzle3dSceneSnapshot, provisional: &std::collections::BTreeSet<u64>, referenced: &[String]) -> (String, String, Option<String>) {
+    pub fn geometry_jsons(&self, scene_snapshot: &Puzzle3dSceneSnapshot, tool_run: Option<semio_plugin::OriginalToolRunView<'_>>, referenced: &[String]) -> (String, String, Option<String>) {
         let fingerprint = scene_geometry_fingerprint(scene_snapshot);
         let mut residency = self.instance_residency.lock().expect("instance residency");
         let residency = residency.get_or_insert_with(Box::<Puzzle3dInstanceResidency>::default);
-        let republished = residency.refresh(scene_snapshot, provisional, referenced);
+        let republished = residency.refresh(scene_snapshot, tool_run, referenced);
         let mut meshes = self.mesh_cache.lock().expect("mesh cache");
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {

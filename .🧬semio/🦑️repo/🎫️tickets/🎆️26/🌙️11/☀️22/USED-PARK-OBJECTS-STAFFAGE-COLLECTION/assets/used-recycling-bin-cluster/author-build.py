@@ -624,3 +624,12 @@ doc = {"$schema": "../../../🧬️schema/🔣️.json#/$defs/AssetDocument", "v
 with open(OUT, "w") as fh:
     json.dump(doc, fh, ensure_ascii=False, indent=1)
 print("[DEBUG] wrote", OUT, "mass", TOTAL_KG, {k: round(v[0], 3) for k, v in MASSES.items()}, {d: (len(s.body), len(s.thermal), len(s.structure)) for d, s in SCALES.items()})
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch SO, the last step: ops/used-recycling-bin-cluster.json of the umbrella ticket of 2026-11-22
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/SO")
+    from lib import repair_file as _repair_file
+    _repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-recycling-bin-cluster")

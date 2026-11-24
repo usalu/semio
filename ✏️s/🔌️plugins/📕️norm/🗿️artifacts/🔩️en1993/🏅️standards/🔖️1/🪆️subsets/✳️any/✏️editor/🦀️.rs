@@ -517,8 +517,7 @@ mod example;
 //#endregion 🪢️TaxonomyMounts
 
 //#region 🪢️Mounts
-#[path = "🏷️field-meta/🦀️.rs"]
-pub mod field_meta;
+pub extern crate semio_s_artifact_norm_en1993_editor_field_meta as field_meta;
 #[path = "🧮️incremental/🦀️.rs"]
 pub mod incremental;
 #[path = "."]

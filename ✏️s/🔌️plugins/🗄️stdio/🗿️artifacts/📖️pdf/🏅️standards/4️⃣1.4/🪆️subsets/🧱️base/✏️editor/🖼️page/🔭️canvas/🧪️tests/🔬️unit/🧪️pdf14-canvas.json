@@ -19,7 +19,11 @@
   "set-query",
   "toggle-match-case",
   "next-hit",
-  "previous-hit"
+  "previous-hit",
+  "presence-pointer",
+  "presence-pointer-leave",
+  "presence-caret",
+  "presence-caret-clear"
  ],
  "cases": [
   {

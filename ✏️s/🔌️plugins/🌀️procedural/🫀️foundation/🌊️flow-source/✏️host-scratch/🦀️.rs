@@ -186,7 +186,7 @@ impl HostScratchWork{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.retirement.is_empty()&&self.fields.moves.is_none()&&self.fields.edit.is_none()&&self.fields.rows.is_none()&&self.fields.entry.is_none()&&self.fields.entry_close.is_none()&&self.fields.lookup.is_none()&&self.fields.pending.is_none()}
 }
-impl Drop for HostScratchWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"procedural host scratch retains original input, rows, lookup or maps");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for HostScratchWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"procedural host scratch retains original input, rows, lookup or maps");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
 impl super::retained_scratch_driver::OriginalScratchWork<FlowHostSnapshot> for HostScratchWork{
  fn origin(&self)->(u64,u64){self.origin}

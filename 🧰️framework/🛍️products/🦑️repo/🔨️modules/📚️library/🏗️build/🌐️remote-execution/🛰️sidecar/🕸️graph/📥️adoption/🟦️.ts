@@ -86,8 +86,8 @@ async function readReadyBytes(path:string,maximumBytes:number,signal:AbortSignal
  }finally{await file.close();}
 }
 
-/** 🚦️ Admits only a fresh Ready record and retains one read slot even if the filesystem outlasts its deadline. */
-export function createHeadAdoptionReadyProbeV1(input:Readonly<{read?:ReadyRead;maximumWaitMilliseconds?:number}>={}){
+/** 🚦️ Admits a machine whose own daemon record is valid, of this origin and platform and fresh, whatever stage it runs: a machine that is not Ready yet needs the graph to become Ready, so Ready can never be the price of adopting it. Retains one read slot even if the filesystem outlasts its deadline. */
+export function createHeadAdoptionLiveProbeV1(input:Readonly<{read?:ReadyRead;maximumWaitMilliseconds?:number}>={}){
  const read=input.read??readReadyBytes,maximumWait=input.maximumWaitMilliseconds??policy.readyProbeMilliseconds;
  const pending=new Map<string,ReadyObservation>();
  return async (store:string,origin:string,signal:AbortSignal,now:()=>number=Date.now):Promise<boolean>=>{
@@ -108,14 +108,14 @@ export function createHeadAdoptionReadyProbeV1(input:Readonly<{read?:ReadyRead;m
    const bytes=await Promise.race([observation.bytes,aborted]);
    if(observed.aborted||!bytes||bytes.length>policy.maximumReadyBytes)return false;
    const status=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes)) as ReadyStatusV1,elapsed=now()-status.updatedMs;
-   return validateJsonSchemaSubset(READY_STATUS_SCHEMA_V1,status,readySchema).length===0&&status.origin===origin&&status.platform===readyPlatformV1()&&status.ready&&status.state==="ready"&&status.stage===null&&status.refusal===null&&elapsed>=0&&elapsed<=READY_TREE_POLICY_V1.foregroundFreshMilliseconds;
+   return validateJsonSchemaSubset(READY_STATUS_SCHEMA_V1,status,readySchema).length===0&&status.origin===origin&&status.platform===readyPlatformV1()&&elapsed>=0&&elapsed<=READY_TREE_POLICY_V1.foregroundFreshMilliseconds;
   }catch{return false;}
   finally{observed.removeEventListener("abort",cancel);}
  };
 }
 
-/** 🕰️ Shares one process-local Ready probe across adoption, foreground monitoring and receipt mirroring. */
-export const readyForHeadAdoptionV1=createHeadAdoptionReadyProbeV1();
+/** 🕰️ Shares one process-local liveness probe across adoption, foreground monitoring and receipt mirroring. */
+export const liveForHeadAdoptionV1=createHeadAdoptionLiveProbeV1();
 
 async function withHeadCapacity<T>(megabytes:number,environment:NodeJS.ProcessEnv,signal:AbortSignal,report:(megabytes:number)=>void,body:()=>Promise<T>):Promise<T>{
  const {reserveGraphPlanCapacityV1}=await import("../../../../🌡️host-capacity/🟦️.ts"),pending=new AbortController(),cancel=()=>pending.abort(signal.reason);
@@ -170,9 +170,9 @@ async function openAdoptionScope(root:string,origin:string,storeRoot:string,loca
      candidate:async()=>prepared.candidate,
      restore:head=>withHeadCapacity(policy.grantMegabytes,environment,signal,report,async()=>{
       try{
-       if(!await readyForHeadAdoptionV1(storeRoot,origin,adoptionSignal))return{status:"busy"} as const;
+       if(!await liveForHeadAdoptionV1(storeRoot,origin,adoptionSignal))return{status:"busy"} as const;
        return await prepared.restoreExpectedWholeGenerationV1(prepared.host,head,{beforePublication:async local=>{
-        if(!await readyForHeadAdoptionV1(storeRoot,origin,adoptionSignal))throw Error("Foreground readiness resumed during graph adoption");
+        if(!await liveForHeadAdoptionV1(storeRoot,origin,adoptionSignal))throw Error("Foreground work resumed during graph adoption");
         await stageWholeGenerationAdoptionIntentV1({...receiptLocation,candidate:head,local});
        }});
       }finally{await prepared.host.release();}
@@ -193,7 +193,7 @@ export async function runHeadAdoptionLaneV1(context:RemoteExecutionSidecarContex
  let heldMegabytes=0;
  const tick=createHeadAdoptionTurnV1({
   async eligible(turn,active){
-   if(turn.aborted||context.work?.restartPending||context.work?.busy||!await readyForHeadAdoptionV1(store,origin,turn))return false;
+   if(turn.aborted||context.work?.restartPending||context.work?.busy||!await liveForHeadAdoptionV1(store,origin,turn))return false;
    const view=await readRemoteExecutionHostViewV1(environment),host=view.host,floor=hostFloorMegabytesV1(BUILD_HOST_CAPACITY_POLICY_V1,host);
    if(host.totalMegabytes<policy.minimumHostMegabytes||host.totalMegabytes>=serveTotalMegabytes||host.pressure!=="normal"||host.availableMegabytes<floor+(active?0:policy.grantMegabytes)||view.waiters.some(row=>!active||row.pid!==process.pid)||view.grants.some(row=>!active||row.pid!==process.pid))return false;
    if(active)return heldMegabytes===0||process.memoryUsage.rss()/1048576<heldMegabytes;
@@ -212,7 +212,7 @@ export async function runHeadAdoptionLaneV1(context:RemoteExecutionSidecarContex
  });
  while(!signal.aborted){
   await tick(signal);
-  if(!context.work?.restartPending&&await readyForHeadAdoptionV1(store,origin,signal))await mirrorWholeGenerationAdoptionReceiptV1({...receiptLocation,signal});
+  if(!context.work?.restartPending&&await liveForHeadAdoptionV1(store,origin,signal))await mirrorWholeGenerationAdoptionReceiptV1({...receiptLocation,signal});
   await wait(policy.roundMilliseconds,signal);
  }
 }

@@ -610,7 +610,7 @@ impl RetainedRecordBodyCursor {
 
 impl Drop for RetainedRecordBodyCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained record-body cursor reached Drop before terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained record-body cursor reached Drop before terminal-empty close");
     }
 }
 //#endregion 🔖️RetainedValue

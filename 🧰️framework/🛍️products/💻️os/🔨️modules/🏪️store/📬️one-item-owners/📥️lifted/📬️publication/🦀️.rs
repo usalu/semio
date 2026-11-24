@@ -582,6 +582,12 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
         true
     }
 
+    /// 🛑️ Abandons this publication with the cause that ends it; an earlier retained cause stays the primary one.
+    pub fn abandon(&mut self, cause: ValueError) {
+        if self.fault.is_none() { self.fault = Some(cause); }
+        self.begin_close();
+    }
+
     pub fn begin_close(&mut self) {
         if self.close_started {
             return;
@@ -734,6 +740,11 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
             "none"
         }
     }
+}
+
+impl<P, Mutation: 'static> ArtifactStoreBatchPublication<P, Mutation> {
+    /// 🔭️ Names the commit-preflight digest step this publication is waiting on, when one is in flight.
+    pub fn digest_witness(&self)->Option<[u64;3]>{self.stage.as_ref()?.digest_owner.as_ref().map(|owner|owner.witness())}
 }
 
 impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {

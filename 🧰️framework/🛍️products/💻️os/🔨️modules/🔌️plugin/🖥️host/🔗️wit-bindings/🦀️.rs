@@ -24,6 +24,11 @@ pub mod actor_bindings {
         world: "actor",
         path: "../../../../🧬️schema",
         wasmtime_crate: ::semio_plugin_host_engine::wasm::generated_code_support,
+        exports: {
+            "semio:framework/reactor.stage-actor-context-budget": async | store,
+            "semio:framework/reactor.stage-cold-pair-page": async | store,
+            "semio:framework/jobs.stage-job-budget": async | store,
+        },
     });
 }
 

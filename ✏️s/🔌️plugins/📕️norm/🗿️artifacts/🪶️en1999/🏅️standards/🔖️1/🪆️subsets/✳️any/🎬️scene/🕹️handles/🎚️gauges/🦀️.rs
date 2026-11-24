@@ -3,7 +3,7 @@
 
 use super::*;
 use crate::model::{AluminiumConnection, AluminiumMember, FatigueCategory, FatigueDetail, FireInsulation, MemberAction, PatchLoad, PlateElement, RingStiffener, SheetProfile, WeldGroup, WeldRun};
-use crate::scene::projection_kit::handle_kit::field_binding;
+use crate::scene::projection_kit::handle_kit::{field_binding, rebased};
 use std::collections::BTreeSet;
 
 pub const STEPS_PER_METRE: f64 = 20.0;
@@ -186,7 +186,7 @@ fn rack(entity: &EntityRef, gauges: Vec<Gauge>, place: &dyn Fn(f64, f64) -> Vec3
         let (a, b) = ((g.lo.min(g.base) - g.base) / k, (g.hi.max(g.base) - g.base) / k);
         let quantise = if g.unit == "1" && (g.step - 1.0).abs() < 1e-12 { Some(Quantise::Int) } else { round(g.step) };
         let across = (i % COLUMNS) as f64 - (columns as f64 - 1.0) / 2.0;
-        out.push(handle(Spec {
+        out.push(rebased(handle(Spec {
             entity,
             tag: &format!("gauge-{}", g.tag),
             kind: HandleKind::ScalarAlong { axis: up.clone() },
@@ -196,7 +196,7 @@ fn rack(entity: &EntityRef, gauges: Vec<Gauge>, place: &dyn Fn(f64, f64) -> Vec3
             snap: grid(0.05),
             limits: (a.min(b), a.max(b)),
             name: loc(&g.en, &g.de),
-        }));
+        })));
     }
 }
 

@@ -211,10 +211,10 @@ impl PdfWriter {
 pub fn materialize_streams(value: &PdfObject) -> PdfObject {
     match value {
         PdfObject::Stream { dict, data, filters } => {
-            let (encoded, filter_entries) = encode_stream(data, filters);
+            let (encoded, filter_entries) = encode_stream(&data.to_vec_owner(), filters);
             let mut entries: Vec<PdfDictEntry> = dict.iter().filter(|entry| entry.key != "Length" && (filters.is_empty() || !matches!(entry.key.as_str(), "Filter" | "DecodeParms"))).map(|entry| PdfDictEntry { key: entry.key.clone(), value: materialize_streams(&entry.value) }).collect();
             entries.extend(filter_entries);
-            PdfObject::Stream { dict: entries, data: encoded, filters: Vec::new() }
+            PdfObject::Stream { dict: entries, data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&encoded), filters: Vec::new() }
         }
         PdfObject::Array(items) => PdfObject::Array(items.iter().map(materialize_streams).collect()),
         PdfObject::Dict(entries) => PdfObject::Dict(entries.iter().map(|entry| PdfDictEntry { key: entry.key.clone(), value: materialize_streams(&entry.value) }).collect()),

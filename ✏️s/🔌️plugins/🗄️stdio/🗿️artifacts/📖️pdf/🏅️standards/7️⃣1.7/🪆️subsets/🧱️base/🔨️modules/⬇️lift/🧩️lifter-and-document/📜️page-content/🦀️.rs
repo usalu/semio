@@ -16,11 +16,11 @@ enum Member { Reference(ObjRef), Inline(usize) }
 pub fn project_content_bytes<T>(source: &mut dyn ObjectSource, contents: Option<&PdfObject>, project: impl FnOnce(&[u8]) -> T) -> T {
     let mut joined = Vec::new();
     match contents {
-        Some(PdfObject::Stream { data, .. }) => return project(data),
+        Some(PdfObject::Stream { data, .. }) => return project(&data.to_vec_owner()),
         Some(PdfObject::Array(items)) => {
             for item in items {
                 match item {
-                    PdfObject::Stream { data, .. } => append(&mut joined, data),
+                    PdfObject::Stream { data, .. } => append(&mut joined, &data.to_vec_owner()),
                     PdfObject::Ref(reference) => append_reference(source, *reference, &mut joined),
                     _ => {}
                 }
@@ -32,7 +32,7 @@ pub fn project_content_bytes<T>(source: &mut dyn ObjectSource, contents: Option<
             let mut members = Vec::new();
             source.inspect(*reference, &mut |value| match value {
                 Some(PdfObject::Stream { data, .. }) => {
-                    direct = project.take().map(|project| project(data));
+                    direct = project.take().map(|project| project(&data.to_vec_owner()));
                 }
                 Some(PdfObject::Array(items)) => {
                     members.extend(items.iter().enumerate().filter_map(|(index, item)| match item {
@@ -49,7 +49,7 @@ pub fn project_content_bytes<T>(source: &mut dyn ObjectSource, contents: Option<
                     Member::Reference(reference) => append_reference(source, reference, &mut joined),
                     Member::Inline(index) => source.inspect(*reference, &mut |value| {
                         if let Some(PdfObject::Stream { data, .. }) = value.and_then(PdfObject::as_array).and_then(|items| items.get(index)) {
-                            append(&mut joined, data);
+                            append(&mut joined, &data.to_vec_owner());
                         }
                     }),
                 }
@@ -63,7 +63,7 @@ pub fn project_content_bytes<T>(source: &mut dyn ObjectSource, contents: Option<
 
 fn append_reference(source: &mut dyn ObjectSource, reference: ObjRef, joined: &mut Vec<u8>) {
     source.inspect(reference, &mut |value| {
-        if let Some(PdfObject::Stream { data, .. }) = value { append(joined, data); }
+        if let Some(PdfObject::Stream { data, .. }) = value { append(joined, &data.to_vec_owner()); }
     });
 }
 

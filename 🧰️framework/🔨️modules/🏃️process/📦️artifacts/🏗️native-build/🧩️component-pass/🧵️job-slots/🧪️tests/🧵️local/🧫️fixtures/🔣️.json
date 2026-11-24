@@ -1,0 +1,484 @@
+{
+ "plan": [
+  {
+   "name": "9.5 GB free, 4 GB floor: a 6.5 GB first final leaves no room for the 3.3 GB one",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     6500,
+     3300,
+     1200
+    ]
+   },
+   "expect": {
+    "jobs": 1,
+    "reason": "local-memory"
+   }
+  },
+  {
+   "name": "the same finals in the order 3.3, 1.2, 6.5 GB: the first two overlap, the 6.5 GB one waits",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     3300,
+     1200,
+     6500
+    ]
+   },
+   "expect": {
+    "jobs": 2,
+    "reason": "local-memory"
+   }
+  },
+  {
+   "name": "1.2 then 3.3 GB: both fit the 5.5 GB above the floor",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     1200,
+     3300
+    ]
+   },
+   "expect": {
+    "jobs": 2,
+    "reason": "local-all"
+   }
+  },
+  {
+   "name": "plenty of memory: the authored local cap bounds five small finals",
+   "host": {
+    "tokens": 8,
+    "availableMegabytes": 30000,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     1000,
+     1000,
+     1000,
+     1000,
+     1000
+    ]
+   },
+   "expect": {
+    "jobs": 3,
+    "reason": "local-cap"
+   }
+  },
+  {
+   "name": "plenty of memory, two tokens: the local grant bounds the jobs",
+   "host": {
+    "tokens": 2,
+    "availableMegabytes": 30000,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     1000,
+     1000,
+     1000,
+     1000,
+     1000
+    ]
+   },
+   "expect": {
+    "jobs": 2,
+    "reason": "local-grant"
+   }
+  },
+  {
+   "name": "memory that cannot be read carries one job",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": null,
+    "floorMegabytes": 4000,
+    "pressure": null,
+    "peaksMegabytes": [
+     1000,
+     1000
+    ]
+   },
+   "expect": {
+    "jobs": 1,
+    "reason": "local-unknown"
+   }
+  },
+  {
+   "name": "raised memory pressure carries one job",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 30000,
+    "floorMegabytes": 4000,
+    "pressure": "warn",
+    "peaksMegabytes": [
+     1000,
+     1000
+    ]
+   },
+   "expect": {
+    "jobs": 1,
+    "reason": "local-pressure"
+   }
+  },
+  {
+   "name": "one final only is one job: its need exceeds the free memory, but the first job always runs",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 3000,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     9000
+    ]
+   },
+   "expect": {
+    "jobs": 1,
+    "reason": "local-memory"
+   }
+  },
+  {
+   "name": "one final that fits is one job and every listed final fits",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     1000
+    ]
+   },
+   "expect": {
+    "jobs": 1,
+    "reason": "local-all"
+   }
+  }
+ ],
+ "admit": [
+  {
+   "name": "nothing runs: the first job always starts, even without free memory",
+   "host": {
+    "running": 0,
+    "maximum": 3,
+    "availableMegabytes": 0,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 0,
+    "floorMegabytes": 4000,
+    "pressure": "critical",
+    "peakMegabytes": 6500
+   },
+   "expect": {
+    "admit": true,
+    "reason": "local-first",
+    "freeMegabytes": -4000
+   }
+  },
+  {
+   "name": "a 6.5 GB final runs: the 3.3 GB one waits for memory (9.5 GB free, 4 GB floor)",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 9500,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 6500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peakMegabytes": 3300
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-memory",
+    "freeMegabytes": -1000
+   }
+  },
+  {
+   "name": "a 3.3 GB final runs: the 1.2 GB one fits beside it",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 9500,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 3300,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peakMegabytes": 1200
+   },
+   "expect": {
+    "admit": true,
+    "reason": "local-fits",
+    "freeMegabytes": 2200
+   }
+  },
+  {
+   "name": "memory dropped to 5 GB: the same 1.2 GB final now waits",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 5000,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 3300,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peakMegabytes": 1200
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-memory",
+    "freeMegabytes": -2300
+   }
+  },
+  {
+   "name": "what the running compilers hold is added back instead of charged twice",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 3000,
+    "ownedMegabytes": 3300,
+    "reservedMegabytes": 3300,
+    "floorMegabytes": 2000,
+    "pressure": "normal",
+    "peakMegabytes": 900
+   },
+   "expect": {
+    "admit": true,
+    "reason": "local-fits",
+    "freeMegabytes": 1000
+   }
+  },
+  {
+   "name": "the added back memory never exceeds the reservation",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 3000,
+    "ownedMegabytes": 9000,
+    "reservedMegabytes": 3300,
+    "floorMegabytes": 2000,
+    "pressure": "normal",
+    "peakMegabytes": 1200
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-memory",
+    "freeMegabytes": 1000
+   }
+  },
+  {
+   "name": "the maximum of local jobs is reached",
+   "host": {
+    "running": 3,
+    "maximum": 3,
+    "availableMegabytes": 60000,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 3000,
+    "floorMegabytes": 2000,
+    "pressure": "normal",
+    "peakMegabytes": 100
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-cap",
+    "freeMegabytes": 55000
+   }
+  },
+  {
+   "name": "unreadable memory admits no further job",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": null,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 3000,
+    "floorMegabytes": 2000,
+    "pressure": null,
+    "peakMegabytes": 100
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-unknown",
+    "freeMegabytes": 0
+   }
+  },
+  {
+   "name": "raised pressure admits no further job",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 60000,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 3000,
+    "floorMegabytes": 2000,
+    "pressure": "warn",
+    "peakMegabytes": 100
+   },
+   "expect": {
+    "admit": false,
+    "reason": "local-pressure",
+    "freeMegabytes": 55000
+   }
+  }
+ ],
+ "slots": [
+  {
+   "name": "offload never or fleet down: the lane is local jobs only, from the grant and the cap",
+   "host": {
+    "fleetJobs": 1,
+    "tokens": 4,
+    "wanted": 1024
+   },
+   "expect": {
+    "jobs": 3,
+    "light": 0,
+    "local": 3
+   }
+  },
+  {
+   "name": "one local token: one job",
+   "host": {
+    "fleetJobs": 1,
+    "tokens": 1,
+    "wanted": 1024
+   },
+   "expect": {
+    "jobs": 1,
+    "light": 0,
+    "local": 1
+   }
+  },
+  {
+   "name": "local jobs switched to one",
+   "host": {
+    "fleetJobs": 1,
+    "tokens": 4,
+    "wanted": 1
+   },
+   "expect": {
+    "jobs": 1,
+    "light": 0,
+    "local": 1
+   }
+  },
+  {
+   "name": "a fleet of six jobs plus the local ones",
+   "host": {
+    "fleetJobs": 6,
+    "tokens": 4,
+    "wanted": 1024
+   },
+   "expect": {
+    "jobs": 8,
+    "light": 5,
+    "local": 3
+   }
+  },
+  {
+   "name": "a fleet that fills the cap leaves one local slot",
+   "host": {
+    "fleetJobs": 40,
+    "tokens": 4,
+    "wanted": 1024
+   },
+   "expect": {
+    "jobs": 24,
+    "light": 23,
+    "local": 1
+   }
+  }
+ ],
+ "invalid": [
+  {
+   "kind": "plan",
+   "name": "no peaks",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": []
+   }
+  },
+  {
+   "kind": "plan",
+   "name": "zero peak",
+   "host": {
+    "tokens": 4,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     0
+    ]
+   }
+  },
+  {
+   "kind": "plan",
+   "name": "no tokens",
+   "host": {
+    "tokens": 0,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "normal",
+    "peaksMegabytes": [
+     1
+    ]
+   }
+  },
+  {
+   "kind": "plan",
+   "name": "unknown pressure",
+   "host": {
+    "tokens": 1,
+    "availableMegabytes": 9500,
+    "floorMegabytes": 4000,
+    "pressure": "high",
+    "peaksMegabytes": [
+     1
+    ]
+   }
+  },
+  {
+   "kind": "admit",
+   "name": "extra field",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 1,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": 0,
+    "floorMegabytes": 0,
+    "pressure": null,
+    "peakMegabytes": 1,
+    "x": 1
+   }
+  },
+  {
+   "kind": "admit",
+   "name": "negative reservation",
+   "host": {
+    "running": 1,
+    "maximum": 3,
+    "availableMegabytes": 1,
+    "ownedMegabytes": 0,
+    "reservedMegabytes": -1,
+    "floorMegabytes": 0,
+    "pressure": null,
+    "peakMegabytes": 1
+   }
+  },
+  {
+   "kind": "slots",
+   "name": "no fleet jobs",
+   "host": {
+    "fleetJobs": 0,
+    "tokens": 4,
+    "wanted": 1
+   }
+  }
+ ]
+}

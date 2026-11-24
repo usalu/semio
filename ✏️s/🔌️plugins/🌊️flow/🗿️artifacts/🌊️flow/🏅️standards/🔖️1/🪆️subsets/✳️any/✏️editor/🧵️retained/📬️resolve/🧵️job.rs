@@ -107,4 +107,4 @@ impl<A:FlowApp> ArtifactCommandWork<EditorApp<A>> for FlowResolveJobWork{
  fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
  fn terminal_is_empty(&self)->bool{FlowResolveJobWork::terminal_is_empty(self)}
 }
-impl Drop for FlowResolveJobWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow Resolve requires full paid source, reply, invocation and output closure");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowResolveJobWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow Resolve requires full paid source, reply, invocation and output closure");unsafe{ManuallyDrop::drop(&mut self.fields)}}}

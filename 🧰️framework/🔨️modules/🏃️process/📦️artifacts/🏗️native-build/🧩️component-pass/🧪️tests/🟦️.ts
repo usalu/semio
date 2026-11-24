@@ -25,7 +25,7 @@ import { decodeCargoProvenanceV1 } from "../../🧾️receipt/🟦️.ts";
 import {CargoSourceAttemptV1,CargoSourceWitnessV1} from "../../🧾️receipt/📎️source-witness/🟦️.ts";
 import { formatStampProtocolV1 } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🟨️.mjs";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/🟦️.ts";
@@ -88,7 +88,7 @@ if (args.includes("--unit-graph")) {
   const units = observing ? packages.map(name=>({pkg_id:"path+"+pathToFileURL(join(root,name)).href+"#"+name+"@0.1.0",target:{name,kind:["cdylib"],crate_types:["cdylib"],src_path:join(root,name,"lib.rs")},platform:"wasm32-wasip2",mode:"build",features:[],dependencies:[]})) : [];
   process.stdout.write(JSON.stringify({ version: 1, units, roots: units.map((_,index)=>index) })); process.exit(0);
 }
-appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ at: Date.now(), pid: process.pid, profile, manifest, jobserver: process.env.CARGO_MAKEFLAGS ?? null, wrapper: process.env.RUSTC_WRAPPER ?? null, unification: process.env.CARGO_RESOLVER_FEATURE_UNIFICATION ?? null }) + "\\n");
+appendFileSync(${JSON.stringify(calls)}, JSON.stringify({ at: Date.now(), pid: process.pid, profile, manifest, jobserver: process.env.CARGO_MAKEFLAGS ?? null, jobs: process.env.CARGO_BUILD_JOBS ?? null, light: process.env.SEMIO_UNIT_CACHE_LIGHT_SLOTS ?? null, wrapper: process.env.RUSTC_WRAPPER ?? null, unification: process.env.CARGO_RESOLVER_FEATURE_UNIFICATION ?? null }) + "\\n");
 if (process.env.STUB_MODE === "hang") await new Promise(() => setInterval(() => {}, 1000));
 const failing = ["error-last", "error-touch"].includes(process.env.STUB_MODE) || process.env.STUB_MODE === "reclaim-error" && basename(root) === "hub";
 const linked = process.env.STUB_MODE === "omit-last" || failing ? packages.slice(0, -1) : packages;
@@ -169,7 +169,7 @@ async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<
           expect(leaseLedgerSnapshotV1().holds.some(lease=>lease.resource==="semio.compiler.host-capacity/v1")).toBe(true);
           return withCompilerWorkspaceStageWriteV1(held.storage,artifacts,phase,write);
         };
-        const run=()=>runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity, ...(verifyStageWriters?{withStageWriter}:{}), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver });
+        const run=()=>runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, withCapacity, ...(verifyStageWriters?{withStageWriter}:{}), physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, localJobs: { maximum: 1 }, ...driver });
         try { outcome = await (verifyStageWriters?withCompilerWorkspaceLifetimeV1(held.storage,control,run):run()); return outcome; }
         finally { await inspect?.({ outcome, held }); }
       }, original) };
@@ -251,6 +251,51 @@ test("the driver streams each component the moment Cargo links it, runs profiles
   expect(reads, JSON.stringify(reads.excess)).toMatchObject({ closed: true, maximumReads: 2 });
   expect(readFileSync(outcome.report, "utf8")).toContain("## Critical path");
   });
+}, 120_000);
+
+test("fleet-sized cargo jobs: a component pass and a jobserver job (a wasm-pack style pass) get the local grant plus the remote slots as their job count and join the fleet-sized jobserver; without a fleet nothing changes", async () => {
+  const run = async (fleet: boolean) => {
+    const root = mkdtempSync(join(artifacts, fleet ? "fj1-" : "fj0-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release");
+    const plan: NativeBuildPlanV1 = { version: 1, passes: [pass], jobs: [stubJob(root, "wasm", [], 20)] };
+    await runStub(root, plan, cargo, fleet ? { fleetJobs: async () => ({ jobs: fixture.stub.tokens + 5, local: fixture.stub.tokens, remote: 5, reason: "fleet-all" as const }) } : {});
+    const pass_ = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)).find((row) => row.at), job = readFileSync(join(root, "jobs.jsonl"), "utf8").trim().split("\n").map((line) => JSON.parse(line))[0];
+    return { pass: pass_, job };
+  };
+  const fleet = await run(true), local = await run(false), planned = String(fixture.stub.tokens + 5);
+  expect(fleet.pass.jobs).toBe(planned);expect(fleet.job.jobs).toBe(planned);
+  if (process.platform !== "win32") for (const row of [fleet.pass, fleet.job]) expect(row.jobserver).toContain(`${sep}fleet${sep}`);
+  expect(local.pass.jobs).not.toBe(planned);expect(local.job.jobs).not.toBe(planned);
+}, 120_000);
+
+test("component jobs: workspaces of one wasm lane overlap up to the planned jobs when the fleet takes their finals, and stay in sequence without a fleet", async () => {
+  const spans = async (root: string, jobs: number | undefined) => {
+    const cargo = stubCargo(root), passes = [stubWorkspace(root, "w0", ["c-0"], "release"), stubWorkspace(root, "w1", ["c-1"], "release"), stubWorkspace(root, "w2", ["c-2"], "release")];
+    const requested: { local: number; crates: readonly string[] }[] = [];
+    const fleet = jobs === undefined ? {} : { fleetJobs: async () => ({ jobs: 2 + jobs, local: 2, remote: jobs, reason: "fleet-all" as const }), componentJobs: async (facts: { local: number; crates: readonly string[] }) => { requested.push(facts); return { jobs, local: 1, remote: jobs - 1, reason: "jobs-all" as const }; } };
+    await runStub(root, { version: 1, passes }, cargo, fleet);
+    const calls = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+    return { requested, spans: passes.map(pass => ({ start: calls.find((row) => row.at && row.manifest === pass.manifest).at as number, end: calls.find((row) => row.end && row.manifest === pass.manifest).end as number })) };
+  };
+  const sequential = await spans(mkdtempSync(join(artifacts, "cj0-")), undefined);
+  expect(sequential.spans[1]!.start).toBeGreaterThanOrEqual(sequential.spans[0]!.end);expect(sequential.spans[2]!.start).toBeGreaterThanOrEqual(sequential.spans[1]!.end);
+  const down = await spans(mkdtempSync(join(artifacts, "cj1-")), 1);
+  expect(down.spans[1]!.start).toBeGreaterThanOrEqual(down.spans[0]!.end);
+  const concurrent = await spans(mkdtempSync(join(artifacts, "cj3-")), 3);
+  expect(concurrent.requested[0]!.crates.sort()).toEqual(["c_0", "c_1", "c_2"]);
+  expect(concurrent.spans[1]!.start).toBeLessThan(concurrent.spans[0]!.end);expect(concurrent.spans[2]!.start).toBeLessThan(concurrent.spans[0]!.end);
+}, 120_000);
+
+test("local component jobs: without any fleet two finals overlap with real reservations while a third waits for memory, and the memory is re-read before each start", async () => {
+  const root = mkdtempSync(join(artifacts, "lj-")), cargo = stubCargo(root), passes = [stubWorkspace(root, "w0", ["c-0"], "release"), stubWorkspace(root, "w1", ["c-1"], "release"), stubWorkspace(root, "w2", ["c-2"], "release")];
+  const peaks: Record<string, number> = { [passes[0]!.id]: 3300, [passes[1]!.id]: 1200, [passes[2]!.id]: 6500 }, lines: string[] = [], samples: number[] = [];
+  await runStub(root, { version: 1, passes }, cargo, { log: line => lines.push(line), localJobs: { floorMegabytes: 4000, peakMegabytes: pass => peaks[pass.id]!, sample: async () => { samples.push(Date.now()); return { availableMegabytes: 9500, ownedMegabytes: 0, pressure: "normal" }; } } });
+  const calls = readFileSync(cargo.calls, "utf8").trim().split("\n").map((line) => JSON.parse(line)), span = (index: number) => ({ start: calls.find((row) => row.at && row.manifest === passes[index]!.manifest).at as number, end: calls.find((row) => row.end && row.manifest === passes[index]!.manifest).end as number });
+  expect(span(1).start).toBeLessThan(span(0).end);
+  expect(span(2).start).toBeGreaterThanOrEqual(Math.max(span(0).end, span(1).end));
+  expect(lines.some(line => line.includes("[component-jobs] " + passes[1]!.id + " starts beside 1 running final(s) and reserves 1200 MB"))).toBe(true);
+  expect(lines.some(line => line.includes("[component-jobs] " + passes[2]!.id + " waits for memory beside 2 running final(s): it needs 6500 MB"))).toBe(true);
+  expect(lines.some(line => line.includes("[component-jobs] component build: 2 component job(s) may hold a local reservation at once"))).toBe(true);
+  expect(samples.length).toBeGreaterThan(2);
 }, 120_000);
 
 for(const correction of warmGraphFixture.secondSourceCorrections) registerIsolatedBuildTestV1(import.meta.path,correction.name,{bodyMilliseconds:120_000,scope:{kind:"body"}},async checkpoint=>{
@@ -821,7 +866,7 @@ test("a real build over wasm32-wasip2 components: both profiles, admitted units,
 function stubJob(root: string, id: string, after: readonly string[], delayMs: number, exit = 0): NativeBuildJobV1 {
   const script = join(root, `j-${id}`, "📜️script.ts");
   mkdirSync(dirname(script), { recursive: true });
-  writeFileSync(script, `import { appendFileSync } from "node:fs";\nconst start = Date.now();\nawait new Promise((accept) => setTimeout(accept, ${delayMs}));\nappendFileSync(${JSON.stringify(join(root, "jobs.jsonl"))}, JSON.stringify({ id: ${JSON.stringify(id)}, start, end: Date.now(), jobserver: process.env.CARGO_MAKEFLAGS ?? null, pass: process.env.SEMIO_BUILD_PASS ?? null, parallelism: Number(process.env.SEMIO_COMPILER_PARALLELISM), capacityHeld: process.env.SEMIO_COMPILER_CAPACITY_HELD, makeflags: process.env.MAKEFLAGS ?? null }) + "\\n");\nprocess.exit(${exit});\n`);
+  writeFileSync(script, `import { appendFileSync } from "node:fs";\nconst start = Date.now();\nawait new Promise((accept) => setTimeout(accept, ${delayMs}));\nappendFileSync(${JSON.stringify(join(root, "jobs.jsonl"))}, JSON.stringify({ id: ${JSON.stringify(id)}, start, end: Date.now(), jobserver: process.env.CARGO_MAKEFLAGS ?? null, jobs: process.env.CARGO_BUILD_JOBS ?? null, pass: process.env.SEMIO_BUILD_PASS ?? null, parallelism: Number(process.env.SEMIO_COMPILER_PARALLELISM), capacityHeld: process.env.SEMIO_COMPILER_CAPACITY_HELD, makeflags: process.env.MAKEFLAGS ?? null }) + "\\n");\nprocess.exit(${exit});\n`);
   return { id, cwd: root, command: [process.execPath, script], after, profile: "release", target: "host", workerProtocol: "jobserver" };
 }
 

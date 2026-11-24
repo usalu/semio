@@ -210,7 +210,7 @@ pub fn embedded_map_label_font(snapshot: &mut PdfSnapshot, id: &str, text: Optio
 pub fn embedded_true_type_font(snapshot:&mut PdfSnapshot,id: &str, program: &[u8], base_font: &str, text: Option<&str>) -> Result<PdfFont, String> {
     use crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont;
     let font = TrueTypeFont::parse(program)?;
-    let reference=foreign_artifacts::admit_pdf_artifact(snapshot,"s.stdio.font.truetype",PdfObject::Stream {dict:vec![PdfDictEntry::new("Length1",PdfObject::Int(program.len() as i64))],data:program.to_vec(),filters:Vec::new()}).map_err(|error|format!("{error:?}"))?;
+    let reference=foreign_artifacts::admit_pdf_artifact(snapshot,"s.stdio.font.truetype",PdfObject::Stream {dict:vec![PdfDictEntry::new("Length1",PdfObject::Int(program.len() as i64))],data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(program),filters:Vec::new()}).map_err(|error|format!("{error:?}"))?;
     let characters: Vec<char> = match text {
         Some(text) => {
             let mut set: Vec<char> = text.chars().collect();

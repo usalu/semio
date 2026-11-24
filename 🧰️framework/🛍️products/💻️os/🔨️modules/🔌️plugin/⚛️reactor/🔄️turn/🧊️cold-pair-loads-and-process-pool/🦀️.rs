@@ -36,6 +36,9 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
     if live.is_none() {
         return finish(pending.load, Err(b"cold-pair.not-live".to_vec()));
     }
+    if semio_framework_trace::guest_linear_memory_over_refusal_ceiling() {
+        return refuse_cold_pair_document_load(runtime, lifetime.instance_id, pending, "plugin.cold-pair.guest-memory-ceiling", "the guest's linear memory passed its refusal ceiling, so the document load is refused instead of allocated into an abort").await;
+    }
     if !pending.admitted {
         if pending.superseded {
             return finish(pending.load, Err(b"cold-pair.load-cancelled".to_vec()));
@@ -55,6 +58,9 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
         Err(fault) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault))),
     };
     if matches!(status.state, DocumentArchiveLoadState::Pending | DocumentArchiveLoadState::Running) {
+        if pending.observe_progress(status.completed, status.total) {
+            return refuse_cold_pair_document_load(runtime, lifetime.instance_id, pending, "plugin.cold-pair.load-stalled", "the archive load made no progress across its idle-poll ceiling").await;
+        }
         let cursor = pending.cursor;
         COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending));
         return ColdPairIngressStatus::Loading(cursor);
@@ -67,6 +73,16 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
         (_, Ok(())) => Err(status.fault),
     };
     finish(pending.load, result)
+}
+
+/// 🛑️ Ends a cold pair's document load with a typed fault: cancels its archive operation when it was admitted, so the previous document stays, and answers the pair `cold-pair` terminal with the encoded fault.
+async fn refuse_cold_pair_document_load<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32, pending: cold_pair::ColdPairDocumentLoad, code: &'static str, message: &'static str) -> semio_framework::kernel::ColdPairIngressStatus {
+    if pending.admitted {
+        let _ = semio_plugin_runtime_ops::ops_document::plugin_cancel_document_archive_load(runtime, instance, pending.operation).await;
+    }
+    let live = native_close_key(runtime, instance).ok().filter(|key| key.lifetime() == pending.cursor.lifetime).map(|key| key.lifetime());
+    let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new(code), message);
+    COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().finish_load(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault)), live))
 }
 
 /// 🧯️ Projects a refused restored-load admission to its fault with the actual retained progress and every independent refusal as a cause.

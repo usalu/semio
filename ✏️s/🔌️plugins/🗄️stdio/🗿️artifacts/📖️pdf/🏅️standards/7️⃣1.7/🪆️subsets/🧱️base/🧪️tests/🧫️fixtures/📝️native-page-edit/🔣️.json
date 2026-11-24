@@ -1,7 +1,7 @@
 {
   "mediaBox": {
     "initial": { "kind": "set-page-media-box", "params": { "index": 0, "mediaBox": [-30, 20, 170, 320] } },
-    "resize": { "page": 0, "width": 260, "height": 410 },
+    "resize": { "page": 1, "width": 260, "height": 410 },
     "expected": { "kind": "set-page-media-box", "params": { "index": 0, "mediaBox": [-30, 20, 230, 430] } }
   },
   "blankDraft": {

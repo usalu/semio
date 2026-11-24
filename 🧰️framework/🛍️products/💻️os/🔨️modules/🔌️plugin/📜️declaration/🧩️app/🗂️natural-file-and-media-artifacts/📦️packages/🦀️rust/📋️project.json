@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-decl-natural-file-media-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -608,7 +608,7 @@ impl RetainedValueCursor {
 
 impl Drop for RetainedValueCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained value cursor reached Drop before terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained value cursor reached Drop before terminal-empty close");
     }
 }
 //#endregion 🔖️RetainedValue

@@ -45,7 +45,7 @@ export function registerDockerContextAndImageTests(): void {
     expect(validate(deployment), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...deployment, site: { ...deployment.site, legal: { imprint: "https://example.org/impressum", privacy: "https://example.org/datenschutz" } } })).toBe(true);
     const { host: _host, ...hostless } = deployment.proctor;
-    for (const invalid of [{ ...deployment, proctor: hostless }, { ...deployment, proctor: { ...deployment.proctor, port: 80 } }, { ...deployment, proctor: { ...deployment.proctor, image: `${deployment.proctor.image}:latest` } }, { ...deployment, site: { host: "https://quizzes.example" } }, { ...deployment, site: { ...deployment.site, legal: { imprint: "impressum" } } }, { ...deployment, cdn: "pages" }]) expect(validate(invalid), JSON.stringify(invalid)).toBe(false);
+    for (const invalid of [{ ...deployment, proctor: hostless }, { ...deployment, proctor: { ...deployment.proctor, port: 80 } }, { ...deployment, proctor: { ...deployment.proctor, image: `${deployment.proctor.image}:latest` } }, { ...deployment, site: { host: "https://quizzes.example" } }, { ...deployment, site: { ...deployment.site, legal: { imprint: "impressum" } } }, { ...deployment, site: { host: deployment.site.host } }, { ...deployment, site: { ...deployment.site, language: "fr" } }, { ...deployment, cdn: "pages" }]) expect(validate(invalid), JSON.stringify(invalid)).toBe(false);
     expect(deployment.proctor.host).not.toBe(deployment.site.host);
     expect([hostZone("quizze.example.org"), hostZone("semio.institute.example.org")]).toEqual(["example.org", "institute.example.org"]);
     expect(COURSE_SITE_ORIGIN).toBe(`https://${deployment.site.host}`);

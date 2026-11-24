@@ -256,7 +256,7 @@
   {"path": ".git", "shared": true},
   {"path": ".git/HEAD", "shared": true},
   {"path": ".git/packed-refs", "shared": true},
-  {"path": ".git/shallow", "shared": true},
+  {"path": ".git/shallow", "shared": false},
   {"path": ".git/refs/heads/main", "shared": true},
   {"path": ".git/refs/tags/v1", "shared": true},
   {"path": ".git/refs/heads/tmp_branch", "shared": true},

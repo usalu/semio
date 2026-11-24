@@ -25,6 +25,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -158,29 +159,6 @@ ETA_JAN = _eta_heat(Q_G_JAN / Q_L_JAN)
 Q_USABLE_JAN = ETA_JAN * Q_G_JAN
 Q_L_JUL, Q_G_JUL = _loss_kwh(D_THETA_JUL), _solar_kwh(I_S_JUL) + Q_INTERN
 ETA_C = _eta_cool(Q_G_JUL / Q_L_JUL)
-#endregion
-
-
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
 #endregion
 
 
@@ -475,7 +453,7 @@ class Beat1_Bilanzgrenze(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("System boundary & energy conservation", "Bilanzgrenze & Energieerhaltung"))
-        din = _din_ref(_references.cite("!din-v-4108-6"), subtitle)
+        din = reference_chip(_references.cite("!din-v-4108-6"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -666,7 +644,7 @@ class Beat2_Verlustseite(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The loss side: transmission & ventilation", "Die Verlustseite: Transmission & Lüftung"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "verluste")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "verluste")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -996,7 +974,7 @@ class Beat3_Gewinnseite(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The gain side & the utilisation factor", "Die Gewinnseite & der Ausnutzungsgrad"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "gewinne")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "gewinne")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1282,7 +1260,7 @@ class Beat4_WinterUndSommer(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The same balance, two seasons", "Dieselbe Bilanz, zwei Jahreszeiten"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "ausnutzung"), ("din-ts-18599-2", "nutzenergie")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "ausnutzung"), ("din-ts-18599-2", "nutzenergie")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

@@ -596,21 +596,59 @@ def overflow_strip(y0, y1, inset):
     return [(xi(y1), y1), (xi(y0), y0), (xi(y0) - inset, y0), (xi(y1) - inset, y1)]
 
 
+def clip_x(pts, x0, x1):
+    """✂️ A convex flat polygon cut to the strip x0 <= X <= x1 (Sutherland-Hodgman)."""
+    for sign, bound in ((1, x0), (-1, x1)):
+        out = []
+        for a, b in zip(pts, pts[1:] + pts[:1]):
+            ia, ib = sign * (a[0] - bound) >= 0, sign * (b[0] - bound) >= 0
+            if ia:
+                out.append(a)
+            if ia != ib:
+                t = (bound - a[0]) / (b[0] - a[0])
+                out.append((bound, a[1] + t * (b[1] - a[1])))
+        pts = out
+    return pts
+
+
+def corner_half(d):
+    """◜️ Half-width of the bottom sheet at the distance d from its end: the rounded corner of the deep-drawn shell."""
+    r = OPEN[2] * K_TAPER
+    return zo(Y_BO) - r + math.sqrt(max(0.0, r * r - (r - min(d, r)) ** 2))
+
+
+def coved(shape, pts, half):
+    """🪜️ A lateral solid of the lowest part of the shell in three steps towards each end (50 and 20 mm before the end of the bottom sheet), so that its front and plan follow the rounded corners of the bottom instead of a square block; the side outline is unchanged."""
+    xb = K_TAPER * (OPEN[0] + TH)
+    x1, x2, far = xb - 0.05, xb - 0.02, 2.0
+    parts = [("", -x1, x1, half), ("-foot-a", x1, x2, min(half, corner_half(0.05))), ("-foot-b", x2, far, min(half, corner_half(0.02))), ("-head-a", -x2, -x1, min(half, corner_half(0.05))), ("-head-b", -far, -x2, min(half, corner_half(0.02)))]
+    out = []
+    for suffix, a, b, z in parts:
+        piece = clip_x(list(pts), a, b)
+        if len(piece) >= 3:
+            out.append({**shape, "id": shape["id"] + suffix, **lpoly(piece), "solid": ext(-z, z)})
+    return out
+
+
 def solid_views(scale):
     """🧊️ Front and plan shapes of the bath as solids of its side profiles (identical definitions in both views), so the upright stored bath and the flat bath in use both read right."""
-    bands = {50: [Y_LIP, 0.457, 0.356, 0.255, Y_BO], 100: [Y_LIP, 0.42, 0.29, Y_BO], 200: [Y_LIP, 0.37, Y_BO], 500: [Y_LIP, 0.35, Y_BO]}[scale]
+    bands = {50: [Y_LIP, 0.5065, 0.457, 0.4065, 0.356, 0.3055, 0.255, 0.2125, Y_BO], 100: [Y_LIP, 0.42, 0.29, Y_BO], 200: [Y_LIP, 0.37, Y_BO], 500: [Y_LIP, 0.35, Y_BO]}[scale]
     fl = OPEN[0] + (RIM[0] - OPEN[0]) * 0.0
     out = [sh("rim-side-l", "tub", "body", 6, True, 0.9, lrect(-RIM[0], Y_LIP, RIM[0], Y_RIM), region="shell", material="enamelled-steel", solid=ext(OPEN[1], RIM[1])),
            sh("rim-side-r", "tub", "body", 6, True, 0.9, lrect(-RIM[0], Y_LIP, RIM[0], Y_RIM), region="shell", material="enamelled-steel", solid=ext(-RIM[1], -OPEN[1])),
            sh("rim-end-foot", "tub", "body", 6, True, 0.9, lrect(fl, Y_LIP, RIM[0], Y_RIM), region="shell", material="enamelled-steel", solid=ext(-OPEN[1], OPEN[1])),
            sh("rim-end-head", "tub", "body", 6, True, 0.9, lrect(-RIM[0], Y_LIP, -fl, Y_RIM), region="shell", material="enamelled-steel", solid=ext(-OPEN[1], OPEN[1]))]
     for i, (ya, yb) in enumerate(zip(bands, bands[1:])):
-        out.append(sh(f"wall-band-{i + 1}", "tub", "body", 2 + 0.1 * i, True, 0.3, lpoly(band_poly(ya, yb)), region="shell", material="enamelled-steel", solid=ext(-zo(ya), zo(ya))))
+        band = sh(f"wall-band-{i + 1}", "tub", "body", 2 + 0.1 * i, True, 0.3, lpoly(band_poly(ya, yb)), region="shell", material="enamelled-steel", solid=ext(-zo(ya), zo(ya)))
+        out.extend(coved(band, band_poly(ya, yb), zo(ya)) if scale == 50 and yb == Y_BO else [band])
     cb = [Y_WT] + (bands[1:-1] if scale < 500 else []) + [Y_WB]
     for i, (ya, yb) in enumerate(zip(cb, cb[1:])):
-        out.append(sh(f"inside-{i + 1}", "tub", "detail", 3 + 0.1 * i, True, 0.62 + 0.04 * i, lpoly([(xi(ya), ya), (xi(yb), yb), (-xi(yb), yb), (-xi(ya), ya)]), region="shell", material="enamel-white-aged", solid=ext(-zi(ya), zi(ya))))
+        inner = [(xi(ya), ya), (xi(yb), yb), (-xi(yb), yb), (-xi(ya), ya)]
+        inside = sh(f"inside-{i + 1}", "tub", "detail", 3 + 0.1 * i, True, r6(0.62 + 0.12 * i / (len(cb) - 2)) if scale == 50 else 0.62 + 0.04 * i, lpoly(inner), region="shell", material="enamel-white-aged", solid=ext(-zi(ya), zi(ya)))
+        out.extend(coved(inside, inner, zi(ya)) if scale == 50 and yb == Y_WB else [inside])
     if scale <= 100:
-        out.append(sh("floor", "tub", "detail", 4, True, 0.8, lrect(-xi(Y_WB), Y_WB, xi(Y_WB), Y_WB + 0.004), region="shell", material="enamel-white-aged", solid=ext(-zi(Y_WB), zi(Y_WB))))
+        floor = sh("floor", "tub", "detail", 4, True, 0.8, lrect(-xi(Y_WB), Y_WB, xi(Y_WB), Y_WB + 0.004), region="shell", material="enamel-white-aged", solid=ext(-zi(Y_WB), zi(Y_WB)))
+        out.extend(coved(floor, [(-xi(Y_WB), Y_WB), (xi(Y_WB), Y_WB), (xi(Y_WB), Y_WB + 0.004), (-xi(Y_WB), Y_WB + 0.004)], zi(Y_WB)) if scale == 50 else [floor])
         out.append(sh("waste-hole", "tub", "detail", 4.2, True, 0.05, lrect(DRAIN_X - DRAIN_R, Y_WB, DRAIN_X + DRAIN_R, Y_WB + 0.005), region="shell", material="enamel-white-aged", solid=ext(-DRAIN_R, DRAIN_R)))
     if scale <= 100:
         out.append(sh("chip", "tub", "detail", 4.4, True, 0.3, lpoly(overflow_strip(OVER_Y - 0.058, OVER_Y + 0.034, 0.004)), region="shell", material="rust-chip", solid=ext(-0.038, 0.034)))
@@ -1190,3 +1228,13 @@ if __name__ == "__main__":
     print(f"[DEBUG] slopes foot {FOOT_SLOPE:.2f} side {SIDE_SLOPE:.2f}; capacity to overflow {CAPACITY_L:.0f} l")
     tub = MASS["tub"]
     print(f"[DEBUG] stored COM world {rot(REST_DEG, tub['comX'], tub['comY'])}")
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch R2-O, the last step: ops/used-bathtub.json of the umbrella ticket of 2026-11-22
+    import importlib.util as _util
+    from pathlib import Path as _Path
+    _spec = _util.spec_from_file_location("silhouette_r2o_lib", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/R2-O/lib.py")
+    _r2o = _util.module_from_spec(_spec)
+    _spec.loader.exec_module(_r2o)
+    _r2o.repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-bathtub")

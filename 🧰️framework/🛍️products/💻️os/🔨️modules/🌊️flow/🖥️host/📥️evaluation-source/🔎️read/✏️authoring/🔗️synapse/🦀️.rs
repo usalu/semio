@@ -34,4 +34,4 @@ impl SynapseWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.fields.iter().all(Option::is_none)&&self.output.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for SynapseWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original synapse text requires terminal custody")}}
+impl Drop for SynapseWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original synapse text requires terminal custody")}}

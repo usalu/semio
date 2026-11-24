@@ -23,7 +23,7 @@ impl OriginalTextOrdering{
  pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.progress=Default::default();if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}let d=self.close_demands();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.source=None;self.offset=0;self.done=None;self.progress=RetainedCloneProgress{copied_bytes:d.copy_bytes,..unit()};RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.source.is_none()&&self.done.is_none()&&self.offset==0}
 }
-impl Drop for OriginalTextOrdering{fn drop(&mut self){assert!(self.terminal_is_empty(),"original raw text ordering requires terminal source binding")}}
+impl Drop for OriginalTextOrdering{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original raw text ordering requires terminal source binding")}}
 /// 🪪️ The original Flow caller binds the same raw comparator to its actual operation and generation.
 pub struct FlowTextOrderingWork{raw:OriginalTextOrdering,source:Option<(usize,usize,usize,usize)>,origin:Option<semio_framework_job::OriginalSourceBinding>,closing:bool}
 impl FlowTextOrderingWork{
@@ -47,7 +47,7 @@ impl FlowTextOrderingWork{
  fn close_granted(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.raw.terminal_is_empty(){return self.raw.close_step(g)}let d=self.close_demands();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.origin=None;self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_bytes:d.copy_bytes,..unit()})),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.origin.is_none()&&self.source.is_none()&&self.raw.terminal_is_empty()}
 }
-impl Drop for FlowTextOrderingWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original context text ordering requires terminal operation and source")}}
+impl Drop for FlowTextOrderingWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original context text ordering requires terminal operation and source")}}
 
 #[doc(hidden)] pub trait OrderingRetire:Send+'static{fn begin(&mut self);fn demand(&self)->RetirementDemand;fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome;fn empty(&self)->bool;}
 impl OrderingRetire for OriginalTextOrdering{fn begin(&mut self){self.begin_close()}fn demand(&self)->RetirementDemand{self.close_demands()}fn close(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{self.close_step(g)}fn empty(&self)->bool{self.terminal_is_empty()}}

@@ -135,7 +135,7 @@ fn open_original_media(path: &Path) -> Result<(File, String, u64), String> {
 /// 🧾 Projects accepted bytes and the existing transfer cancellation action.
 pub(super) fn task_nodes(id: u64, task: &NativeOriginalMediaTask, german: bool) -> [UiNode; 3] {
     let (completed, total) = task.progress();
-    let label = if german { "Originalbild importieren" } else { "Import original image" };
+    let label = shell_chrome_string("taskManager.transfer.importOriginal", german);
     let value = if total == 0 { label.to_owned() } else { format!("{label} · {completed}/{total}") };
     let key = format!("documentTransfer:{id}");
     [
@@ -147,7 +147,7 @@ pub(super) fn task_nodes(id: u64, task: &NativeOriginalMediaTask, german: bool) 
         }),
         UiNode::Button(UiButtonNode {
             id: Some(format!("os.task-manager.cancel.{key}")), icon_id: IconName::Square,
-            label: Label::data(if german { "Bildimport abbrechen" } else { "Cancel image import" }),
+            label: Label::data(shell_chrome_string("taskManager.transfer.cancelImport", german)),
             action: ActionDescriptor { controller_id: "framework".into(), action: IMPORT_TRANSFER_CANCEL_ACTION.into(),
                 args: semio_renderer_wgpu_host_base::action_args_json!({ "transfer": id }) },
             style: None, presence: UiPresence::default(), menu: None,

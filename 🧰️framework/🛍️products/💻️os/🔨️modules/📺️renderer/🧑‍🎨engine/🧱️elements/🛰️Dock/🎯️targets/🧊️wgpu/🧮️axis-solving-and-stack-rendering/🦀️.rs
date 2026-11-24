@@ -244,7 +244,7 @@ pub(super) fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, p
         }
         let group_w = group.tabs.iter().map(|tab| tab.rect.w).sum::<f32>();
         let group_rect = Rect::new(group.tabs[0].rect.x, group.tabs[0].rect.y, group_w, tab_h);
-        let group_glass = ctx.draw.push_glass([group_rect.x, group_rect.y, group_rect.w, group_rect.h], 0.0, theme.glass(Level::Window));
+        let group_glass = ctx.draw.push_glass([group_rect.x, group_rect.y, group_rect.w, group_rect.h], 0.0, theme.chip_glass(Level::Base));
         ctx.draw.begin_glass_content(group_glass);
         for tab in &group.tabs {
             let is_active = tab.window_id == *active;

@@ -21,6 +21,16 @@ pub fn pane_document_rect(window_rect: Rect, frame: Option<&WindowFrame>, edgele
         _ => window_rect,
     }
 }
+/// 🧱️ Whether a window of this declared kind mounts an engine host (world3d, node graph, tiled map, board2d), known from the manifest at creation and so right on the first laid-out frame, unlike the host registration that only lands once the document has painted.
+pub fn surface_kind_is_engine_host(kind: Option<&semio_ui_declaration::ui::SurfaceKind>) -> bool {
+    use semio_ui_declaration::ui::SurfaceKind;
+    matches!(kind, Some(SurfaceKind::World3d | SurfaceKind::NodeGraph | SurfaceKind::TiledMap | SurfaceKind::Board2d))
+}
+
+/// 🧻️ [`pane_document_rect`] decided from the window's declared kind, so the first frame of a new window is already laid out final.
+pub fn kind_pane_document_rect(window_rect: Rect, frame: Option<&WindowFrame>, kind: Option<&semio_ui_declaration::ui::SurfaceKind>) -> Rect {
+    pane_document_rect(window_rect, frame, surface_kind_is_engine_host(kind))
+}
 //#endregion WindowFrameGeometry
 
 /// 🏷️ One painted tab of a stack cap group, as returned inside [`StackCapGroupLayout`] by [`layout_stack_cap`].

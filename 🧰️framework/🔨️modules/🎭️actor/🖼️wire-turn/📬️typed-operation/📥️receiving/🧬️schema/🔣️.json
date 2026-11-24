@@ -11,7 +11,8 @@
     "steps",
     "cancellation",
     "denialAxes",
-    "cases"
+    "cases",
+    "minimumPresentationTurns"
   ],
   "properties": {
     "version": {
@@ -89,6 +90,10 @@
           "headerHex": "73656d696f2e74797065642d6f7065726174696f6e2d706167652e763100010000000700000000000000020000000000000003000000010000100000"
         }
       ]
+    },
+    "minimumPresentationTurns": {
+      "type": "integer",
+      "minimum": 1
     }
   }
 }

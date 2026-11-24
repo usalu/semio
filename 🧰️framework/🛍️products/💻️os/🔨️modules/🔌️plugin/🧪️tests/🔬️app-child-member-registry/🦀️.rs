@@ -257,11 +257,11 @@ mod child_member_registry_tests {
             assert_eq!(removed.progress().copied_bytes, remove_demand.copy_bytes);
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(registry.is_empty());
-            let backing_pointer = registry.slots.as_ptr();
+            let backing_demand = registry.empty_backing_byte_demand();
             let (denied, heap) = observe_heap_allocations_on_this_thread(|| {let denied_grant=RetainedCloneGrant { maximum_release_bytes: original_registry_bytes - 1, ..grant };let mut wallet=semio_framework_value::AuthoringWallet::new(denied_grant,64);wallet.run(denied_grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,true)).unwrap().unwrap().output.unwrap()});
             assert_eq!(denied.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            assert_eq!(registry.slots.as_ptr(), backing_pointer);
+            assert_eq!(registry.empty_backing_byte_demand(), backing_demand);
             let (backing, heap) = observe_heap_allocations_on_this_thread(|| {let mut wallet=semio_framework_value::AuthoringWallet::new(grant,64);wallet.run(grant,64,|effect|advance_original_child_root_retirement(&mut registry, &mut children, Some(&mut retiring), &ChildContentView::EMPTY, member, review, &mut cursor,effect,true)).unwrap().unwrap().output.unwrap()});
             assert!(backing.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, original_registry_bytes));
@@ -386,6 +386,30 @@ pub fn close_ingress(mut ingress: OwnedDocumentMemberIngress, grant: RetainedClo
             assert!(registry.take_at(index).is_some(), "one exact child owner detaches per cursor step");
         }
         assert!(registry.is_empty());
+    }
+
+    #[test]
+    fn fixed_child_member_registry_is_born_with_its_page_table_only_and_births_one_page_per_first_admission() {
+        use semio_plugin_ownership::bounded_ownership::EmptyBacking as _;
+        let page = 16 * std::mem::size_of::<std::mem::MaybeUninit<semio_plugin_child::ChildMemberEntry<store::NoMembers>>>();
+        let table = ChildMemberRegistry::<store::NoMembers>::birth_demands().unwrap().capacity_bytes;
+        assert!(table < page, "the birth quote is the page table, not the {CHILD_CONTENT_SLOTS} slot bodies");
+        let (mut registry, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(ChildMemberRegistry::<store::NoMembers>::new);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (table, 0));
+        let key = ("slot".to_string(), "child".to_string());
+        let (admission, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.admit(&key).expect("first admission"));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (page, 0), "the first admission births exactly its page");
+        registry.cancel_admission(&admission);
+        let mut turns = 0;
+        let mut released = 0;
+        while let Some(bytes @ 1..) = registry.release_bytes() {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: bytes, maximum_depth: 1, ..Default::default() };
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.release(grant).unwrap());
+            assert_eq!((step.progress().released_bytes, heap.requested_bytes, heap.released_bytes), (bytes, 0, bytes));
+            released += bytes;
+            turns += 1;
+        }
+        assert_eq!((turns, released), (2, page + table), "one release per resident page and one for the page table");
     }
 
     #[test]

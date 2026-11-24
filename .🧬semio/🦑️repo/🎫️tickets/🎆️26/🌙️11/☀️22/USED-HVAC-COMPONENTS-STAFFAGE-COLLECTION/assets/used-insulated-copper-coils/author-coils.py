@@ -44,6 +44,7 @@ HOIST_UP, LIFT_UP, TRAVERSE = 0.288, 0.5, 1.0
 TAIL_BEND = 60.0
 ROUTE = [0.0] * 6 + [30.0, 60.0] + [90.0] * 12 + [60.0, 30.0] + [0.0] * 17
 CLAMPS = [9, 13, 17, 25, 31, 36]
+TOUCHES = [(35, 22), (22, 34), (34, 21)]
 
 
 def t(en, de):
@@ -103,6 +104,20 @@ ROUTE_REL = [ROUTE[0]] + [ROUTE[k] - ROUTE[k - 1] for k in range(1, N)]
 OFFSETS = [r6(wrap(ROUTE_REL[k] - REL[k])) for k in range(N)]
 SEG = [f"seg-{k:02d}" for k in range(N)]
 ENDS = ((SEG[0], 0.0, -1.0, 0.0), (SEG[-1], S, math.cos(math.radians(TAIL_BEND)), math.sin(math.radians(TAIL_BEND))))
+
+
+def touch_strip(knee, chord, width=0.008):
+    """🤝 Where the knee of one turn lies against the next turn (3 mm of air or less, which the soft foam closes under the ties): a strip from the knee centre to 1 mm inside the foam of the other turn, in the frame of the knee's segment."""
+    (px, py), (ax, ay), (bx, by) = VERTS[knee], VERTS[chord], VERTS[chord + 1]
+    ex, ey = bx - ax, by - ay
+    f = max(0.0, min(1.0, ((px - ax) * ex + (py - ay) * ey) / (ex * ex + ey * ey)))
+    nx, ny = ax + f * ex - px, ay + f * ey - py
+    dist = math.hypot(nx, ny)
+    reach = dist - R_S + 0.001
+    a = math.radians(DIRS[knee])
+    ux, uy = (nx * math.cos(a) + ny * math.sin(a)) / dist, (-nx * math.sin(a) + ny * math.cos(a)) / dist
+    h = width / 2
+    return [(-uy * h, ux * h), (ux * reach - uy * h, uy * reach + ux * h), (ux * reach + uy * h, uy * reach - ux * h), (uy * h, -ux * h)]
 
 
 def tail_pt(end, along, across):
@@ -469,7 +484,9 @@ def line_shapes(scale, view):
     if view == "elevation" and scale == 100:
         for k in TIES[::2]:
             b = SEG[k]
-            out.append(shape(f"{b}-cable-tie", b, "detail", 4, False, 0.1, poly([(S / 2, -R_S), (S / 2, R_S)]), region="suction-line"))
+            out.append(shape(f"{b}-cable-tie", b, "texture", 4, False, 0.1, poly([(S / 2, -R_S), (S / 2, R_S)]), region="suction-line"))
+        for knee, chord in TOUCHES:
+            out.append(shape(f"{SEG[knee]}-turn-contact", SEG[knee], "body", 2 + knee * 0.001 + 0.0007, True, 0.16, poly(touch_strip(knee, chord), closed=True), region="suction-line", material="elastomer-foam"))
     return out
 
 
@@ -566,7 +583,7 @@ DECISIONS = {
     100: {
         "silhouette": t("The same coil at 7.4 mm across: the 39 segments of both insulated tubes with their knees, the copper tails at both ends drawn at their true diameter, the pallet with its three block rows drawn as stringers.", "Dieselbe Rolle mit 7,4 mm Durchmesser: die 39 Abschnitte beider gedämmten Rohre mit ihren Knicken, die Kupferenden an beiden Enden in wahrem Durchmesser, die Palette mit ihren drei Klotzreihen als Kufen gezeichnet."),
         "retained": t("Every second cable tie as a stroke across the pair.", "Jeder zweite Kabelbinder als Strich quer über das Paar."),
-        "merged": t("Each cross board and its three blocks are one stringer; the knees of the tubes are spheres of the tube diameter.", "Jedes Querbrett und seine drei Klötze sind eine Kufe; die Knicke der Rohre sind Kugeln vom Rohrdurchmesser."),
+        "merged": t("Each cross board and its three blocks are one stringer; the knees of the tubes are spheres of the tube diameter; at three knees by the hook that lie 3 to 4 mm from the next turn (0.03 mm on paper) the foam of the two turns is drawn touching.", "Jedes Querbrett und seine drei Klötze sind eine Kufe; die Knicke der Rohre sind Kugeln vom Rohrdurchmesser; an drei Knicken beim Haken, die 3 bis 4 mm vor der nächsten Windung liegen (0,03 mm auf Papier), ist die Dämmung beider Windungen berührend gezeichnet."),
         "omitted": t("Tie heads, crushed tips, knife cuts, creases, the tag and the pallet grain, stamp and nails.", "Binderköpfe, gequetschte Spitzen, Messerschnitte, Falten, der Anhänger sowie Maserung, Stempel und Nägel der Palette."),
         "thinElements": t("The copper tails keep their true diameters as slender parts (0.06 and 0.1 mm on paper).", "Die Kupferenden behalten als schlanke Teile ihre wahren Durchmesser (0,06 und 0,1 mm auf Papier)."),
         "hatching": t("No hatch.", "Keine Schraffur."),

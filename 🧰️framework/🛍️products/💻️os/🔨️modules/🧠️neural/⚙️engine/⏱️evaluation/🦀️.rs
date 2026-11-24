@@ -177,7 +177,7 @@ impl BudgetedEvalState{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.is_none()&&self.retirement.is_none()&&self.job.is_none()}
 }
-impl Drop for BudgetedEvalState{fn drop(&mut self){assert!(self.terminal_is_empty(),"original evaluation state must reach physical terminal emptiness");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
+impl Drop for BudgetedEvalState{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original evaluation state must reach physical terminal emptiness");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
 /// 🧹️ Owns a closing evaluation state as its retirement cursor.
 pub struct EvalRetirement(BudgetedEvalState);
 impl RetirementCursor for EvalRetirement{

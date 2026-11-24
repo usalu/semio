@@ -204,6 +204,12 @@ pub fn check_outline(section: &AluminiumSection, vertices: &[SectionVertex], ann
             out.push(torsion_info(section, &p, &k, annex));
         }
     }
+    if is_free(section) {
+        out.push(CheckResult::assess(format!("en1999.6.1.outline.match.{}", section.id), "DIN EN 1999-1-1", clause("6.1"), section_subject(section, "kind"), loc("Outline against the parametric section", "Umriss gegen den parametrischen Querschnitt"))
+            .annex(annex)
+            .not_applicable(loc("The polygon defines a free section, so there is no parametric section to compare it with.", "Das Polygon definiert einen freien Querschnitt, daher gibt es keinen parametrischen Querschnitt zum Vergleich."))
+            .build());
+    }
     if !is_free(section) {
         let parametric = part_1_1::section_geometry(section).0;
         if parametric > 0.0 {
@@ -262,14 +268,14 @@ fn free_uls(member: &AluminiumMember, section: &AluminiumSection, rs: &[Ring], p
     let n_t_rd = (props.a * fo / g1).min(0.9 * props.a * fu / g2);
     let n_c_rd = eff.a * fo / g1;
     let (n_abs, n_rd, title) = if n >= 0.0 { (n, n_t_rd, ("Tension resistance N_t,Rd (yield, net/HAZ ultimate)", "Zugwiderstand N_t,Rd (Fließen, Netto/WEZ-Bruch)")) } else { (-n, n_c_rd, ("Compression resistance N_c,Rd (A_eff, HAZ)", "Druckwiderstand N_c,Rd (A_eff, WEZ)")) };
-    let rem = leaf_remedies("members", &member.id, &member.actions, n_abs / n_rd.max(1e-18), &label, "Reduce the axial force", "Normalkraft senken", "nK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, n_abs / n_rd.max(1e-18), &label, "Reduce the axial force", "Normalkraft senken", &[("nK", n)]);
     push("en1999.6.2.3.n", "6.2.3", title, q_force(n_abs), q_force(n_rd), format!("N_Ed = {:.1} kN, N_t,Rd = {:.1} kN, N_c,Rd = {:.1} kN (A_eff = {:.1} mm², {el_class}){}", n / 1e3, n_t_rd / 1e3, n_c_rd / 1e3, eff.a * 1e6, tag("free outline")), path("nK"), rem);
     let w_y = if eff.class == part_1_1::SectionClass::Class4 { eff.wy } else { props.wy };
     let w_z = if eff.class == part_1_1::SectionClass::Class4 { eff.wz } else { props.wz };
     let (m_rd_y, m_rd_z) = (w_y * fo / g1, w_z * fo / g1);
-    let rem = leaf_remedies("members", &member.id, &member.actions, my.abs() / m_rd_y.max(1e-18), &label, "Reduce the strong-axis moment", "Moment um die starke Achse senken", "mYK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, my.abs() / m_rd_y.max(1e-18), &label, "Reduce the strong-axis moment", "Moment um die starke Achse senken", &[("mYK", my)]);
     push("en1999.6.2.5.m", "6.2.5", ("Bending resistance M_y,Rd", "Biegewiderstand M_y,Rd"), q_moment(my.abs()), q_moment(m_rd_y), format!("M_y,Ed = {:.2} kNm, elastic W = {:.0} mm³, M_y,Rd = {:.2} kNm{}", my / 1e3, w_y * 1e9, m_rd_y / 1e3, tag("free outline")), path("mYK"), rem);
-    let rem = leaf_remedies("members", &member.id, &member.actions, mz.abs() / m_rd_z.max(1e-18), &label, "Reduce the weak-axis moment", "Moment um die schwache Achse senken", "mZK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, mz.abs() / m_rd_z.max(1e-18), &label, "Reduce the weak-axis moment", "Moment um die schwache Achse senken", &[("mZK", mz)]);
     push("en1999.6.2.5.mz", "6.2.5", ("Bending resistance M_z,Rd", "Biegewiderstand M_z,Rd"), q_moment(mz.abs()), q_moment(m_rd_z), format!("M_z,Ed = {:.2} kNm, elastic W = {:.0} mm³, M_z,Rd = {:.2} kNm{}", mz / 1e3, w_z * 1e9, m_rd_z / 1e3, tag("free outline")), path("mZK"), Vec::new());
     let k_sup = match member.support { SupportCondition::Continuous => 0.7, SupportCondition::Cantilever => 2.0, SupportCondition::SimplySupported => 1.0 };
     let pick = |l: f64| if l > 0.0 { l } else { k_sup * member.length };
@@ -279,7 +285,7 @@ fn free_uls(member: &AluminiumMember, section: &AluminiumSection, rs: &[Ring], p
         let lam = part_1_1::lambda_bar(l, i, eff.a, fo);
         let kc = part_1_1::kappa(1.0, lam) * part_1_1::chi_from_lambda(lam, alpha, lambda_0);
         let n_b = omega(kc, l) * kc * eff.a * fo / g1;
-        let rem = leaf_remedies("members", &member.id, &member.actions, nc / n_b.max(1e-18), &label, &format!("Reduce the compression force (flexural buckling about {axis})"), &format!("Druckkraft senken (Biegeknicken um {axis})"), "nK");
+        let rem = leaf_remedies("members", &member.id, &member.actions, nc / n_b.max(1e-18), &label, &format!("Reduce the compression force (flexural buckling about {axis})"), &format!("Druckkraft senken (Biegeknicken um {axis})"), &[("nK", n.min(0.0))]);
         push(id, "6.3.1.1", if axis == "y" { ("Flexural buckling N_b,Rd,y", "Biegeknicken N_b,Rd,y") } else { ("Flexural buckling N_b,Rd,z", "Biegeknicken N_b,Rd,z") }, q_force(nc), q_force(n_b), format!("λ̄_{axis} = {lam:.4}, N_b,Rd,{axis} = {:.1} kN (A_eff = {:.1} mm², L_cr = {l:.2} m){}", n_b / 1e3, eff.a * 1e6, tag("free outline")), format!("members[id={}].{len_field}", member.id), rem);
     }
     if let Some(k) = constants {

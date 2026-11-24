@@ -19,6 +19,12 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// A folder attach is remembered for this device (`os.config.local-folders`) and, natively, the folder's archive is
     /// restored into the program like a fresh load.
     pub async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
+        self.attach_sync_backbone_as(uri, None).await
+    }
+
+    /// 🔗️ [`Self::attach_sync_backbone`] under a remembered document: a folder reconnect names the document the folder
+    /// holds, so a program minting a fresh identity per boot adopts it and later edits persist under the same lane.
+    pub async fn attach_sync_backbone_as(&mut self, uri: String, remembered_document_id: Option<String>) -> Result<(), String> {
         let session = self.docs.session.clone().ok_or("session missing")?;
         let (document_id, bindings, surface) = match parse_remote_backbone_uri(&uri) {
             Some(remote) => {
@@ -26,11 +32,14 @@ impl<'ctx> ActionsCtx<'ctx> {
                 (remote.document_id, vec![PersistenceBinding::Hub { base_url: format!("http://{}", remote.host_port), space_id: remote.space_id, surface: Some(surface.clone()) }], Some(surface))
             }
             None => {
-                let Some(identity) = self.docs.sync_program_identity() else {
+                let Some(mut identity) = self.docs.sync_program_identity() else {
                     let text = local_folder_text(LocalFolderText::Unidentified, "", self.prefs.active_locale());
                     self.chrome.show_transient_notice(text, semio_framework::Severity::Warning, Some(SYNC_DOCUMENT_UNIDENTIFIED_CODE));
                     return Ok(());
                 };
+                if let Some(document_id) = sync_attach_document_id(remembered_document_id.as_deref(), Some(identity.document_id.as_str())) {
+                    identity.document_id = document_id;
+                }
                 #[cfg(target_arch = "wasm32")]
                 if !SHELL_DOCUMENT_TRANSPORTS.folder && is_host_route_uri(&uri) {
                     return self.as_window_actions().attach_host_route_backbone(uri, identity).await;

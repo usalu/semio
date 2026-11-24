@@ -29,6 +29,7 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block5dSnapshot>, _cfg: &ConfigView<'_, Block5dConfig>) -> Result<Emit<Block5dMutation, Block5dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
+        "" => Some(Block5dSnapshot::default()),
         BLOCK5D_EXAMPLE_FOREST_LEFT => semio_s_artifact_block_5d_io::text::snapshot::parse_dsl(semio_s_artifact_block_5d_io::text::snapshot::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         BLOCK5D_EXAMPLE_CAPSULE => semio_s_artifact_block_5d_io::text::snapshot::parse_dsl(semio_s_artifact_block_5d_io::text::snapshot::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
         _ => None,

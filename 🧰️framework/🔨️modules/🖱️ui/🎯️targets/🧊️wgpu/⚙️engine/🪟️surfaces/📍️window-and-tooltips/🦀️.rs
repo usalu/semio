@@ -116,7 +116,7 @@ pub struct UiWindow {
     pub candidate_scene_retirements: VecDeque<UiRetiredComponentScene>,
     pub accepted_scene_retirements: VecDeque<UiRetiredComponentScene>,
     pub component_mount_generation: u64,
-    pub paint_frame: Option<RetainedPaintFrame>,
+    pub paint_frame: Option<Box<RetainedPaintFrame>>,
     pub retiring_draw: Option<DrawList>,
     pub paint_census: UiFramePaintCensus,
     /// 🎯️ Every interactive node of the last published paint, at the rect that paint drew it at.

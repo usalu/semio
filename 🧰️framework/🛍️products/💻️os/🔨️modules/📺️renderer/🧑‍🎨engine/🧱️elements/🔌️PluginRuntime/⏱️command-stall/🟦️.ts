@@ -10,8 +10,8 @@ import contract from "./🔣️.json" with { type: "json" };
 //#region 🧬️Contract
 export const COMMAND_STALL_CONTRACT_V1 = contract;
 
-/** 🏷️ What one watched turn is: the actor lane it holds, the program and the command the person asked for. */
-export type CommandStallLabelV1 = Readonly<{ actorId: string; programId: string; commandId: string | null }>;
+/** 🏷️ What one watched turn is: the actor lane it holds, the program and the command the person asked for. `operation` names the kind of input when it is no declared command (`media-in`, `config-command`, ...) and `stage` reads where the turn is right now (offered ingress page, continuation count and guest status, acknowledgement settle), so a held lane says what it waits for. */
+export type CommandStallLabelV1 = Readonly<{ actorId: string; programId: string; commandId: string | null; operation?: string; stage?: () => string }>;
 
 /** 🚧️ One turn that has held its lane past the bound. */
 export type CommandStallV1 = CommandStallLabelV1 & Readonly<{ id: number; startedAtMs: number }>;
@@ -61,7 +61,7 @@ export function createCommandStallWatchV1(clock: CommandStallClockV1, boundMs: n
       const stall: CommandStallV1 = Object.freeze({ ...label, id: nextId, startedAtMs: clock.now() });
       const timer = clock.setTimer(() => {
         if (!cancellers.has(stall.id)) return;
-        console.warn(`[os-shell] command stalled: ${stall.programId} ${stall.commandId ?? "interaction"} has held ${stall.actorId}'s lane for ${boundMs} ms`);
+        console.warn(`[os-shell] command stalled: ${stall.programId} ${stall.commandId ?? "interaction"} has held ${stall.actorId}'s lane for ${boundMs} ms (operation: ${stall.commandId ?? stall.operation ?? "unnamed"}, stage: ${stall.stage?.() ?? "unreported"})`);
         publish([...current, stall]);
       }, boundMs);
       const cancelled = new Promise<never>((_, reject) => cancellers.set(stall.id, () => reject(new CommandCancelledErrorV1(stall))));
@@ -105,6 +105,19 @@ export function commandStallBandTextV1(programLabel: string, commandLabel: strin
     .replace("{program}", programLabel)
     .replace("{command}", commandLabel ?? text(contract.labels.interaction, locale))
     .replace("{seconds}", new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(seconds));
+}
+
+/** 🛑️ The localized sentence for the reactor's `plugin.command-stalled` fault (a command that stayed pending without consuming work or changing stage for the contract's turn bound). The turn pump has no display locale, so its thrown message carries the code and both languages; the shell renders [`commandStalledTextV1`] in the person's own language. */
+export function commandStalledTextV1(program: string, operation: string, locale: string): string {
+  return text(contract.labels.stalledFault, locale).replace("{program}", program).replace("{operation}", operation);
+}
+
+export function commandStalledMessageV1(program: string, operation: string): string {
+  return `${contract.stalledFaultCode}: ${commandStalledTextV1(program, operation, "en")} / ${commandStalledTextV1(program, operation, "de")}`;
+}
+
+export function isCommandStalledFaultV1(display: string): boolean {
+  return display.includes(contract.stalledFaultCode);
 }
 
 export function commandStallCancelTextV1(locale: string): string {

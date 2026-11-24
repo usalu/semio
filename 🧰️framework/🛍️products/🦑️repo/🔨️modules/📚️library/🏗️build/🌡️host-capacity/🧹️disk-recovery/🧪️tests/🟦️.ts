@@ -27,7 +27,7 @@ import {runCacheLedgerCommandV1} from "../../../🧹️cache-gc/⌨️command/�
 
 const GIB=1024**3,roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"disk-recovery-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
-const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
+const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,capShortfallBytes:0,partitionShortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
 
 class Volume{free:number;constructor(readonly total:number,free:number,readonly partition="/"){this.free=free;}facts=():DiskFactsV1=>({partition:this.partition,totalBytes:this.total,freeBytes:this.free});}
 const row=(id:string,priority:number,patch:Partial<DiskWriterRowV1>={}):DiskWriterRowV1=>({id,priority,class:"derivable",relief:"host",root:"/"+id,collector:"age-prune",command:"repo cache gc --area="+id,bound:{en:"b",de:"b"},...patch});

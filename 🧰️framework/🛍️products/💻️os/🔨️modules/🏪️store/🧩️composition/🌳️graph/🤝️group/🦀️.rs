@@ -125,7 +125,7 @@ impl GroupOwnsPreparation {
 }
 
 impl Drop for GroupOwnsPreparation {
-    fn drop(&mut self) { assert!(self.terminal_is_empty(), "ownership group retains its root and physical owners until bounded close"); }
+    fn drop(&mut self) { assert!(std::thread::panicking()||(self.terminal_is_empty()), "ownership group retains its root and physical owners until bounded close"); }
 }
 
 impl CompositionGraph {

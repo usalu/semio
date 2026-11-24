@@ -139,6 +139,12 @@ describe("🎞️ assignments and learning clips on the home overview", () => {
     const soon = document.querySelector<HTMLElement>('[data-card="clip:clip-soon"]')!;
     expect(soon.querySelector("[data-clip-state='soon']")?.textContent?.trim()).toBe("Coming soon");
     expect(soon.querySelector("a[target]")).toBeNull();
+    expect(soon.querySelector("[data-clip-poster][data-unavailable] [data-course-unavailable-tint]"), "a clip not hosted yet shows its poster tinted").not.toBeNull();
+    for (const clip of clips) {
+      const card = document.querySelector<HTMLElement>(`[data-card="clip:${clip.id}"]`)!;
+      expect(card.textContent, "a clip card holds its poster and chips, not its description").not.toContain(clip.description.en);
+      expect(card.querySelector("[data-clip-poster]")!.hasAttribute("data-unavailable"), clip.id).toBe(clip.urls?.en === undefined);
+    }
   });
 
   it("links a clip to its hosted address for the learner's language in a tab of its own, else says it is coming soon", () => {

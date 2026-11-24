@@ -29,6 +29,7 @@ fn document(generation: u64, surface: &str) -> UiDocumentLease {
 
 #[test]
 fn shell_ninth_document_and_nonterminal_first_close_remain_in_qualified_retirement() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let first = document(90_001, "shell.retirement.first");
     let mut owners = UiFixedList::<UiDocumentLease, 9>::default();
     for _ in 0..7 {
@@ -53,6 +54,7 @@ fn shell_ninth_document_and_nonterminal_first_close_remain_in_qualified_retireme
 
 #[test]
 fn shell_absolute_refusal_returns_the_exact_max_plus_one_owner_before_mutation() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut owners = UiFixedList::<UiDocumentLease, SHELL_DOCUMENT_RETIREMENT_CAPACITY>::default();
     for ordinal in 0..UI_DOCUMENT_LEASE_SLOTS {
         let primary = document(90_100 + ordinal as u64, &format!("shell.retirement.absolute-{ordinal}"));
@@ -83,6 +85,7 @@ fn shell_absolute_refusal_returns_the_exact_max_plus_one_owner_before_mutation()
 
 #[test]
 fn sparse_occupied_index_preserves_cursor_vacancy_epoch_and_terminal_ownership() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = index_fixture();
     assert_eq!(SHELL_DOCUMENT_RETIREMENT_CAPACITY, fixture["capacity"].as_u64().unwrap() as usize);
     assert_eq!(SHELL_DOCUMENT_RETIREMENT_WORD_BITS, fixture["wordBits"].as_u64().unwrap() as usize);

@@ -1,10 +1,6 @@
 //! 🧪️ Independent serde codec oracle of the semantic camera cache (test and testing feature only).
 
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
-use crate::standards::v2_0::subsets::any::schema::snapshot_root::STDIO_GLTF_DOCUMENT_SCHEMA;
-use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 impl Serialize for GltfCameraProjection {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

@@ -38,22 +38,27 @@ export function useReleaseClock(course: CourseView | undefined, now: () => numbe
   return at;
 }
 
-/** 🔒️ Keeps a locked preview rendered behind a theme-aware tint with no operable descendants; the gate is its own stacking context, so the tint never covers the footer chips of a neighbouring card that share its seam. */
+/** 🌫️ The tint every content that is not available yet wears, over the content it leaves loaded and visible beneath: the one look of a locked page, a locked task and a clip that is not hosted yet. */
+export function UnavailableTint(props: { readonly children?: ReactNode }): ReactNode {
+  return <div data-course-unavailable-tint="" className={`course-access-tint absolute inset-0 z-10 flex items-center justify-center bg-background/60 p-double text-foreground ${props.children === undefined ? "pointer-events-none" : "pointer-events-auto"}`}>{props.children}</div>;
+}
+
+/** 🔒️ Keeps a locked preview rendered exactly as its unlocked self (the same card filling the same cell, with the same chips) behind a theme-aware tint with no operable descendants; the gate is its own stacking context, so the tint never covers the footer chips of a neighbouring card that share its seam. */
 export function AccessGate(props: { readonly course: CourseView | undefined; readonly page: string; readonly task?: string; readonly at: number; readonly locale: CourseLocale; readonly text: CourseText; readonly children: ReactNode }): ReactNode {
   if (clientAccess(props.course, props.page, props.at, props.task)) return props.children;
   const release = props.course === undefined ? undefined : courseRelease(props.course, props.page, props.task);
   const date = release == null || !Number.isFinite(new Date(release).getTime()) ? undefined : new Intl.DateTimeFormat(props.locale, { dateStyle: "medium", timeStyle: "short" }).format(release);
   return (
-    <div data-course-locked={props.task === undefined ? props.page : `${props.page}/${props.task}`} className="course-access-gate relative h-full min-h-0 w-full" style={{ isolation: "isolate" }}>
-      <div inert aria-hidden="true" className="course-access-preview h-full pointer-events-none select-none" onClickCapture={(event) => { event.preventDefault(); event.stopPropagation(); }} onKeyDownCapture={(event) => { event.preventDefault(); event.stopPropagation(); }}>{props.children}</div>
-      <div className="course-access-tint pointer-events-auto absolute inset-0 z-10 flex items-center justify-center bg-background/80 p-double text-foreground">
+    <div data-course-locked={props.task === undefined ? props.page : `${props.page}/${props.task}`} className="course-access-gate relative flex h-full min-h-0 w-full flex-1 flex-col" style={{ isolation: "isolate" }}>
+      <div inert aria-hidden="true" className="course-access-preview flex min-h-0 flex-1 flex-col pointer-events-none select-none" onClickCapture={(event) => { event.preventDefault(); event.stopPropagation(); }} onKeyDownCapture={(event) => { event.preventDefault(); event.stopPropagation(); }}>{props.children}</div>
+      <UnavailableTint>
         <SharedBorderRow role="status" className="bg-background">
           <SharedBorderRowCell className="flex items-center gap-single px-double py-single text-sm">
             <Icon icon="lock" size="small" />
             {date === undefined ? props.text("course.access.locked") : props.text("course.access.opens", { date })}
           </SharedBorderRowCell>
         </SharedBorderRow>
-      </div>
+      </UnavailableTint>
     </div>
   );
 }

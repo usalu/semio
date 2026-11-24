@@ -211,7 +211,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
 async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
     let base = app.snapshot().expect("projection");
-    context::dispatch(&mut app, En1997Command::SetField(set_field::SetField { path: "designApproach".into(), value_json: "\"wave3\"".to_string() })).await;
+    context::dispatch(&mut app, En1997Command::SetField(set_field::SetField { path: "designApproach".into(), value_json: "\"da3\"".to_string() })).await;
     let edited = app.snapshot().expect("projection");
     assert_ne!(edited, base, "the concrete setter moved the document");
     semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_plugin::artifact_app_laws::meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
@@ -240,9 +240,9 @@ async fn report_out_exports_the_computed_check_report() {
 #[semio_framework_async_macros::async_test]
 async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, En1997Command::SetField(set_field::SetField { path: "designApproach".into(), value_json: "\"wave3\"".into() })).await;
+    context::dispatch(&mut app, En1997Command::SetField(set_field::SetField { path: "designApproach".into(), value_json: "\"da3\"".into() })).await;
     let edited = app.snapshot().expect("projection");
-    let expected = semio_s_artifact_norm_en1997_inferences::evaluate(&edited);
+    let expected = semio_s_plugin_norm_compliance::incremental_evaluation::owned::<En1997Family>(&edited, semio_s_artifact_norm_en1997_inferences::evaluate(&edited));
     assert_eq!(*<En1997Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold");
     let worst = expected.checks.iter().max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("the edited document still has checks");
     let rendered = context::render(&mut app, checks::BODY_CHECKS).await;

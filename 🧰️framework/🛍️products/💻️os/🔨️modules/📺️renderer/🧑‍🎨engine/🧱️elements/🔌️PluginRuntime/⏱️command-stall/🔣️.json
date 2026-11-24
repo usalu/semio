@@ -2,9 +2,11 @@
   "schema": "semio.os.command-stall/v1",
   "stallBoundMs": 5000,
   "cancelledFault": "plugin.command-cancelled",
+  "stalledFaultCode": "plugin.command-stalled",
   "labels": {
     "band": { "en": "{program} has not answered “{command}” for {seconds} s — later input waits for it.", "de": "{program} antwortet seit {seconds} s nicht auf „{command}“ — spätere Eingaben warten darauf." },
     "interaction": { "en": "an interaction", "de": "eine Interaktion" },
+    "stalledFault": { "en": "{program} accepted “{operation}” but made no progress, so the command was stopped. Nothing was changed.", "de": "{program} hat „{operation}“ angenommen, aber keinen Fortschritt gemacht; der Befehl wurde abgebrochen. Es wurde nichts verändert." },
     "cancel": { "en": "Cancel command", "de": "Befehl abbrechen" }
   }
 }

@@ -29,7 +29,7 @@ pub fn window_definition() -> WindowKindDefinition {
         definition
     };
     definition.actions.extend([
-        action("replace-page-text", "Replace Page Text", "Seitentext ersetzen", vec![ActionArgDef::index("page", LocalizedLabel::native("Page", "Seite")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).required(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()]),
+        action("replace-page-text", "Replace Page Text", "Seitentext ersetzen", vec![ActionArgDef::index("page", LocalizedLabel::native("Page index", "Seitenindex")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).required(), ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).required()]),
     ]);
     definition
 }

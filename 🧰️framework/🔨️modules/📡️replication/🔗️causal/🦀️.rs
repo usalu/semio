@@ -151,8 +151,8 @@ impl<T> MutationDagFixedSlots<T> {
 
     fn new() -> Self {
         let free = (0..MUTATION_DAG_CAPACITY).rev().map(|slot| slot as u16).collect::<Vec<_>>().into_boxed_slice();
-        Self {
-            slots: (0..MUTATION_DAG_PAGE_COUNT).map(|_| Some(Box::new([const { std::mem::MaybeUninit::<T>::uninit() }; MUTATION_DAG_PAGE_SLOTS]))).collect::<Vec<_>>().into_boxed_slice(),
+        let born = Self {
+            slots: (0..MUTATION_DAG_PAGE_COUNT).map(|_| None).collect::<Vec<_>>().into_boxed_slice(),
             close_page: 0,
             generations: vec![0; MUTATION_DAG_CAPACITY].into_boxed_slice(),
             occupied: vec![false; MUTATION_DAG_CAPACITY].into_boxed_slice(),
@@ -163,19 +163,23 @@ impl<T> MutationDagFixedSlots<T> {
             head: MUTATION_DAG_SLOT_NONE,
             tail: MUTATION_DAG_SLOT_NONE,
             len: 0,
-        }
+        };
+        semio_framework_value::birth_ledger::record_original_birth(born.backing_bytes());
+        born
+    }
+
+    fn backing_bytes(&self)->usize{
+        self.slots.iter().flatten().count()*size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>()+size_of_val(&*self.slots)+size_of_val(&*self.generations)+size_of_val(&*self.occupied)+size_of_val(&*self.next)+size_of_val(&*self.previous)+size_of_val(&*self.free)
     }
 
     fn birth_bytes(&self)->usize{
         if self.slots.is_empty(){return MUTATION_DAG_PAGE_COUNT*std::mem::size_of::<Option<Box<[std::mem::MaybeUninit<T>;MUTATION_DAG_PAGE_SLOTS]>>>()}
-        if self.slots.iter().any(Option::is_none){return std::mem::size_of::<[std::mem::MaybeUninit<T>;MUTATION_DAG_PAGE_SLOTS]>()}
         if self.generations.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<u32>()}
         if self.occupied.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<bool>()}
         if self.next.is_empty()||self.previous.is_empty()||self.free.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<u16>()}0
     }
     fn admit_backing(&mut self){
         if self.slots.is_empty(){self.slots=(0..MUTATION_DAG_PAGE_COUNT).map(|_|None).collect::<Vec<_>>().into_boxed_slice();}
-        else if let Some(slot)=self.slots.iter_mut().find(|slot|slot.is_none()){*slot=Some(Box::new([const{std::mem::MaybeUninit::<T>::uninit()};MUTATION_DAG_PAGE_SLOTS]));}
         else if self.generations.is_empty(){self.generations=vec![0;MUTATION_DAG_CAPACITY].into_boxed_slice();}
         else if self.occupied.is_empty(){self.occupied=vec![false;MUTATION_DAG_CAPACITY].into_boxed_slice();}
         else if self.next.is_empty(){self.next=vec![MUTATION_DAG_SLOT_NONE;MUTATION_DAG_CAPACITY].into_boxed_slice();}
@@ -188,7 +192,30 @@ impl<T> MutationDagFixedSlots<T> {
     }
 
     fn slot_mut(&mut self, slot: usize) -> &mut std::mem::MaybeUninit<T> {
-        &mut self.slots[slot / MUTATION_DAG_PAGE_SLOTS].as_mut().expect("causal page remains retained")[slot % MUTATION_DAG_PAGE_SLOTS]
+        let page = self.slots[slot / MUTATION_DAG_PAGE_SLOTS].get_or_insert_with(|| {
+            semio_framework_value::birth_ledger::record_original_birth(size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>());
+            Box::new([const { std::mem::MaybeUninit::<T>::uninit() }; MUTATION_DAG_PAGE_SLOTS])
+        });
+        &mut page[slot % MUTATION_DAG_PAGE_SLOTS]
+    }
+
+    /// 📏️ The one slot page the next push needs and does not yet own; zero while that page is resident or the metadata is unborn.
+    fn next_push_page_bytes(&self) -> usize {
+        if self.free_len == 0 || self.free.is_empty() || self.slots.is_empty() { return 0; }
+        let slot = usize::from(self.free[self.free_len - 1]);
+        if self.slots[slot / MUTATION_DAG_PAGE_SLOTS].is_none() { size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { 0 }
+    }
+
+    /// 🎟️ Births the page [`Self::next_push_page_bytes`] quoted.
+    fn admit_next_push_page(&mut self) {
+        if self.next_push_page_bytes() == 0 { return; }
+        let slot = usize::from(self.free[self.free_len - 1]);
+        let _ = self.slot_mut(slot);
+    }
+
+    /// 📄️ Slot pages currently resident.
+    fn resident_pages(&self) -> usize {
+        self.slots.iter().flatten().count()
     }
 
     fn backing_is_empty(&self) -> bool {
@@ -438,6 +465,25 @@ impl MutationDag {
     /// 🪹️ An allocation-free terminal shell for granted transfer of the original causal owner.
     pub fn empty() -> Self {
         Self { original_seed_stage:None,original_seed_epoch:0,envelopes: MutationDagFixedSlots::empty(), applied: MutationDagFixedSlots::empty(), drained: 0, pending: MutationDagFixedSlots::empty() }
+    }
+
+    /// 📏️ Quotes the slot page the next applied identity needs when it is not resident yet.
+    pub fn original_seed_page_demands(&self) -> semio_framework_value::RetirementDemand {
+        let capacity_bytes = self.applied.next_push_page_bytes();
+        semio_framework_value::RetirementDemand { capacity_bytes, depth: usize::from(capacity_bytes != 0), ..Default::default() }
+    }
+
+    /// 🎟️ Births the applied slot page [`Self::original_seed_page_demands`] quoted under the caller's grant.
+    pub fn admit_original_seed_page_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedCloneProgress {
+        let d = self.original_seed_page_demands();
+        if d.capacity_bytes == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, d) { return Default::default(); }
+        self.applied.admit_next_push_page();
+        semio_framework_value::RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: d.capacity_bytes, ..Default::default() }
+    }
+
+    /// 📄️ Slot pages resident across the three tables.
+    pub fn resident_pages(&self) -> usize {
+        self.envelopes.resident_pages() + self.applied.resident_pages() + self.pending.resident_pages()
     }
 
     /// 📏️ Quotes one actual original causal page or fixed metadata allocation.

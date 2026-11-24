@@ -1,0 +1,58 @@
+{
+  "title": "Pets Roam the Consolidated Borders",
+  "emoji": "🐾",
+  "status": "closed",
+  "description": "The course pets used to jump between UI elements of the old layout, which the consolidated-border design no longer has. New logic: pets move around the empty areas of the UI, walk on top of border lines, climb, use a ladder, fire a grappling hook to reach a level higher, and may try to steal a chip.",
+  "summary": "Pets no longer line up on the footer: the survey can treat a surface as a frame around open room, the course names its ground as border lines (card frames, the chips at a card's foot, the footer line), a press on a pet inside an overview card is the pet's, the label of a topic card's title chip is what that topic's pet may try to steal, and the reserved strip above the footer is gone. Survey vectors (Python reference extended) 71 of 71; course pets suites pass; three Playwright pets specs pass on the release rehearsal. Open: travel between levels on the overview and an actual chip theft were not observed, a title label is rarely reachable for the prank and carrying a chip away is not built, mischief on a quiz page never starts because rows span the whole stage, and most of the pets Playwright project was not rerun. Details: 🐾️pets-on-border-lines.md.",
+  "goal": "runningproducts",
+  "sessions": [
+    "719bce11-7839-4d70-9dda-1a6736847b70"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 04:45:10",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The course pets used to jump between UI elements of the old layout, which the consolidated-border design no longer has. New logic: pets move around the empty areas of the UI, walk on top of border lines, climb, use a ladder, fire a grappling hook to reach a level higher, and may try to steal a chip.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 05:29:11",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Pets no longer line up on the footer: the survey can treat a surface as a frame around open room, the course names its ground as border lines (card frames, the chips at a card's foot, the footer line), a press on a pet inside an overview card is the pet's, the label of a topic card's title chip is what that topic's pet may try to steal, and the reserved strip above the footer is gone. Survey vectors (Python reference extended) 71 of 71; course pets suites pass; three Playwright pets specs pass on the release rehearsal. Open: travel between levels on the overview and an actual chip theft were not observed, a title label is rarely reachable for the prank and carrying a chip away is not built, mischief on a quiz page never starts because rows span the whole stage, and most of the pets Playwright project was not rerun. Details: 🐾️pets-on-border-lines.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️🐕️petwalk🗃️🧰️petkit💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🐾️pets🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📡️survey💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🐾️pets🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🫧️layer💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🐾️pets🗃️🧪️tests🗃️📡️surfacesurvey🗃️🟣️harness💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️🐾️pets🗃️🧪️tests🗃️🧫️fixtures🗃️📡️surfacesurvey⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️⚖️footerandforcedcolors💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🐾️pets🗃️🎪️stage💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🪟️chrome💻🟦️"
+        }
+      ]
+    }
+  ]
+}

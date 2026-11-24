@@ -145,6 +145,68 @@
           "minimum": 1,
           "maximum": 100
         },
+        "imageShards": {
+          "description": "Splits the partition into one image per key, each at most the platform maximum of the image shard protocol (macOS returns freed blocks of a mounted image only up to 2^35 bytes). `enabled: false` keeps the partition one image. Mirrors `Rule` of the image shard schema; a test proves both validate the same policy.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "roots",
+            "headroomPercent",
+            "hostFreeReservePercent"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "maximumImageBytes": {
+              "type": "integer",
+              "minimum": 1073741824,
+              "maximum": 137438953472
+            },
+            "headroomPercent": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "hostFreeReservePercent": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 99
+            },
+            "roots": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "prefix",
+                  "pattern",
+                  "needBytes"
+                ],
+                "properties": {
+                  "prefix": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "pattern": "^([A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*)?$"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "needBytes": {
+                    "type": "integer",
+                    "minimum": 1048576,
+                    "maximum": 137438953472
+                  }
+                }
+              }
+            }
+          }
+        },
         "needBytes": {
           "description": "The capacity a new fixed image must at least get per host platform, whatever share of the host it would otherwise be cut down to: what its writers need (for the dependencies image the package cache, scratch space and the installed generations plus one building set of the platform's install backend, divided by what the ledger leaves the store beside its nested areas); a host that cannot give it is refused before the image is born.",
           "type": "object",

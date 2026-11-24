@@ -237,15 +237,15 @@ impl<T:'static,E:'static> OriginalEffectProducer for AnyTurn<T,E>{
  fn receive<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,T,E>)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>where 'b:'a{(c.call)(effect,reply,false)}
  fn recover<'r,'a,'b>(&mut self,c:&mut Self::Context<'a,'b>,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,T,E>)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>where 'b:'a{(c.call)(effect,reply,true)}
 }
-/// 🧵️ Runs one reply-shaped call under a real original action, re-entering it as recovery after every Pending, and returns its recorded reply with the work it performed.
-pub fn drive_reply<T:'static,E:'static>(grant:RetainedCloneGrant,units:u64,progress:impl Fn(&Result<T,E>)->RetainedCloneProgress,mut call:impl for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,T,E>,bool)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>)->RetainedWorkOutcome<T,E>{
+/// 🧵️ Runs one reply-shaped call under a real original action, re-entering it as recovery after every Pending, and returns its recorded reply with the work it performed; a callback that refuses with a plain error records that error as the reply, so the resident action always finishes before the thread's bank drops.
+pub fn drive_reply<T:'static,E:'static+From<ValueError>>(grant:RetainedCloneGrant,units:u64,progress:impl Fn(&Result<T,E>)->RetainedCloneProgress,mut call:impl for<'r> FnMut(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,T,E>,bool)->Result<OriginalEffectReplyComplete<'r,T,E>,ValueError>)->RetainedWorkOutcome<T,E>{
  BANK.with(|cell|{
   let mut slot=cell.borrow_mut();let bank=slot.get_or_insert_with(fresh);
   let source=bank.source_witness().identity();let mut authority=OriginalEffectAuthority::new(AnyTurn::<T,E>(source,std::marker::PhantomData));let mut context=AnyFrame{call:&mut call};
   let(mut action,mut output)=(None,None);let before=*bank.wallet().original_work();let mut heap=(0usize,0usize);
   let mut complete=false;
   for _ in 0..4096{
-   let(poll,observed)=measure(bank,grant,units,&mut |effect|{let start=effect.performed_boundary();let ready=authority.drive(&mut context,effect,&mut action).unwrap();let work=effect.performed_since(start).unwrap();if ready{RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})}else{RetainedWorkPoll::Pending{work}}});
+   let(poll,observed)=measure(bank,grant,units,&mut |effect|{let start=effect.performed_boundary();let ready=match authority.drive(&mut context,effect,&mut action){Ok(ready)=>ready,Err(error)=>{action.as_mut().expect("a refused reply-shaped call keeps its resident action").restore_reply(Err(error.into()));authority.drive(&mut context,effect,&mut action).unwrap()}};let work=effect.performed_since(start).unwrap();if ready{RetainedWorkPoll::Complete(RetainedWorkOutcome::<(),ValueError>{result:Ok(()),work})}else{RetainedWorkPoll::Pending{work}}});
    heap.0+=observed.0;heap.1+=observed.1;
    if matches!(poll,RetainedWorkPoll::Pending{..}){continue}
    let progress=progress(&action.as_ref().unwrap().recorded_reply().unwrap());

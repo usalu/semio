@@ -59,7 +59,7 @@ async fn open_native_file(
     folder: PathBuf, source: Option<PathBuf>, cancel: CancelToken, progress: Arc<AtomicU8>,
 ) -> Result<Option<NativeOpenedFile>, String> {
     if cancel.is_cancelled_now() { return Ok(None); }
-    let extension = declaration.extension().ok_or("Open File has no declared extension")?;
+    let extension = declaration.extension().ok_or("open-file.no-declared-extension")?;
     let Some(path) = (match source {
         Some(path) => Some(path),
         None => ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open([extension], false)).await.into_iter().next(),
@@ -79,7 +79,7 @@ async fn open_native_file(
             }),
         ).await?;
         if imported.is_none() { return Ok(None); }
-        retained.ok_or("Open File lost the natural source instance")?
+        retained.ok_or("open-file.lost-source-instance")?
     } else {
         let maximum_bytes = declaration.natural_file_payload_limit().await?;
         let Some(bytes) = read_selected_file(&path, maximum_bytes, || cancel.is_cancelled_now()).await? else { return Ok(None); };
@@ -93,10 +93,10 @@ async fn open_native_file(
     let instance = opened.instance;
     if cancel.is_cancelled_now() { return Ok(None); }
     let owner = opened.program.read_app_document_identity(instance).await.map_err(|error| error.to_string())?;
-    let document = owner.parent_document_id.as_deref().ok_or("Open File did not create a document identity")?;
+    let document = owner.parent_document_id.as_deref().ok_or("open-file.no-document-identity")?;
     let archive = opened.program.read_app_document_archive(instance).await.map_err(|error| error.to_string())?;
     let schema = opened.program.manifest.apps.iter().find(|candidate| candidate.id == app)
-        .map(|candidate| candidate.io.artifact_schema.as_str()).ok_or("Open File lost its declared editor")?;
+        .map(|candidate| candidate.io.artifact_schema.as_str()).ok_or("open-file.lost-declared-editor")?;
     let encoded = protocol::encode_document_archive_bytes(&archive).map_err(|error| error.to_string())?;
     if cancel.is_cancelled_now() || opened.program.read_app_document_identity(instance).await.map_err(|error| error.to_string())? != owner {
         return Ok(None);
@@ -106,7 +106,7 @@ async fn open_native_file(
     storage.create_archive_if_absent(document, schema, &encoded).await.map_err(|error| error.to_string())?;
     let readback = storage.archive_matches(document, &encoded, || cancel.is_cancelled_now());
     if cancel.is_cancelled_now() { return Ok(None); }
-    if !readback.map_err(|error| error.to_string())? { return Err("Open File could not verify the local document archive".into()); }
+    if !readback.map_err(|error| error.to_string())? { return Err("open-file.archive-unverified".into()); }
     opened.document_id = document.to_owned();
     Ok(Some(opened))
 }
@@ -175,7 +175,7 @@ fn open_selected_file(path: &Path, maximum_bytes: u64) -> Result<(std::fs::File,
     let file = std::fs::File::open(path).map_err(|error| error.to_string())?;
     let metadata = file.metadata().map_err(|error| error.to_string())?;
     if !metadata.is_file() || metadata.len() == 0 || metadata.len() > maximum_bytes {
-        return Err("Open File has an inadmissible input extent".into());
+        return Err("open-file.inadmissible-extent".into());
     }
     Ok((file, metadata.len()))
 }
@@ -189,11 +189,11 @@ async fn read_selected_file(path: &Path, maximum_bytes: usize, cancelled: impl F
         if cancelled() { return Ok(None); }
         let count = input.read(&mut page).map_err(|error| error.to_string())?;
         if count == 0 { break; }
-        if data.len() + count > maximum_bytes { return Err("Open File exceeded its input cap".into()); }
+        if data.len() + count > maximum_bytes { return Err("open-file.input-cap-exceeded".into()); }
         data.extend_from_slice(&page[..count]);
         semio_framework_async::yield_once().await;
     }
-    if data.len() as u64 != extent { return Err("Open File changed size while being read".into()); }
+    if data.len() as u64 != extent { return Err("open-file.size-changed".into()); }
     Ok(Some(data))
 }
 

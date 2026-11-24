@@ -58,6 +58,21 @@ impl<M:protocol::OpBinaryReceiving+Send+Sync+'static> ArtifactOperationWire<M> w
  /// 🔢️ Registration binds the vocabulary's own binary receiving cursor for persisted operations; the installer names the encoding, the receiver never sniffs bytes.
  pub fn with_original_binary_receiving(mut self)->Self{self.original_receiving=Some(OriginalOperationReceivingAdmission::binary(crate::lifted_member_owned_batch::BatchRetirementIssuer::typed()));self}
 }
+#[repr(transparent)]
+struct OrdinalVariant<M>(M);
+impl<M:semio_framework_dsl_record::BorrowedDslVariants> FieldProjectionSource for OrdinalVariant<M>{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{self.0.projected_borrowed_variant_view(path)}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{self.0.projected_borrowed_variant_key(path,index)}
+}
+fn ordinal_pack_source<M:semio_framework_dsl_record::BorrowedDslVariants>(mutation:&M)->Option<super::ArtifactPreparedOperationSource<'_>>{
+ let(_,ordinal,spec)=mutation.projected_borrowed_variant_identity();
+ let body=unsafe{&*(std::ptr::from_ref(mutation).cast::<OrdinalVariant<M>>())};
+ Some(super::ArtifactPreparedOperationSource::Pack{tag:ordinal as u64,body,spec})
+}
+impl<M:protocol::OpBinaryReceiving+semio_framework_dsl_record::BorrowedDslVariants+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
+ /// 🔢️ Registers a vocabulary whose persisted operations are `format | ordinal | record body`: the same borrowed variant is the original encoding source, so replacement and edit comparison re-encode the persisted bytes exactly.
+ pub fn with_original_ordinal_binary_receiving(mut self)->Self{self.source=ordinal_pack_source::<M>;self.with_original_binary_receiving()}
+}
 impl<M:protocol::OpBinaryReceiving+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactOperationWire<M> where M::Receiving:Send{
  /// 🎒️ Pairs a vocabulary's full Pack Value OpBinary decoder with its original typed comparison projection.
  pub fn with_original_pack_value_receiving(self)->Self{

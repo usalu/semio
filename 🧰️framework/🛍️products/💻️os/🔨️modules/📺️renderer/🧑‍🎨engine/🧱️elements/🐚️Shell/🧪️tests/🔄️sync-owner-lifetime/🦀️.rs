@@ -45,8 +45,8 @@ fn hub_overlay_has_footer_and_command_openers_after_dock_removal() {
     assert!(SHELL_SOURCE().contains("FRAMEWORK_HUB_PANEL_ID"));
     assert!(SHELL_SOURCE().contains("\"framework.hub.signIn\""));
     assert!(SHELL_SOURCE().contains("\"os.openHub\""));
-    assert!(SHELL_SOURCE().matches("self.push_uri(\"/hub\".to_string());").count() >= 2);
-    assert!(SHELL_SOURCE().matches("self.apply_shell_uri(\"/hub\").await").count() >= 2);
+    assert!(SHELL_SOURCE().matches("self.opening.push_uri(\"/hub\".to_string());").count() >= 2);
+    assert!(SHELL_SOURCE().matches("apply_shell_uri(\"/hub\").await").count() >= 2);
     assert!(SHELL_SOURCE().contains("if path.trim_end_matches('/') == \"/hub\""));
     assert!(SHELL_SOURCE().contains("ShellChromeFramePhase::HubWorkspace"));
 }

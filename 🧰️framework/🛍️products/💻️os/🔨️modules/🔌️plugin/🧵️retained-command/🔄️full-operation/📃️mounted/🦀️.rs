@@ -13,6 +13,8 @@ pub struct MountedPagePublication{
 }
 impl MountedPagePublication{
  pub const fn new()->Self{Self{interaction_close:None,ui_copy:MountedUiCopy::new(),plan:None,owner:None,failure:None,failure_close:None}}
+ /// 🩺️ Every custody the page ladder owns, folded into one comparable word that changes whenever one ladder step moves anything (see [`PendingPublicationPage::phase_witness`]).
+ pub fn phase_witness(&self)->u64{u64::from(self.interaction_close.is_some())|u64::from(self.plan.is_some())<<1|u64::from(self.failure.is_some())<<2|u64::from(self.failure_close.is_some())<<3|u64::from(!self.ui_copy.terminal_is_empty())<<4|self.owner.as_ref().map_or(0,|owner|owner.phase_witness().rotate_left(5)|1<<63)}
  pub fn terminal_is_empty(&self)->bool{self.interaction_close.is_none()&&self.ui_copy.terminal_is_empty()&&self.plan.is_none()&&self.owner.is_none()&&self.failure.is_none()&&self.failure_close.is_none()}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.interaction_close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&self.interaction_close),depth:1,..Default::default()})}else{owner.next_demand(body)}}

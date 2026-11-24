@@ -13513,7 +13513,7 @@
       {
        "id": "seg-02-cable-tie",
        "bone": "seg-02",
-       "role": "detail",
+       "role": "texture",
        "z": 4,
        "filled": false,
        "tone": 0.1,
@@ -13534,7 +13534,7 @@
       {
        "id": "seg-10-cable-tie",
        "bone": "seg-10",
-       "role": "detail",
+       "role": "texture",
        "z": 4,
        "filled": false,
        "tone": 0.1,
@@ -13555,7 +13555,7 @@
       {
        "id": "seg-18-cable-tie",
        "bone": "seg-18",
-       "role": "detail",
+       "role": "texture",
        "z": 4,
        "filled": false,
        "tone": 0.1,
@@ -13576,7 +13576,7 @@
       {
        "id": "seg-26-cable-tie",
        "bone": "seg-26",
-       "role": "detail",
+       "role": "texture",
        "z": 4,
        "filled": false,
        "tone": 0.1,
@@ -13597,7 +13597,7 @@
       {
        "id": "seg-34-cable-tie",
        "bone": "seg-34",
-       "role": "detail",
+       "role": "texture",
        "z": 4,
        "filled": false,
        "tone": 0.1,
@@ -13614,6 +13614,96 @@
         ]
        ],
        "closed": false
+      },
+      {
+       "id": "seg-35-turn-contact",
+       "bone": "seg-35",
+       "role": "body",
+       "z": 2.0357000000000003,
+       "filled": true,
+       "tone": 0.16,
+       "region": "suction-line",
+       "material": "elastomer-foam",
+       "kind": "poly",
+       "points": [
+        [
+         0.003749,
+         -0.001395
+        ],
+        [
+         -0.004018,
+         -0.022266
+        ],
+        [
+         -0.011516,
+         -0.019476
+        ],
+        [
+         -0.003749,
+         0.001395
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "seg-22-turn-contact",
+       "bone": "seg-22",
+       "role": "body",
+       "z": 2.0227,
+       "filled": true,
+       "tone": 0.16,
+       "region": "suction-line",
+       "material": "elastomer-foam",
+       "kind": "poly",
+       "points": [
+        [
+         -0.003917,
+         0.00081
+        ],
+        [
+         0.003821,
+         0.038208
+        ],
+        [
+         0.011655,
+         0.036587
+        ],
+        [
+         0.003917,
+         -0.00081
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "seg-34-turn-contact",
+       "bone": "seg-34",
+       "role": "body",
+       "z": 2.0347,
+       "filled": true,
+       "tone": 0.16,
+       "region": "suction-line",
+       "material": "elastomer-foam",
+       "kind": "poly",
+       "points": [
+        [
+         0.003867,
+         -0.001024
+        ],
+        [
+         -0.001702,
+         -0.022049
+        ],
+        [
+         -0.009436,
+         -0.02
+        ],
+        [
+         -0.003867,
+         0.001024
+        ]
+       ],
+       "closed": true
       }
      ],
      "front": [
@@ -17935,8 +18025,8 @@
       "de": "Jeder zweite Kabelbinder als Strich quer über das Paar."
      },
      "merged": {
-      "en": "Each cross board and its three blocks are one stringer; the knees of the tubes are spheres of the tube diameter.",
-      "de": "Jedes Querbrett und seine drei Klötze sind eine Kufe; die Knicke der Rohre sind Kugeln vom Rohrdurchmesser."
+      "en": "Each cross board and its three blocks are one stringer; the knees of the tubes are spheres of the tube diameter; at three knees by the hook that lie 3 to 4 mm from the next turn (0.03 mm on paper) the foam of the two turns is drawn touching.",
+      "de": "Jedes Querbrett und seine drei Klötze sind eine Kufe; die Knicke der Rohre sind Kugeln vom Rohrdurchmesser; an drei Knicken beim Haken, die 3 bis 4 mm vor der nächsten Windung liegen (0,03 mm auf Papier), ist die Dämmung beider Windungen berührend gezeichnet."
      },
      "omitted": {
       "en": "Tie heads, crushed tips, knife cuts, creases, the tag and the pallet grain, stamp and nails.",

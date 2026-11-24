@@ -88,6 +88,13 @@ test("the wasm build derives its deadline from the native-child progress policy,
  expect(policy.idleMilliseconds).toBeGreaterThan(60*60000-1);expect(policy.maximumMilliseconds).toBeLessThanOrEqual(fixture.policy.budgetMs>0?fixture.policy.budgetMs:21600000);expect(policy.maximumMilliseconds).toBeGreaterThan(60*60000);
 });
 
+/** 🧊️ The compile child runs under the caller's own control, never a fixed snapshot of its remaining time: copying a renewable window (here one hour idle) into a nonrenewable request killed a progressing wasm-pack build at exactly that hour (`Original resource loan deadline exhausted`). */
+test("the wasm compile child inherits the caller deadline instead of a fixed snapshot of its remaining budget",()=>{
+ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8");
+ expect(source).not.toMatch(/budgetMs:\s*compilerAdmissionBudgetV1/u);expect(source).not.toMatch(/requestedCompilerAdmissionControlV1\(options\.control,\s*options\.budgetMs\)/u);
+ expect(source).toContain("requestedCompilerAdmissionControlV1(options.control,0)");
+});
+
 /** 🔒️ The wasm build takes its leases in ascending class rank: configuration view (toolchain 1), then the cargo build lease (cargo-coordination 2), then the compiler writer (image 7) around the compile only, and the artifact capture (artifact 6) AFTER the writer is released; the old order held the build lease before the view and the writer while it captured, which the lease-order rule reports and which can deadlock against an exclusive writer. */
 test("the wasm build acquires configuration view, build lease, writer and artifact capture in an order the lease-order policy accepts",async()=>{
  const order=await import("../../../🔒️leases/🧭️order/🟦️.ts"),policy=order.leaseOrderPolicyV1(),rank=(resource:string)=>order.classifyLeaseResourceV1(policy,resource).rank;

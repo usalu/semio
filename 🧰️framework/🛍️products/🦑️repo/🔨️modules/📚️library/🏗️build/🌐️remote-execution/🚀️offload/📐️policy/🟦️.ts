@@ -67,13 +67,57 @@ export function offloadDeadlineMillisecondsV1(predictedMilliseconds:number|undef
  return Math.min(cap,Math.max(deadline.floorMilliseconds,Math.ceil(predictedMilliseconds*deadline.factor)));
 }
 
-/** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release are 1.2 to 4.7 GiB, the cold bound of the admission broker 6 GiB), 0 for every other unit, which keeps the machine's own admission as the only memory check. */
+/** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release's component finals are 0.4 to 6.5 GiB; this is the cold bound that the family estimate replaces once enough crates were measured), 0 for every other unit (the static part: whether the unit is a linked wasm unit; the size a unit is placed with is `offloadUnitPeakMegabytesV1`). */
 export const offloadPeakMegabytesV1=(types:readonly string[],target:string|undefined):number=>offloadWasmTargetV1(target)&&types.some(type=>OFFLOAD_POLICY_V1.wasm.crateTypes.includes(type))?OFFLOAD_POLICY_V1.wasm.peakMegabytes:0;
+
+/** 👪️ The peak a crate of the family is expected to need before it was measured: the `peak.family.quantilePercent` quantile (linear between closest ranks, R-7) of the recorded peaks of the family's crates, one sample per crate; `undefined` while fewer than `peak.family.minimumCrates` crates were measured (the cold bound applies).
+ * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+export function offloadFamilyPeakMegabytesV1(samples:readonly number[]):number|undefined{
+ const family=OFFLOAD_POLICY_V1.peak.family,sorted=samples.filter(value=>Number.isFinite(value)&&value>0).sort((left,right)=>left-right);
+ if(sorted.length<family.minimumCrates)return undefined;
+ const position=(sorted.length-1)*family.quantilePercent/100,lower=Math.floor(position);
+ return Math.ceil(lower+1>=sorted.length?sorted[lower]!:sorted[lower]!+(position-lower)*(sorted[lower+1]!-sorted[lower]!));
+}
+
+/** 🕰️ The compile time a crate of the family is expected to need before it was measured: the same quantile as `offloadFamilyPeakMegabytesV1` over the recorded local compile times (milliseconds) of the family's crates, `undefined` while fewer than `peak.family.minimumCrates` crates were measured (the seed `finals.seedMilliseconds` applies).
+ * @see ../../🧪️tests/🏁️finals/🐍️.py */
+export const offloadFamilyMillisecondsV1=(samples:readonly number[]):number|undefined=>offloadFamilyPeakMegabytesV1(samples);
+
+/** 🏷️ Whether a crate belongs to the family whose peaks estimate a crate that was never measured (its name ends in `peak.family.crateSuffix`). */
+export const offloadFamilyCrateV1=(crate:string):boolean=>crate.endsWith(OFFLOAD_POLICY_V1.peak.family.crateSuffix);
+
+/** 🏋️ The megabytes placement reserves for one unit: the peak measured here for the crate (`learned`) plus the margin of the schema, between its bounds; else for a linked wasm unit the estimate of its family (`family`, see `offloadFamilyPeakMegabytesV1`) plus the same margin, else the unknown default (`peak.unknownMegabytes`, for a linked wasm unit the cold bound `wasm.peakMegabytes`), so a worker admits the unit by its own size instead of one constant.
+ * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+export function offloadUnitPeakMegabytesV1(learned:number|undefined,types:readonly string[],target:string|undefined,family?:number):number{
+ const peak=OFFLOAD_POLICY_V1.peak,margin=(megabytes:number)=>Math.min(peak.maximumMegabytes,Math.max(peak.minimumMegabytes,Math.ceil(megabytes*(100+peak.marginPercent)/100)));
+ if(learned!==undefined&&Number.isFinite(learned)&&learned>0)return margin(learned);
+ if(family!==undefined&&Number.isFinite(family)&&family>0&&offloadPeakMegabytesV1(types,target)>0)return margin(family);
+ return Math.max(peak.unknownMegabytes,offloadPeakMegabytesV1(types,target));
+}
+
+/** 💎️ What makes a unit expensive and where the number comes from. */
+export type OffloadExpenseV1=Readonly<{expensive:boolean;milliseconds:number|undefined;megabytes:number|undefined;source:"record"|"family"|"seed"|"none"}>;
+
+/** 💎️ Whether a unit is expensive enough to prefer a worker with headroom over a free slot of this machine (`finals`): its predicted local compile time (the recorded one, else for a linked wasm unit the family estimate, else the seed) reaches `finals.minimumMilliseconds`, or its placed peak (`placedMegabytes`, counted only for a unit with a learned peak or a linked wasm unit: the unknown default of an ordinary unit says nothing) reaches `finals.minimumMegabytes`. A unit with neither signal is never expensive.
+ * @see ../../🧪️tests/🏁️finals/🐍️.py */
+export function offloadExpenseV1(input:Readonly<{recordedMilliseconds?:number;familyMilliseconds?:number;learnedMegabytes?:number;placedMegabytes:number;linked:boolean}>):OffloadExpenseV1{
+ const finals=OFFLOAD_POLICY_V1.finals,source=input.recordedMilliseconds!==undefined?"record" as const:!input.linked?"none" as const:input.familyMilliseconds!==undefined?"family" as const:"seed" as const;
+ const milliseconds=source==="record"?input.recordedMilliseconds:source==="family"?input.familyMilliseconds:source==="seed"?finals.seedMilliseconds:undefined,megabytes=input.learnedMegabytes!==undefined||input.linked?input.placedMegabytes:undefined;
+ return Object.freeze({expensive:milliseconds!==undefined&&milliseconds>=finals.minimumMilliseconds||megabytes!==undefined&&megabytes>=finals.minimumMegabytes,milliseconds,megabytes,source});
+}
+
+/** 🧠️ The peak a crate is known by after one more measurement: a larger one at once (an under-estimate is corrected by the first compile that shows it), a smaller one only halfway, so one lucky run never shrinks it.
+ * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+export const offloadLearnPeakMegabytesV1=(before:number|undefined,measured:number):number=>before===undefined||measured>=before?Math.ceil(measured):Math.ceil((before+measured)/2);
+
+/** 💀️ What a crate is known by after a worker killed its unit (exit `peak.killedExit`) while it was placed with `placed` megabytes: `killedFactor` times that, so the next placement asks for a machine that has the room; `undefined` for any other exit.
+ * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+export const offloadKilledPeakMegabytesV1=(exitCode:number,placed:number,learned:number|undefined):number|undefined=>exitCode===OFFLOAD_POLICY_V1.peak.killedExit?Math.min(OFFLOAD_POLICY_V1.peak.maximumMegabytes,Math.max(learned??0,placed*OFFLOAD_POLICY_V1.peak.killedFactor)):undefined;
 
 /** 🎛️ How a build treats offloading: `distribute` places every unit worth a round trip on any ready machine of the fleet (this machine's slots are one more worker), `pin` places every unit on the one named machine, `never` stays local. */
 export type OffloadModeV1="distribute"|"pin"|"never";
 /** 🧭️ Why a unit stays here or its offload failed. */
-export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"crate-type"|"source-kind"|"cheap"|"pin-failed"|"cancelled";
+export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"final-wait"|"pin-failed"|"cancelled";
 
 type Environment=Readonly<Record<string,string|undefined>>;
 

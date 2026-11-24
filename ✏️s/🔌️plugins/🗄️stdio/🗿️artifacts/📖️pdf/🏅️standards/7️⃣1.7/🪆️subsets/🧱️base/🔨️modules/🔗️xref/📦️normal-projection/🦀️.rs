@@ -94,6 +94,11 @@ impl NormalProjectionCursor {
         Ok(())
     }
 
+    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
+    pub fn copies_identity_bytes(&self) -> bool {
+        matches!(self.phase, Phase::Shape(Shape::Decode)) && self.decoder.as_ref().is_some_and(PdfDecodedStreamCursor::copies_identity_bytes)
+    }
+
     /// 🛂️ Quotes an empty history allocation before decoding normal stream data.
     pub fn next_reserves_history(&self) -> bool {
         matches!(self.phase, Phase::Shape(Shape::Decode)) && self.decoder.as_ref().is_some_and(PdfDecodedStreamCursor::next_reserves_history)
@@ -269,11 +274,13 @@ impl NormalProjectionCursor {
             return receipt(Ok(Event::More), 1);
         }
         if let Some(data) = self.data.as_mut() {
-            let bytes = data.bytes.capacity();
-            if bytes != 0 {
-                if bytes > grant.release_bytes { return receipt(Ok(Event::NeedsRelease { bytes }), 0); }
-                data.bytes = Vec::new();
-                return released(bytes);
+            if !data.bytes.retained_bytes().terminal_is_empty() {
+                let step = match data.bytes.cold_retire_page(grant.release_bytes) {
+                    Ok(step) => step,
+                    Err(error) => return receipt(Err(XrefStreamError::Decode(error)), 0),
+                };
+                if let Some(bytes) = step.needs_release { return receipt(Ok(Event::NeedsRelease { bytes }), 0); }
+                return NormalProjectionReceipt { event: Ok(Event::More), work: step.work.max(1), allocated_bytes: 0, released_bytes: step.released_bytes };
             }
             let count = data.filters.len().min(grant.work);
             if count != 0 {

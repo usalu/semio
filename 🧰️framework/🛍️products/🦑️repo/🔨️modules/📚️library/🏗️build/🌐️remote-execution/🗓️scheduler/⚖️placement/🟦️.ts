@@ -36,7 +36,7 @@ export class RemoteExecutionLoadTableV1{
  }
 }
 
-/** 👷️ A registered worker as the placement sees it; `committedMegabytes` is the peak that the scheduler already placed on it and that its next load report may not show yet. */
+/** 👷️ A registered worker as the placement sees it; `committedMegabytes` is what its running actions still cost beyond the machine's reported free memory (`placementChargeMegabytesV1`). */
 export type PlacementWorkerV1=Readonly<{id:string;name:string;origin:string;properties:readonly RemoteExecutionPropertyV1[];concurrency:number;running:number;waiting:boolean;draining:boolean;refusedUntilMs:number;committedMegabytes?:number}>;
 
 /** 🎬️ A queued action as the placement sees it: the properties it requires, the workers (by origin, else name) that already failed it, who asked for it and the megabytes it needs at its peak (0 when it declares none). */
@@ -58,6 +58,13 @@ export function placementHasHeadroomV1(worker:PlacementWorkerV1,entry:RemoteExec
  if(worker.draining||worker.running>=worker.concurrency||nowMs<worker.refusedUntilMs)return false;
  if(entry===undefined)return peakMegabytes<=0;
  return entry.report.pressure!=="critical"&&entry.report.headroom&&(peakMegabytes<=0||entry.report.freeMegabytes-(worker.committedMegabytes??0)>=peakMegabytes);
+}
+
+/** 💸️ What one running action still costs on top of its machine's reported free memory, so it is charged once over its life: the free memory already shows what the action holds, so only the part of its declared peak it has not grown into yet is reserved. With the action's measured memory (heartbeat of a worker that reports it) that is `max(0, declared - measured)`: nothing before it is declared, all of it before it grew, nothing at its peak. Without a measurement (a worker that does not report it) the whole declared peak is reserved until a load report arrived `rampMs` after the action started, from then on the free memory is trusted. */
+export function placementChargeMegabytesV1(task:Readonly<{declaredMegabytes:number;measuredMegabytes?:number;startedAtMs:number}>,reportAtMs:number|undefined,rampMs:number):number{
+ if(task.declaredMegabytes<=0)return 0;
+ if(task.measuredMegabytes!==undefined)return Math.max(0,task.declaredMegabytes-task.measuredMegabytes);
+ return reportAtMs!==undefined&&reportAtMs>=task.startedAtMs+rampMs?0:task.declaredMegabytes;
 }
 
 /** 📏️ How loaded the machine of a worker is, lower is better: its local work (running and queued builds beside the remote actions it reports) plus the remote actions the scheduler knows about, per core, a raised pressure level and the load average. */
@@ -94,11 +101,18 @@ export function planDispatchV1(queue:readonly PlacementOperationV1[],workers:rea
  return plan;
 }
 
-/** 🔢️ How the registered workers stand for one action right now: all of them, those the platform key lets run it (never its requester, never one that failed it), those with headroom, and those that are both, the candidates, with the free action slots (`slots`) of the candidates, the width a build sizes its jobs to. The one counting behind every answer to "is another machine idle": the check at submission and the answer the build door asks for. */
+/** 🧮️ How many actions of `peakMegabytes` a worker with headroom can take at once: its free action slots, and for a sized action also the whole multiples of the peak its machine's reported free memory, less what the scheduler already placed on it, still covers (at least one: headroom already said one fits). A machine that has not reported counts its free action slots. */
+export function placementSlotsV1(worker:PlacementWorkerV1,entry:RemoteExecutionLoadEntryV1|undefined,peakMegabytes:number=0):number{
+ const actions=Math.max(1,worker.concurrency-worker.running);
+ if(peakMegabytes<=0||entry===undefined)return actions;
+ return Math.max(1,Math.min(actions,Math.floor((entry.report.freeMegabytes-(worker.committedMegabytes??0))/peakMegabytes)));
+}
+
+/** 🔢️ How the registered workers stand for one action right now: all of them, those the platform key lets run it (never its requester, never one that failed it), those with headroom, and those that are both, the candidates, with the free action slots (`slots`) of the candidates, counted at the peak of the action when it declares one (`placementSlotsV1`), the width a build sizes its jobs to. The one counting behind every answer to "is another machine idle": the check at submission and the answer the build door asks for. */
 export function placementIdleCountV1(operation:PlacementOperationV1,workers:readonly PlacementWorkerV1[],table:Pick<RemoteExecutionLoadTableV1,"get">,nowMs:number):Readonly<{workers:number;compatible:number;headroom:number;candidates:number;slots:number}>{
  const required=placementRequiredV1(operation.platform,operation.requester===undefined?undefined:table.get(operation.requester));
  let compatible=0,headroom=0,candidates=0,slots=0;
- for(const worker of workers){const fits=placementCompatibleV1(operation,worker,required),room=placementHasHeadroomV1(worker,table.get(worker.origin),nowMs,operation.peakMegabytes??0);if(fits)compatible++;if(room)headroom++;if(fits&&room){candidates++;slots+=Math.max(1,worker.concurrency-worker.running);}}
+ for(const worker of workers){const fits=placementCompatibleV1(operation,worker,required),room=placementHasHeadroomV1(worker,table.get(worker.origin),nowMs,operation.peakMegabytes??0);if(fits)compatible++;if(room)headroom++;if(fits&&room){candidates++;slots+=placementSlotsV1(worker,table.get(worker.origin),operation.peakMegabytes??0);}}
  return Object.freeze({workers:workers.length,compatible,headroom,candidates,slots});
 }
 

@@ -5,8 +5,8 @@ import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue 
 
 const DESCRIPTOR_ROOT = dirname(fileURLToPath(import.meta.url));
 
-/** 📜️ Projects the actor world's exported functions from its authored WIT contract. */
-export function parseActorComponentExports(wit: string): Record<string, string[]> {
+/** 📜️ Projects the actor world's exported functions, in declaration order and with their asynchrony, from its authored WIT contract. */
+export function parseActorComponentFunctions(wit: string): Record<string, { name: string; async: boolean }[]> {
   const source = wit.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
   const body = (kind: string, name: string) => {
     const matches = [...source.matchAll(new RegExp(`\\b${kind}\\s+${name}\\s*\\{`, "g"))];
@@ -20,15 +20,20 @@ export function parseActorComponentExports(wit: string): Record<string, string[]
     }
     throw new Error(`Unclosed WIT ${kind} ${name}`);
   };
-  const result: Record<string, string[]> = {};
+  const result: Record<string, { name: string; async: boolean }[]> = {};
   for (const match of body("world", "actor").matchAll(/\bexport\s+([a-z][a-z0-9-]*)\s*;/g)) {
     const name = match[1]!;
     if (Object.hasOwn(result, name)) throw new Error(`Duplicate actor export ${name}`);
-    result[name] = [...body("interface", name).matchAll(/\b([a-z][a-z0-9-]*)\s*:\s*(?:async\s+)?func\s*\(/g)].map((method) => method[1]!.replace(/-([a-z])/g, (_match, char: string) => char.toUpperCase()));
+    result[name] = [...body("interface", name).matchAll(/\b([a-z][a-z0-9-]*)\s*:\s*(async\s+)?func\s*\(/g)].map((method) => ({ name: method[1]!.replace(/-([a-z])/g, (_match, char: string) => char.toUpperCase()), async: method[2] !== undefined }));
     if (!result[name]!.length) throw new Error(`Actor export ${name} has no functions`);
   }
   if (!Object.keys(result).length) throw new Error("Actor world has no exports");
   return result;
+}
+
+/** 📜️ Projects the actor world's exported function names from its authored WIT contract. */
+export function parseActorComponentExports(wit: string): Record<string, string[]> {
+  return Object.fromEntries(Object.entries(parseActorComponentFunctions(wit)).map(([name, functions]) => [name, functions.map((method) => method.name)]));
 }
 
 /** 📜️ Reads the actor package's authored WIT files, in name order, as the one text the package declares. */
@@ -36,7 +41,9 @@ export function readActorComponentWit(directory: string): string {
   return readdirSync(directory).filter((name) => name.endsWith(".wit")).sort().map((name) => readFileSync(join(directory, name), "utf8")).join("\n");
 }
 
-export const ACTOR_COMPONENT_EXPORTS = parseActorComponentExports(readActorComponentWit(join(DESCRIPTOR_ROOT, "../../🧬️schema")));
+const ACTOR_COMPONENT_WIT = readActorComponentWit(join(DESCRIPTOR_ROOT, "../../🧬️schema"));
+export const ACTOR_COMPONENT_FUNCTIONS = parseActorComponentFunctions(ACTOR_COMPONENT_WIT);
+export const ACTOR_COMPONENT_EXPORTS = parseActorComponentExports(ACTOR_COMPONENT_WIT);
 
 /** 🛂️ Both package roles must expose the complete actor world before publication. */
 export function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {
@@ -57,7 +64,8 @@ const grant = { maximumItems: 1n << 20n, maximumCopyBytes: 64n << 20n, maximumCa
 const fuel = 1n << 24n;
 const deadlineUs = 1n << 52n;
 const budget = { input: { operation: 1n, generation: 1n, epoch: 1n, work: { clockBinding: 1n, absoluteDeadlineUs: deadlineUs, fuel }, grant }, retainedPolicy: grant, fuel, deadlineUs, cancelled: false };
-const bytes = await component.describe.describe(budget);
+component.reactor.stageActorContextBudget(budget);
+const bytes = await component.describe.describe();
 if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 8 * 1024 * 1024) throw new Error("Invalid descriptor byte extent");
 process.stdout.write(Buffer.from(bytes).toString("base64"));
 `;

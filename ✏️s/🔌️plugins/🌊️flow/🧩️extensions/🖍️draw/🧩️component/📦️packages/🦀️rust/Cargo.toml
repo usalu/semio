@@ -18,6 +18,7 @@ deployment-directory = "🎨️flow-extension-draw"
 component-kind = "extension"
 extends = "flow"
 contributes = ["flow.extension"]
+activates-on = ["on-node-kind:draw"]
 
 [lib]
 crate-type = ["cdylib"]

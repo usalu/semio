@@ -31,6 +31,7 @@ import {
   requestIsolatedJobUiPoll
 } from "../🛰️runtime-singletons/🟦️.ts";
 import { commandStallWatch, serializeCommandIngressForActor } from "../🧵️turn-dispatch/🟦️.ts";
+import { commandStalledMessageV1, isCommandStalledFaultV1 } from "../⏱️command-stall/🟦️.ts";
 import { compactAcknowledgedTurns } from "../🔁️turn-settle/📥️acknowledged/🟦️.ts";
 import { commandIngressContinuationCeilingV1, commandIngressNeedsReplyStampV1, commandIngressUnownedV1, PLUGIN_UI_CONTINUATION_LIMIT, settleAcknowledgedPluginTurns, settlePluginTurn } from "../🔁️turn-settle/🟦️.ts";
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
@@ -63,16 +64,25 @@ function createSpawnedJobProgressLane() {
       if (listeners.size === 0) spawnedJobProgressListeners.delete(instanceId);
     };
   };
-  const publishSpawnedJobProgress = (instanceId: number, key: string): void => {
-    const now = performance.now();
-    if (now - (lastJobProgressRefreshMs.get(key) ?? -Infinity) < PLUGIN_JOB_PROGRESS_REFRESH_MS) return;
-    lastJobProgressRefreshMs.set(key, now);
+  const notifySpawnedJobProgress = (instanceId: number): void => {
     for (const listener of [...(spawnedJobProgressListeners.get(instanceId) ?? [])]) {
       try { listener(); }
       catch (error) {  }
     }
   };
-  return { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress };
+  const publishSpawnedJobProgress = (instanceId: number, key: string): void => {
+    const now = performance.now();
+    if (now - (lastJobProgressRefreshMs.get(key) ?? -Infinity) < PLUGIN_JOB_PROGRESS_REFRESH_MS) return;
+    lastJobProgressRefreshMs.set(key, now);
+    notifySpawnedJobProgress(instanceId);
+  };
+  /** 🏁️ A job's terminal is its last progress: once its completion turn has installed the surfaces it dirtied, the shell repaints them
+   * unthrottled. That turn routes no shell frame, so without this the final frame waited for an unrelated later refresh. */
+  const publishSpawnedJobTerminal = (instanceId: number, key: string): void => {
+    lastJobProgressRefreshMs.delete(key);
+    notifySpawnedJobProgress(instanceId);
+  };
+  return { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, publishSpawnedJobTerminal };
 }
 
 /** 💼️ Phase 6 of {@link loadPluginModule}: the host half of `Effect::SpawnJob` (isolated and reserved-tool job drives),
@@ -83,7 +93,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
   const { pluginId, shardClient, state, closingInstances, actorIdByInstance, documentBindings, turnOutcomes } = scope;
   const { requireActorId, submitTurn } = instances;
   const { acceptUiPatches } = ui;
-  const { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress } = createSpawnedJobProgressLane();
+  const { lastJobProgressRefreshMs, subscribeSpawnedJobProgress, publishSpawnedJobProgress, publishSpawnedJobTerminal } = createSpawnedJobProgressLane();
   /** 💼️ In-flight `spawn-job` drives, keyed `actorId#job`. A guest re-emitting the same `job` id
    * (a replayed turn, a checkpoint restore) must never open a second `start-job` for one owner. */
   const drivingJobs = new Set<string>();
@@ -120,6 +130,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
       activation.assertActive();
       return settlePluginTurn(actorId, await submitTurn(actorId, [{ kind: "job-completed", payload }], { lane: "Background", activation }), "Background", new Set(), (turn) => acceptUiPatches(instanceId, turn), true, activation, call);
     });
+    console.error("[DEBUG] job completion turn", String(job), outcome.status, wireTurnStatusTag(settled.status), settled.uiPatches.length, settled.effects.length);
     const frames: Uint8Array[] = [];
     const leftover: WireVariant[] = [];
     for (const effect of routeHostEffects(instanceId, settled.effects, documentBindings.get(instanceId)?.port)) {
@@ -187,7 +198,11 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
           return last ?? { status: "failed" as const, value: new TextEncoder().encode("plugin.job-step-empty") };
         });
         if (outcome.status !== "running") {
-          if (live()) await deliverJobCompletion(instanceId, actorId, job, outcome);
+          console.error("[DEBUG] isolated job terminal", String(job), kind, outcome.status, step, live(), outcome.status === "failed" ? new TextDecoder().decode(outcome.value) : "");
+          if (live()) {
+            await deliverJobCompletion(instanceId, actorId, job, outcome);
+            if (live()) publishSpawnedJobTerminal(instanceId, key);
+          }
           return;
         }
         ledgerEntry.step(step, progressed.value);
@@ -196,6 +211,7 @@ export function createSpawnedJobDriver(scope: PluginHandleScope, instances: Retu
         await yieldPluginUiContinuation();
       }
     } catch (error) {
+      console.error("[DEBUG] isolated job error", String(job), String(error));
       turnOutcomes.push({ instanceId, error });
     } finally {
       ledgerEntry.end();
@@ -308,7 +324,8 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
       const documentPort = documentBindings.get(instanceId)?.port;
       const inspected = inspectEncodedAppCommand(events);
       const importSignal = inspected.mediaIn ? queuedImportSignal : undefined;
-      const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, () => commandStallWatch.watch({ actorId, programId: pluginId, commandId: inspected.actionId }, async (): Promise<WireTurnResult> => {
+      let stage = "queued behind the actor's ingress lane";
+      const result = await withTypedOperationCall(actorId, `command#${instanceId}`, (call) => serializeCommandIngressForActor(actorId, () => commandStallWatch.watch({ actorId, programId: pluginId, commandId: inspected.actionId, operation: inspected.operation, stage: () => stage }, async (): Promise<WireTurnResult> => {
         activation.assertActive();
         importSignal?.throwIfAborted();
         const results: WireTurnResult[] = [];
@@ -363,6 +380,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           for (let pageIndex = 0; pageIndex < pages.length;) {
             if (importSignal?.aborted) await cancelImportAtBoundary();
             if (performance.now() - crossingStartedMs >= COMMAND_CONTINUATION_WALL_MS) throw new Error(`plugin ${pluginId}: command ingress plugin.command-page-stalled: page ${pageIndex}/${pages.length} stayed refused (action=${inspected.actionId ?? "none"})`);
+            stage = `offering ingress page ${pageIndex + 1}/${pages.length}`;
             const offered = await submitTurn(actorId, acknowledgements, { commandPage: pages[pageIndex]!, activation });
             await acceptTurn(offered);
             if (importSignal?.aborted) await cancelImportAtBoundary();
@@ -380,7 +398,11 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           let lastTurnStatus = wireTurnStatusTag(results.at(-1)?.status);
           let continuations = 0;
           for (; terminal !== "command-complete" && (continuations < ceiling || performance.now() - crossingStartedMs < COMMAND_CONTINUATION_WALL_MS); continuations += 1) {
-            if (terminal === "fault") throw new Error(`plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
+            if (terminal === "fault") {
+              const display = commandIngressFaultDisplay(results.at(-1)?.commandIngress);
+              if (isCommandStalledFaultV1(display)) throw new Error(commandStalledMessageV1(pluginId, inspected.operation));
+              throw new Error(`plugin ${pluginId}: command ingress fault: ${display}`);
+            }
             // 🚦️ backpressure is the guest asking for another turn (its slice ended or its single ingress owner is still assembling); the owner is retained, so keep draining within the ceiling instead of failing the command.
             if (commandIngressUnownedV1(terminal, lastTurnStatus)) break;
             // ⏳️ every guest turn pays a fixed ~4 KB / 12 items of lifetime grant (origin refresh), so a retained command that cannot advance must not be re-asked at millisecond cadence.
@@ -389,6 +411,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
             if (lastTurnStatus === "more-work" && quietMs < COMMAND_CONTINUATION_BURST_MS) await yieldPluginUiContinuation();
             else await new Promise<void>((resolve) => setTimeout(resolve, lastTurnStatus === "more-work" ? Math.min(COMMAND_CONTINUATION_BACKOFF_MAX_MS, COMMAND_CONTINUATION_PAUSE_MS * 2 ** Math.min(4, Math.floor((quietMs - COMMAND_CONTINUATION_BURST_MS) / 5_000))) : COMMAND_CONTINUATION_PAUSE_MS));
             if (importSignal?.aborted) await cancelImportAtBoundary();
+            stage = `continuation ${continuations + 1}/${ceiling} (guest status ${lastTurnStatus}, ingress ${terminal ?? "none"}, ${acknowledgements.length} acknowledgements pending)`;
             const continued = await submitTurn(actorId, acknowledgements, { activation });
             const previousIngress = terminal;
             await acceptTurn(continued);
@@ -404,6 +427,7 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
           }
         }
         if (importSignal?.aborted) await cancelImportAtBoundary();
+        stage = "settling the acknowledged turns";
         const settled = await settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation, call);
         importSignal?.throwIfAborted();
         await commitReservedToolSpawnsWhileSerialized(instanceId, actorId, settled.effects);
@@ -442,40 +466,46 @@ export function createTurnPump(scope: PluginHandleScope, instances: ReturnType<t
    * command turn that ends `more-work` again. It shares `serializeCommandIngressForActor` with every
    * other caller, so a real command always wins the actor and this poll waits behind it. */
   const drainingInstances = new Set<number>();
+  const rearmedDrains = new Set<number>();
   const drainTypedOperations = async (instanceId: number): Promise<void> => {
     const live = (): boolean => !state.disposing && !closingInstances.has(instanceId) && actorIdByInstance.has(instanceId);
-    if (drainingInstances.has(instanceId) || !live()) return;
+    if (!live()) return;
+    if (drainingInstances.has(instanceId)) { rearmedDrains.add(instanceId); return; }
     drainingInstances.add(instanceId);
     try {
-      const outcome = await drainTypedOperationBatches(PLUGIN_OPERATION_DRAIN_BUDGET, live, async () => {
-        const actorId = requireActorId(instanceId);
-        const activation = shardClient.captureActorActivation(actorId);
-        const documentPort = documentBindings.get(instanceId)?.port;
-        const settled = await withTypedOperationCall(actorId, `operation-drain#${instanceId}`, (call) =>
-          serializeCommandIngressForActor(actorId, async () => {
-            activation.assertActive();
-            return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, activation, call);
-          }),
-        );
-        const frames: Uint8Array[] = [];
-        const leftover = pendingCompletionEffects.get(instanceId) ?? [];
-        for (const effect of routeHostEffects(instanceId, settled.effects, documentPort)) {
-          const frame = shellFrameBytes(effect, instanceId);
-          if (frame) frames.push(frame);
-          else leftover.push(effect);
-        }
-        if (leftover.length > PLUGIN_OPERATION_EFFECT_CAPACITY) throw new Error(`typed-operation host effects for instance ${instanceId} exceeded their ${PLUGIN_OPERATION_EFFECT_CAPACITY}-entry authority`);
+      do {
+        rearmedDrains.delete(instanceId);
+        const outcome = await drainTypedOperationBatches(PLUGIN_OPERATION_DRAIN_BUDGET, live, async () => {
+          const actorId = requireActorId(instanceId);
+          const activation = shardClient.captureActorActivation(actorId);
+          const documentPort = documentBindings.get(instanceId)?.port;
+          const settled = await withTypedOperationCall(actorId, `operation-drain#${instanceId}`, (call) =>
+            serializeCommandIngressForActor(actorId, async () => {
+              activation.assertActive();
+              return settlePluginTurn(actorId, await submitTurn(actorId, [], { lane: "UserVisible", activation }), "UserVisible", new Set(), (turn) => acceptUiPatches(instanceId, turn), false, activation, call);
+            }),
+          );
+          const frames: Uint8Array[] = [];
+          const leftover = pendingCompletionEffects.get(instanceId) ?? [];
+          for (const effect of routeHostEffects(instanceId, settled.effects, documentPort)) {
+            const frame = shellFrameBytes(effect, instanceId);
+            if (frame) frames.push(frame);
+            else leftover.push(effect);
+          }
+          if (leftover.length > PLUGIN_OPERATION_EFFECT_CAPACITY) throw new Error(`typed-operation host effects for instance ${instanceId} exceeded their ${PLUGIN_OPERATION_EFFECT_CAPACITY}-entry authority`);
         pendingCompletionEffects.set(instanceId, leftover);
-        if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
-        return { status: settled.status, nextWake: settled.nextWake };
-      }, yieldPluginUiContinuation);
-      if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
-        hostContinuations.schedule(() => void drainTypedOperations(instanceId), Math.min(Math.max(outcome.nextWake, 0), PLUGIN_OPERATION_WAKE_MAX_MS), `operation-wake#${instanceId}`);
-      }
+          if (frames.length > 0) turnOutcomes.push({ instanceId, frames });
+          return { status: settled.status, nextWake: settled.nextWake };
+        }, yieldPluginUiContinuation);
+        if (outcome.stopped === "idle" && outcome.nextWake !== null && live()) {
+          hostContinuations.schedule(() => void drainTypedOperations(instanceId), Math.min(Math.max(outcome.nextWake, 0), PLUGIN_OPERATION_WAKE_MAX_MS), `operation-wake#${instanceId}`);
+        }
+      } while (rearmedDrains.has(instanceId) && live());
     } catch (error) {
       turnOutcomes.push({ instanceId, error });
     } finally {
       drainingInstances.delete(instanceId);
+      rearmedDrains.delete(instanceId);
     }
   };
 

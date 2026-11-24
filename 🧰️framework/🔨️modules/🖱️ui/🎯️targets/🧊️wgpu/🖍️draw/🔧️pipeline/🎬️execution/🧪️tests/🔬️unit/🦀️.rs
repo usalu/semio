@@ -67,10 +67,23 @@ fn chip_glass_is_recorded_after_the_frame_content_and_inside_the_frame() {
 fn chip_glass_is_translucent_blurred_and_one_level_above_the_content_surface() {
     use crate::theme::Level;
     let theme = crate::theme::Theme::default();
-    let chip = theme.glass(Level::Window);
-    assert_eq!(Level::Window.index(), Level::Base.index() + 1);
+    let chip = theme.chip_glass(Level::Base);
+    assert_eq!(Level::Base.above(), Level::Window);
+    assert_eq!(Level::Menu.above(), Level::Menu);
     assert!(chip.alpha < 1.0, "the content must stay visible through a chip");
     assert!(chip.blur_px > 0.0, "a chip blurs the content behind it");
+    for level in [Level::Base, Level::Window, Level::Pane, Level::Panel, Level::Dialog, Level::Menu] {
+        let (chip, glass) = (theme.chip_glass(level), theme.glass(level.above()));
+        let veil = 1.0 - (1.0 - chip.alpha) / (1.0 - glass.alpha);
+        assert!(veil > 0.0 && veil < 0.5, "the veil tints, it does not cover");
+        for (folded, tint, text) in [(chip.tint.r, glass.tint.r, theme.text.r), (chip.tint.g, glass.tint.g, theme.text.g), (chip.tint.b, glass.tint.b, theme.text.b)] {
+            for backdrop in [0.0_f32, 0.5, 1.0] {
+                let layered = veil * text + (1.0 - veil) * (glass.alpha * tint + (1.0 - glass.alpha) * backdrop);
+                assert!((chip.alpha * folded + (1.0 - chip.alpha) * backdrop - layered).abs() < 1e-5, "the chip glass composites as the level glass under the foreground veil");
+            }
+        }
+        assert!(chip.alpha > glass.alpha, "a chip is never the bare glass of its level");
+    }
     assert_eq!(theme.glass(Level::Base).blur_px, 0.0, "the content surface itself does not blur");
 }
 

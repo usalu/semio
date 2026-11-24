@@ -9,7 +9,7 @@ impl<'ctx> ActionsCtx<'ctx> {
     /// 🔗️ Reattaches a remembered folder through the same folder attach a person makes, which re-records it and restores
     /// the folder's archive.
     pub async fn reattach_local_folder(&mut self, binding: &LocalFolderBinding) -> Result<(), String> {
-        self.attach_sync_backbone(format!("folder://{}", local_folder_path(binding))).await
+        self.attach_sync_backbone_as(format!("folder://{}", local_folder_path(binding)), Some(binding.document_id.clone())).await
     }
 }
 

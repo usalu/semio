@@ -118,8 +118,18 @@ fn intents_reduce_presence() {
     assert_eq!((pointed.pointer_x, pointed.pointer_y, pointed.pointer_active), (1000, 7, true));
     let careted = crate::reduce_presence(&snapshot, &pointed, &PresenceIntent::Caret { object: "p3.o1".into(), offset: 2, anchor: 0 });
     assert_eq!(crate::reduce_presence(&snapshot, &careted, &PresenceIntent::CaretClear).caret_object, "");
-    assert_eq!(crate::presence_intent("presence-caret", &json!({ "object": "p3.o1", "x": 2.0, "y": 2.0 })), Some(PresenceIntent::Caret { object: "p3.o1".into(), offset: 2, anchor: 2 }));
-    assert!(crate::presence_intent("zoom-in", &json!({})).is_none());
+    assert_eq!(crate::presence_intent("presence-caret", &json!({ "object": "p3.o1", "x": 2.0, "y": 2.0 }), 5), Ok(Some(PresenceIntent::Caret { object: "p3.o1".into(), offset: 2, anchor: 2 })));
+    assert_eq!(crate::presence_intent("zoom-in", &json!({}), 5), Ok(None));
+}
+
+/// 🔢️ A pointer's page is the one-based number a person reads: number 4 of 5 is index 3, and 0 or 6 is outside `1..=5`.
+#[test]
+fn pointer_page_is_a_one_based_number() {
+    let pointer = |page: u64| crate::presence_intent("presence-pointer", &json!({ "page": page, "x": 10.0, "y": 20.0 }), 5);
+    assert_eq!(pointer(4), Ok(Some(PresenceIntent::Pointer { page: 3, x: 10, y: 20 })));
+    assert_eq!(pointer(1), Ok(Some(PresenceIntent::Pointer { page: 0, x: 10, y: 20 })));
+    assert_eq!(pointer(0), Err(semio_s_artifact_stdio_pdf_page_editor_view::PageNumberRange { number: 0, last: 5 }));
+    assert_eq!(pointer(6), Err(semio_s_artifact_stdio_pdf_page_editor_view::PageNumberRange { number: 6, last: 5 }));
 }
 
 fn peer() -> PdfPresence {

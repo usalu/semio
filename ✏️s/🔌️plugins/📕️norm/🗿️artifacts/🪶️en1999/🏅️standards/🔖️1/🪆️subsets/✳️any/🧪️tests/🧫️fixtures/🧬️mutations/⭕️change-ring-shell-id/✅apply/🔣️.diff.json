@@ -13,25 +13,9 @@
   "outlineVertices": null,
   "fatigueCategories": null,
   "patchLoads": null,
-  "ringStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "ring-1",
-        "patch": {
-          "shellId": "shell-pass",
-          "x": null,
-          "depth": null,
-          "thickness": null,
-          "internal": null
-        }
-      }
-    ]
-  },
+  "ringStiffeners": null,
   "sheetProfiles": null,
   "fireInsulations": null,
   "transverseStiffeners": null,
-  "reliabilityClass": "RC2"
+  "reliabilityClass": null
 }

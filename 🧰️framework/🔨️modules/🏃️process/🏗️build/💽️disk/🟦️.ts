@@ -44,3 +44,23 @@ export const diskCollectingLineV1 = (facts: Readonly<{ partition: string; usedFr
   usedPercent: Math.round(facts.usedFraction * 1000) / 10,
   limitPercent: Math.round(facts.limitFraction * 1000) / 10,
 });
+
+/** 🚪️ What the upfront admission of a build decides on: the partition that holds the image backing, its free bytes, the planned new space of the build, the largest single batch that must fit whole, the reserve it keeps, the blocks the image already holds without using (slack) and the shares of the plan that must fit and of the slack that counts. */
+export type DiskAdmissionV1 = Readonly<{ partition: string; hostFreeBytes: number; plannedBytes: number; minimumBytes: number; reserveBytes: number; slackBytes: number; planShareBasisPoints: number; slackCreditBasisPoints: number }>;
+
+/** 🚪️ The new host space a build asks for: the planned footprint scaled by the share that persists (never below the largest single batch), less the credited part of the image slack that later writes reuse without growing the backing file. Pure and language-agnostic. */
+export function diskAdmissionNeedBytesV1(facts: Pick<DiskAdmissionV1, "plannedBytes" | "minimumBytes" | "slackBytes" | "planShareBasisPoints" | "slackCreditBasisPoints">): Readonly<{ needBytes: number; creditBytes: number; planBytes: number }> {
+  const planBytes = Math.max(facts.minimumBytes, Math.ceil(facts.plannedBytes * facts.planShareBasisPoints / 10000)), creditBytes = Math.min(planBytes, Math.floor(Math.max(0, facts.slackBytes) * facts.slackCreditBasisPoints / 10000));
+  return Object.freeze({ needBytes: planBytes - creditBytes, creditBytes, planBytes });
+}
+
+/** 🚪️ The bytes the partition lacks for the build and its reserve: zero when it fits, so a build that cannot finish stops before it starts instead of at its end. Pure and language-agnostic. */
+export function diskAdmissionShortfallBytesV1(facts: DiskAdmissionV1): number {
+  return Math.max(0, diskAdmissionNeedBytesV1(facts).needBytes + facts.reserveBytes - facts.hostFreeBytes);
+}
+
+/** 🚪️ The bilingual refusal of a build the partition cannot take: it names the partition, its free bytes, the planned and the credited bytes, the reserve, what is missing and the command that frees space. */
+export const refuseDiskAdmissionV1 = (facts: DiskAdmissionV1): RepoErrorV1 => {
+  const need = diskAdmissionNeedBytesV1(facts);
+  return refuseProcessV1("refused", "disk.admission-insufficient", { partition: facts.partition, free: formatDiskBytesV1(facts.hostFreeBytes), need: formatDiskBytesV1(need.needBytes), plan: formatDiskBytesV1(need.planBytes), credit: formatDiskBytesV1(need.creditBytes), reserve: formatDiskBytesV1(facts.reserveBytes), missing: formatDiskBytesV1(diskAdmissionShortfallBytesV1(facts)), command: DISK_RECLAIM_COMMAND_V1 });
+};

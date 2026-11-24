@@ -10,7 +10,7 @@ import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/�
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import heartbeatFixture from"./💓️heartbeat/🔣️.json"with{type:"json"};
 import{READY_TREE_POLICY_V1 as TREE}from"../🌲️process-tree/🟦️.ts";
-import{READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,createReadyLeaseV1,createReadyPortsV1,createReadyStatusV1,readyWriteStoreFileV1,readyInputHashV1,readyReasonV1,readyRepoBinaryV1,emptyReadyStateV1,readyBackoffV1,readyDecideV1,readyDigestsV1,readyHumanActiveV1,readyHumanRecordV1,readyHumanVerdictV1,readyIsServerV1,readyJobsV1,readyRefusalV1,readyStoreFullV1,readyTreeMegabytesV1,runReadyStageV1,runReadyV1,type ReadyCodeV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1}from"../🟦️.ts";
+import{createReadyMemoryMirrorV1,READY_POLICY_V1 as P,READY_STAGES_V1 as STAGES,READY_STATUS_SCHEMA_V1,createReadyLeaseV1,createReadyPortsV1,createReadyStatusV1,readyWriteStoreFileV1,readyInputHashV1,readyReasonV1,readyRepoBinaryV1,emptyReadyStateV1,readyBackoffV1,readyDecideV1,readyDigestsV1,readyHumanActiveV1,readyHumanRecordV1,readyHumanVerdictV1,readyIsServerV1,readyJobsV1,readyRefusalV1,readyStoreFullV1,readyTreeMegabytesV1,runReadyStageV1,runReadyV1,type ReadyCodeV1,type ReadyLocalStateV1,type ReadyPortsV1,type ReadyRunResultV1,type ReadyStatusV1}from"../🟦️.ts";
 
 /** 🚦️ Readiness that drives itself: a ready machine does nothing, a machine that is not ready runs its stages and records them, a failed stage waits for its back-off and is recorded, the group server never runs, and two runners on one machine never overlap. */
 const scratch:string[]=[];
@@ -900,4 +900,21 @@ test("late movement from a failed stage cannot renew its replacement's running r
   return{...result,exit:null,detached:true};
  }},w.controller.signal);
  expect([observed?.state,observed?.stage,observed?.updatedMs]).toEqual(["running","tools",replacementStarted]);
+});
+
+test("the memory mirror keeps the warden alive and writes memory.json at most every five seconds, at once when the level or a counter changed, and an absent record when no warden state is fresh",()=>{
+ const store=temp("memory"),file=join(store,"v1","origins","w1",P.memoryMirrorName),clock={now:1000000};
+ let ensured=0,state:object={version:1,atMs:0,absent:true};
+ const mirror=createReadyMemoryMirrorV1({store,origin:"w1",now:()=>clock.now,ensure:()=>{ensured++;},current:at=>({...state,atMs:at}) as never});
+ const read=()=>JSON.parse(readFileSync(file,"utf8")) as {atMs:number;absent?:boolean;level?:string;counters?:{cancelled:number}};
+ expect(mirror.tick()).toBe(true);expect(read()).toEqual({version:1,atMs:1000000,absent:true});expect(ensured).toBe(1);
+ clock.now+=1000;expect(mirror.tick()).toBe(false);expect(read().atMs).toBe(1000000);expect(ensured).toBe(2);
+ const full={version:1,pid:1,mode:"observe",code:"c",host:{totalMegabytes:16384,availableMegabytes:3000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,compressedMegabytes:0,pressure:"normal"},level:"calm",hold:false,guardMegabytes:1,dangerMegabytes:1,resumeMegabytes:1,subjects:{count:0,megabytes:0,byKind:{}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:1},lastAlarms:[],overhead:{tickMillisecondsP50:1,tickMillisecondsP95:1,cpuBasisPoints:1,residentMegabytes:1}};
+ state=full;clock.now+=1000;expect(mirror.tick()).toBe(true);expect(read()).toMatchObject({level:"calm",atMs:1002000});
+ clock.now+=1000;expect(mirror.tick()).toBe(false);
+ state={...full,counters:{...full.counters,cancelled:1}};clock.now+=1000;expect(mirror.tick()).toBe(true);expect(read().counters?.cancelled).toBe(1);
+ clock.now+=1000;expect(mirror.tick()).toBe(false);
+ clock.now+=P.memoryMirrorMilliseconds;expect(mirror.tick()).toBe(true);
+ expect(createReadyMemoryMirrorV1({store:undefined,origin:"w1",ensure:()=>{ensured++;}}).tick()).toBe(false);
+ expect(createReadyMemoryMirrorV1({store,origin:"w2",ensure:()=>{throw Error("x");},current:()=>{throw Error("y");}}).tick()).toBe(false);
 });

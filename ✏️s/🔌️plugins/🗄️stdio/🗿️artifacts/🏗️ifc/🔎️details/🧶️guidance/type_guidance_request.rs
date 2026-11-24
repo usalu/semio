@@ -1,7 +1,7 @@
 //! 📨️ Captures only original donated request args and returns the exact donor after projection closure.
 use super::DslValue;
 use super::{RetainedWorkOutcome,idle_step,owned_step,settled,effected,retire_self};
-use super::source_loan::{advance_cursor,close_cursor,closed_cursor,funded_turn,replied,settle_cursor,take_cursor};
+use super::source_loan::{advance_cursor,close_cursor,close_quote,closed_cursor,funded_turn,replied,settle_cursor,take_cursor};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_plugin::action_staging::StagedFormRequest;
 use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneClose,RetainedCloneProgress,RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneStep,retained_clone_grant_admits}};
@@ -16,16 +16,17 @@ impl Default for RequestCopy{fn default()->Self{Self{admission:ManuallyDrop::new
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"staging.original-request-copy")}
 impl RequestCopy{
     fn metadata()->usize{2*size_of::<Self>()+2*size_of::<StagedFormRequest>()+2*size_of::<DslValue>()}
-    pub(super) fn request(&self)->Option<&StagedFormRequest>{self.source.as_ref().and_then(Source::original_authority)}
+    pub(super) fn request(&self)->Option<&StagedFormRequest>{self.source.as_ref().and_then(Source::original_authority).or_else(||self.admission.as_ref().and_then(Admission::original_authority)).or(self.returned.as_ref())}
     pub(super) fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let bytes=Self::metadata();let mut demand=RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};
         let child=match self.phase{
             0=>RetirementDemand{depth:1,..Default::default()},
-            7=>self.admission.as_ref().ok_or_else(invalid)?.next_demand()?,
+            7=>{let admission=self.admission.as_ref().ok_or_else(invalid)?;if admission.phase()=="projectionStart"{admission.owned_projection_demand()?}else{admission.next_demand()?}},
             1=>self.cursor.advance_demands(self.source.as_ref().ok_or_else(invalid)?.borrow().project(0,|request|&request.args),body.saturating_sub(bytes),self.fuel)?,
             2=>self.cursor.take_demand()?,
-            3 if !self.cursor.terminal_is_empty()=>self.cursor.close_demands(body.saturating_sub(bytes))?,
+            3 if !self.cursor.terminal_is_empty()=>close_quote(&self.cursor, body.saturating_sub(bytes))?,
             4=>self.source.as_ref().ok_or_else(invalid)?.next_take_demand(body.saturating_sub(bytes))?,
+            5 if self.source.as_ref().is_some_and(|source|!source.terminal_is_empty())=>self.source.as_ref().ok_or_else(invalid)?.next_close_demand(body.saturating_sub(bytes))?,
             _=>Default::default(),
         };
         demand.copy_bytes=demand.copy_bytes.checked_add(child.copy_bytes).ok_or_else(invalid)?;demand.capacity_bytes=child.capacity_bytes;demand.release_bytes=child.release_bytes;demand.depth=demand.depth.max(child.depth);Ok(demand)
@@ -47,8 +48,8 @@ impl RequestCopy{
             7=>{
                 let admission=self.admission.as_mut().ok_or_else(invalid)?;
                 let source=&mut self.source;
-                if funded_turn(cx,|effect|if admission.phase()=="ready"{admission.take_output(source,effect)}else{admission.advance(effect)})?.is_none(){return Ok(false);}
-                if self.source.is_some(){*self.admission=None;self.phase=1;}
+                if funded_turn(cx,|effect|match admission.phase(){"ready"=>admission.take_output(source,effect),"projectionStart"=>admission.project_owned(effect),_=>admission.advance(effect)})?.is_none(){return Ok(false);}
+                if self.source.is_some()&&self.admission.as_ref().is_some_and(Admission::terminal_is_empty){*self.admission=None;self.phase=1;}
             },
             1=>{advance_cursor(cx,&mut self.cursor,self.source.as_ref().ok_or_else(invalid)?.borrow().project(0,|request|&request.args),child_body,&mut self.recover)?;if self.cursor.output_ready(){self.phase=2;}},
             2=>{
@@ -64,7 +65,11 @@ impl RequestCopy{
                 settle_cursor(cx,reply?,&mut self.recover)?;
                 if donor.is_some(){self.phase=5;}
             },
-            5=>{if self.source.as_ref().is_none_or(|source|!source.terminal_is_empty()){return Err(invalid().into());}drop(self.source.take());self.phase=6;Self::post(cx,0)?;},
+            5=>{
+                let source=self.source.as_mut().ok_or_else(invalid)?;
+                if source.terminal_is_empty(){drop(self.source.take());self.phase=6;Self::post(cx,0)?;}
+                else if funded_turn(cx,|effect|settled(source.close_step(child_body,effect)))?.is_none(){return Ok(false);}
+            },
             _=>return Err(invalid().into()),
         }
         Ok(self.phase==6)
@@ -78,9 +83,9 @@ impl RequestCopy{
     pub(super) fn begin_close(&mut self){self.closing=true;}
     pub(super) fn empty(&self)->bool{self.cursor.terminal_is_empty()&&self.args.is_none()&&self.source.is_none()&&self.admission.is_none()&&self.returned.is_none()&&self.retirement.is_empty()}
     pub(super) fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if !self.cursor.terminal_is_empty(){return self.cursor.close_demands(body);}
+        if !self.cursor.terminal_is_empty(){return close_quote(&self.cursor, body);}
         if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
-        if let Some(admission)=self.admission.as_ref(){return if admission.phase()=="ready"{admission.next_demand()}else{admission.next_return_demand()};}
+        if let Some(admission)=self.admission.as_ref(){return if admission.projection_result()==Some(true){Ok(admission.discard_projection_demand())}else if admission.phase()=="ready"{admission.next_demand()}else{admission.next_return_demand()};}
         if self.returned.is_some(){return self.retirement.next_owner_demands::<StagedFormRequest>(true,&None,body);}
         if self.args.is_some(){return self.retirement.next_owner_demands::<DslValue>(true,&None,body);}
         if self.source.is_some(){return self.retirement.next_owner_demands::<Source>(true,&None,body);}
@@ -90,7 +95,7 @@ impl RequestCopy{
         if !self.cursor.terminal_is_empty(){return closed_cursor(effect,&mut self.cursor,body,&mut self.recover);}
         if !self.retirement.is_empty(){return settled(self.retirement.step_granted(body,effect));}
         if let Some(admission)=self.admission.as_mut(){
-            let turn=if admission.phase()=="ready"{admission.take_output(&mut self.source,effect)}else{let mut inputs=None;let turn=admission.return_inputs(&mut inputs,effect);if let Some((original,()))=inputs{*self.returned=Some(original);}turn};
+            let turn=if admission.projection_result()==Some(true){admission.discard_projection(effect)}else if admission.phase()=="ready"{admission.take_output(&mut self.source,effect)}else{let mut inputs=None;let turn=admission.return_inputs(&mut inputs,effect);if let Some((original,()))=inputs{*self.returned=Some(original);}turn};
             if admission.terminal_is_empty()||self.source.is_some(){*self.admission=None;}
             return turn;
         }

@@ -15,6 +15,7 @@ fn scalar_controller_value(input: &serde_json::Value) -> IfcValue {
 }
 #[test]
 fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_signed_values_editable() {
+    let _arena=semio_plugin::artifact_app_laws::FixtureUiArena::admit();semio_ui_contract::built_node_pages_are_terminal_empty();
     use semio_plugin::{AppRenderOperationContext, ChildContentView};
     use semio_ui_contract::{Component, ContainerRole, OriginalBuiltTreeRetirement};
     use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity};
@@ -31,7 +32,7 @@ fn scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_sig
                 complex: input["complex"].as_array().unwrap().iter().map(|part| IfcComplexType { name: part["name"].as_str().unwrap().into(), args: part["args"].as_array().unwrap().iter().map(scalar_controller_value).collect() }).collect(),
             })
             .collect();
-        let snapshot = std::sync::Arc::new(IfcSnapshot { entities, ..Default::default() });
+        let snapshot = std::sync::Arc::new(IfcSnapshot { entities, header: ifc4x3_header(), ..Default::default() });
         let history = semio_plugin::HistoryView::empty();
         let view = staged_view();
         let rows = serde_json::Value::Array(row["required"].as_array().unwrap().iter().map(|item| serde_json::json!({"index":item["index"].as_u64().unwrap().to_string(),"value":row["args"][item["index"].as_u64().unwrap()as usize]})).collect());

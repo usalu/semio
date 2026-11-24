@@ -92,6 +92,22 @@ async fn add_layer_action_emits_op_and_appends_path() {
     assert!(semio_s_artifact_draw_drawing_model::layer_base(created).attributes.fill.is_some());
 }
 
+/// 🌐️ LAW: `addLayer` settles under the browser host's mounted grant (`🧪️tests/🔬️mounted-grant-archive-publication`'s `browser-mounted-grant` row: 64 items, 32 KiB copy, 16 MiB capacity, 1 MiB release, depth 64) instead of stalling after its commit with `interactive-job.publication-stalled`.
+#[semio_framework_async_macros::async_test]
+async fn add_layer_settles_under_the_browser_grant() {
+    let mut app = drawing_app().await;
+    let before = app.snapshot().unwrap().layers.len();
+    let meta = artifact_laws::meta("local");
+    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 64 };
+    let policy = semio_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant };
+    settle_drawing_geometry(&mut app, meta.view_state.as_deref()).await;
+    let command = DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() });
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, policy, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("dispatch addLayer: {fault:?}"));
+    let receipt = artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, policy, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("retained publication of addLayer settles under the browser grant: {fault:?}"));
+    assert_one_artifact_publication(&receipt);
+    assert_eq!(app.snapshot().unwrap().layers.len(), before + 1);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn patch_layers_opacity_emits_granular_operation() {
     let mut app = drawing_app().await;

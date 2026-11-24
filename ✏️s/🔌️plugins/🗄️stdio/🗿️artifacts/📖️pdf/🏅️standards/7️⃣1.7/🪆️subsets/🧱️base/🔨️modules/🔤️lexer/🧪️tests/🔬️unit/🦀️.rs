@@ -1,4 +1,4 @@
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
 #[allow(unused_imports)]
@@ -25,7 +25,7 @@ fn parses_every_cos_object_kind() {
 #[test]
 fn stream_with_wrong_length_recovers_by_endstream_search() {
     let object = parse("<< /Length 99 >>\nstream\nabc\nendstream");
-    assert_eq!(object, PdfObject::Stream { dict: vec![PdfDictEntry::new("Length", PdfObject::Int(99))], data: b"abc".to_vec(), filters: Vec::new() });
+    assert_eq!(object, PdfObject::Stream { dict: vec![PdfDictEntry::new("Length", PdfObject::Int(99))], data: stream_bytes(b"abc"), filters: Vec::new() });
 }
 
 #[test]

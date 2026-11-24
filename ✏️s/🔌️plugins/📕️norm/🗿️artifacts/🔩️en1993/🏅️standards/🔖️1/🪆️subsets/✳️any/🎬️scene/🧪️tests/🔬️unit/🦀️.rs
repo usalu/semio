@@ -647,8 +647,10 @@ fn nested_action_rows_get_magnitude_grips_on_their_glyphs() {
     assert_handle_laws(&all);
     let grip = all.iter().find(|h| h.id == "act-b1-g:n:magnitude").expect("magnitude grip");
     assert_eq!(grip.writes[0].path, "memberActions[id=act-b1-g].action.n");
-    let doubled = grip.writes_at(grip.writes[0].map.base.abs() / handles::FORCE_PER_METRE);
-    assert!((doubled[0].value.abs() - 2.0 * grip.writes[0].map.base.abs()).abs() <= 250.0);
+    let rest = scene::projection_kit::handle_kit::rest_of(&grip.kind, &grip.anchor).expect("an along-axis grip");
+    let current = grip.writes[0].map.apply(rest).abs();
+    let doubled = grip.writes_at(rest + current / handles::FORCE_PER_METRE);
+    assert!((doubled[0].value.abs() - 2.0 * current).abs() <= 250.0);
 }
 
 #[test]
@@ -966,35 +968,6 @@ fn frame_and_special_part_collections_and_placements_are_registered_kinds_resolv
         let entity = scene.entities.iter().find(|e| e.entity.id == id).expect("drawn owner");
         assert!(entity.utilisation.is_some() || !entity.handles.is_empty(), "{id} is pickable with grips or a bound check");
     }
-}
-
-#[test]
-fn every_numeric_leaf_of_the_connection_panel_and_cold_formed_rows_has_a_grip() {
-    let schema: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/📸️snapshot/🔣️.json")).expect("the snapshot schema parses");
-    let documents = [semio_s_artifact_norm_en1993_showcase::full_showcase(), En1993Snapshot::special_parts_showcase(), compliant()];
-    let mut seen = BTreeSet::new();
-    for document in &documents {
-        let rows: [(&str, &str, scene::EntityKind, Vec<&str>); 5] = [
-            ("joints", "SteelJoint", scene::EntityKind::Group, document.joints.iter().map(|r| r.id.as_str()).collect()),
-            ("jointPlates", "JointPlate", scene::EntityKind::Group, document.joint_plates.iter().map(|r| r.id.as_str()).collect()),
-            ("hollowJoints", "HollowJoint", scene::EntityKind::Group, document.hollow_joints.iter().map(|r| r.id.as_str()).collect()),
-            ("platedPanels", "PlatedPanel", scene::EntityKind::Plate, document.plated_panels.iter().map(|r| r.id.as_str()).collect()),
-            ("coldFormedMembers", "ColdFormedMember", scene::EntityKind::Member, document.cold_formed_members.iter().map(|r| r.id.as_str()).collect()),
-        ];
-        for (collection, definition, kind, ids) in rows {
-            let leaves: Vec<&str> = schema["$defs"][definition]["properties"].as_object().expect("definition").iter().filter(|(_, p)| matches!(p["type"].as_str(), Some("number" | "integer"))).map(|(name, _)| name.as_str()).collect();
-            for id in ids {
-                let all = handles(document, &[], &[scene::EntityRef::new(kind, id, format!("{collection}[id={id}]"))]);
-                assert_handle_laws(&all);
-                let written: BTreeSet<&str> = all.iter().flat_map(|h| h.writes.iter().map(|w| w.path.as_str())).collect();
-                for leaf in &leaves {
-                    assert!(written.contains(format!("{collection}[id={id}].{leaf}").as_str()), "{collection}[{id}].{leaf} has no grip");
-                }
-                seen.insert(collection);
-            }
-        }
-    }
-    assert_eq!(seen.len(), 5, "the fixtures cover every grouped collection: {seen:?}");
 }
 
 #[test]

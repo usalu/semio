@@ -78,7 +78,7 @@ fn plugin_definitions() -> Vec<(String, String)> {
     found
 }
 
-fn framed_dialects(value: &str) -> Option<Vec<semio_plugin::io::ArtifactDialect>> {
+fn framed_dialects(value: &str) -> Option<Vec<semio_plugin::app::ArtifactDialect>> {
     let mut rest = value;
     let mut found = Vec::new();
     for _ in 0..2 {
@@ -86,7 +86,7 @@ fn framed_dialects(value: &str) -> Option<Vec<semio_plugin::io::ArtifactDialect>
         let coordinate = tail.get(..length.parse::<usize>().ok()?)?;
         let (artifact_kind, remainder) = coordinate.split_once('@')?;
         let (standard, subset) = remainder.rsplit_once('/')?;
-        found.push(semio_plugin::io::ArtifactDialect { artifact_kind: artifact_kind.into(), standard: standard.into(), subset: subset.into() });
+        found.push(semio_plugin::app::ArtifactDialect { artifact_kind: artifact_kind.into(), standard: standard.into(), subset: subset.into() });
         rest = &tail[coordinate.len()..];
     }
     rest.is_empty().then_some(found)
@@ -100,7 +100,7 @@ fn runtime_claim_violations(file: &str, text: &str) -> Vec<String> {
         let claims = capability["claims"].as_array().into_iter().flatten().collect::<Vec<_>>();
         let value_of = |namespace: &str| claims.iter().find(|claim| claim["namespace"] == namespace).and_then(|claim| claim["value"].as_str());
         let mut check = |namespace: &str, declared: &str, rebuilt: Result<ArtifactIdentityClaim, ArtifactDefinitionError>| match rebuilt {
-            Err(error) => found.push(format!("{file}: {identity}: {namespace} claim {declared:?} cannot be rebuilt: {}", error.message)),
+            Err(error) => found.push(format!("{file}: {identity}: {namespace} claim {declared:?} cannot be rebuilt: {error}")),
             Ok(runtime) => {
                 if runtime.value() != declared {
                     found.push(format!("{file}: {identity}: {namespace} claim declares {declared:?} but the runtime constructor produces {:?}", runtime.value()));

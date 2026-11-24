@@ -651,6 +651,31 @@
       "properties": {
         "operation": {
           "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Operation outside occupancy",
+              "de": "Betrieb außerhalb der Nutzungszeit"
+            },
+            "widget": "select",
+            "options": {
+              "nonResidentialPurge": {
+                "en": "Non-residential: purge before occupancy",
+                "de": "Nichtwohngebäude: Spülung vor Nutzungsbeginn"
+              },
+              "nonResidentialReduced": {
+                "en": "Non-residential: reduced ventilation",
+                "de": "Nichtwohngebäude: reduzierte Lüftung"
+              },
+              "residentialReduced": {
+                "en": "Residential: reduced ventilation",
+                "de": "Wohngebäude: reduzierte Lüftung"
+              },
+              "residentialShutdown": {
+                "en": "Residential: ventilation switched off",
+                "de": "Wohngebäude: Lüftung abgeschaltet"
+              }
+            }
+          },
           "enum": [
             "nonResidentialPurge",
             "nonResidentialReduced",
@@ -659,19 +684,69 @@
           ]
         },
         "assessedAreaM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Assessed floor area",
+              "de": "Bewertete Grundfläche"
+            },
+            "widget": "stepper",
+            "unit": "m²",
+            "precision": 1,
+            "step": 1
+          }
         },
         "zoneVolumeM3": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Zone volume",
+              "de": "Zonenvolumen"
+            },
+            "widget": "stepper",
+            "unit": "m³",
+            "precision": 1,
+            "step": 1
+          }
         },
         "minutesBeforeOccupancy": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Purge duration before occupancy",
+              "de": "Spüldauer vor Nutzungsbeginn"
+            },
+            "widget": "stepper",
+            "unit": "min",
+            "precision": 0,
+            "step": 5
+          }
         },
         "residentialDesignRateLPerSM2": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Residential design air flow rate per floor area",
+              "de": "Auslegungs-Luftvolumenstrom je Grundfläche (Wohngebäude)"
+            },
+            "widget": "stepper",
+            "unit": "L/(s·m²)",
+            "precision": 2,
+            "step": 0.05
+          }
         },
         "outdoorAirM3H": {
-          "type": "number"
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Outdoor air flow",
+              "de": "Außenluftvolumenstrom"
+            },
+            "widget": "stepper",
+            "unit": "m³/h",
+            "precision": 1,
+            "step": 10
+          }
         }
       }
     }

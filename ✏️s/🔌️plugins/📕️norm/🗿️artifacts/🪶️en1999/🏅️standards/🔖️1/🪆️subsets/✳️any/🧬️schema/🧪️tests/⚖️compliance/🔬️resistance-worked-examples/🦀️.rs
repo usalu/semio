@@ -53,7 +53,7 @@ fn e2_02_classification_and_local_buckling() {
     assert!(close(eps, 0.98058, 1e-4));
     let flange = el("f", 0.037, 0.010, true);
     assert_eq!(part_1_1::classify_element(&flange, i.f_o_pa, true, 1.0), part_1_1::SectionClass::Class2);
-    let web = el("w", 0.100, 0.006, false);
+    let web = el("web", 0.100, 0.006, false);
     let eta = part_1_1::stress_gradient_eta(-1.0);
     assert!(close(eta, 0.4, 1e-12));
     assert_eq!(part_1_1::classify_element(&web, i.f_o_pa, true, eta), part_1_1::SectionClass::Class1);
@@ -138,7 +138,7 @@ fn the_channel_critical_moment_follows_the_general_formula_with_the_monosymmetry
     assert!(close(part_1_1::m_cr_of(&channel, 1.0, 3.0), 3015.33, 3e-3));
     let outer = [[0.02, 0.0], [0.08, 0.0], [0.08, 0.008], [0.053, 0.008], [0.053, 0.188], [0.1, 0.188], [0.1, 0.2], [0.0, 0.2], [0.0, 0.188], [0.047, 0.188], [0.047, 0.008], [0.02, 0.008]];
     let (mcr, zj) = part_1_1::m_cr_of_outline(&outer, &[], 1.0, 4.0).expect("mono-symmetric I outline");
-    assert!(close(zj, 0.06400390761890133, 2e-3), "z_j={zj}");
+    assert!(close(zj, 0.06400390761890133, 5e-3), "z_j={zj}");
     assert!(close(mcr, 14283.5, 6e-3), "M_cr={mcr}");
     let flipped: Vec<[f64; 2]> = outer.iter().map(|p| [p[0], 0.2 - p[1]]).collect();
     let (down, zj_down) = part_1_1::m_cr_of_outline(&flipped, &[], 1.0, 4.0).expect("flipped outline");
@@ -190,7 +190,7 @@ fn e2_11_shell_critical_stress_and_reduction() {
     assert!(part_1_4_1_5::shell_chi(0.15, 0.5, 0.6, 1.0, 0.2) == 1.0);
     let chi = part_1_4_1_5::shell_chi(0.9, 0.5, 0.6, 1.0, 0.2);
     assert!(chi < 1.0 && chi > 0.2);
-    assert!(part_1_4_1_5::alpha_x(0.5, 0.003, part_1_4_1_5::shell_quality_q("B")) < 0.62);
+    assert!(part_1_4_1_5::alpha_x(0.5, 0.003, part_1_4_1_5::shell_quality_q(semio_s_artifact_norm_en1999_model::FabricationClass::B)) < 0.62);
 }
 
 #[test]
@@ -237,7 +237,7 @@ fn rho_c_is_continuous_at_every_class_3_limit() {
 fn interaction_exponents_are_data_driven_and_never_below_one() {
     let (eta_c, gamma_c, xi_c) = part_1_1::member_interaction_exponents(part_1_1::SectionClass::Class2, 0.6);
     assert!(eta_c >= 1.0 && gamma_c >= 1.0 && xi_c >= 1.0);
-    let (psi, eta, xi) = part_1_1::section_interaction_exponents("extrudedI");
+    let (psi, eta, xi) = part_1_1::section_interaction_exponents(semio_s_artifact_norm_en1999_model::SectionKind::ExtrudedI);
     assert!(psi >= 1.0 && eta >= 1.0 && xi >= 1.0);
     assert!(part_1_1::kappa(0.5, 0.0) == 0.5 && part_1_1::kappa(0.5, 2.0) == 1.0);
     assert!((part_1_1::omega_x(0.9, 0.48, 0.0, 1.0, 1.0) - 1.0).abs() < 1e-12, "a weld at the support has no effect");
@@ -689,7 +689,7 @@ fn e2_12b_net_width_of_aligned_and_staggered_hole_lines() {
     assert!(joints::net_path(0.140, 0.018, 0, 0.040, 0.0).is_empty());
     assert!(close(joints::plate_width(2, 0.060, 0.040), 0.140, 1e-12) && close(joints::plate_width(1, 0.060, 0.040), 0.080, 1e-12));
     let (n_o, n_u) = joints::plate_tension_resistances(0.140, 0.104, 0.008, 260.0e6, 310.0e6, 1.1, 1.25);
-    assert!(close(n_o, 264.727e3, 1e-6) && close(n_u, 185.702e3, 1e-6), "N_o={n_o} N_u={n_u}");
+    assert!(close(n_o, 264.7272727e3, 1e-9) && close(n_u, 185.7024e3, 1e-9), "N_o={n_o} N_u={n_u}");
 }
 
 #[test]

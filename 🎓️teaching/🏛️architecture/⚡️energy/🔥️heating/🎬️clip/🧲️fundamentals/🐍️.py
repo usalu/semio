@@ -27,6 +27,7 @@ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡
 room_metre = _manim_module.room_metre
 pose_animation = _manim_module.pose_animation
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -349,7 +350,7 @@ def _route_strip(active: int | None = None):
         chip(n, c if active == i else P_PRIMARY, font_size=LABEL_FONT_SIZE)
         for i, (n, c) in enumerate(zip(names, colors))
     ]).arrange(RIGHT, buff=0.5)
-    strip.move_to(np.array([0.0, -2.16, 0.0]))
+    strip.move_to(np.array([-1.0, -2.16, 0.0]))
     if active is not None:
         for i, boxed in enumerate(strip):
             if i != active:
@@ -436,21 +437,6 @@ def _layer_legend(entries):
     return rows
 
 
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the same empty top-right corner.
-
-    Every section of Module 1 names the norm it is built on (mostly
-    DIN EN ISO 6946 for building-component heat transfer; DIN EN 12831-1 where
-    the beat is really about the heating load). Dim so it reads as a footnote,
-    never competing with the diagram.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Beat1 – Heat crosses from warm to cold, and only that way
 class Beat1_DreiWegeDerWaerme(Scene):
     NARRATION = [
@@ -479,7 +465,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Section 1.1 — How heat moves", "Abschnitt 1.1 — Wie Wärme sich bewegt"))
-        din = _din_ref(tr("2nd law of thermodynamics", "2. Hauptsatz der Thermodynamik"))
+        din = reference_chip(tr("2nd law of thermodynamics", "2. Hauptsatz der Thermodynamik"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -632,7 +618,7 @@ class Beat2_Waermeleitung(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Conduction — energy without material transport", "Wärmeleitung — Energie ohne Materialtransport"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
@@ -742,7 +728,7 @@ class Beat3_Konvektion(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Convection — moving air carries the heat", "Konvektion — bewegte Luft trägt die Wärme"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
@@ -881,7 +867,7 @@ def _spectrum():
         marker(10.0, tr("Room surfaces (20 °C): long-wave", "Raumflächen (20 °C): langwellig"), PASTEL_ORANGE),
     )
     panel = RoundedRectangle(corner_radius=0.15, width=10.6, height=4.5, stroke_color=P_PRIMARY, stroke_width=1.6,
-                             fill_color=P_DEEP_DARK, fill_opacity=0.97).move_to(np.array([0.0, y + 0.55, 0.0]))
+                             fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(np.array([0.0, y + 0.55, 0.0]))
     base = VGroup(bands, ticks, names, axis, heading)
     for m in (panel, base, marks):
         m.set_z_index(901)
@@ -919,7 +905,7 @@ class Beat4_Strahlung(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Radiation — needs no medium", "Strahlung — braucht kein Medium"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
@@ -959,13 +945,14 @@ class Beat4_Strahlung(Scene):
 
         spec = _spectrum()
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "light"))
-        self.play(FadeIn(spec["panel"]), FadeIn(spec["base"]), run_time=1.2)
+        covered = VGroup(stage["ti"], stage["te"], stage["dth"], air_tag, sky_tag)
+        self.play(FadeIn(spec["panel"]), FadeIn(spec["base"]), covered.animate.set_opacity(0.0), run_time=1.2)
         hold_for(self, self.NARRATION, "light", used=1.2 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "short"))
         self.play(LaggedStart(*[FadeIn(m, shift=DOWN * 0.12) for m in spec["marks"]], lag_ratio=0.4), run_time=1.4)
         hold_for(self, self.NARRATION, "short", used=1.4 + 0.35)
-        self.play(FadeOut(spec["group"]), run_time=0.6)
+        self.play(FadeOut(spec["group"]), covered.animate.set_opacity(1.0), run_time=0.6)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "vacuum"))
         self.play(Create(loop_guide), *glow(0.8, pulses=False), run_time=0.8)
@@ -1019,13 +1006,13 @@ class Beat5_Zusammenfassung(Scene):
          "Derselbe Wärmestrom läuft durch alle Stationen. Die Temperatur fällt in Stufen: 20, 16,3, 1,1 und 0 Grad."),
         ("standard",
          r"Heat transfer at the surface: $R_{\mathrm{si}}$ and $R_{\mathrm{se}}$ combine radiation and convection into one resistance.",
-         r"Wärmeübergang: $R_{\mathrm{si}}$ und $R_{\mathrm{se}}$ fassen Strahlung und Konvektion zusammen."),
+         r"Der Wärmeübergang an den Oberflächen wird je als ein Widerstand angegeben: $R_{\mathrm{si}}$ innen, $R_{\mathrm{se}}$ außen."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
-        subtitle = section_heading(tr("Summary — three paths, one heat flow", "Zusammenfassung — drei Wege, ein Wärmestrom"))
+        subtitle = section_heading(tr("Three paths, one heat flow", "Drei Wege, ein Wärmestrom"))
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "recap"))
@@ -1076,10 +1063,10 @@ class Beat5_Zusammenfassung(Scene):
             .move_to(p(1.75, _profile_y(theta_se) + 0.32)),
             Text(f"{THETA_E} °C", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(p(3.5, _profile_y(THETA_E) + 0.28)),
         )
-        iso = _din_ref(_references.cite(("din-en-iso-6946", "rse")))
+        iso = reference_chip(_references.cite(("din-en-iso-6946", "rse")))
         surf_note = math_label(
-            tr(r"\text{Heat transfer:}\;R_{\mathrm{si}}\;\text{and}\;R_{\mathrm{se}}\;\text{combine radiation and convection}",
-               r"\text{Wärmeübergang:}\;R_{\mathrm{si}}\;\text{und}\;R_{\mathrm{se}}\;\text{fassen Strahlung und Konvektion zusammen}"),
+            tr(r"R_{\mathrm{si}}\;\text{inside},\;R_{\mathrm{se}}\;\text{outside:}\;\text{convection and radiation in one value}",
+               r"R_{\mathrm{si}}\;\text{innen},\;R_{\mathrm{se}}\;\text{außen:}\;\text{Konvektion und Strahlung in einem Wert}"),
             np.array([0.0, 2.72, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_GREEN)
         surf_box = SurroundingRectangle(surf_note, color=PASTEL_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2)
         r_tags = VGroup(
@@ -1156,7 +1143,7 @@ class Beat6_VonWegenZuZahlen(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Section 1.2 — From three paths to one characteristic value", "Abschnitt 1.2 — Von drei Wegen zu einem Kennwert"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "bridge"))
@@ -1271,7 +1258,7 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Thermal resistance R", "Wärmedurchlasswiderstand R"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1500,7 +1487,7 @@ class Beat8_UWert(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("U-value — how easily heat passes through", "U-Wert — wie leicht Wärme hindurchgeht"))
-        din = _din_ref(_references.cite("din-en-iso-6946"))
+        din = reference_chip(_references.cite("din-en-iso-6946"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1661,7 +1648,7 @@ class Beat9_WaermestromFormel(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat flow through a component", "Wärmestrom durch ein Bauteil"))
-        din = _din_ref(_references.cite("din-en-12831-1"))
+        din = reference_chip(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

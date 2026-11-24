@@ -220,6 +220,12 @@ def side_runs(hull, thickness):
     return [[(z, world_v(v)) for z, v in right], [(z, world_v(v)) for z, v in left]]
 
 
+def band_end(id_, hull, thickness, tone, region, material, z):
+    """➿ Front section of a band tensioned round a hull, as the body has it: the filled ring between the hull and its offset by the band thickness (a thin band drawn as a pen stroke encloses the void under its taut run, which the silhouette guard then reads as closed)."""
+    ring = lambda r: "M " + " L ".join(f"{r6(z)} {r6(world_v(v))}" for z, v in r) + " Z"
+    return {"id": id_, "bone": "lashing", "role": "body", "z": z, "filled": True, "tone": tone, "region": region, "material": material, "kind": "path", "d": ring(g.offset_convex(hull, thickness)) + " " + ring(hull)}
+
+
 def band_sides(id_, hull, thickness, tone, region, material, z):
     """➰ Front strokes of the two side runs of a band."""
     return [poly(f"{id_}-{side}", "lashing", run, tone, closed=False, filled=False, region=region, material=material, role="detail", z=z) for side, run in zip(("l", "r"), side_runs(hull, thickness))]
@@ -258,7 +264,7 @@ def shapes_50():
     for side, sgn in (("r", -1), ("l", 1)):
         z0, z1 = sorted([sgn * (g.EDGE - 0.020), sgn * (g.EDGE + g.PROT_T)])
         fr.append(rect(f"protector-{side}-end", "lashing", z0, world_v(g.PROT_V0), z1 - z0, g.PROT_V1 - g.PROT_V0, TONE_PROT, "lashing-straps", material=ST, z=5))
-    fr.extend(band_sides("strap-side", HULL, g.STRAP_T, TONE_STRAP, "lashing-straps", ST, 6))
+    fr.append(band_end("strap-end", HULL, g.STRAP_T, TONE_STRAP, "lashing-straps", ST, 6))
     fr.extend(band_sides("sling-choke-side", LOOP, g.LOOP_T, TONE_SLING, "round-slings", SL, 5.5))
     for leg in ("a", "b"):
         fr.append(rect(f"sling-leg-{leg}-end", f"sling-leg-{leg}", -g.LEG_W / 2, world_v(g.TOP), g.LEG_W, g.LEG_T, TONE_SLING, "round-slings", material=SL, z=6.5))
@@ -322,7 +328,7 @@ def shapes_100():
     for side, sgn in (("r", -1), ("l", 1)):
         z0, z1 = sorted([sgn * g.EDGE, sgn * (g.EDGE + PROT100)])
         fr.append(rect(f"protector-{side}-end", "lashing", z0, world_v(g.PROT_V0), z1 - z0, g.PROT_V1 - g.PROT_V0, TONE_PROT, "lashing-straps", material=ST, z=5))
-    fr.extend(band_sides("strap-side", hull100(), g.STRAP_T, TONE_STRAP, "lashing-straps", ST, 6))
+    fr.append(band_end("strap-end", hull100(), g.STRAP_T, TONE_STRAP, "lashing-straps", ST, 6))
     fr.extend(band_sides("sling-choke-side", LOOP, g.LOOP_T, TONE_SLING, "round-slings", SL, 5.5))
     for leg in ("a", "b"):
         fr.append(rect(f"sling-leg-{leg}-end", f"sling-leg-{leg}", -g.LEG_W / 2, world_v(g.TOP), g.LEG_W, g.LEG_T, TONE_SLING, "round-slings", material=SL, z=6.5))
@@ -412,7 +418,7 @@ REP_DECISIONS = {
         "retained": T("Every crest of the profile (35 mm high, 35 mm wide, 207 mm pitch) in the front view, the 150 mm corner trim of the edge crest at the eaves end, the 6.5 mm screw holes of the old fastening (end purlin lines in every crest, intermediate lines in every second crest, 1.45 m old purlin spacing) as circles in plan, the straps at 32 mm, the 2 mm edge protectors and the 25 mm sling chokes at their true widths.", "Jede Rippe des Profils (35 mm hoch, 35 mm breit, Teilung 207 mm) in der Vorderansicht, der 150 mm lange Eckschnitt der Randrippe am Traufende, die 6,5-mm-Schraublöcher der alten Befestigung (Endpfettenlinien in jeder Rippe, Zwischenpfetten in jeder zweiten, alter Pfettenabstand 1,45 m) als Kreise in der Draufsicht, die Bänder mit 32 mm, der 2 mm starke Kantenschutz und die 25 mm breiten Schlingenschnürungen in wahrer Breite."),
         "merged": T("The 29 nested sheets of the bundle are one band in side elevation and one profiled band in the front view; their 1.5 mm nesting pitch is below the 7.5 mm smallest feature, so every tenth layer is a texture line.", "Die 29 geschachtelten Bleche des Pakets sind in der Seitenansicht ein Band und in der Vorderansicht ein profiliertes Band; ihre Schachtelteilung von 1,5 mm liegt unter der kleinsten Einzelheit von 7,5 mm, daher ist jede zehnte Lage eine Texturlinie."),
         "omitted": T("The 0.75 mm sheet thickness as a filled area (drawn as the profile line of the top sheet), the strap buckles, the zinc white-rust spots (a lighter tone of the top sheet).", "Die Blechdicke von 0,75 mm als Fläche (als Profillinie des obersten Blechs gezeichnet), die Bandverschlüsse, die Weißrostflecken der Verzinkung (ein hellerer Ton des obersten Blechs)."),
-        "thinElements": T("Strap and sling loops in the front view are the centre lines of their two side runs; the bottom run under the valleys and the top run on the battens are hidden in the end view; the top sheet profile is a detail line.", "Band- und Schlingenschlaufen der Vorderansicht sind die Mittellinien ihrer beiden Seitenläufe; der untere Lauf unter den Untergurten und der obere auf den Kanthölzern sind in der Stirnansicht verdeckt; das Profil des obersten Blechs ist eine Detaillinie."),
+        "thinElements": T("The strap in the front view is its true 1 mm section round bundle and battens; the sling loops are the centre lines of their two side runs, whose bottom run under the valleys and top run on the battens are hidden in the end view; the top sheet profile is a detail line.", "Das Band ist in der Vorderansicht sein wahrer Querschnitt von 1 mm um Paket und Kanthölzer; die Schlingenschlaufen sind die Mittellinien ihrer beiden Seitenläufe, deren unterer Lauf unter den Untergurten und oberer auf den Kanthölzern in der Stirnansicht verdeckt sind; das Profil des obersten Blechs ist eine Detaillinie."),
         "hatching": T("End grain of bearers and battens cross-hatched 0.5 mm, the long grain of the battens in the front view hatched in lines.", "Hirnholz von Unterlegern und Kanthölzern kreuzschraffiert 0,5 mm, das Langholz der Kanthölzer in der Vorderansicht mit Linien schraffiert."),
         "styles": T("Weathered zinc in two light greys (the top sheet lighter), timber mid grey, the straps nearly white, edge protectors and slings dark.", "Bewittertes Zink in zwei hellen Grautönen (das oberste Blech heller), Holz mittelgrau, die Bänder fast weiß, Kantenschutz und Schlingen dunkel."),
         "overlays": T("Supports, hooks and purlin lines appear in the structural views only.", "Auflager, Haken und Pfettenlinien erscheinen nur in den statischen Ansichten."),
@@ -422,7 +428,7 @@ REP_DECISIONS = {
         "retained": T("The crests in the front view (0.35 mm on paper), the six crest lines of the top sheet in plan, the corner trim, the straps (0.32 mm) and the sling chokes.", "Die Rippen der Vorderansicht (0,35 mm auf Papier), die sechs Rippenlinien des obersten Blechs in der Draufsicht, der Eckschnitt, die Bänder (0,32 mm) und die Schlingenschnürungen."),
         "merged": T("The U-shaped edge protectors become 15 mm plates outside the sheet edges (the smallest feature); the layer texture of the bundle side is dropped.", "Der U-förmige Kantenschutz wird zu 15 mm starken Platten außen an den Blechkanten (die kleinste Einzelheit); die Lagentextur der Paketseite entfällt."),
         "omitted": T("The 6.5 mm screw holes (0.065 mm on paper) and the corner-trim tick in side elevation.", "Die 6,5-mm-Schraublöcher (0,065 mm auf Papier) und der Eckschnitt-Strich in der Seitenansicht."),
-        "thinElements": T("Strap and sling loops as the centre lines of their side runs; the top sheet profile as a detail line.", "Band- und Schlingenschlaufen als Mittellinien ihrer Seitenläufe; das Profil des obersten Blechs als Detaillinie."),
+        "thinElements": T("The strap as its true section, the sling loops as the centre lines of their side runs; the top sheet profile as a detail line.", "Das Band als wahrer Querschnitt, die Schlingenschlaufen als Mittellinien ihrer Seitenläufe; das Profil des obersten Blechs als Detaillinie."),
         "hatching": T("No hatches; the timber reads by its tone.", "Keine Schraffuren; das Holz liest sich über seinen Ton."),
         "styles": T("As at 1:50 with the 0.25 mm body pen.", "Wie 1:50 mit der 0,25-mm-Körperfeder."),
         "overlays": T("Supports and loads in the structural views only.", "Auflager und Lasten nur in den statischen Ansichten."),
@@ -498,8 +504,11 @@ def u_protector(sign):
 def body_50():
     """🧊 1:50 body."""
     out = bearer_solids()
-    out.append(ext_u("sheets-1-29", "bundle", g.sheet_ring(True), 0, g.L, GS, TONE_PACK, sheet=True, repeat={"count": 29, "translation": [0, g.NEST, 0]}))
-    out.append(ext_u("sheets-1-29-edge-crest", "bundle", g.edge_crest_ring(), g.CUT, g.L, GS, TONE_PACK, sheet=True, repeat={"count": 29, "translation": [0, g.NEST, 0]}))
+    up, air = len(g.sheet_surfaces(True)[0]), g.NEST - g.T
+    pack = [(z, v + air) if i < up else (z, v) for i, (z, v) in enumerate(g.pack_ring(29, True))]
+    crests = [(z, v + air) if v > g.H else (z, v) for z, v in g.edge_crest_pack_ring(29)]
+    out.append(ext_u("sheets-1-29", "bundle", pack, 0, g.L, GS, TONE_PACK))
+    out.append(ext_u("sheets-1-29-edge-crest", "bundle", crests, g.CUT, g.L, GS, TONE_PACK))
     out.append(ext_u("sheet-30", "sheet-30", g.sheet_ring(True), 0, g.L, GS, TONE_TOP, sheet=True))
     out.append(ext_u("sheet-30-edge-crest", "sheet-30", g.edge_crest_ring(), g.CUT, g.L, GS, TONE_TOP, sheet=True))
     out.append(box("battens", "lashing", [0.1, 0.1, 2 * g.BATTEN_HALF], [lu(g.XS[0]), g.BATTEN_V0 + 0.05, 0], WD, TONE_WOOD, repeat=repeat_x(4, 1.8)))
@@ -518,7 +527,8 @@ def body_100():
     out = bearer_solids("s100-")
     out.append(ext_u("pack-1-29", "bundle", g.pack_ring(29, True), 0, g.L, GS, TONE_PACK))
     out.append(ext_u("pack-1-29-edge-crests", "bundle", g.edge_crest_pack_ring(29), g.CUT, g.L, GS, TONE_PACK))
-    out.append(ext_u("s100-sheet-30", "sheet-30", g.sheet_ring(), 0, g.L, GS, TONE_TOP, sheet=True))
+    out.append(ext_u("s100-sheet-30", "sheet-30", g.sheet_ring(True), 0, g.L, GS, TONE_TOP, sheet=True))
+    out.append(ext_u("s100-sheet-30-edge-crest", "sheet-30", g.edge_crest_ring(), g.CUT, g.L, GS, TONE_TOP, sheet=True))
     out.append(box("s100-battens", "lashing", [0.1, 0.1, 2 * g.BATTEN_HALF], [lu(g.XS[0]), g.BATTEN_V0 + 0.05, 0], WD, TONE_WOOD, repeat=repeat_x(4, 1.8)))
     out.append(ext_u("s100-straps", "lashing", g.offset_convex(h, g.STRAP_T), lu(g.XS[0]) - g.STRAP_W / 2, lu(g.XS[0]) + g.STRAP_W / 2, ST, TONE_STRAP, holes=[h], repeat=repeat_x(4, 1.8)))
     for side, sgn in (("r", -1), ("l", 1)):
@@ -573,7 +583,7 @@ def thermal(scale):
     p = {100: "s100-", 200: "s200-", 500: "s500-"}[scale]
     pairs = [(f"{p}bearer-{k}", "bearers") for k in range(1, 5)] + [(f"{p}sheet-30", "top-sheet"), (f"{p}battens", "battens")]
     if scale == 100:
-        pairs += [("pack-1-29", "bundle-sheets"), ("pack-1-29-edge-crests", "bundle-sheets"), ("s100-straps", "lashing-straps"), ("s100-protectors-r", "lashing-straps"), ("s100-protectors-l", "lashing-straps"), ("s100-sling-chokes", "round-slings"), ("s100-sling-leg-a", "round-slings"), ("s100-sling-leg-b", "round-slings")]
+        pairs += [("s100-sheet-30-edge-crest", "top-sheet"), ("pack-1-29", "bundle-sheets"), ("pack-1-29-edge-crests", "bundle-sheets"), ("s100-straps", "lashing-straps"), ("s100-protectors-r", "lashing-straps"), ("s100-protectors-l", "lashing-straps"), ("s100-sling-chokes", "round-slings"), ("s100-sling-leg-a", "round-slings"), ("s100-sling-leg-b", "round-slings")]
         return thermal_refs(pairs)
     if scale == 200:
         pairs += [("block-1-29", "bundle-sheets"), ("s200-straps", "lashing-straps"), ("s200-sling-chokes", "round-slings"), ("s200-sling-leg-a", "round-slings"), ("s200-sling-leg-b", "round-slings")]
@@ -594,7 +604,7 @@ def structure(scale):
     """🏗️ The structure list of one scale."""
     if scale == 50:
         out = [member(f"bearer-{k}", f"bearer-{k}") for k in range(1, 5)]
-        out += [member("sheets-1-29", "bundle"), member("sheet-30", "sheet-30"), member("sling-leg-a", "sling-leg-a"), member("sling-leg-b", "sling-leg-b")]
+        out += [member("sheets-1-29", "bundle"), member("sheets-1-29-edge-crest", "bundle"), member("sheet-30", "sheet-30"), member("sling-leg-a", "sling-leg-a"), member("sling-leg-b", "sling-leg-b")]
         return out
     p = {100: "s100-", 200: "s200-", 500: "s500-"}[scale]
     pack = {100: "pack-1-29", 200: "block-1-29", 500: "block-1-29"}[scale]
@@ -608,10 +618,10 @@ def structure(scale):
 
 
 VOL_DECISIONS = {
-    50: [T("Body: the bundle as it lies: 29 nested sheets of the true 35/207 profile (0.75 mm, 44 points per section, declared sheets) at a nesting pitch of 1.5 mm as one extrude repeated 29 times, each in two pieces because the right edge crest is trimmed back 150 mm at the eaves end (profile without it over the full 6 m, the edge crest from 0.15 m on); the top sheet 30 on its own bone; four 100 x 100 x 1200 mm bearers; four 100 x 100 x 1030 mm battens on the top sheet; four composite straps (32 x 1 mm) tensioned round battens, stack and the U-shaped polyethylene edge protectors (2 mm); two violet round slings choked round the stack at 1.50 m and 4.50 m, their legs (50 x 16 mm) lying on the top sheet.", "Körper: das Paket, wie es liegt: 29 geschachtelte Bleche im wahren Profil 35/207 (0,75 mm, 44 Punkte je Querschnitt, als Bleche deklariert) mit 1,5 mm Schachtelteilung als ein 29-fach wiederholter Strangkörper, jeder zweiteilig, weil die rechte Randrippe am Traufende 150 mm zurückgeschnitten ist (Profil ohne sie über die vollen 6 m, die Randrippe ab 0,15 m); das oberste Blech 30 auf eigenem Knochen; vier Unterleger 100 x 100 x 1200 mm; vier Kanthölzer 100 x 100 x 1030 mm auf dem obersten Blech; vier Polyesterbänder (32 x 1 mm) um Kanthölzer, Stapel und den U-förmigen Kantenschutz aus Polyethylen (2 mm); zwei violette Rundschlingen bei 1,50 m und 4,50 m um den Stapel geschnürt, ihre Stränge (50 x 16 mm) auf dem obersten Blech liegend."),
+    50: [T("Body: the bundle as it lies: the 29 nested sheets of the true 35/207 profile are one pack extruded from the envelope of their sections (lower face of sheet 1 to the lower face of the top sheet 30, so no air is left under it either), in two pieces because the right edge crest is trimmed back 150 mm at the eaves end (envelope without it over the full 6 m, the edge crests from 0.15 m on). Ruling of the coordinator of 2026-11-23: the 0.75 mm of air between nested sheets is far below the 7.5 mm smallest feature of 1:50, so a body of 1:50 does not model it (29 separate sheets read IoU 0.914 against the band drawing in the front view, the pack 0.972); the top sheet 30 on its own bone; four 100 x 100 x 1200 mm bearers; four 100 x 100 x 1030 mm battens on the top sheet; four composite straps (32 x 1 mm) tensioned round battens, stack and the U-shaped polyethylene edge protectors (2 mm); two violet round slings choked round the stack at 1.50 m and 4.50 m, their legs (50 x 16 mm) lying on the top sheet.", "Körper: das Paket, wie es liegt: die 29 geschachtelten Bleche im wahren Profil 35/207 sind ein Paket, extrudiert aus der Hülle ihrer Querschnitte (Unterseite Blech 1 bis Unterseite des obersten Blechs 30, sodass auch darunter keine Luft bleibt), zweiteilig, weil die rechte Randrippe am Traufende 150 mm zurückgeschnitten ist (Hülle ohne sie über die vollen 6 m, die Randrippen ab 0,15 m). Entscheid der Koordination vom 23.11.2026: die 0,75 mm Luft zwischen geschachtelten Blechen liegen weit unter der kleinsten Einzelheit von 7,5 mm bei 1:50, ein Körper 1:50 bildet sie also nicht ab (29 einzelne Bleche ergeben in der Vorderansicht IoU 0,914 gegen die Bandzeichnung, das Paket 0,972); das oberste Blech 30 auf eigenem Knochen; vier Unterleger 100 x 100 x 1200 mm; vier Kanthölzer 100 x 100 x 1030 mm auf dem obersten Blech; vier Polyesterbänder (32 x 1 mm) um Kanthölzer, Stapel und den U-förmigen Kantenschutz aus Polyethylen (2 mm); zwei violette Rundschlingen bei 1,50 m und 4,50 m um den Stapel geschnürt, ihre Stränge (50 x 16 mm) auf dem obersten Blech liegend."),
        T("The 6.5 mm old screw holes are below the 7.5 mm feature and are drawn in plan only; the white-rust patina is the lighter tone of the top sheet.", "Die alten Schraublöcher von 6,5 mm liegen unter der Einzelheit von 7,5 mm und sind nur in der Draufsicht gezeichnet; die Weißrostpatina ist der hellere Ton des obersten Blechs."),
        T("Thermal: references to the body solids, one region per part family, except the 29 nested sheets, whose 0.75 mm nesting gaps exchange no air with the yard: their region is the envelope pack of the bundle (lower face of sheet 1 to upper face of sheet 29, corner trim kept); structure: the bundle, the top sheet, the bearers and the sling legs as members on their own bones (the sheets are the member), the legs end at the hooks.", "Thermik: Verweise auf die Körper, eine Region je Teilefamilie, außer den 29 geschachtelten Blechen, deren Schachtelspalte von 0,75 mm keine Luft mit dem Lagerplatz tauschen: ihre Region ist das Hüllpaket des Bündels (Unterseite Blech 1 bis Oberseite Blech 29, mit Eckschnitt); Statik: Paket, oberstes Blech, Unterleger und Schlingenstränge als Stäbe auf eigenen Knochen (die Bleche sind der Stab), die Stränge enden an den Haken.")],
-    100: [T("Body: the 29 nested sheets merge into one pack extruded from the envelope of their true profile (lower face of sheet 1 to upper face of sheet 29), still trimmed at the eaves corner; the top sheet keeps its true profile; the edge protectors become 15 mm plates outside the sheet edges and the straps run round them; slings and legs keep their sizes (25 and 16 mm, above the 15 mm feature).", "Körper: die 29 geschachtelten Bleche verschmelzen zu einem Paket, extrudiert aus der Hülle ihres wahren Profils (Unterseite Blech 1 bis Oberseite Blech 29), weiterhin mit dem Traufeckschnitt; das oberste Blech behält sein wahres Profil; der Kantenschutz wird zu 15 mm starken Platten außen an den Kanten, die Bänder laufen darum; Schlingen und Stränge behalten ihre Maße (25 und 16 mm, über der Einzelheit von 15 mm)."),
+    100: [T("Body: the 29 nested sheets merge into one pack extruded from the envelope of their true profile (lower face of sheet 1 to upper face of sheet 29), still trimmed at the eaves corner; the top sheet keeps its true profile and its own corner trim (two pieces, as at 1:50); the edge protectors become 15 mm plates outside the sheet edges and the straps run round them; slings and legs keep their sizes (25 and 16 mm, above the 15 mm feature).", "Körper: die 29 geschachtelten Bleche verschmelzen zu einem Paket, extrudiert aus der Hülle ihres wahren Profils (Unterseite Blech 1 bis Oberseite Blech 29), weiterhin mit dem Traufeckschnitt; das oberste Blech behält sein wahres Profil und seinen eigenen Traufeckschnitt (zwei Teile wie bei 1:50); der Kantenschutz wird zu 15 mm starken Platten außen an den Kanten, die Bänder laufen darum; Schlingen und Stränge behalten ihre Maße (25 und 16 mm, über der Einzelheit von 15 mm)."),
         T("Thermal and structure: as at 1:50 on these solids; the pack is the bundle member.", "Thermik und Statik: wie 1:50 auf diesen Körpern; das Paket ist der Paketstab.")],
     200: [T("Body: the profile is generalised to its rectangular envelope (the 25 mm web run is below the 30 mm feature): the bundle is a 43.5 mm block, the top sheet a 35 mm declared sheet; straps run round the block and the battens; edge protectors merge into the straps; sling chokes are drawn and modelled 30 mm wide, the legs are slender 36 mm bars drawn as lines.", "Körper: das Profil ist auf seine rechteckige Hülle vereinfacht (der Steglauf von 25 mm liegt unter der Einzelheit von 30 mm): das Paket ist ein Block von 43,5 mm, das oberste Blech eine deklarierte 35-mm-Platte; die Bänder laufen um Block und Kanthölzer; der Kantenschutz geht in den Bändern auf; Schlingenschnürungen sind 30 mm breit gezeichnet und modelliert, die Stränge sind schlanke Stäbe von 36 mm, als Linien gezeichnet."),
         T("Thermal and structure on these solids.", "Thermik und Statik auf diesen Körpern.")],

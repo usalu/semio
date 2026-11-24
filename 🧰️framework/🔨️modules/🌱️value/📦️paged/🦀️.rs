@@ -13,6 +13,10 @@ pub const PAGED_UTF8_CHUNK_BYTES: usize = 1024;
 
 
 
+/// 🧾️ One cold retirement action of paged octets.
+#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
+pub struct PagedBytesRetirement{pub work:usize,pub discarded:usize,pub released_bytes:usize,pub needs_release:Option<usize>,pub terminal:bool}
+
 /// 🧩️ Arbitrary octets retained in separately admitted fixed-size backing pages.
 pub struct PagedBytes<const N: usize> {
     bytes: PagedList<u8, N>,
@@ -52,6 +56,36 @@ impl<const N: usize> PagedBytes<N> {
     }
     /// 🛫️ Projects a borrowed octet source into canonical pages through its actual output control.
     pub fn copy_encoded(source:&(impl ByteReadSource+?Sized),control:&mut crate::NativeEncodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{control.begin_stage(source.byte_len())?;let mut output=Self::default();for index in 0..source.byte_len(){output.push_encoded(source.byte_at(index).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet source changed"))?,control)?;control.step()?;}Ok(output)})}
+
+    /// 📏️ Quotes the physical allocation of the next page, zero while a reserved slot is free.
+    pub fn cold_reservation_bytes(&self)->Result<usize,ValueError>{self.bytes.next_allocation_bytes().map_err(ValueError::from)}
+
+    /// 🧱️ Counts the reserved slots that accept octets without any further allocation.
+    pub fn cold_free_slots(&self)->usize{self.bytes.capacity()-self.bytes.len()}
+
+    /// 🎟️ Reserves exactly one page within `allocation_bytes` and returns `(allocated, released)` physical bytes; a smaller grant reserves nothing.
+    pub fn cold_reserve_page(&mut self,allocation_bytes:usize)->Result<(usize,usize),ValueError>{
+        if self.bytes.has_reserved_slot(){return Ok((0,0))}
+        let progress=self.bytes.reserve_one_cold(allocation_bytes).map_err(|error|ValueError::from(error.refusal()))?;
+        Ok((progress.allocated_bytes,progress.released_allocation_bytes))
+    }
+
+    /// 🫳️ Places as many octets as the reserved slots take and returns how many were placed.
+    pub fn cold_push_slice(&mut self,bytes:&[u8])->usize{
+        let count=self.cold_free_slots().min(bytes.len());
+        for byte in &bytes[..count]{let _=self.bytes.push_reserved(*byte);}
+        count
+    }
+
+    /// ♻️ Retires one page of an exclusive cold owner: its octets first, then its empty backing within `maximum_release_bytes`.
+    pub fn cold_retire_page(&mut self,maximum_release_bytes:usize)->Result<PagedBytesRetirement,ValueError>{
+        if self.bytes.terminal_is_empty(){return Ok(PagedBytesRetirement{terminal:true,..Default::default()})}
+        if !self.bytes.is_empty(){let count=self.bytes.discard_plain_tail_leaf_cold().map_err(ValueError::from)?;return Ok(PagedBytesRetirement{work:1,discarded:count,..Default::default()})}
+        let quote=self.bytes.next_release_allocation_bytes().map_err(ValueError::from)?;
+        if quote>maximum_release_bytes{return Ok(PagedBytesRetirement{needs_release:Some(quote),..Default::default()})}
+        let progress=self.bytes.release_empty_page_leased(maximum_release_bytes).map_err(ValueError::from)?;
+        Ok(PagedBytesRetirement{work:1,released_bytes:progress.released_allocation_bytes,terminal:self.bytes.terminal_is_empty(),..Default::default()})
+    }
 
     pub fn len(&self) -> usize {
         self.bytes.len()
@@ -449,6 +483,14 @@ impl<const N: usize> FromValue for PagedUtf8<N> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
             DslValue::String(value) => Self::try_from_str(&value),
+            other => Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+        }
+    }
+
+    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> {
+        control.checkpoint()?;
+        match value {
+            DslValue::String(value) => Self::try_from_str_controlled(value, control),
             other => Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
         }
     }

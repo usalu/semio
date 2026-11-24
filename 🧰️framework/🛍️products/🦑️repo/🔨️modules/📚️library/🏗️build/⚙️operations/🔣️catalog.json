@@ -201,6 +201,12 @@
       "description": { "en": "cache status: print the selected tool's task cache (a CacheStatus) instead of the cache ledger.", "de": "cache status: gibt den Task-Cache des gewählten Werkzeugs (einen CacheStatus) statt der Cache-Bilanz aus." }
     },
     {
+      "name": "--unreferenced",
+      "value": "none",
+      "operations": ["cache"],
+      "description": { "en": "cache cas gc: remove only the objects that no holder, pin, lease or hard link references and that are older than the in-flight grace; never evicts a held entry, whatever the cap or the partition says; with --dry-run it prints that plan.", "de": "cache cas gc: entfernt nur Objekte, die kein Halter, Pin, keine Lease und kein harter Link referenziert und die älter als die Karenzzeit für laufende Vorgänge sind; verdrängt nie einen gehaltenen Eintrag, was Obergrenze oder Partition auch sagen; mit --dry-run wird dieser Plan ausgegeben." }
+    },
+    {
       "name": "--graph-policy",
       "value": "required",
       "valueName": "fresh|current",
@@ -1406,15 +1412,15 @@
         },
         {
           "name": "cas",
-          "synopsis": "cache cas status|adopt|gc [--dry-run]", "flags": ["--dry-run", "--json"],
+          "synopsis": "cache cas status|adopt|gc [--dry-run]", "flags": ["--dry-run", "--json", "--unreferenced"],
           "summary": {
-            "en": "Report, deduplicate and collect the host-wide content-addressed store: status prints its fill against the cap; adopt makes finished files of the declared places (dependency installs, bun cache, tool installs, Bazel disk cache) hard links of one stored object per content; gc applies the cap, the watermarks and the idle ages to the store, the graph memo and the build-input closures, least recently accessed first, never removing an object that is pinned, leased, linked by a workspace or too young.",
-            "de": "Zeigt, dedupliziert und sammelt den rechnerweiten inhaltsadressierten Speicher: status gibt die Füllung gegen die Obergrenze aus; adopt macht fertige Dateien der deklarierten Orte (Abhängigkeits-Installationen, Bun-Cache, Werkzeug-Installationen, Bazel-Disk-Cache) zu harten Links je eines gespeicherten Objekts pro Inhalt; gc wendet Obergrenze, Marken und Leerlaufalter auf Speicher, Graph-Memo und Abschluss-Inventare an, zuletzt benutzte zuerst, und entfernt nie ein Objekt, das gepinnt, geleast, von einem Workspace verlinkt oder zu jung ist."
+            "en": "Report, deduplicate and collect the host-wide content-addressed store: status prints its fill against the cap; adopt makes finished files of the declared places (dependency installs, bun cache, tool installs, Bazel disk cache) hard links of one stored object per content; gc applies the cap, the watermarks and the idle ages to the store, the graph memo and the build-input closures, least recently accessed first, never removing an object that is pinned, leased, linked by a workspace or too young; gc --unreferenced removes only the objects that no holder, pin, lease or hard link references and that are older than the in-flight grace, never touches a held entry, and with --dry-run prints that plan.",
+            "de": "Zeigt, dedupliziert und sammelt den rechnerweiten inhaltsadressierten Speicher: status gibt die Füllung gegen die Obergrenze aus; adopt macht fertige Dateien der deklarierten Orte (Abhängigkeits-Installationen, Bun-Cache, Werkzeug-Installationen, Bazel-Disk-Cache) zu harten Links je eines gespeicherten Objekts pro Inhalt; gc wendet Obergrenze, Marken und Leerlaufalter auf Speicher, Graph-Memo und Abschluss-Inventare an, zuletzt benutzte zuerst, und entfernt nie ein Objekt, das gepinnt, geleast, von einem Workspace verlinkt oder zu jung ist; gc --unreferenced entfernt nur Objekte, die kein Halter, Pin, keine Lease und kein harter Link referenziert und die älter als die Karenzzeit für laufende Vorgänge sind, berührt nie einen gehaltenen Eintrag und gibt mit --dry-run diesen Plan aus."
           }
         },
         { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } }
       ],
-      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks"],
+      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks", "--unreferenced"],
       "examples": [
         { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
         { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Sammler entfernen würde." } },

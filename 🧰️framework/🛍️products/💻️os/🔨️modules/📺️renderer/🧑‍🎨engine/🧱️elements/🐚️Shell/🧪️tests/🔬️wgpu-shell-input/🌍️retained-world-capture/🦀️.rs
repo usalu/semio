@@ -3,37 +3,38 @@
 #[test]
 fn the_topmost_retained_world_owns_the_press_and_release_outside_its_bounds() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("captured");
+    retained_world_sequence_probe_closing("captured", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn captured_world_movement_and_wheel_never_fan_out_to_an_overlapping_peer() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("motion-wheel");
+    retained_world_sequence_probe_closing("motion-wheel", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn cancelled_world_capture_cannot_manufacture_a_successful_release() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("cancel");
+    retained_world_sequence_probe_closing("cancel", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn a_modal_layer_blocks_actual_world_pointer_ingress() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("modal");
+    retained_world_sequence_probe_closing("modal", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn a_scene_refresh_preserves_the_exact_captured_owner_until_outside_release() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("refresh");
+    retained_world_sequence_probe_closing("refresh", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::serving_world_closes(semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let law = &fixture["siblingInsertion"];
     let window = "renderer-capture-arena-rebase";
@@ -55,7 +56,7 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
             records.push(record);
         }
         let document = shell.windows.publish_surface_records(window, records).unwrap();
-        let input = paint_component_pointer_documents(&mut shell, &[(window, "capture-controller", &document, body)]);
+        let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(window, "capture-controller", &document, body)]);
         if index > 0 {
             let key = semio_ui_retained_tree::tree::NodeKey::Explicit(format!("scene-{}", law["receiver"].as_u64().unwrap()));
             let target = input
@@ -83,11 +84,12 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
         if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
             break;
         }
-        caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
+        caller.turn_funded(TEST_TURN_WORK, |cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn");
     }
     for mut document in documents {
         while !document.close_step() {}
     }
+    turns.finish();
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending());
     assert!(original.same_component_host(&current), "a sibling insertion preserves the mounted receiver");
     assert_ne!(original.node, current.node, "the fixture must exercise different arena histories");
@@ -101,6 +103,7 @@ fn an_accepted_sibling_insertion_rebases_the_exact_renderer_scene_capture() {
 #[test]
 fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camera() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::serving_world_closes(semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
     let window = "renderer-camera-multiple-retirement";
     let controller = "renderer-camera-multiple-retirement-controller";
     let body = Rect::new(0.0, 0.0, 600.0, 300.0);
@@ -123,7 +126,7 @@ fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camer
     };
     let mut shell = host_test_shell();
     let mut presented = shell.windows.publish_surface_records(window, vec![root(&[2, 3]), child(2, "left-camera"), child(3, "right-camera")]).unwrap();
-    let input = paint_component_pointer_documents(&mut shell, &[(window, controller, &presented, body)]);
+    let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(window, controller, &presented, body)]);
     let mut rects: Vec<_> = input.hits().iter().filter(|hit| hit.kind == HitKind::ComponentScene).map(|hit| hit.rect).collect();
     rects.sort_by(|left, right| left.x.total_cmp(&right.x));
     assert_eq!(rects.len(), 2);
@@ -136,7 +139,7 @@ fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camer
     }
     let mut deadlines = semio_renderer_wgpu_scene_state::SceneCameraDispatchCursor::begin(semio_renderer_wgpu_host_base::app_now_ms() + 400.0, semio_renderer_wgpu_scene_state::camera_fixture_grant()).unwrap().0;
     let mut removed = interaction.shell.windows.publish_surface_records(window, vec![root(&[])]).unwrap();
-    interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(window, controller, &removed, body)]);
+    interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(window, controller, &removed, body)]);
     let mut actions = Vec::new();
     loop {
         match deadlines.step(semio_renderer_wgpu_scene_state::camera_fixture_grant()).unwrap().0 {
@@ -150,12 +153,14 @@ fn renderer_canvas_multiple_accepted_removals_invalidate_every_checked_out_camer
     assert!(actions.is_empty(), "every camera removed by the accepted pixels becomes stale atomically");
     while !presented.close_step() {}
     while !removed.close_step() {}
+    turns.finish();
 }
 
 /// 🕒️ A same-host sibling insertion preserves a checked-out camera across its arena rebase.
 #[test]
 fn renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::serving_world_closes(semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
     let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let law = &fixture["siblingInsertion"];
     let receiver = law["receiver"].as_u64().unwrap();
@@ -179,7 +184,7 @@ fn renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera() {
             records.push(record);
         }
         let document = shell.windows.publish_surface_records(window, records).unwrap();
-        let input = paint_component_pointer_documents(&mut shell, &[(window, controller, &document, body)]);
+        let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(window, controller, &document, body)]);
         let key = semio_ui_retained_tree::tree::NodeKey::Explicit(format!("scene-{receiver}"));
         let target_and_rect = input
             .hits()
@@ -222,24 +227,25 @@ fn renderer_canvas_same_host_sibling_rebase_preserves_checked_out_camera() {
     for mut document in documents {
         while !document.close_step() {}
     }
+    turns.finish();
 }
 
 #[test]
 fn a_replacement_scene_cannot_inherit_the_previous_keys_capture() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("replacement");
+    retained_world_sequence_probe_closing("replacement", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn another_pointers_chrome_release_preserves_the_captured_scene_drag() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("foreign-release");
+    retained_world_sequence_probe_closing("foreign-release", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
 fn another_pointers_cancellation_preserves_the_captured_scene_drag() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
-    retained_world_sequence_probe("foreign-cancel");
+    retained_world_sequence_probe_closing("foreign-cancel", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 #[test]
@@ -253,13 +259,14 @@ fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
     let scene = semio_ui_scene_world3d::World3dScene::base(serde_json::json!({ "position": [4.0, 4.0, 4.0], "target": [0.0, 0.0, 0.0], "projection": "perspective" }).to_string(), "[]".into(), "[]".into(), "{}".into());
     let window = "scene-capture-capacity";
     let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
+    let mut turns = PointerFixtureTurns::serving_world_closes(semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
     let mut first = shell.windows.publish_surface_records(window, vec![world3d_pointer_record(1, "original", &scene)]).unwrap();
-    let input = paint_tree_pointer_document(&mut shell, window, &first, bounds);
+    let input = paint_tree_pointer_documents_in(&mut turns, &mut shell, &[(window, &first, bounds)]);
     let target = shell.input.scene_pointer_target_at(100.0, 100.0, &input, &Theme::default()).unwrap();
     let admitted: Vec<_> = (0..capacity).map(|pointer| semio_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), ui_render::PointerId(pointer + 100))).collect();
     let overflow = semio_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), ui_render::PointerId(999));
     let mut successor = shell.windows.publish_surface_records(window, vec![world3d_pointer_record(1, "successor", &scene)]).unwrap();
-    let input = paint_tree_pointer_document(&mut shell, window, &successor, bounds);
+    let input = paint_tree_pointer_documents_in(&mut turns, &mut shell, &[(window, &successor, bounds)]);
     let target = shell.input.scene_pointer_target_at(100.0, 100.0, &input, &Theme::default()).unwrap();
     let old_live: Vec<_> = (0..capacity).map(|pointer| semio_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(ui_render::PointerId(pointer + 100)).is_some()).collect();
     let fresh = semio_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target, ui_render::PointerId(999));
@@ -268,14 +275,13 @@ fn replaced_scene_pointer_slots_release_the_fixed_capture_grant() {
     }
     semio_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(ui_render::PointerId(999));
     SessionCtx::of(&mut shell).sync_engine_surface_states();
-    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
-        if shell.surfaces.retired_world3d_states.is_empty() {
-            break;
-        }
-        shell.surfaces.advance_world3d_retirement_step();
-    }
+    turns.retire_shell_worlds(&mut shell);
     while !first.close_step() {}
     while !successor.close_step() {}
+    turns.finish_with(&mut || {
+        let placeholder = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+        shell = semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close(std::mem::replace(&mut shell, placeholder));
+    });
     assert!(admitted.iter().all(|value| *value), "every funded pointer owns a slot");
     assert!(!overflow, "live captures cannot exceed the fixed grant");
     assert!(old_live.iter().all(|value| !value), "a replaced key retires every old receiver");

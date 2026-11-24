@@ -96,7 +96,10 @@ pub fn semio_mesh_from_mesh_data(mesh: &MeshData) -> Result<SemioMeshSnapshot, s
 /// 🎨️ Visits each emitted vertex's source corner inside the same geometry grouping authority.
 pub fn semio_mesh_from_mesh_data_with_sources(mesh: &MeshData, mut record: impl FnMut(Option<&str>, usize, bool) -> Result<(), semio_framework_diagnostic::TextError>) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
     use semio_plugin::{MeshAttributeDomain, MeshAttributeSemantic};
-    if mesh.positions.is_empty() || mesh.positions.len() % 3 != 0 || mesh.positions.len() > 300_000 || mesh.positions.iter().any(|value| !value.is_finite()) {
+    if mesh.positions.is_empty() {
+        return Err(io_error("generation3d export: prepared geometry has no positions"));
+    }
+    if mesh.positions.len() % 3 != 0 || mesh.positions.len() > 300_000 || mesh.positions.iter().any(|value| !value.is_finite()) {
         return Err(io_error("generation3d export requires 1..100000 finite three-dimensional positions"));
     }
     let topology = if mesh.indices.is_empty() { SemioTopology::Points } else { SemioTopology::Triangles };

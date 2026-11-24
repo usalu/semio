@@ -10,8 +10,8 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 };
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
-#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
-#[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn cell(row: u32, col: u32, value: XlsxCellValue) -> XlsxCell {
@@ -265,7 +265,7 @@ async fn decode_recognizes_strict_office_document_and_shared_strings_relationshi
 /// this artifact's OWN early-warning, plus direct coverage of the mutations/diff facets the
 /// framework's `m5` auto-discovery does not reach at all.
 mod conformance_laws {
-    #[cfg(test)] use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
+    use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::*;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::XlsxError;
     use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::{diff, snapshot};
@@ -447,9 +447,12 @@ fn insertion_history_inputs_preserve_identity_and_reject_forged_namespace() {
     let mut snapshot: XlsxSnapshot = semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut mutation: XlsxMutation = semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let schema = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::input_schema(&mutation).unwrap();
-    let resolver = |id: &str| (id == "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json").then(|| {
-        semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(ADDRESS_SCHEMA, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())
-    });
+    const XML_SNAPSHOT_SCHEMA: &str = include_str!("../../../../../../../../📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🔣️.json");
+    let resolver = |id: &str| match id {
+        "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/base/cell-vacancy-address.json" => Some(ADDRESS_SCHEMA),
+        "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json" => Some(XML_SNAPSHOT_SCHEMA),
+        _ => None,
+    }.map(|text| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));
     let inputs = semio_framework::mutation_input_defs(schema, &resolver).unwrap();
     let payload = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::payload_value(&mutation);
     let changes = semio_plugin::app::history_edit_acceptance::acceptance_changes(&inputs, &payload);

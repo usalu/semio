@@ -35,8 +35,7 @@ where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveContent> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_content::InsertContent>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_content(self.index, self.at, self.count))
+        diff::outcome_over(base, diff::diff_remove_content(self.index, self.at, self.count))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

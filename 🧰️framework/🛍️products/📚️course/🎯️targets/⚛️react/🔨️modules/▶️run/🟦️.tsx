@@ -190,7 +190,7 @@ export function TaskClock(props: {
             <p className="course-prose m-0 text-sm leading-normal">{text("course.run.clockIntro")}</p>
             <p className="m-0 text-sm font-semibold tabular-nums">{text("course.run.clockAllowed", { time: formatCountdown(seconds * 1000) })}</p>
           </CardSection>
-          <BodyButton row primary onClick={start}>
+          <BodyButton icon="play" row primary onClick={start}>
             {text("course.run.clockStart")}
           </BodyButton>
           {starting === undefined ? null : (
@@ -199,7 +199,7 @@ export function TaskClock(props: {
                 <progress aria-label={text("course.run.clockStarting")} className="course-progress" />
                 <span className="text-sm">{text("course.run.clockStarting")}</span>
               </CardSection>
-              <BodyButton row onClick={() => starting.abort()}>{text("course.run.cancel")}</BodyButton>
+              <BodyButton icon="x" row onClick={() => starting.abort()}>{text("course.run.cancel")}</BodyButton>
             </>
           )}
           {problem === undefined ? null : <ProblemNote cell problem={problem} text={text} />}
@@ -445,7 +445,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
         icon={emoji === undefined ? <CardIcon icon="list" /> : <Glyph emoji={emoji} className="text-sm" />}
         title={localized(view.sheet.title, locale)}
         footerRight={
-          <CardAction primary aria-disabled={!ready} aria-describedby={ready ? undefined : `${scope}-hint`} className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50" onClick={() => ready && setSubmission({ stage: "confirming" })}>
+          <CardAction icon="check-circle-2" primary aria-disabled={!ready} aria-describedby={ready ? undefined : `${scope}-hint`} className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50" onClick={() => ready && setSubmission({ stage: "confirming" })}>
             {text("course.run.submit")}
           </CardAction>
         }
@@ -512,12 +512,12 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
           icon={<TaskGlyph task={task} />}
           title={localized(task.title, locale)}
           footerLeft={
-            <CardAction disabled={index === 0} onClick={() => go(index - 1)}>
+            <CardAction icon="arrow-left" disabled={index === 0} onClick={() => go(index - 1)}>
               {text("course.run.previous")}
             </CardAction>
           }
           footerRight={
-            <CardAction primary disabled={index === tasks.length - 1} onClick={() => go(index + 1)}>
+            <CardAction icon="arrow-right" primary disabled={index === tasks.length - 1} onClick={() => go(index + 1)}>
               {text("course.run.next")}
             </CardAction>
           }
@@ -552,16 +552,16 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
           onEscape={() => (submission.stage === "working" ? submission.controller.abort() : close())}
           footerLeft={
             submission.stage === "confirming" ? (
-              <CardAction disabled={props.readOnly} onClick={close}>{text("course.run.keepWorking")}</CardAction>
+              <CardAction icon="pencil" disabled={props.readOnly} onClick={close}>{text("course.run.keepWorking")}</CardAction>
             ) : (
-              <CardAction data-autofocus="" disabled={props.readOnly} onClick={() => submission.controller.abort()}>
+              <CardAction icon="x" data-autofocus="" disabled={props.readOnly} onClick={() => submission.controller.abort()}>
                 {text("course.run.cancel")}
               </CardAction>
             )
           }
           footerRight={
             submission.stage === "confirming" ? (
-              <CardAction primary data-autofocus="" disabled={props.readOnly} onClick={submit}>
+              <CardAction icon="check" primary data-autofocus="" disabled={props.readOnly} onClick={submit}>
                 {text("course.run.confirm")}
               </CardAction>
             ) : undefined

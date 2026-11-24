@@ -192,6 +192,9 @@ impl<'ctx> WindowActionsCtx<'ctx> {
                         self.settle.submit_shell_io_future(async move { ShellIoCompletion::Import(PickedImport { opened: request_file_open(&accept, read_as.as_deref(), multiple, max_file_bytes).await, controller_id, import_action, args, multiple }) });
                     }
                 }
+                semio_framework::kernel::Effect::ClipboardWrite { fragment } => {
+                    self.docs.workspace_clipboard = Some(fragment);
+                }
                 other => {
                     debug_log(&format!("[TRACE] wgpu-shell effect dropped tag={other:?}"));
                 }

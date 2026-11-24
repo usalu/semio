@@ -360,13 +360,16 @@ pub fn result_stage(render: Option<AppRenderOperationContext>, authority: Option
     let render = render?;
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
-        let request_owner = registry.requests.live_binding(render.app_instance_id, authority.map_or(ConsumerKey::Model, ConsumerKey::Window))?;
+        let request_owner = registry.requests.live_binding(render.app_instance_id, authority.map_or(ConsumerKey::Model, ConsumerKey::Window));
+        eprintln!("[DEBUG] fem3d result_stage binding={:?} window={} current={:?}", request_owner.map(|owner| owner.index()), authority.is_some(), request_owner.and_then(|owner| registry.current[owner.index()]).map(|current| (current.shell, current.identity.job, current.identity.generation.0)));
+        let request_owner = request_owner?;
         let slot = request_owner.index();
         if let Some((owner, _, _)) = registry.requests.at(slot) { if let Some(terminal) = registry.requests.terminal(owner, source_version(render)) { match terminal.kind { semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Faulted => return Some("fem3d.failed"), semio_framework_value_registry::fixed_request_owners::RequestTerminalKind::Cancelled => return Some("fem3d.cancelled"), _ => {} } } }
         let current = registry.current[slot]?;
         if !render.matches_revision(current.app_instance_id, current.identity.base_revision, current.identity.generation, &current.identity.canonical_base_revision) { return None; }
         let owner = registry.shells[current.shell as usize].try_borrow().ok()?;
         let state = owner.as_ref()?;
+        eprintln!("[DEBUG] fem3d result_stage slot={slot} shell={} current_job={:#x} state_job={:#x} done={} numerical_done={} stage={:?} shell_request={:?} owner={:?}", current.shell, current.identity.job, state.identity.job, state.done, state.numerical_done, state.numerical.as_ref().map(|child| child.stage), registry.shell_request[current.shell as usize].map(|owner| owner.index()), slot);
         Some(if state.cancel.is_cancelled_now() { "fem3d.cancelled" } else if state.done { "fem3d.validated" } else if state.numerical_done { "fem3d.visual" } else { state.numerical.as_ref()?.stage.progress_stage() })
     })
 }

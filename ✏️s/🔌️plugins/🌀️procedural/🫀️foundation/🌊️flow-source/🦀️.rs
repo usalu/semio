@@ -99,4 +99,4 @@ impl<T:RetireOwned+Sync> ProceduralFlowSourceWork<T>{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.snapshot.is_none()&&self.close.is_none()&&self.field.terminal_is_empty()}
 }
-impl<T:RetireOwned+Sync> Drop for ProceduralFlowSourceWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"procedural source retains its captured native read or snapshot");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot)}}}}
+impl<T:RetireOwned+Sync> Drop for ProceduralFlowSourceWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"procedural source retains its captured native read or snapshot");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.snapshot)}}}}

@@ -56,6 +56,11 @@ export function gitCachedNames(root: string, extra: string[] = []): string[] {
   return raw.split("\0").filter(Boolean);
 }
 
+/** 🪢️Tells whether git reads the history through a shallow boundary (`.git/shallow`): the commits behind it look like roots, so a commit, squash or push made on top can cut the archive. */
+export function gitShallow(root: string): boolean {
+  return git(root, ["rev-parse", "--is-shallow-repository"]).out === "true";
+}
+
 export function gitEmail(root: string): string {
   return git(root, ["config", "user.email"]).out;
 }

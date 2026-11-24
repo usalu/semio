@@ -1,3 +1,4 @@
+import {spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
 import {closeSync,linkSync,watch,type FSWatcher,mkdirSync,openSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeSync} from "node:fs";
 import {join} from "node:path";
@@ -29,8 +30,21 @@ export function watchChangesV1(directories:readonly string[]):Readonly<{wait(mil
  });
 }
 
-/** 🫀️ Whether a process exists; a permission refusal still means it exists. */
-export function processAliveV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
+/** 🫀️ Whether a process id exists in the table, zombies included; a permission refusal still means it exists. */
+export function processExistsV1(pid:number):boolean{try{process.kill(pid,0);return true;}catch(error){return(error as NodeJS.ErrnoException).code==="EPERM";}}
+
+/** 🧟️ Whether a process has exited but its parent has not reaped it yet: its id still answers `kill(pid,0)` although it can never release anything again. Linux reads the state of `/proc/<pid>/stat`, other POSIX hosts ask `ps -o stat=`, Windows has no zombies. */
+export function processZombieV1(pid:number,world:Readonly<{platform?:string;state?:(pid:number)=>string|undefined}>={}):boolean{
+ const platform=world.platform??process.platform;if(platform==="win32")return false;
+ const state=world.state??(target=>{
+  if(platform==="linux"){try{const text=readFileSync("/proc/"+String(target)+"/stat","utf8");return text.slice(text.lastIndexOf(")")+2).trim().charAt(0);}catch{return undefined;}}
+  try{const run=spawnSync("ps",["-o","stat=","-p",String(target)],{encoding:"utf8",timeout:2000,windowsHide:true});return run.status===0?run.stdout.trim():undefined;}catch{return undefined;}
+ });
+ return(state(pid)??"").startsWith("Z");
+}
+
+/** 🫀️ Whether a process can still act: it exists and is not a zombie. */
+export function processAliveV1(pid:number,world:Readonly<{platform?:string;state?:(pid:number)=>string|undefined}>={}):boolean{return processExistsV1(pid)&&!processZombieV1(pid,world);}
 
 /** 🧹️ Removes one claim file and never throws: a Windows sharing violation (`EPERM`, `EBUSY`, `EACCES` while a reader, scanner or indexer holds the file) is retried on the churn table's pauses, and a file that stays busy is announced in every language and left to age out as stale; `false` then. */
 export function removeClaimFileV1(path:string,world:Readonly<{platform?:string;sleepSync?:(milliseconds:number)=>void;report?:(text:string)=>void}>={}):boolean{
@@ -44,12 +58,12 @@ function ageOf(path:string,now:number):number|undefined{try{return now-statSync(
 /** 🪪️ One held claim: a file created exclusively and kept fresh by its holder, released by removal. */
 export type ClaimV1=Readonly<{path:string;waitedMs:number;release():void}>;
 
-/** ⌛️ A claim is stale when its holder is dead; a holder that is alive keeps it however old the file is, because a stalled event loop stops the heartbeat while the holder still works. A file without a readable holder ages out. */
+/** ⌛️ A claim is stale when its holder is gone or a zombie (exited, never reaped by its parent, so its id still answers and it would hold the claim and block every ticket behind it forever); a holder that is alive keeps it however old the file is, because a stalled event loop stops the heartbeat while the holder still works. The zombie check asks the platform only once the heartbeat is overdue, so a healthy holder costs nothing. A file without a readable holder ages out. */
 function stale(path:string,staleMs:number,now:number):boolean{
  const age=ageOf(path,now);if(age===undefined)return false;
  const holder=holderOf(path);
  if(holder===undefined)return age>staleMs;
- return age>1000&&!processAliveV1(holder.pid);
+ return age>1000&&(!processExistsV1(holder.pid)||age>2*policy.lock.heartbeatMilliseconds&&processZombieV1(holder.pid));
 }
 
 function removeStale(path:string,staleMs:number):void{
@@ -143,6 +157,23 @@ export function lightSlotsHeldV1(root:string,count:number):number{
  const slots=join(root,policy.layout.slots);let held=0;
  for(let index=0;index<count;index++)if(claimHeldV1(slots,"light-"+String(index)))held++;
  return held;
+}
+
+/** 🥇️ Takes a compile slot at once when one is free and nobody waits for it, else answers `undefined` without joining the queue: the local-first placement of a unit (a unit that finds a free slot compiles here, only a unit that would wait may go to the fleet). The oldest live ticket keeps its turn, so a free slot never overtakes a waiter; the claim itself is atomic (`tryCreate`), so concurrent callers never share one slot. */
+export function tryAcquireSlotV1(root:string,count:number):ClaimV1|undefined{
+ if(!Number.isSafeInteger(count)||count<1)return undefined;
+ const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets),now=Date.now();
+ try{
+  mkdirSync(slots,{recursive:true});
+  for(const entry of readdirSync(tickets)){const path=join(tickets,entry);if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);else return undefined;}
+ }catch{}
+ for(let index=0;index<count;index++){
+  const path=join(slots,String(index)+".lock");
+  if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);
+  const claim=tryCreate(path,policy.slot.heartbeatMilliseconds);
+  if(claim)return Object.freeze({...claim,waitedMs:0});
+ }
+ return undefined;
 }
 
 /** 🎰️ Host-wide compile slots. Waiters take a numbered ticket and only the oldest live ticket may claim a free slot, so grants are first-in-first-out and no waiter starves; tickets and slots of dead processes are reaped. */

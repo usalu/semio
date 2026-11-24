@@ -445,7 +445,7 @@
     {
       "action": "insert-page",
       "args": {
-        "page": 0,
+        "page": 1,
         "width": 10,
         "height": 10
       },
@@ -457,7 +457,7 @@
     {
       "action": "insert-page",
       "args": {
-        "page": 1,
+        "page": 2,
         "width": 10,
         "height": 10
       },
@@ -469,8 +469,8 @@
     {
       "action": "move-page",
       "args": {
-        "page": 0,
-        "x": 2
+        "page": 1,
+        "x": 3
       },
       "pages": 3,
       "widgetPage": 2,
@@ -480,19 +480,8 @@
     {
       "action": "move-page",
       "args": {
-        "page": 0,
-        "x": 9
-      },
-      "pages": 3,
-      "widgetPage": 2,
-      "linkAt": 0,
-      "linkTarget": 2
-    },
-    {
-      "action": "move-page",
-      "args": {
-        "page": 2,
-        "x": 0
+        "page": 3,
+        "x": 1
       },
       "pages": 3,
       "widgetPage": 1,
@@ -502,7 +491,7 @@
     {
       "action": "remove-page",
       "args": {
-        "page": 1
+        "page": 2
       },
       "pages": 2,
       "widgetPage": 0,
@@ -511,7 +500,7 @@
     {
       "action": "remove-page",
       "args": {
-        "page": 0
+        "page": 1
       },
       "pages": 2,
       "widgetPage": null,

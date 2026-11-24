@@ -46,7 +46,7 @@ def mask_buckets(mask):
 
 def git_path(path):
     if path==REALM_BASE or path.startswith(REALM_ENTRIES): return True
-    if path in (".git/HEAD",".git/packed-refs",".git/shallow") or path.startswith(".git/refs/heads/"): return True
+    if path in (".git/HEAD",".git/packed-refs") or path.startswith(".git/refs/heads/"): return True
     return path.rsplit("/",1)[-1] in (".gitignore",".gitattributes",".gitmodules")
 
 def before(left,right): return (left["segment"],left["bytes"])<(right["segment"],right["bytes"])

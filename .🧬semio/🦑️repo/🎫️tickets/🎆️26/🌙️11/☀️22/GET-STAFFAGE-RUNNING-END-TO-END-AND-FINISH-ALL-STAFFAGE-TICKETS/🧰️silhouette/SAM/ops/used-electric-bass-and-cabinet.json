@@ -1,0 +1,10 @@
+[
+{"op": "solid-set", "scale": "50", "id": "string-1", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-1-head", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-2", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-2-head", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-3", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-3-head", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-4", "set": {"texture": true}},
+{"op": "solid-set", "scale": "50", "id": "string-4-head", "set": {"texture": true}}
+]

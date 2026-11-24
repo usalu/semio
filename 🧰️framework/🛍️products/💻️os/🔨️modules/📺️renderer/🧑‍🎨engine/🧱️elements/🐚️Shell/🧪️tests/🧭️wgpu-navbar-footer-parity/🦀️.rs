@@ -48,7 +48,7 @@ fn chrome_geometry_fixture() -> Value {
 }
 
 fn hub_projection_fixture() -> Value {
-    let path = engine_root().join("🧫️fixtures/🔗️hub-projection/🔣️.json");
+    let path = engine_root().join("🧪️tests/🧫️fixtures/🔗️hub-projection/🔣️.json");
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("hub projection fixture")
 }
 
@@ -146,7 +146,7 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
         let mut overlay = Some(&mut overlay);
         let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         for _ in 0..1_usize << 24 {
-            if caller.turn(|cx|ChromeViewCtx::of(&mut shell).paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx)) {
+            if caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx)) {
                 break;
             }
         }
@@ -290,7 +290,8 @@ fn a_pane_chip_press_over_an_engine_surface_belongs_to_the_shell() {
 /// it never abandons the body, which is what left the live pane blank.
 #[test]
 fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    caller.own_surface(&window_projection_surface_id("pane-top"));
     let theme = Theme::light();
     let mut body = |mut shell: &mut ShellState, window: Rect| {
         let mut input = InputState::<ActionDescriptor>::default();
@@ -305,7 +306,7 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
         while opportunities < WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES {
             polls += 1;
             assert!(polls < 1 << 24, "⏱️ the pane's layout worker answers");
-            let complete = caller.turn(|cx|ChromeViewCtx::of(&mut shell).paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx));
+            let complete = caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).paint_window_projection_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, "pane-top", window, &mut world_resources, cx));
             if cursor.document.last_step_was_own_work() {
                 opportunities += 1;
             }
@@ -359,6 +360,8 @@ fn an_unfolded_projection_pane_publishes_its_rows_within_one_frame_budget() {
     for row in &clamped {
         assert!(row.rect.y >= theme.panel_inset - 0.5, "🧭️ every painted row stays inside the pane: {:?}", row.rect.y);
     }
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut short);
     caller.finish();
 }
 
@@ -625,7 +628,7 @@ fn the_shared_band_fixture_and_custom_cap_metrics_hold_in_rust() {
 /// 🎓️ Keeps a declared introduction available through the shell manifest boundary.
 #[test]
 fn app_manifest_carries_the_introduction_the_tour_arms_on() {
-    let path = repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧫️fixtures/🎓️manifest/🔣️.json");
+    let path = repo_root().join("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎓️manifest/🔣️.json");
     let descriptor: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("the owned descriptor is JSON");
     let apps = descriptor["manifest"]["apps"].as_array().expect("the owned descriptor declares apps");
     let editor = apps.iter().find(|app| app["id"].as_str() == Some("fixture.scene@1/*#editor")).expect("🎓️ the owned descriptor declares the scene editor");

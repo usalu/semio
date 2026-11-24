@@ -21,8 +21,8 @@
     },
     "types": {
       "type": "array",
-      "minItems": 9,
-      "maxItems": 9,
+      "minItems": 10,
+      "maxItems": 10,
       "uniqueItems": true,
       "items": {
         "enum": [
@@ -34,7 +34,8 @@
           "OriginalActorCallError",
           "OriginalActorContextSlot",
           "OriginalActorAdmissionReply",
-          "OriginalActorCloseReply"
+          "OriginalActorCloseReply",
+          "ActorBorrow"
         ]
       }
     },

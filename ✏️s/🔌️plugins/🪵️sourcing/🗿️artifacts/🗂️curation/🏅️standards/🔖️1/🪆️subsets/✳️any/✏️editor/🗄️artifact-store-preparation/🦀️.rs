@@ -49,10 +49,10 @@ pub fn sourcing_curation_store_owners_source_demands() -> Result<semio_framework
     store::os_store::document_store_owners::bounded_artifact_store_owners_shared_semantic_source_demands::<CurationSnapshot, SourcingMutation, SourcingCurationSemanticProducer>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0)
 }
 
-/// 🗃️ Admits the document owner catalog with the shared semantic producer installed for publication and replay. Every curation edit declares the whole document as its conflict target.
+/// 🗃️ Admits the document owner catalog with the shared semantic producer installed for publication and replay; every curation edit declares the whole document as its conflict target.
 pub fn admit_sourcing_curation_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<CurationSnapshot, SourcingMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<CurationSnapshot, SourcingMutation>> {
     store::os_store::document_store_owners::bounded_artifact_store_owners_with_shared_semantic_preparation(grant, semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }, 0, || SourcingCurationSemanticProducer::bounded(sourcing_curation_preparation_bounds())).map(|(mut owners, progress)| {
-        owners.operation_wire = owners.operation_wire.with_original_binary_receiving().with_original_target(store::os_store::whole_document_target::<SourcingMutation>);
+        owners.operation_wire = owners.operation_wire.with_original_ordinal_binary_receiving().with_original_target(store::os_store::whole_document_target::<SourcingMutation>);
         (owners, progress)
     })
 }

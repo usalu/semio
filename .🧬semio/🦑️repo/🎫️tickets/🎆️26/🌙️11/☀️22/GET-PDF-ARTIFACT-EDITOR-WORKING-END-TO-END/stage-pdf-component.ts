@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 /** 📦️ Stages a built PDF plugin component for the native dev host with the browser-bundle pipeline's own transpile steps (native transpile, async-result and asset-URL rewrites, preview2 shim relocation).
  * Usage: `bun stage-pdf-component.ts <component.wasm> <work-dir>` from the workspace root.
@@ -13,6 +14,9 @@ const modules = join(root, ".cache/b/p/m/browser/prototype/modules");
 const stage = join(modules, "📘️stdio-pdf");
 const materialization = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization");
 const { transpilePluginComponentModulesAsync, rewritePreview2ShimImports } = await import(join(materialization, "🟦️.ts"));
+const { pluginComponentBridgeSource } = await import(join(materialization, "🌉️component-bridge-source/🟦️.ts"));
+const { hostShimSource } = await import(join(materialization, "🪢️host-shim-source/🟦️.ts"));
+if (!existsSync(stage)) throw new Error(`no staged module at ${stage}: attach the products image first (sh mount-products.sh)`);
 const stripped = join(work, "component.wasm");
 const out = join(work, "out");
 await rm(work, { recursive: true, force: true });
@@ -23,6 +27,8 @@ await transpilePluginComponentModulesAsync(stripped, out, base, { repoRoot: root
 for (const file of [`${base}.core.wasm`, `${base}.js`, `${base}.d.ts`]) await cp(join(out, file), join(stage, file));
 rewritePreview2ShimImports(join(stage, `${base}.js`), join(modules, "🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim"));
 await cp(join(out, "interfaces"), join(stage, "interfaces"), { recursive: true });
+await writeFile(join(stage, "🌉️bridge.js"), pluginComponentBridgeSource(base, `${base}.core.wasm`));
+await writeFile(join(stage, "🟨️.js"), hostShimSource());
 const bytes = await readFile(stripped);
 const receiptPath = join(stage, "🧾️receipt.json");
 const receipt = JSON.parse(await readFile(receiptPath, "utf8"));

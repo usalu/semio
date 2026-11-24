@@ -58,7 +58,7 @@ impl<P: 'static> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
 
 impl<P> Drop for UnsupportedMemberSnapshotOpen<P> {
     fn drop(&mut self) {
-        assert!(self.request.is_none(), "unsupported member decoder dropped retained request authority");
+        assert!(std::thread::panicking()||(self.request.is_none()), "unsupported member decoder dropped retained request authority");
     }
 }
 

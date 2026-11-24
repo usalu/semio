@@ -12,7 +12,7 @@ import {closeBuildOwnerAdmissionV1,createSourceOwnerResolverV1,readBuildGraphSel
 import {observeOwnerFactsMemoizedV1,selectedAdmissionFactsV1} from "../../🟦️.ts";
 import {loadedGraphAdmissionFormatV1} from "../../../🔐️authority/🟦️.ts";
 import {canonicalTestAggregatePolicyV1 as aggregate,deriveCanonicalTestAggregateV1,readCanonicalTestRoutesV1,requireCanonicalTestAggregateV1} from "../../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
-import {isOwnerFailureV1,joinOwnerFailuresV1,observeOwnerWithRetryV1,ownerFailureDecisionV1,ownerFailureV1,ownerIsolationPolicyV1,registryPendingFailureV1,stableOwnerFailureHoldsV1} from "../🟦️.ts";
+import {isOwnerFailureV1,joinOwnerFailuresV1,observeOwnerWithRetryV1,heavyQuestionCancelledV1,ownerFailureDecisionV1,ownerFailureV1,ownerIsolationPolicyV1,registryPendingFailureV1,stableOwnerFailureHoldsV1} from "../🟦️.ts";
 import {isClosedOwnerRegistryInvalidationV1,registryFaultTextV1,withOwnerRegistryCustodyV1} from "../../🧭️registry-follow/🟦️.ts";
 import {revalidatedWithheldOwnersV1,withheldRevalidationV1} from "../🔁️revalidation/🟨️.mjs";
 
@@ -229,8 +229,10 @@ test("the decision table shared by every inference path equals the hand-stated c
  expect(fixture.revalidation.cooldownMilliseconds).toBe(ownerIsolationPolicyV1.revalidateCooldownMilliseconds);
  for(const row of fixture.decisionCases)expect(ownerFailureDecisionV1(row as never),row.name).toBe(row.expect);
  const oracle=pythonOracle().decisions;
- for(const foreign of [0,1])for(const moved of [0,1])for(const young of [0,1])for(let round=1;round<=ownerIsolationPolicyV1.retryRounds;round++)
+ for(const foreign of [0,1])for(const moved of [0,1])for(const young of [0,1])for(let round=1;round<=ownerIsolationPolicyV1.retryRounds;round++){
   expect(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round}),`${foreign}${moved}${young}${round}`).toBe(oracle[`${foreign}${moved}${young}${round}`]!);
+  expect(ownerFailureDecisionV1({foreign:foreign===1,moved:moved===1,young:young===1,round,cancelled:true}),`${foreign}${moved}${young}${round}c`).toBe(oracle[`${foreign}${moved}${young}${round}c`]!);
+ }
 });
 
 test("the re-validation of a withheld owner equals the hand-stated cases and the Python oracle",()=>{
@@ -366,4 +368,24 @@ test("a joined failure whose owners all failed on a pending native root is follo
  const mixed=joinOwnerFailuresV1([pending("a"),ownerFailureV1("b",Error("boom"),1,true)]);
  expect(registryFaultTextV1(mixed)).toBeUndefined();
  expect(await run(mixed).catch(thrown=>thrown)).toBe(mixed);
+});
+
+test("a heavy question whose child the host warden cancelled is asked again until the declared rounds are used up, then the failure is the owner's own; a foreign failure stays foreign",async()=>{
+ const rounds=ownerIsolationPolicyV1.retryRounds;
+ for(let round=1;round<rounds;round++)expect(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round,cancelled:true}),String(round)).toBe("retry");
+ expect(ownerFailureDecisionV1({foreign:false,moved:false,young:false,round:rounds,cancelled:true})).toBe("stable");
+ expect(ownerFailureDecisionV1({foreign:false,moved:true,young:false,round:rounds,cancelled:true})).toBe("unsettled");
+ expect(ownerFailureDecisionV1({foreign:true,moved:false,young:false,round:1,cancelled:true})).toBe("foreign");
+ const cancelled=Object.assign(new Error("x"),{key:"build.graph.heavy-question-cancelled"}),plain=Object.assign(new Error("x"),{key:"build.graph.heavy-question-failed"});
+ expect(heavyQuestionCancelledV1(cancelled)).toBe(true);expect(heavyQuestionCancelledV1(new Error("y",{cause:cancelled}))).toBe(true);
+ expect(heavyQuestionCancelledV1(plain)).toBe(false);expect(heavyQuestionCancelledV1(undefined)).toBe(false);expect(heavyQuestionCancelledV1("graph.heavy-question-cancelled")).toBe(false);
+ const attempts:number[]=[],pauses:number[]=[];
+ const failure=await observeOwnerWithRetryV1({owner:"o",attempt:async()=>{attempts.push(1);throw cancelled;},hold:async()=>true,pause:async milliseconds=>{pauses.push(milliseconds);},now:()=>1000000}).then(()=>undefined,(error:unknown)=>error as {stable:boolean;rounds:number});
+ expect(attempts).toHaveLength(rounds);expect(pauses).toHaveLength(rounds-1);
+ expect(failure).toMatchObject({stable:true,rounds});
+ let calls=0;
+ const value=await observeOwnerWithRetryV1({owner:"o",attempt:async()=>{if(++calls<3)throw cancelled;return "ok";},hold:async()=>true,pause:async()=>{},now:()=>1000000});
+ expect(value).toBe("ok");expect(calls).toBe(3);
+ const crash=await observeOwnerWithRetryV1({owner:"o",attempt:async()=>{throw plain;},hold:async()=>true,pause:async()=>{},now:()=>1000000}).then(()=>undefined,(error:unknown)=>error as {rounds:number});
+ expect(crash?.rounds).toBe(1);
 });

@@ -23,20 +23,20 @@ export type RemoteExecutionConfinementV1="full"|"none";
 /** 🛜️ What a worker does about the network of an action: cut by the sandbox, asked for but not enforceable by the strategy, or allowed by policy. */
 export type RemoteExecutionNetworkV1="denied"|"unenforced"|"allowed";
 
-/** 🚫️ Why a worker's own admission refused an action. */
-export type RemoteExecutionRefusalV1="memory"|"swap"|"swap-activity"|"pressure-critical"|"pressure-warn"|"files"|"attaches"|"load"|"queue-order"|"ramp"|"quiet-limit"|"slots"|"disk"|"not-ready"|"draining";
+/** 🚫️ Why a worker refused an action: its own admission at arrival, or (`warden-cancelled`) the host warden cancelled the compiler of a running action. */
+export type RemoteExecutionRefusalV1="memory"|"swap"|"swap-activity"|"pressure-critical"|"pressure-warn"|"files"|"attaches"|"load"|"queue-order"|"ramp"|"quiet-limit"|"slots"|"disk"|"not-ready"|"draining"|"warden-cancelled";
 
 /** 🤝️ The scheduler's answer to a registration. */
 export type RemoteExecutionWorkerRegisteredV1=Readonly<{version:1;id:string;heartbeatSeconds:number;pollSeconds:number;leaseSeconds:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none"}>;
 
-/** 📦️ One action assigned to a worker. */
-export type RemoteExecutionTaskV1=Readonly<{id:string;instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;attempt:number}>;
+/** 📦️ One action assigned to a worker, with the peak megabytes its requester declared (`peakMegabytes`, absent when none) so the worker admits it by its own size. */
+export type RemoteExecutionTaskV1=Readonly<{id:string;instance:string;action:RemoteExecutionDigestV1;timeoutSeconds:number;attempt:number;peakMegabytes?:number}>;
 
 /** 📥️ A poll answer: maybe a task, the tasks to cancel, and whether the scheduler still knows the worker. */
 export type RemoteExecutionPollAnswerV1=Readonly<{version:1;task:RemoteExecutionTaskV1|null;cancel:readonly string[];known:boolean}>;
 
-/** 💓️ A worker's heartbeat: the tasks it still runs. */
-export type RemoteExecutionHeartbeatV1=Readonly<{version:1;running:readonly string[]}>;
+/** 💓️ A worker's heartbeat: the tasks it still runs and, when it measures them, the memory each holds now. */
+export type RemoteExecutionHeartbeatV1=Readonly<{version:1;running:readonly string[];usage?:readonly Readonly<{task:string;megabytes:number}>[]}>;
 
 /** 🫀️ The scheduler's answer to a heartbeat: whether it still knows the worker and which tasks to abandon. */
 export type RemoteExecutionHeartbeatAnswerV1=Readonly<{version:1;known:boolean;cancel:readonly string[]}>;
@@ -108,4 +108,44 @@ export function remoteExecutionPropertiesV1(text:string|undefined):readonly Remo
 export function remoteExecutionHostPropertiesV1(platform:string=process.platform,arch:string=process.arch,toolchain?:Readonly<{target:string|null;toolchain:string|null}>):readonly RemoteExecutionPropertyV1[]{
  const family=platform==="darwin"?"macos":platform==="win32"?"windows":platform,cpu=arch==="x64"?"amd64":arch;
  return [{name:"Arch",value:cpu},{name:"OSFamily",value:family},...toolchain?.target?[{name:"semio-target",value:toolchain.target}]:[],...toolchain?.toolchain?[{name:"semio-toolchain",value:toolchain.toolchain}]:[]];
+}
+
+/** 🏷️ The type of the auxiliary metadata entry in which a worker returns the measured peak resident megabytes of an action (the value is the decimal text); other clients and servers ignore an entry they do not know. */
+export const REMOTE_EXECUTION_PEAK_TYPE_URL_V1="type.semio.dev/peak-memory-megabytes";
+
+/** 📤️ The auxiliary metadata entry that carries a measured peak. */
+export function remoteExecutionPeakEntryV1(megabytes:number):Readonly<{type_url:string;value:Uint8Array}>{
+ return Object.freeze({type_url:REMOTE_EXECUTION_PEAK_TYPE_URL_V1,value:new TextEncoder().encode(String(Math.max(1,Math.ceil(megabytes))))});
+}
+
+/** 📥️ The measured peak megabytes in the auxiliary metadata of an action result, or nothing when the worker returned none. */
+export function remoteExecutionPeakOfMetadataV1(entries:readonly Readonly<{type_url:string;value:Uint8Array}>[]|undefined):number|undefined{
+ for(const entry of entries??[])if(entry.type_url===REMOTE_EXECUTION_PEAK_TYPE_URL_V1){const megabytes=Number(new TextDecoder().decode(entry.value));if(Number.isSafeInteger(megabytes)&&megabytes>0)return megabytes;}
+ return undefined;
+}
+
+/** 🏷️ The type of the auxiliary metadata entry in which a worker returns how many code generation threads it granted a linked unit (decimal text). */
+export const REMOTE_EXECUTION_THREADS_TYPE_URL_V1="type.semio.dev/codegen-threads";
+
+/** 📤️ The auxiliary metadata entry that carries the granted code generation threads. */
+export function remoteExecutionThreadsEntryV1(threads:number):Readonly<{type_url:string;value:Uint8Array}>{
+ return Object.freeze({type_url:REMOTE_EXECUTION_THREADS_TYPE_URL_V1,value:new TextEncoder().encode(String(Math.max(1,Math.floor(threads))))});
+}
+
+/** 📥️ The granted code generation threads in the auxiliary metadata of an action result, or nothing when the unit is not a linked one. */
+export function remoteExecutionThreadsOfMetadataV1(entries:readonly Readonly<{type_url:string;value:Uint8Array}>[]|undefined):number|undefined{
+ for(const entry of entries??[])if(entry.type_url===REMOTE_EXECUTION_THREADS_TYPE_URL_V1){const threads=Number(new TextDecoder().decode(entry.value));if(Number.isSafeInteger(threads)&&threads>0)return threads;}
+ return undefined;
+}
+
+/** ⏱️ How a worker spent one action, from the timestamps of its `ExecutedActionMetadata` (differences of one clock, so no clock skew between machines enters): `workerMilliseconds` from taking the action to finishing, `fetchMilliseconds` to bring the input tree into the private root, `executeMilliseconds` of the command itself, `uploadMilliseconds` to hand the outputs to the store. */
+export type RemoteExecutionPhasesV1=Readonly<{workerMilliseconds:number;fetchMilliseconds:number;executeMilliseconds:number;uploadMilliseconds:number}>;
+
+/** ⏱️ The phases a worker reported in the execution metadata of an action result, or nothing when a timestamp is missing (a worker that does not report them). */
+export function remoteExecutionPhasesOfMetadataV1(metadata:Readonly<Record<string,unknown>>|undefined):RemoteExecutionPhasesV1|undefined{
+ if(metadata===undefined)return undefined;
+ const at=(name:string):number|undefined=>{const stamp=metadata[name] as {seconds?:number|bigint|string;nanos?:number}|undefined;if(stamp===undefined||stamp===null||stamp.seconds===undefined)return undefined;return Number(stamp.seconds)*1000+Math.round((stamp.nanos??0)/1e6);};
+ const start=at("worker_start_timestamp"),done=at("worker_completed_timestamp"),fetchStart=at("input_fetch_start_timestamp"),fetchDone=at("input_fetch_completed_timestamp"),run=at("execution_start_timestamp"),ran=at("execution_completed_timestamp"),uploadStart=at("output_upload_start_timestamp"),uploadDone=at("output_upload_completed_timestamp");
+ if(start===undefined||done===undefined||fetchStart===undefined||fetchDone===undefined||run===undefined||ran===undefined||uploadStart===undefined||uploadDone===undefined)return undefined;
+ return Object.freeze({workerMilliseconds:Math.max(0,done-start),fetchMilliseconds:Math.max(0,fetchDone-fetchStart),executeMilliseconds:Math.max(0,ran-run),uploadMilliseconds:Math.max(0,uploadDone-uploadStart)});
 }

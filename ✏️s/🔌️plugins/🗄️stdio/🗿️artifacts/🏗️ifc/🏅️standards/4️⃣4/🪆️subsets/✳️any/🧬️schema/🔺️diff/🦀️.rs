@@ -458,6 +458,13 @@ fn validate_args_diff(base_len: usize, diff: &IfcArgsDiff, prefix: &[String]) ->
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
             return Err(target_error("mutation.apply.invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
         }
+        if !entry.value.binary_literals_admitted() {
+            return Err(target_error("mutation.apply.invalid-binary-literal", "binary literal must carry valid padding bits and hexadecimal digits", target));
+        }
+    }
+    if let Some(entry) = diff.added.iter().find(|entry| !entry.value.binary_literals_admitted()) {
+        let target: Vec<String> = prefix.iter().cloned().chain(["args".to_string(), entry.index.to_string()]).collect();
+        return Err(target_error("mutation.apply.invalid-binary-literal", "binary literal must carry valid padding bits and hexadecimal digits", target));
     }
     let mut additions: Vec<usize> = diff.added.iter().map(|entry| entry.index).collect();
     additions.sort_unstable();
@@ -492,6 +499,9 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
         if base_entity.is_none() || removed.contains(&entry.id) || !modified.insert(entry.id) {
             return Err(target_error("mutation.apply.invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
         }
+        if entry.diff.complex.iter().flatten().any(|part| !part.args.iter().all(IfcValue::binary_literals_admitted)) {
+            return Err(target_error("mutation.apply.invalid-binary-literal", "binary literal must carry valid padding bits and hexadecimal digits", vec!["entities".to_string(), entry.id.to_string()]));
+        }
         if let Some(args) = &entry.diff.args {
             validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
         }
@@ -505,6 +515,9 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
             return Err(target_error("mutation.apply.invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
         }
         previous = Some(entry.index);
+        if !entry.entity.args.iter().chain(entry.entity.complex.iter().flat_map(|part| &part.args)).all(IfcValue::binary_literals_admitted) {
+            return Err(target_error("mutation.apply.invalid-binary-literal", "binary literal must carry valid padding bits and hexadecimal digits", vec!["entities".to_string(), entry.entity.id.to_string()]));
+        }
     }
     Ok(())
 }

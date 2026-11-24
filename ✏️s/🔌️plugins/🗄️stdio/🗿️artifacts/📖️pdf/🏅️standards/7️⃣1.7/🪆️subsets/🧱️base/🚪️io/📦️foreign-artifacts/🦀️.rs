@@ -65,11 +65,18 @@ impl PdfSampledResourceIdentity {
     }
 
     /// ▶️ Hashes at most `work` pages of native stream bytes and reports page work consumed.
-    pub fn advance(&mut self, data: &[u8], work: usize) -> usize {
+    pub fn advance(&mut self, data: &(impl semio_framework_value::ByteReadSource + ?Sized), work: usize) -> usize {
         let limit = work.saturating_mul(Self::PAGE_BYTES);
-        let end = self.cursor.saturating_add(limit).min(data.len());
+        let end = self.cursor.saturating_add(limit).min(data.byte_len());
         let bytes = end - self.cursor;
-        self.append(&data[self.cursor..end]);
+        let mut page = [0u8; Self::PAGE_BYTES];
+        let mut remaining = bytes;
+        while remaining != 0 {
+            let count = remaining.min(Self::PAGE_BYTES);
+            if data.read_bytes(self.cursor, &mut page[..count]) != count { break; }
+            self.append(&page[..count]);
+            remaining -= count;
+        }
         bytes.div_ceil(Self::PAGE_BYTES)
     }
 
@@ -121,10 +128,17 @@ impl PdfDctResourceIdentity {
     }
 
     /// ▶️ Hashes at most the granted number of native stream bytes.
-    pub fn advance(&mut self, data: &[u8], work: usize) -> usize {
-        let end = self.cursor.saturating_add(work).min(data.len());
+    pub fn advance(&mut self, data: &(impl semio_framework_value::ByteReadSource + ?Sized), work: usize) -> usize {
+        let end = self.cursor.saturating_add(work).min(data.byte_len());
         let used = end - self.cursor;
-        self.append(&data[self.cursor..end]);
+        let mut page = [0u8; 4_096];
+        let mut remaining = used;
+        while remaining != 0 {
+            let count = remaining.min(page.len());
+            if data.read_bytes(self.cursor, &mut page[..count]) != count { break; }
+            self.append(&page[..count]);
+            remaining -= count;
+        }
         used
     }
 
@@ -224,7 +238,7 @@ pub trait PdfArtifactResourcePort {
 pub struct NativePdfArtifactResources<'a> {resources:Vec<(ArtifactRef,PdfObject)>,graph:&'a [PdfIndirectObject]}
 fn identity(kind:&str,object:&PdfObject)->PResult<ArtifactRef> {
     let PdfObject::Stream {dict,data,filters}=object else{return Err(PdfEngineError::Unsupported("foreign PDF artifact requires a native stream".into()));};
-    let mut hash=semio_framework_hash::Sha256::new();hash.update(kind.as_bytes());hash.update(data);
+    let mut hash=semio_framework_hash::Sha256::new();hash.update(kind.as_bytes());{let mut page=[0u8;4096];let mut at=0;while at<data.len(){let count=(data.len()-at).min(page.len());if semio_framework_value::ByteReadSource::read_bytes(data,at,&mut page[..count])!=count{return Err(PdfEngineError::Malformed("foreign PDF artifact lost a stream byte".into()))}hash.update(&page[..count]);at+=count;}}
     let value=semio_framework_pack_json::from_dsl_value(&filters.to_value());hash.update(semio_framework_pack_json::to_string(&value).as_bytes());
     if kind=="s.stdio.font.type1" {for name in ["Length1","Length2","Length3"]{let entry=dict.iter().find(|entry|entry.key==name).map(|entry|&entry.value).unwrap_or(&PdfObject::Null);hash.update(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&entry.to_value())).as_bytes());}}
     Ok(artifact_reference(kind, hash.finalize()))
@@ -498,7 +512,7 @@ pub mod png_source {
                 PdfDictEntry::new("Height", PdfObject::Int(i64::from(height))),
                 PdfDictEntry::new("SemioChannels", PdfObject::Int(plane.channels() as i64)),
             ];
-            Ok(PdfObject::Stream { dict, data: samples, filters: vec![PdfStreamFilter::Flate { predictor: None }] })
+            Ok(PdfObject::Stream { dict, data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&samples), filters: vec![PdfStreamFilter::Flate { predictor: None }] })
         }
     }
 }

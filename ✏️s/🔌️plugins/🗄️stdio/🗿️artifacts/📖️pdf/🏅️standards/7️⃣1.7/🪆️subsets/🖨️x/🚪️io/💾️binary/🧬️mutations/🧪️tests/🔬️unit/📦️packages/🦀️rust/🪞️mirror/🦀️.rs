@@ -40,7 +40,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "../../../🦀️.rs"]
                             pub mod tests;
-                            pub use semio_s_artifact_stdio_pdf_mut_x::standards::v1_7::subsets::x::io::binary::mutations::remove_encryption_dictionary;
                         }
                     }
                 }
@@ -154,76 +153,6 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
-                            #[path = "."]
-                            pub mod remove_struct_tree_root {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::ua::io::binary::mutations::remove_struct_tree_root::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🪓️remove-struct-tree-root/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod remove_display_doc_title {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_6::standards::v1_7::subsets::ua::io::binary::mutations::remove_display_doc_title::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🚫️remove-display-doc-title/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod remove_mark_info {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_mark_info::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🗑️remove-mark-info/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod set_lang {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_lang::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🗣️set-lang/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod remove_font_file {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_font_file::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🧺️remove-font-file/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod remove_lang {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::remove_lang::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🤐️remove-lang/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod set_mark_info {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_mark_info::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/✅️set-mark-info/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod embed_font_file {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::embed_font_file::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🔤️embed-font-file/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod set_struct_tree_root {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_struct_tree_root::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🌲️set-struct-tree-root/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
-                            #[path = "."]
-                            pub mod set_display_doc_title {
-                                pub use semio_s_artifact_stdio_pdf_mut_family_7::standards::v1_7::subsets::ua::io::binary::mutations::set_display_doc_title::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🪧️set-display-doc-title/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
-                            }
                         }
                     }
                 }

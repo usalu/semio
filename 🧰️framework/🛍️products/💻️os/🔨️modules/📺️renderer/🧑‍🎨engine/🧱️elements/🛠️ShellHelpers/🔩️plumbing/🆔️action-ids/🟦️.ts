@@ -15,7 +15,7 @@ export const NOTE_WORLD_NAVIGATION_ACTION_ID = "noteWorldNavigation";
  * panel — intercepted by the plugin BEFORE the app ever sees it, args `{ commandId: string, label: string,
  * detail?: unknown }`. Routed through the exact same `handleAction` dispatch path as every other action
  * (unlike {@link NOTE_WORLD_NAVIGATION_ACTION_ID}, which is fully shell-intercepted and never forwarded). */
-const NOTE_SHELL_COMMAND_ACTION_ID = "noteShellCommand";
+export const NOTE_SHELL_COMMAND_ACTION_ID = "noteShellCommand";
 
 /** 🛡️ Action ids intercepted by `VcsDocumentApp::dispatch_action` before `command_from_action` — undeclared
  * surface verbs (e.g. VFS `selectRows` on Home) must not be forwarded or they hard-error the bridge. */

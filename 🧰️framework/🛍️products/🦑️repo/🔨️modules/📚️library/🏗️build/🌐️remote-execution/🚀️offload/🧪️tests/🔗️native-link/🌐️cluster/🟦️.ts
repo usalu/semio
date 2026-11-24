@@ -66,3 +66,24 @@ test.skipIf(!toolsPresent)("a native cdylib with a static library of the checkou
  expect(Buffer.compare(offloaded,local),"offloaded and local library have the same bytes").toBe(0);
  expect(offloaded.includes(Buffer.from(remote.base))).toBe(false);
 },stretchedBudgetMillisecondsV1(240000));
+
+/** 🧵️ Offloads one cdylib unit to the cluster and answers what the worker reported of its code generation threads (the `offload-run` event's detail), after the host view of the workers was set to `load`. */
+async function offloadedThreads(label:string,load:number):Promise<number|undefined>{
+ const view=JSON.parse(readFileSync(idleHost,"utf8")) as {host:{load:number}};view.host.load=load;writeFileSync(idleHost,JSON.stringify(view));
+ await new Promise<void>(resolve=>{setTimeout(resolve,1500);});
+ const remote=checkout(label),cacheRoot=join(scratch,"unit-"+label);mkdirSync(cacheRoot,{recursive:true});
+ const environment={...testRustEnvironmentV1(remote.environment),SEMIO_UNIT_CACHE_ROOT:cacheRoot,SEMIO_UNIT_CACHE_LANE:"t",SEMIO_UNIT_CACHE_SLOTS:"0",SEMIO_OFFLOAD:"distribute",SEMIO_OFFLOAD_PRESSURE:"door",SEMIO_REMOTE_EXECUTION_ENDPOINT:cluster.server.grpcUrl,SEMIO_REMOTE_CACHE_ENDPOINT:cluster.cache.url.replace("//0.0.0.0","//127.0.0.1"),SEMIO_REMOTE_CACHE_INSTANCE:"main",SEMIO_CAS_ROOT:join(scratch,"cas-"+label)};
+ const previous=process.cwd();process.chdir(remote.root);
+ let status:number;try{status=await wrapRustcV1(["rustc",...remote.args],environment,remote.root,{admission:{probe:testHostProbeV1("quiet-no-swap",true)}});}finally{process.chdir(previous);}
+ expect(status,JSON.stringify(events(cacheRoot))).toBe(0);
+ const run=events(cacheRoot).find(row=>row.kind==="offload-run");expect(run,JSON.stringify(events(cacheRoot))).toBeDefined();
+ const found=/(\d+) codegen threads/u.exec(String(run!.detail??""));
+ return found===null?undefined:Number(found[1]);
+}
+
+test.skipIf(!toolsPresent)("a cdylib final that runs on a worker uses the cores of that worker: an idle 16-core machine grants it several code generation threads (the policy's cap), a saturated one grants one (the serial back end), and the grant comes back in the result",async()=>{
+ const idle=await offloadedThreads("idle",0.5);
+ expect(idle,"threads granted by an idle worker").toBeGreaterThan(1);
+ const saturated=await offloadedThreads("busy",30);
+ expect(saturated,"threads granted by a saturated worker").toBe(1);
+},stretchedBudgetMillisecondsV1(240000));

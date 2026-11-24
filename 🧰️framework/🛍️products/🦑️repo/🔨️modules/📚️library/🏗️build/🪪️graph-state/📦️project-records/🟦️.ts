@@ -142,11 +142,11 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
    return documents.sort((left,right)=>left.name<right.name?-1:1);
   }catch{return[];}
  };
- const refusals:Record<string,number>={},refuse=(reason:string)=>{const key=reason.replace(/\s+/gu," ").slice(0,80);if(key in refusals||Object.keys(refusals).length<16)refusals[key]=(refusals[key]??0)+1;};
+ let unportable="";const refusals:Record<string,number>={},refuse=(reason:string)=>{const key=reason.replace(/\s+/gu," ").slice(0,80);if(key in refusals||Object.keys(refusals).length<16)refusals[key]=(refusals[key]??0)+1;};
  const documentsOf=async(info:ProjectRecordInfoV1)=>{
   const portable=info.exportRecord() as PortableRecordV1|undefined;if(portable===undefined){refuse("no record to export");return undefined;}
   let neutral:ReturnType<typeof neutralRecordV1>;
-  try{neutral=neutralRecordV1(portable,host);}catch(error){counts.refused++;refuse(String((error as Error)?.message??error));return undefined;}
+  try{neutral=neutralRecordV1(portable,host);}catch(error){counts.refused++;unportable=String((error as Error)?.message??error).slice(0,200);refuse(unportable);return undefined;}
   return[{name:"record",bytes:Buffer.from(JSON.stringify(packRecordV1(neutral.record)))},...await closureDocsOf(info,portable.image,neutral.keys)];
  };
  const heldOf=(info:ProjectRecordInfoV1,held:Map<string,string>)=>async(entry:Readonly<{path:string;hash:string}>)=>{
@@ -154,7 +154,7 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
   if(named===null||info.closures?.held===undefined)return false;
    try{const local=await timedGate("held",()=>info.closures!.held!(input.root,entry.hash,named[1]!));if(local===undefined)return false;held.set(named[1]!,local);return true;}catch{return false;}
  };
- const recipeMemo=new Map<string,Readonly<{recipe:unknown;owned:boolean}>>(),importing=new Map<string,Readonly<{work:Promise<number>;signal?:AbortSignal}>>(),waiting:(()=>void)[]=[];let free=CLOSURE_WINDOW;
+ const heads=new Map<string,Promise<undefined>>(),recipeMemo=new Map<string,Readonly<{recipe:unknown;owned:boolean}>>(),importing=new Map<string,Readonly<{work:Promise<number>;signal?:AbortSignal}>>(),waiting:(()=>void)[]=[];let free=CLOSURE_WINDOW;
  const within=async<T>(work:()=>Promise<T>,signal?:AbortSignal):Promise<T>=>{
   signal?.throwIfAborted();
   if(free===0)await new Promise<void>((resolve,reject)=>{
@@ -173,9 +173,11 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
   const recipes=new Map<string,unknown>();let owned=false;
   for(const [name,entry] of lane){
    signal?.throwIfAborted();
-   const known=entry.hash===undefined?undefined:recipeMemo.get(entry.hash);
+   const hash=entry.hash;
+   let known=hash===undefined?undefined:recipeMemo.get(hash);
+   if(known===undefined&&hash!==undefined){const reading=heads.get(hash);if(reading!==undefined){await reading;known=recipeMemo.get(hash);}}
    if(known!==undefined){recipes.set(name.slice(8),known.recipe);owned||=known.owned;continue;}
-   await within(async()=>{
+   const reading=within(async()=>{
     const document=await entry.read({keep:true});if(document===undefined)return;
     try{
      const head=closureDocumentHeadV1(document.bytes);
@@ -184,18 +186,22 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
      if(entry.hash!==undefined){recipeMemo.delete(entry.hash);recipeMemo.set(entry.hash,{recipe:head.recipe,owned:head.owned});while(recipeMemo.size>MAXIMUM_RECIPES)recipeMemo.delete(recipeMemo.keys().next().value!);}
     }catch{}
    },signal);
+   if(hash!==undefined){const flight=reading.then(()=>undefined,()=>undefined);heads.set(hash,flight);void flight.then(()=>{if(heads.get(hash)===flight)heads.delete(hash);});}
+   await reading;
   }
   return{recipes,owned};
  };
- const takeClosures=async(info:ProjectRecordInfoV1,lane:ReadonlyMap<string,GraphDeferredV1>,recipes:ReadonlyMap<string,unknown>,held:ReadonlyMap<string,string>,keys:ReadonlyMap<string,string>,context:Readonly<{providers:readonly string[];generation:string|undefined}>,signal?:AbortSignal)=>{
+ const takeClosures=async(info:ProjectRecordInfoV1,lane:ReadonlyMap<string,GraphDeferredV1>,recipes:ReadonlyMap<string,unknown>,held:Map<string,string>,keys:ReadonlyMap<string,string>,context:Readonly<{providers:readonly string[];generation:string|undefined}>,signal?:AbortSignal)=>{
   if(info.closures===undefined)return;
   try{
    const all=new Map([...keys,...held,...bundleKeysV1([...recipes].map(([recipeKey,recipe])=>({recipeKey,bundle:{recipe} as unknown as ClosureBundleV1})),host,"local")]);
    for(const [name,entry] of lane){
     signal?.throwIfAborted();
     const hash=entry.hash,flying=hash===undefined?undefined:importing.get(hash);
-    if(flying!==undefined&&flying.signal===signal){await flying.work.catch(()=>undefined);continue;}
+    if(flying!==undefined&&await flying.work.then(()=>true,()=>false)&&flying.signal?.aborted!==true)continue;
     const work=within(async()=>{
+     const local=hash===undefined||info.closures!.held===undefined?undefined:await info.closures!.held(input.root,hash,name.slice(8)).catch(()=>undefined);
+     if(local!==undefined){held.set(name.slice(8),local);return 0;}
      const document=await entry.read();if(document===undefined)return 0;
      signal?.throwIfAborted();
      let neutral:Readonly<{recipeKey:string;bundle:ClosureBundleV1}>;
@@ -326,7 +332,7 @@ export function createProjectFleetPortV1(input:Readonly<{root:string;environment
    return{state:"granted",why:()=>why,code:()=>code,deterministic:()=>sure,digest:state.digest,
     async publish(){if(done)return false;done=true;const stored=await track((async()=>{
      const documents=await documentsOf(info);
-     if(documents===undefined){const missing=info.exportRecord()===undefined;sure=!missing;why=missing?"the inference left no record to export (inputs changed while it ran)":"the record names the root in a spelling that cannot be shared";code=missing?"no-record":"unshareable";await hold.release().catch(()=>undefined);return false;}
+     if(documents===undefined){const missing=info.exportRecord()===undefined;sure=false;why=missing?"the inference left no record to export (inputs changed while it ran)":"the record names the root in a spelling that cannot be shared: "+unportable;code=missing?"no-record":"unshareable";await hold.release().catch(()=>undefined);return false;}
      const result=await send(state,documents,hold,retry.attempts,head);
      if(result.stored){if(result.refusal===undefined)counts.published++;else{code=result.refusal.code;why=explain(result.refusal,documents);}mark(info,state);return true;}
      const refusal=result.refusal;code=refusal.code;sure=refusal.deterministic;why=explain(refusal,documents);

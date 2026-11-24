@@ -83,6 +83,27 @@ export function registerOpensPageStepFrontTests(): void {
     await vi.advanceTimersByTimeAsync(3 * LEADERBOARD_POLL_MS);
     expect(alone.refreshLeaderboard).not.toHaveBeenCalled();
     expect(screen.queryByRole("status")).toBeNull();
+  }, 60_000);
+  it("starts the run a visitor asked for once they signed in, and forgets it when they close the sign-in", () => {
+    const session = stubSession();
+    const step = { screen: "home", page: "heating" } as const;
+    const home = (state: Partial<CourseState>, identifying: boolean) => <HomeScreen session={session as unknown as CourseSession} state={{ ...STATE, step, ...state }} text={courseText("en")} locale="en" preferences={PREFERENCES} onPreferences={() => undefined} identifying={identifying} />;
+    const visitor = { learner: undefined, learnerView: undefined, runs: {} };
+    const start = (): HTMLElement => within(pane("heating")).getAllByRole("button").find((button) => /^Start/u.test(button.textContent?.trim() ?? ""))!;
+    const { rerender } = render(home(visitor, false));
+    fireEvent.click(start());
+    expect(session.open).toHaveBeenLastCalledWith({ screen: "identity" });
+    expect(session.startRun).not.toHaveBeenCalled();
+    rerender(home(visitor, true));
+    rerender(home({ runs: {} }, false));
+    expect(session.startRun).toHaveBeenCalledTimes(1);
+    expect((session.startRun.mock.calls as unknown[][])[0]![0]).toBe("heating");
+    rerender(home(visitor, false));
+    fireEvent.click(start());
+    rerender(home(visitor, true));
+    rerender(home(visitor, false));
+    rerender(home({ runs: {} }, false));
+    expect(session.startRun).toHaveBeenCalledTimes(1);
   });
   it("refreshes only the open quiz crowd when the leaderboard reports a submission", () => {
     const session = stubSession();

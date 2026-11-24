@@ -10,12 +10,12 @@ use std::mem::{ManuallyDrop,size_of};
 pub use semio_framework_value_native_schema_engine::source::{NativeTreeKind,NativeValueSource,NativeScalarQuery,NativeSourceScalar,NativeScalarQueryProducer,NativeScalarQueryOperation,invalid,fixed,receipt,nested,child_grant,add_receipt,NativeScalarQueryFrame};
 use semio_framework_value_native_receiver_protocol::{NativeAdvanceSelection,NativeSlotOperation,NativeSlotProducer,OriginalEffectReply,OriginalEffectReplyComplete};
 fn native_slot_seed<I:NativeValueSource+?Sized,T:NativeReceive<I>>(subset:bool)->Result<T::Receiver,ValueError>{if subset{T::record_subset_receiver().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native owner has no original record subset receiving port"))}else{Ok(T::receiver())}}
-pub struct NativeReceiveSlot<I:NativeValueSource+?Sized,T:NativeReceive<I>>{binding:Option<RetainedCloneBinding>,receiver:semio_framework_value_native_storage::NativeOwnedStorage<T::Receiver>,retired_header:Option<Box<T::Receiver>>,backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,action:semio_framework_value_native_receiver_protocol::NativeReceivingChild<OriginalReceivingPrimary>,authority:ManuallyDrop<Option<crate::native_decoding::OriginalEffectAuthority<NativeSlotProducer<I,T,T::Receiver>>>>,closing:bool,subset:bool,checkpoint_unresolved:bool}
-unsafe impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> Send for NativeReceiveSlot<I,T>{}
-impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> Default for NativeReceiveSlot<I,T>{fn default()->Self{Self{binding:None,receiver:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose::vacant(),output:ManuallyDrop::new(None),retirement:Default::default(),action:Default::default(),authority:ManuallyDrop::new(Some(crate::native_decoding::OriginalEffectAuthority::new(NativeSlotProducer::new()))),closing:false,subset:false,checkpoint_unresolved:false}}}
-impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> NativeReceiveSlot<I,T>{
+pub struct NativeReceiveSlot<I:NativeValueSource+?Sized,T:NativeReceive<I>,F:semio_framework_value_native_receiver_protocol::SlotFrame=semio_framework_value_native_receiver_protocol::OwnedFrame>{binding:Option<RetainedCloneBinding>,receiver:semio_framework_value_native_storage::NativeOwnedStorage<T::Receiver>,retired_header:Option<Box<T::Receiver>>,backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,action:F,authority:ManuallyDrop<Option<crate::native_decoding::OriginalEffectAuthority<NativeSlotProducer<I,T,T::Receiver>>>>,closing:bool,subset:bool,checkpoint_unresolved:bool}
+unsafe impl<I:NativeValueSource+?Sized,T:NativeReceive<I>,F:semio_framework_value_native_receiver_protocol::SlotFrame> Send for NativeReceiveSlot<I,T,F>{}
+impl<I:NativeValueSource+?Sized,T:NativeReceive<I>,F:semio_framework_value_native_receiver_protocol::SlotFrame> Default for NativeReceiveSlot<I,T,F>{fn default()->Self{Self{binding:None,receiver:semio_framework_value_native_storage::NativeOwnedStorage::empty(),retired_header:None,backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose::vacant(),output:ManuallyDrop::new(None),retirement:Default::default(),action:Default::default(),authority:ManuallyDrop::new(Some(crate::native_decoding::OriginalEffectAuthority::new(NativeSlotProducer::new()))),closing:false,subset:false,checkpoint_unresolved:false}}}
+impl<I:NativeValueSource+?Sized,T:NativeReceive<I>,F:semio_framework_value_native_receiver_protocol::SlotFrame> NativeReceiveSlot<I,T,F>{
  pub fn original_record_subset()->Self{let mut slot=Self::default();slot.subset=true;slot}
- pub fn advance_pending(&self)->bool{self.checkpoint_unresolved||self.action.pending()||self.receiver.get().is_some_and(|receiver|receiver.advance_pending())}
+ pub fn advance_pending(&self)->bool{self.checkpoint_unresolved||self.action.frame_pending()||self.receiver.get().is_some_and(|receiver|receiver.advance_pending())}
  pub fn ready(&self)->bool{!self.closing&&self.output.is_some()}
  pub fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if (self.closing||self.output.is_some())&&!self.advance_pending()&&!self.receiver.get().is_some_and(|receiver|receiver.requires_original_birth()){return Err(invalid())}let bound=input.check_binding(&self.binding)?;let captured=self.authority.as_ref().ok_or_else(invalid)?.inspect(|producer|producer.identity());if captured.is_some_and(|identity|identity!=input.reference_identity()){return Err(ValueError::invariant("original native slot source changed"))}if let Some(d)=self.action.demand{return Ok(d)}if captured.is_none(){return Ok(fixed(std::mem::size_of::<Option<(u64,usize,usize,usize)>>()))}if !bound{return Ok(fixed(input.binding_copy_bytes()))}if !self.receiver.reserved(){return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::reserve_demand())}if !self.receiver.initialized(){return match T::receiver_template(self.subset){Some(template)=>self.receiver.template_seed_demand(template),None=>Ok(semio_framework_value_native_storage::NativeOwnedStorage::<T::Receiver>::seed_demand())}}let receiver=self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))?;if receiver.output_ready(){nested(receiver.take_demand()?,0)}else{nested(receiver.demands(input,body,maximum_work_units)?,0)}}
  /// 🧷️ Continues recorded custody without any cancellation point, so a cancelled receiver never holds a half-settled original action.
@@ -42,7 +42,6 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> NativeReceiveSlot<I,T>{
  pub fn take(&mut self,output:&mut Option<T>,effect:&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkPoll<RetainedCloneStep,OriginalReceivingPrimary>{if !self.ready(){return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}semio_framework_value_native_receiver_protocol::native_output_take(&mut self.output,output,0,effect)}
  /// 🚪️ Observes the real parent close state.
  pub fn is_closing(&self)->bool{self.closing}
- pub fn debug_state(&self)->String{format!("[DEBUG] slot cu={} req={:?} dem={} eph={:?} tag={} nested={:?} closing={} out={}",self.checkpoint_unresolved,self.action.request,self.action.demand.is_some(),self.action.effect.phase(),self.action.tag,self.receiver.get().map(|r|r.advance_pending()),self.closing,self.output.is_some())}
  /// 📐️ Quotes close only after the original resident action has settled.
  pub fn begin_close_demand(&self)->Result<RetirementDemand,ValueError>{if self.advance_pending(){return Err(invalid())}Ok(if self.closing{Default::default()}else{fixed(std::mem::size_of::<bool>())})}
  /// ⏱️ Quotes the close-start work under the same settled parent.
@@ -62,7 +61,7 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> NativeReceiveSlot<I,T>{
  /// 🔁️ Recovers the same original-loan slot close.
  pub fn recover_close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::native_decoding::OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<crate::native_decoding::OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_borrowed(Some(original),body,effect,reply,true)}
  fn close_borrowed<'r>(&mut self,mut original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::native_decoding::OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>,recover:bool)->Result<crate::native_decoding::OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
-  if self.action.pending()||self.requires_original_birth(){return Err(invalid())}if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
+  if self.action.frame_pending()||self.requires_original_birth(){return Err(invalid())}if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
   if !self.closing{return if recover{self.recover_begin_close_into(effect,reply)}else{self.begin_close_into(effect,reply)}}
   if !self.backing.terminal_is_empty()||self.receiver.reserved()||self.retired_header.is_some(){return match(original.as_deref_mut(),recover){(Some(loan),false)=>self.backing.close_original_into::<I,T,T::Receiver>(&mut self.receiver,&mut self.retired_header,body,loan,effect,reply),(Some(loan),true)=>self.backing.recover_close_original_into::<I,T,T::Receiver>(&mut self.receiver,&mut self.retired_header,body,loan,effect,reply),(None,false)=>self.backing.close_into::<I,T,T::Receiver>(&mut self.receiver,&mut self.retired_header,body,effect,reply),(None,true)=>self.backing.recover_close_into::<I,T,T::Receiver>(&mut self.receiver,&mut self.retired_header,body,effect,reply)}}
   if !self.retirement.is_empty(){return match(original.as_deref_mut(),recover){(Some(loan),false)=>self.retirement.step_original_into(loan,body,effect,reply),(Some(loan),true)=>self.retirement.recover_step_original_into(loan,body,effect,reply),(None,false)=>self.retirement.step_into(body,effect,reply),(None,true)=>self.retirement.recover_step_into(body,effect,reply)}}
@@ -70,39 +69,15 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> NativeReceiveSlot<I,T>{
  }
  pub fn requires_original_birth(&self)->bool{if let Some(receiver)=self.receiver.get(){if !receiver.terminal_is_empty(){return receiver.requires_original_birth()}}if self.receiver.reserved()||self.retired_header.is_some(){return false}self.retirement.requires_original_birth()}
  pub fn close_original_birth_step(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->crate::OriginalRetirementPoll{if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}if let Some(receiver)=self.receiver.get_mut(){if !receiver.terminal_is_empty()&&receiver.requires_original_birth(){return receiver.close_original_birth_step(original,child_grant(grant,0))}}if !self.receiver.reserved()&&self.retired_header.is_none()&&self.retirement.requires_original_birth(){return self.retirement.step_original_birth(original,grant)}crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native child has no original birth to settle").into()),work:0})}
- pub fn requires_original_control(&self)->bool{if let Some(original)=self.backing.original_route(){return original}if self.action.pending(){return true}if let Some(receiver)=self.receiver.get(){if !receiver.terminal_is_empty(){return receiver.requires_original_control()}}if self.receiver.reserved()||self.retired_header.is_some(){return false}self.retirement.requires_original_control()}
- pub fn terminal_is_empty(&self)->bool{self.backing.terminal_is_empty()&&self.receiver.terminal_is_empty()&&self.retired_header.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.action.terminal_is_empty()&&!self.checkpoint_unresolved&&self.authority.as_ref().is_none_or(|authority|authority.inspect(|producer|producer.identity().is_none()))&&self.binding.is_none()}
+ pub fn requires_original_control(&self)->bool{if let Some(original)=self.backing.original_route(){return original}if self.action.frame_pending(){return true}if let Some(receiver)=self.receiver.get(){if !receiver.terminal_is_empty(){return receiver.requires_original_control()}}if self.receiver.reserved()||self.retired_header.is_some(){return false}self.retirement.requires_original_control()}
+ pub fn terminal_is_empty(&self)->bool{self.backing.terminal_is_empty()&&self.receiver.terminal_is_empty()&&self.retired_header.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.action.frame_idle()&&!self.checkpoint_unresolved&&self.authority.as_ref().is_none_or(|authority|authority.inspect(|producer|producer.identity().is_none()))&&self.binding.is_none()}
 }
-impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> Drop for NativeReceiveSlot<I,T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native child receiving requires funded closure");}}
-pub trait NativeScalarValue<I:NativeValueSource+?Sized>:RetireOwned{fn read(original:&I)->Result<Self,ValueError> where Self:Sized;fn read_copy_bytes(original:&I)->Result<usize,ValueError>;}
-pub struct NativeScalarReceiver<I:NativeValueSource+?Sized,T:NativeScalarValue<I>>{binding:Option<RetainedCloneBinding>,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,closing:bool,taken:bool,input:std::marker::PhantomData<fn(&I)>}
-impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeScalarReceiver<I,T>{pub fn new()->Self{Self{binding:None,output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,taken:false,input:std::marker::PhantomData}}}
-impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> NativeReceiver<I,T> for NativeScalarReceiver<I,T>{
- fn demands(&self,input:RetainedCloneRef<'_,I>,_:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>{if self.closing||self.taken||self.output.is_some(){return Err(invalid());}if !input.check_binding(&self.binding)?{return Ok(fixed(input.binding_copy_bytes()));}Ok(fixed(T::read_copy_bytes(input.get())?))}
- fn select_advance(&self,input:RetainedCloneRef<'_,I>,_body:usize,_maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>{if self.closing||self.taken||self.output.is_some(){return Err(invalid())}Ok(NativeAdvanceSelection::Local{work:if input.check_binding(&self.binding)?{1}else{input.binding_work_demand(&self.binding)?}})}
- fn advance_nested(&mut self,_:RetainedCloneRef<'_,I>,_:&mut NativeDecodeControl<'_>,_:semio_framework_value_control_contract::OriginalSourceTurnWitness<'_>,_:usize,_:u64,_:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,crate::native_decoding::NativeReceivingFailure>{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(invalid().into()),work:0})}
- fn advance_local<'reply>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetainedCloneStep,OriginalReceivingPrimary>)->Result<OriginalEffectReplyComplete<'reply,RetainedCloneStep,OriginalReceivingPrimary>,ValueError>{
-  let result:Result<RetainedCloneStep,OriginalReceivingPrimary>=(||{let d=self.demands(input,body,effect.maximum_work_units())?;if !retained_clone_grant_admits(effect.grant(),d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-   if self.binding.is_none(){let turn=input.bind(&mut self.binding,effect);return turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())).map_err(Into::into)}
-   if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native scalar action exceeded its original work").into())}*self.output=Some(T::read(input.get())?);Ok(RetainedCloneStep::Complete(receipt(d)))})();
-  Ok(reply.complete(result))
- }
- fn advance_pending(&self)->bool{false}
- semio_framework_value_native_receiver_protocol::scalar_output_engine!();
- semio_framework_value_native_receiver_protocol::native_receiver_close_start!(closing);
- semio_framework_value_native_receiver_protocol::scalar_close_engine!();
- fn native_terminal_release(&self)->Option<semio_framework_value_native_receiver_protocol::RetainedCursorRelease<Self>>{self.terminal_is_empty().then(||unsafe{semio_framework_value_native_receiver_protocol::RetainedCursorRelease::native(|value:&Self|value.terminal_is_empty())})}
-  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
-}
-impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> Drop for NativeScalarReceiver<I,T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native scalar receiving requires funded closure");}}
-macro_rules! scalar {($t:ty,$input:ident,$value:expr)=>{impl<I:NativeValueSource+?Sized> NativeScalarValue<I> for $t{fn read($input:&I)->Result<Self,ValueError>{$value}fn read_copy_bytes(_: &I)->Result<usize,ValueError>{Ok(size_of::<Option<Self>>())}}impl<I:NativeValueSource+?Sized> NativeReceive<I> for $t{type Receiver=NativeScalarReceiver<I,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}}};}
-scalar!(bool,input,input.boolean());scalar!((),input,if input.is_null(){Ok(())}else{Err(invalid())});
-scalar!(f64,input,{let n=input.number()?.as_f64();if n.is_finite(){Ok(n)}else{Err(invalid())}});
-scalar!(f32,input,{let n=input.number()?.as_f64();if n.is_finite()&&n.abs()<=f32::MAX as f64{Ok(n as f32)}else{Err(invalid())}});
-macro_rules! unsigned {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{Number::UInt(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Int(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Float(n)if n.is_finite()&&n.fract()==0.0&&n>=0.0&&(n as u128)<=<$t>::MAX as u128&&n<18446744073709551616.0=>Ok(n as $t),_=>Err(invalid())});)*};}
-unsigned!(u8,u16,u32,u64,usize);
-macro_rules! signed {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{Number::UInt(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Int(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Float(n)if n.is_finite()&&n.fract()==0.0&&n>=<$t>::MIN as f64&&n<=<$t>::MAX as f64&&n<9223372036854775808.0=>Ok(n as $t),_=>Err(invalid())});)*};}
-signed!(i8,i16,i32,i64,isize);
+impl<I:NativeValueSource+?Sized,T:NativeReceive<I>,F:semio_framework_value_native_receiver_protocol::SlotFrame> Drop for NativeReceiveSlot<I,T,F>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native child receiving requires funded closure");}}
+impl<I:NativeValueSource+?Sized,T:NativeReceive<I>> NativeReceiveSlot<I,T,semio_framework_value_native_receiver_protocol::SharedFrame>{/// ⚓️ Anchors the slot to its record's one frame.
+ pub fn anchor_frame(&mut self,frame:*mut semio_framework_value_native_receiver_protocol::NativeReceivingChild<OriginalReceivingPrimary>){self.action.anchor(frame)}}
+macro_rules! receive_scalars {($($t:ty),*)=>{$(impl<I:NativeValueSource+?Sized> NativeReceive<I> for $t{type Receiver=NativeScalarReceiver<I,Self>;fn receiver()->Self::Receiver{Self::Receiver::new()}})*};}
+receive_scalars!(bool,(),f64,f32,u8,u16,u32,u64,usize,i8,i16,i32,i64,isize);
+pub use semio_framework_value_native_record_machine::tree::{NativeScalarValue,NativeScalarReceiver,NativeFieldPlanSlot,plan_field_stage,plan_leaf_stage};
 pub struct NativeStringReceiver<I:NativeValueSource+?Sized>{cursor:RetainedFieldCursor<String>,validated:bool,closing:bool,input:std::marker::PhantomData<fn(&I)>}
 impl<I:NativeValueSource+?Sized> NativeReceive<I> for String{type Receiver=NativeStringReceiver<I>;fn receiver()->Self::Receiver{NativeStringReceiver{cursor:Default::default(),validated:false,closing:false,input:std::marker::PhantomData}}}
 impl<I:NativeValueSource+?Sized> NativeReceiver<I,String> for NativeStringReceiver<I>{
@@ -254,20 +229,7 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:u
 pub mod refusal;
 
 
-/// 🧭️ Erases one field slot so the struct-independent plan phases are compiled once instead of once per record.
-pub trait NativeFieldPlanSlot{
- fn plan_ready(&self)->bool;
- fn plan_demands(&self,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>;
- fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>;
- fn plan_take_work_demand(&self)->Result<u64,ValueError>;
- fn plan_terminal_is_empty(&self)->bool;
- fn plan_is_closing(&self)->bool;
- fn plan_begin_close_demand(&self)->Result<RetirementDemand,ValueError>;
- fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>;
- fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>;
-}
-impl<T:NativeReceive<dyn NativeValueSource>> NativeFieldPlanSlot for NativeReceiveSlot<dyn NativeValueSource,T>{
+impl<T:NativeReceive<dyn NativeValueSource>,F:semio_framework_value_native_receiver_protocol::SlotFrame> NativeFieldPlanSlot for NativeReceiveSlot<dyn NativeValueSource,T,F>{
  fn plan_ready(&self)->bool{self.ready()}
  fn plan_demands(&self,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(source.as_ref().ok_or_else(invalid)?.borrow()?,body,maximum)}
  fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
@@ -278,39 +240,4 @@ impl<T:NativeReceive<dyn NativeValueSource>> NativeFieldPlanSlot for NativeRecei
  fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>{self.begin_close_work_demand()}
  fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
  fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work_demand(body)}
-}
-impl<T:semio_framework_value_native_default::NativeDefault> NativeFieldPlanSlot for semio_framework_value_native_default::NativeDefaultSlot<T>{
- fn plan_ready(&self)->bool{self.ready()}
- fn plan_demands(&self,_:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.demands(body,maximum)}
- fn plan_take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
- fn plan_take_work_demand(&self)->Result<u64,ValueError>{self.take_work_demand()}
- fn plan_terminal_is_empty(&self)->bool{self.terminal_is_empty()}
- fn plan_is_closing(&self)->bool{self.is_closing()}
- fn plan_begin_close_demand(&self)->Result<RetirementDemand,ValueError>{self.begin_close_demand()}
- fn plan_begin_close_work_demand(&self)->Result<u64,ValueError>{self.begin_close_work_demand()}
- fn plan_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn plan_close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.close_work_demand(body)}
-}
-/// 🧭️ Plans every field stage except the projection of a present field (stage 0), which needs the typed input.
-pub fn plan_field_stage(stage:u8,present:bool,slot:&dyn NativeFieldPlanSlot,source:&Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>,projection:&crate::retained_clone::RetainedOwnedProjectionAdmission<dyn NativeValueSource>,body:usize,maximum:u64,option_bytes:usize,field_demand:fn(usize)->Result<RetirementDemand,ValueError>)->Result<(RetirementDemand,u64,u8),ValueError>{
- let one=||->Result<(RetirementDemand,u64,u8),ValueError>{Ok((fixed(size_of::<u8>()),1,13))};
- match stage{
-  0=>if present{Err(invalid())}else{one()},
-  8=>if present{Ok((projection.take_demand()?,projection.take_work_demand()?,24))}else{Err(invalid())},
-  1=>if slot.plan_ready(){one()}else{Ok((slot.plan_demands(source,body,maximum)?,1,14))},
-  2=>{let mut d=slot.plan_take_demand()?;d.copy_bytes=d.copy_bytes.checked_add(option_bytes+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(slot.plan_take_work_demand()?,2)?,13))},
-  3=>{let mut d=field_demand(0)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<bool>()+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(1,2)?,13))},
-  4=>if slot.plan_terminal_is_empty()||slot.plan_is_closing(){one()}else{Ok((slot.plan_begin_close_demand()?,slot.plan_begin_close_work_demand()?,21))},
-  7=>if slot.plan_terminal_is_empty(){one()}else{Ok((slot.plan_close_demands(body)?,slot.plan_close_work_demand(body)?,15))},
-  5=>if present{match source.as_ref(){Some(source)=>if source.terminal_is_empty(){Ok((fixed(size_of::<Option<crate::retained_clone::RetainedOwnedProjection<dyn NativeValueSource>>>()),1,13))}else{Ok((source.close_demand(body)?,source.close_work_demand(body)?,16))},None=>one()}}else{one()},
-  6=>Ok((fixed(size_of::<usize>()+size_of::<u8>()),2,13)),
-  _=>Err(invalid())}
-}
-
-/// 🍃️ Plans a scalar leaf field: stage 0 reads the one original scalar straight from its parent into the record's pending value (action 25) and stage 3 places it; a leaf owns no slot, projection alias or close frontier.
-pub fn plan_leaf_stage(stage:u8,option_bytes:usize,field_demand:fn(usize)->Result<RetirementDemand,ValueError>)->Result<(RetirementDemand,u64,u8),ValueError>{
- match stage{
-  0=>Ok((fixed(option_bytes+size_of::<u8>()),1,25)),
-  3=>{let mut d=field_demand(0)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<bool>()+size_of::<u8>()).ok_or_else(invalid)?;Ok((d,work_sum(1,2)?,13))},
-  _=>Err(invalid())}
 }

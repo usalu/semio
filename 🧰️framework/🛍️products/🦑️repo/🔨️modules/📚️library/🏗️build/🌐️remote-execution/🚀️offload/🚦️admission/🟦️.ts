@@ -6,13 +6,13 @@ import {evaluateHostCapacityV1,type HostCapacityPolicyV1,type HostReasonV1,type 
 import {currentHostProbeV1,readHostSampleV1,type HostProbeV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
 import {claimHeldV1,processAliveV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts";
-import {OFFLOAD_POLICY_V1,offloadModeV1} from "../📐️policy/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadExpenseV1,offloadFamilyCrateV1,offloadFamilyMillisecondsV1,offloadFamilyPeakMegabytesV1,offloadLearnPeakMegabytesV1,offloadModeV1,offloadPeakMegabytesV1,offloadUnitPeakMegabytesV1,type OffloadExpenseV1} from "../📐️policy/🟦️.ts";
 
 const limits=OFFLOAD_POLICY_V1.limits;
 /** 🚦️ The machine's own answer to "may one more compiler unit start here now". */
 export type OffloadAdmissionV1=Readonly<{verdict:"admit"|"wait";reason:HostReasonV1;atMs:number}>;
 /** 🔌️ The seam of the host-capacity decision: tests hand in a probe that reports a pressured machine or a policy, production uses the machine and the authored policy. */
-export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number;signal?:AbortSignal;doorRefused?:boolean;fleet?:Readonly<{fetch?:typeof fetch;timeoutMilliseconds?:number}>}>;
+export type OffloadAdmissionPortsV1=Readonly<{probe?:HostProbeV1;policy?:HostCapacityPolicyV1;now?:()=>number;signal?:AbortSignal;doorRefused?:boolean;peakMegabytes?:number;fleet?:Readonly<{fetch?:typeof fetch;timeoutMilliseconds?:number}>}>;
 
 /** 🚦️ Asks the single admission decision of the host (`evaluateHostCapacityV1`) about one more unit: a sample of the machine, an empty ledger (what is committed by other builds already shows in the sample's free memory, swap, pressure and load) and one waiting request for one job of the unit's size. `wait` means the unit would queue here. */
 export async function localUnitAdmissionV1(ports:OffloadAdmissionPortsV1={}):Promise<OffloadAdmissionV1>{
@@ -64,7 +64,7 @@ export async function fleetHeadroomV1(environment:Readonly<Record<string,string|
  return Number.isInteger(answer?.candidates)&&answer!.candidates!>0?answer!.candidates!:0;
 }
 
-/** 🛰️ How many action slots other machines of the same platform and toolchain have free right now, the width a build sizes its jobs to (`planFleetJobsV1`): the `slots` of the scheduler's idle answer, else its candidate count for a scheduler that does not count slots yet; `null` when offloading is off, no scheduler is published or it does not answer in time, so the build stays at its local grant. Never throws. */
+/** 🛰️ How many action slots other machines of the same platform and toolchain have free right now, the width a build sizes its jobs to (`planFleetJobsV1`): the `slots` of the scheduler's idle answer (counted at `peakMegabytes` when the caller sizes the unit it asks for: a wasm final), else its candidate count for a scheduler that does not count slots yet; `null` when offloading is off, no scheduler is published or it does not answer in time, so the build stays at its local grant. Never throws. */
 export async function fleetIdleSlotsV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1={}):Promise<number|null>{
  if(offloadModeV1(environment)==="never")return null;
  const answer=await fleetIdleAnswerV1(environment,ports);
@@ -77,13 +77,13 @@ export async function fleetIdleSlotsV1(environment:Readonly<Record<string,string
 async function fleetIdleAnswerV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1):Promise<{candidates?:number;slots?:number}|undefined>{
  try{
   const fleet=await import("../../../🌐️remote-cache/🛰️fleet/🟦️.ts"),{resolveRemoteExecutionEndpointV1,resolveRemoteExecutionSchedulerV1}=await import("../../🧭️endpoint/🟦️.ts"),{remoteExecutionOriginV1}=await import("../../🌡️load/🟦️.ts");
-  const root=environment.SEMIO_WORKSPACE_ROOT??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
+  const root=environment.SEMIO_WORKSPACE_ROOT??(environment.SEMIO_UNIT_CACHE_WORKSPACE_ROOT||undefined)??fleet.fleetCacheRootV1(environment)??workspaceRootFromV1(process.cwd());
   const published=resolveRemoteExecutionEndpointV1({environment,...root===undefined?{}:{root}})?.endpoint;
   if(!published)return undefined;
   const scheduler=await resolveRemoteExecutionSchedulerV1({environment,...root===undefined?{}:{root}},published);
   if(scheduler===undefined)return undefined;
   const call=ports.fleet?.fetch??(root===undefined?fetch:fleet.remoteCacheFetchV1({...environment,SEMIO_WORKSPACE_ROOT:root},{root,audience:"execution",roleOf:()=>"submit"})),own=root===undefined?"":remoteExecutionOriginV1(root,environment);
-  const response=await call(scheduler.url.replace(/\/+$/u,"")+"/v1/fleet/idle?origin="+encodeURIComponent(own),{signal:AbortSignal.any([...ports.signal?[ports.signal]:[],AbortSignal.timeout(ports.fleet?.timeoutMilliseconds??limits.fleetStatusMilliseconds)])});
+  const response=await call(scheduler.url.replace(/\/+$/u,"")+"/v1/fleet/idle?origin="+encodeURIComponent(own)+(ports.peakMegabytes!==undefined&&ports.peakMegabytes>0?"&peak="+Math.ceil(ports.peakMegabytes):""),{signal:AbortSignal.any([...ports.signal?[ports.signal]:[],AbortSignal.timeout(ports.fleet?.timeoutMilliseconds??limits.fleetStatusMilliseconds)])});
   if(!response.ok){await response.body?.cancel();return undefined;}
   return await response.json() as {candidates?:number;slots?:number};
  }catch{return undefined;}
@@ -114,20 +114,87 @@ export function readUnitCostV1(root:string,crate:string):number|undefined{
 export function writeUnitCostV1(root:string,crate:string,milliseconds:number):void{
  try{const before=readUnitCostV1(root,crate),next=before===undefined?milliseconds:Math.round((before+milliseconds)/2),path=costPath(root,crate),temporary=path+"."+randomBytes(3).toString("hex");mkdirSync(join(root,"c"),{recursive:true});writeFileSync(temporary,String(next));renameSync(temporary,path);}catch{}
 }
-/** 🎯️ Whether a unit is worth a round trip: its recorded local cost is not below the measured round trip; a unit without a record is offloaded (the first compile teaches the cost). */
-export function worthARoundTripV1(root:string,crate:string):boolean{
- const cost=readUnitCostV1(root,crate);return cost===undefined||cost>=limits.roundTripMilliseconds;
+/** 🏋️ The peak memory a compile of this crate needed here the last times, in megabytes (a file `<crate>.peak` beside the cost record); `undefined` when none was measured. */
+export function readUnitPeakV1(root:string,crate:string):number|undefined{
+ try{const value=Number(readFileSync(costPath(root,crate)+".peak","utf8"));return Number.isFinite(value)&&value>0?value:undefined;}catch{return undefined;}
+}
+/** 👪️ The peak that a crate of the family is expected to need when none was measured for it: the quantile of the recorded peaks of every family crate in the cost folder of this root (a crate's own file `<crate>.peak`, one sample each, kills included), `undefined` while too few crates were measured. Reads only the names of the folder that end in the family suffix. */
+export function readFamilyPeakV1(root:string):number|undefined{
+ try{
+  const suffix=OFFLOAD_POLICY_V1.peak.family.crateSuffix+".peak",samples:number[]=[];
+  for(const name of readdirSync(join(root,"c")))if(name.endsWith(suffix)&&offloadFamilyCrateV1(name.slice(0,-5))){const value=readUnitPeakV1(root,name.slice(0,-5));if(value!==undefined)samples.push(value);}
+  return offloadFamilyPeakMegabytesV1(samples);
+ }catch{return undefined;}
+}
+/** 🕰️ The compile time that a crate of the family is expected to need when none was recorded for it: the quantile of the recorded local compile times of every family crate in the cost folder of this root (`offloadFamilyMillisecondsV1`), `undefined` while too few crates were measured. */
+export function readFamilyCostV1(root:string):number|undefined{
+ try{
+  const samples:number[]=[];
+  for(const name of readdirSync(join(root,"c")))if(offloadFamilyCrateV1(name)){const value=readUnitCostV1(root,name);if(value!==undefined)samples.push(value);}
+  return offloadFamilyMillisecondsV1(samples);
+ }catch{return undefined;}
+}
+/** 💎️ What placement and the expensive-unit rule know about a unit of this crate before it compiles: the megabytes it is placed with (`peak`: the learned peak, else for a linked wasm unit the family estimate, else the unknown default) and whether it is expensive (`expense`, see `offloadExpenseV1`). The one reading of the cost folder that the placement of the unit and the gate share. */
+export function readUnitExpenseV1(root:string,crate:string,types:readonly string[],target:string|undefined):Readonly<{peak:number;expense:OffloadExpenseV1}>{
+ const linked=offloadPeakMegabytesV1(types,target)>0,learned=readUnitPeakV1(root,crate),recorded=readUnitCostV1(root,crate),family=recorded===undefined&&linked?readFamilyCostV1(root):undefined;
+ const peak=offloadUnitPeakMegabytesV1(learned,types,target,learned===undefined&&linked?readFamilyPeakV1(root):undefined);
+ return Object.freeze({peak,expense:offloadExpenseV1({...recorded===undefined?{}:{recordedMilliseconds:recorded},...family===undefined?{}:{familyMilliseconds:family},...learned===undefined?{}:{learnedMegabytes:learned},placedMegabytes:peak,linked})});
+}
+/** 🖊️ Records the peak of a local compile (`megabytes`) by the rule of `offloadLearnPeakMegabytesV1`, or a peak a worker's kill taught (`force`), which replaces the record. */
+export function writeUnitPeakV1(root:string,crate:string,megabytes:number,force:boolean=false):void{
+ try{
+  if(!Number.isFinite(megabytes)||megabytes<=0)return;
+  const next=force?Math.ceil(megabytes):offloadLearnPeakMegabytesV1(readUnitPeakV1(root,crate),megabytes),path=costPath(root,crate)+".peak",temporary=path+"."+randomBytes(3).toString("hex");
+  mkdirSync(join(root,"c"),{recursive:true});writeFileSync(temporary,String(next));renameSync(temporary,path);
+ }catch{}
+}
+/** 🎯️ What a round trip costs a unit beyond its own compile, in milliseconds: the average of the measured overheads of the units that ran on a worker (the whole round trip minus the compile time the worker reports, so queue, input fetch, output upload, download and token waits are in it), else the authored floor `roundTripMilliseconds`. */
+export function readOffloadOverheadV1(root:string):number{
+ try{const value=Number(readFileSync(join(root,"offload-overhead"),"utf8"));if(Number.isFinite(value)&&value>=0)return value;}catch{}
+ return limits.roundTripMilliseconds;
+}
+/** 🖊️ Records the overhead of one offloaded unit: the estimate moves halfway to the new measurement, so a fleet that gets slower or faster is followed within a few units. */
+export function writeOffloadOverheadV1(root:string,milliseconds:number):void{
+ try{
+  if(!Number.isFinite(milliseconds)||milliseconds<0)return;
+  let before:number|undefined;try{const value=Number(readFileSync(join(root,"offload-overhead"),"utf8"));if(Number.isFinite(value)&&value>=0)before=value;}catch{}
+  const next=before===undefined?Math.round(milliseconds):Math.round((before+milliseconds)/2),path=join(root,"offload-overhead"),temporary=path+"."+randomBytes(3).toString("hex");
+  mkdirSync(root,{recursive:true});writeFileSync(temporary,String(next));renameSync(temporary,path);
+ }catch{}
+}
+/** 🎯️ The answer of the round trip test. */
+export type OffloadWorthV1="worth"|"cheap"|"unmeasured";
+/** 🎯️ Whether a unit is worth a round trip: `worth` when its recorded local compile time (`readUnitCostV1`, the run of the compiler without any wait for a slot) is not below the expected overhead of a round trip (`readOffloadOverheadV1`), `cheap` when it is, `unmeasured` when none was recorded (the unit compiles here first, which teaches the cost). */
+export function worthARoundTripV1(root:string,crate:string):OffloadWorthV1{
+ const cost=readUnitCostV1(root,crate);return cost===undefined?"unmeasured":cost>=readOffloadOverheadV1(root)?"worth":"cheap";
 }
 
-/** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: a unit worth a round trip, the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
-export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;worth:()=>boolean;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
-/** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`headroom`: this machine is calm, the unit goes where another machine has room). */
-export type OffloadGateReasonV1="never"|"pin"|"cheap"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
-/** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. `pin` offers every unit and queues it on the named machine. `distribute` offers every unit worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where this machine is calm, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
+/** 🏁️ Whether a worker has room for an expensive unit placed with `peakMegabytes`, waiting for one for up to `waitMilliseconds` (asked every `pollMilliseconds`, the scheduler's own idle counting at that peak: `fleetIdleSlotsV1`, so the answer already counts the units that run on workers now). `false` at once when offloading is off or no scheduler answers; never throws.
+ * @see ../🧪️tests/🏁️finals/🟦️.ts */
+export async function awaitFleetFitV1(environment:Readonly<Record<string,string|undefined>>,ports:OffloadAdmissionPortsV1&Readonly<{waitMilliseconds:number;pollMilliseconds:number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>}>):Promise<boolean>{
+ const now=ports.now??Date.now,sleep=ports.sleep??((milliseconds,signal)=>new Promise<void>(resolve=>{const timer=setTimeout(resolve,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);resolve();},{once:true});})),until=now()+ports.waitMilliseconds;
+ for(;;){
+  const slots=await fleetIdleSlotsV1(environment,ports);
+  if(slots===null)return false;
+  if(slots>0)return true;
+  if(ports.signal?.aborted===true||now()+ports.pollMilliseconds>until)return false;
+  await sleep(ports.pollMilliseconds,ports.signal);
+ }
+}
+
+/** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: an expensive unit (`expensive`, see `offloadExpenseV1`) asks only for a worker with room (`workerFits`, which waits at most the given milliseconds), a free compile slot of this machine taken at once (`localSlot(0)`, the caller keeps it and compiles in it), the round trip test (`worth`: a unit cheaper than the overhead of a round trip stays; a unit without a recorded cost waits up to `unmeasuredWaitMilliseconds` for a slot here, so it is measured, and goes away only when none became free), the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
+export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;expensive:()=>boolean;workerFits:(waitMilliseconds:number)=>Promise<boolean>;localSlot:(waitMilliseconds:number)=>Promise<boolean>;worth:()=>OffloadWorthV1;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
+/** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`final`: an expensive unit and a worker has room for it, whatever this machine's slots are; `final-wait`: an expensive unit but no worker had room in time, it compiles here; `local-slot`: a compile slot here was free, local first; `unmeasured`: its cost is unknown and a slot came free soon; `headroom`: every slot here is busy, the unit goes where another machine has room). */
+export type OffloadGateReasonV1="never"|"pin"|"final"|"final-wait"|"local-slot"|"cheap"|"unmeasured"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
+/** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. Local first, except for expensive units: an expensive unit (a linked component final: 10 to 60 minutes, up to 6.5 GB) goes to a worker that has the room for it even while a slot here is free (it frees this machine for the next unit and runs with the worker's own cores), queued there for a short while if another unit took the room first, and compiles here when no worker has room within `finals.waitMilliseconds`; a cheaper unit that finds a free compile slot compiles here at once, the fleet only takes units that would wait for one. `pin` offers every unit and queues it on the named machine. `distribute` offers a unit that would wait here and is worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where the wait is short, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
 export async function offloadGateV1(input:OffloadGateInputV1):Promise<Readonly<{offload:boolean;queue:boolean;reason:OffloadGateReasonV1}>>{
  if(input.mode==="never")return{offload:false,queue:false,reason:"never"};
  if(input.mode==="pin")return{offload:true,queue:true,reason:"pin"};
- if(!input.worth())return{offload:false,queue:false,reason:"cheap"};
+ if(input.expensive())return await input.workerFits(OFFLOAD_POLICY_V1.finals.waitMilliseconds)?{offload:true,queue:true,reason:"final"}:{offload:false,queue:false,reason:"final-wait"};
+ if(await input.localSlot(0))return{offload:false,queue:false,reason:"local-slot"};
+ const worth=input.worth();
+ if(worth==="cheap")return{offload:false,queue:false,reason:"cheap"};
+ if(worth==="unmeasured"&&await input.localSlot(limits.unmeasuredWaitMilliseconds))return{offload:false,queue:false,reason:"unmeasured"};
  if(input.door)return{offload:true,queue:true,reason:"door"};
  if(input.slotQueueMilliseconds()>=limits.queueThresholdMilliseconds)return{offload:true,queue:true,reason:"slot-queue"};
  if(await input.host()==="wait")return{offload:true,queue:true,reason:"host-wait"};

@@ -143,7 +143,7 @@ function pythonInterpreter(context: ToolContextV1, series: string): string | und
   const matches = context.list(directory).filter(name => name.startsWith("cpython-" + series + ".")).sort().reverse();
   for (const name of matches) {
     const candidate = windows ? join(directory, name, "python.exe") : join(directory, name, "bin", "python3");
-    if (context.exists(candidate)) return candidate;
+    if (context.exists(join(directory, name, ".toolchain.json")) && context.exists(candidate)) return candidate;
   }
   return undefined;
 }

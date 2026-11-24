@@ -380,7 +380,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// (26/09/02/PUZZLE-3D-END-TO-END wave B9 lane 2).
     fn interaction_topology(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, _cfg: &ConfigView<'_, Puzzle3dConfig>) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError> {
  Ok((||{
-        #[cfg(test)]
         PUZZLE3D_INTERACTION_TOPOLOGY_BUILDS.with(|counter| counter.set(counter.get().saturating_add(1)));
         let snapshot = puzzle3d_scene_snapshot_from_document(doc.snapshot.typed());
         let mut ordered = Vec::new();
@@ -523,7 +522,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
-            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run()))])
+            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.original_tool_run()))])
         })
     }
 
@@ -539,7 +538,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         with_puzzle3d_session_for(puzzle3d_view_session_key(doc), &runtime, |_session| {
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), window_id);
-            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.tool_run()))])
+            HashMap::from([(window_id.to_string(), main::engagement(&envelope, labels, doc.original_tool_run()))])
         })
     }
 
@@ -553,7 +552,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
             let wid = view_state.window_id.as_deref().unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
             let Some(labels) = puzzle3d_labels(view_state) else { return HashMap::new() };
             let envelope = main::scene_for(doc.snapshot, &runtime, Some(view_state), wid);
-            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
+            HashMap::from([(semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_FILL_TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.original_tool_run()))])
         })
     }
 
@@ -615,9 +614,7 @@ impl Puzzle3dPlayApp {
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
-                    let no_provisional = std::collections::BTreeSet::new();
-                    let provisional = doc.tool_run().map_or(&no_provisional, |run| run.provisional_entities.get());
-                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.scene_snapshot, provisional, &interaction.referenced);
+                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.scene_snapshot, doc.original_tool_run(), &interaction.referenced);
                     let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref(), labels)

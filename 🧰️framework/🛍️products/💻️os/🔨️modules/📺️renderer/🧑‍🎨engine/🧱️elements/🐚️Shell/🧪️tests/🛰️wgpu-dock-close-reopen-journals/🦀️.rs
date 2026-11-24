@@ -82,14 +82,14 @@ fn accepted_dock_input(shell: &mut ShellState) -> InputState<ActionDescriptor> {
     let icon_ids = HashMap::new();
     let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     shell.dock.dock.paint_chrome(&mut ctx, CANVAS, false);
-    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
+    PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
     input
 }
 
 fn plan(shell: &mut ShellState) {
     let theme = Theme::default();
     let mut atlas = FontAtlas::builtin();
-    ChromeViewCtx::of(&mut shell).plan_dock_windows(CANVAS, &theme, &mut atlas);
+    ChromeViewCtx::of(shell).plan_dock_windows(CANVAS, &theme, &mut atlas);
 }
 
 //#region 🪟️CloseAndReopen

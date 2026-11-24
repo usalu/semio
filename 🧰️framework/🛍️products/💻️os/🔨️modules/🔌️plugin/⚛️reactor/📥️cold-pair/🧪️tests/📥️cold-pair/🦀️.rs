@@ -109,6 +109,32 @@ fn cold_pair_ingress_streams_the_exact_sixteen_mibibyte_pair_and_loads_once() {
     assert!(!ingress.is_mounted(exact_header.lifetime));
 }
 
+/// ⚖️ LAW: an archive load whose status stays unmoved for the idle-poll ceiling is declared stalled, and any movement of the status re-arms the count.
+#[test]
+fn a_cold_pair_load_that_never_moves_is_declared_stalled_at_exactly_the_idle_poll_ceiling() {
+    let pack = patterned(64, 3, 1);
+    let spr = patterned(32, 5, 2);
+    let pair = header(&pack, &spr, lifetime(13), 54);
+    let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
+    for index in 0..pair.page_count {
+        ingress.accept_page(&page(&pair, &pack, &spr, index), Some(pair.lifetime));
+    }
+    let load = ingress.begin_load(pair.lifetime, pair.transfer_generation, Some(pair.lifetime)).expect("verified pair load");
+    let mut pending = crate::ColdPairDocumentLoad::new(load, pair.transfer_generation, pair.cursor(pair.page_count - 1));
+    assert!(!pending.observe_progress(3, 9), "the first reading only arms the count");
+    for _ in 0..crate::COLD_PAIR_LOAD_IDLE_POLL_CEILING - 1 {
+        assert!(!pending.observe_progress(3, 9));
+    }
+    assert!(pending.observe_progress(3, 9), "the ceiling-th unmoved poll stalls the load");
+    assert!(!pending.observe_progress(4, 9), "any movement re-arms the count");
+    for _ in 0..crate::COLD_PAIR_LOAD_IDLE_POLL_CEILING - 1 {
+        assert!(!pending.observe_progress(4, 9));
+    }
+    assert!(pending.observe_progress(4, 9));
+    ingress.finish_load(pending.load, Ok(()), Some(pair.lifetime));
+    close_all(&mut ingress, pair.lifetime);
+}
+
 #[test]
 fn cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacement() {
     let pack = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES, 3, 1);

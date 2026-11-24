@@ -36,6 +36,9 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         }
     }
 
+    /// 🧯️ A refusal owns its preparation only once a refusal is retained; a live in-flight export or download is closed by its own completion or by the closing app, never by upkeep.
+    pub fn media_submission_refusal_retained(&self)->bool{self.media_submission_refusal.is_some()||self.media_submission_refusal_place.is_some()||self.media_submission_refusal_retirement.is_some()||self.media_submission_refusal_identity.is_some()}
+
     pub fn media_submission_refusal_terminal_is_empty(&self)->bool{self.media_download_preparation.is_none()&&self.media_export_preparation.is_none()&&self.media_submission_refusal.is_none()&&self.media_submission_refusal_place.is_none()&&self.media_submission_refusal_retirement.is_none()&&self.media_submission_refusal_identity.is_none()}
 
     pub fn media_submission_refusal_demands(&self, stores:&InstanceStores<A>,tools: &ToolOperations<A>,body:usize)->Result<RetirementDemand,ValueError>{

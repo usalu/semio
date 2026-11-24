@@ -167,6 +167,8 @@ semio_ui_locale::app_labels! {
         scale: native_en "Scale", native_de "Maßstab", reuse_en "Scale", reuse_de "Maßstab";
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        yes: native_en "Yes", native_de "Ja", reuse_en "Yes", reuse_de "Ja";
+        no: native_en "No", native_de "Nein", reuse_en "No", reuse_de "Nein";
         settings: native_en "Settings", native_de "Einstellungen", reuse_en "Settings", reuse_de "Einstellungen";
         grid_factor: native_en "Factor", native_de "Faktor", reuse_en "Factor", reuse_de "Faktor";
         proximity_radius: native_en "Proximity radius (m)", native_de "Näherungsradius (m)", reuse_en "Proximity radius (m)", reuse_de "Näherungsradius (m)";

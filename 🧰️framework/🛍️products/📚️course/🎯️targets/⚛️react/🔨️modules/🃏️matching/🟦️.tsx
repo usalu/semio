@@ -29,7 +29,7 @@ import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, hintName, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
-import { CELL, CardSection, GROUP, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
+import { CELL, CardIcon, CardSection, GROUP, IconLabel, LiveRegion, ROW, RowList, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { petProp, usePetTopic } from "../🐾️pets/🟦️.tsx";
 import { useGradualCount } from "../🧱️gradual-items/🟦️.ts";
 
@@ -188,7 +188,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                           })}
                         </select>
                         <button type="button" {...CELL} className={ICON_BUTTON_CLASS} aria-label={text("course.matching.unassign", { item: itemLabel(item.id) })} aria-describedby={lockedId} aria-disabled={locked || card === undefined} onClick={() => set(dimension, item, undefined)}>
-                          ✕
+                          <CardIcon icon="x" />
                         </button>
                       </>
                     )}

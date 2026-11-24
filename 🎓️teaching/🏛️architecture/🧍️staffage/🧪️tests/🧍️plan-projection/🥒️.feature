@@ -4,7 +4,7 @@ Feature: A figure seen from above follows its pose
   bone's x travel from the rest pose. A plan capsule with `followTip` stretches: its first end follows the origin of the bone and its second end the tip of the
   bone, so an arm, a leg or a backrest seen from above grows and shortens with the pose. Plan casts are sized to the plan, not to the elevation.
 
-  THE REFERENCE is gl-matrix `mat2d`, an independent forward kinematics of the rig; the cast depth is read back from the exported index.
+  THE REFERENCE is gl-matrix `mat4`, an independent forward kinematics of the three-dimensional rig; the cast depth is read back from the exported index.
 
   Scenario: A limb capsule stretches with a stride
     Given a capsule of radius 0.08 m on a thigh whose tip travels 0.168573 m ahead at a stride

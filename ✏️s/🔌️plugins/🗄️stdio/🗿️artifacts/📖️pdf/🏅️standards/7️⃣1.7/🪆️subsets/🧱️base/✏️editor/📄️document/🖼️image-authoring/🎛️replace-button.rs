@@ -10,7 +10,7 @@ pub fn image_replacement_button(controller: &str, page: usize, at: usize, revisi
     let fail = || PluginAssemblyError::new("pdf.object.image-action", "PDF image picker control admission failed");
     let guard = UiText::try_from_str(&format!("{revision:016x}")).ok_or_else(fail)?;
     let mut args = UiMapBuilder::try_new().ok_or_else(fail)?;
-    for (key, value) in [("page", UiValue::Number(page as f64)), ("operator", UiValue::Number(at as f64)), ("text", UiValue::Text(guard))] {
+    for (key, value) in [("page", UiValue::Number(crate::document::page_number(page) as f64)), ("operator", UiValue::Number(at as f64)), ("text", UiValue::Text(guard))] {
         args.try_insert(key.into(), value).map_err(|_| fail())?;
     }
     let action = ActionId::try_v1(controller, "replace-image").ok_or_else(fail)?;

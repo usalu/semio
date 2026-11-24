@@ -1,0 +1,204 @@
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🦀️.rs
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🦀️.rs
+@@ -457,10 +457,10 @@
+     tokens.filter(|count| *count >= 1).map(|count| if is_cdylib_final(args) { 1 } else { count })
+ }
+ 
+-/// 🪶️ Runs the LLVM back end of an admitted `cdylib` final serially (`-Z no-parallel-backend`, keeping its codegen units and ThinLTO): concurrent codegen and ThinLTO jobs each hold a module of the dependency closure, so the peak is the front end plus one module instead of the front end plus one per jobserver token. Output is identical, the flag only schedules; like the thread bound it is added at the process that starts rustc, so fingerprints and unit cache keys never see it. Without a grant, and for every other compile, nothing changes.
++/// 🪶️ Keeps the LLVM back end of a `cdylib` final serial only when the run was admitted ONE job (`-Z no-parallel-backend`, keeping its codegen units and ThinLTO): rustc then has no token beside its implicit slot and a private pool would invent three. With a larger grant the flag is left off, so the codegen and ThinLTO workers take their threads from the jobserver Cargo handed rustc unchanged: the tokens left of the grant after the running units (one unit running of four granted cores: three extra threads; four units running: none), so a lone final uses the idle cores and memory stays bounded by the same grant. Output is identical, the flag only schedules; like the thread bound it is added at the process that starts rustc, so fingerprints and unit cache keys never see it.
+ /// @see ./🧪️tests/🧵️frontend-threads/🟦️.ts
+ fn serial_backend(args: Vec<OsString>, tokens: Option<usize>) -> Vec<OsString> {
+-    if tokens.filter(|count| *count >= 1).is_none() || !is_cdylib_final(&args) { return args }
++    if tokens != Some(1) || !is_cdylib_final(&args) { return args }
+     let mut result = args;
+     result.push(OsString::from("-Z"));
+     result.push(OsString::from("no-parallel-backend"));
+@@ -728,13 +728,14 @@
+         assert_eq!(frontend_tokens(&os(&["--crate-type", "cdylib"]), Some(0)), None);
+     }
+ 
+-    /// 🪶️ An admitted `cdylib` final runs its back end serially; libraries and runs without a grant are untouched.
++    /// 🪶️ A `cdylib` final admitted one job runs its back end serially; with more cores granted, libraries and runs without a grant it is untouched.
+     #[test]
+-    fn serializes_the_back_end_of_a_cdylib_final() {
++    fn serializes_the_back_end_of_a_one_job_cdylib_final() {
+         let os = |items: &[&str]| items.iter().map(OsString::from).collect::<Vec<_>>();
+-        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
++        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(1)), os(&["--crate-type", "cdylib", "a.rs", "-Z", "no-parallel-backend"]));
+         assert_eq!(serial_backend(os(&["--crate-type=cdylib"]), Some(1)), os(&["--crate-type=cdylib", "-Z", "no-parallel-backend"]));
+-        assert_eq!(serial_backend(os(&["--crate-type", "lib"]), Some(8)), os(&["--crate-type", "lib"]));
++        assert_eq!(serial_backend(os(&["--crate-type", "cdylib", "a.rs"]), Some(8)), os(&["--crate-type", "cdylib", "a.rs"]));
++        assert_eq!(serial_backend(os(&["--crate-type", "lib"]), Some(1)), os(&["--crate-type", "lib"]));
+         assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), None), os(&["--crate-type", "cdylib"]));
+         assert_eq!(serial_backend(os(&["--crate-type", "cdylib"]), Some(0)), os(&["--crate-type", "cdylib"]));
+     }
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🔣️.json
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🔣️.json
+@@ -170,15 +170,13 @@
+     "a.rs"
+    ],
+    "tokens": 8,
+-   "note": "a cdylib final gets one front-end thread whatever the grant; its back end runs serially",
++   "note": "a cdylib final gets one front-end thread whatever the grant; with 8 granted cores its back end keeps the jobserver and runs parallel",
+    "expected": [
+     "--crate-type",
+     "cdylib",
+     "-Z",
+     "threads=1",
+-    "a.rs",
+-    "-Z",
+-    "no-parallel-backend"
++    "a.rs"
+    ]
+   },
+   {
+@@ -189,13 +187,11 @@
+     "a.rs"
+    ],
+    "tokens": 8,
+-   "note": "the joined crate-type spelling is a cdylib final too; its back end runs serially",
++   "note": "the joined crate-type spelling is a cdylib final too; its back end keeps the jobserver and runs parallel",
+    "expected": [
+     "--crate-type=cdylib",
+     "-Zthreads=1",
+-    "a.rs",
+-    "-Z",
+-    "no-parallel-backend"
++    "a.rs"
+    ]
+   },
+   {
+@@ -233,6 +229,42 @@
+     "-Z",
+     "threads=0"
+    ]
++  },
++  {
++   "id": "cdylib-one-job",
++   "args": [
++    "--crate-type",
++    "cdylib",
++    "-Z",
++    "threads=0",
++    "a.rs"
++   ],
++   "tokens": 1,
++   "note": "one admitted job leaves rustc no token beside its implicit slot, so its back end stays serial",
++   "expected": [
++    "--crate-type",
++    "cdylib",
++    "-Z",
++    "threads=1",
++    "a.rs",
++    "-Z",
++    "no-parallel-backend"
++   ]
++  },
++  {
++   "id": "cdylib-two-jobs",
++   "args": [
++    "--crate-type=cdylib",
++    "-Zthreads=0",
++    "a.rs"
++   ],
++   "tokens": 2,
++   "note": "two admitted jobs leave one token for a codegen thread: the back end takes it from the jobserver",
++   "expected": [
++    "--crate-type=cdylib",
++    "-Zthreads=1",
++    "a.rs"
++   ]
+   }
+  ]
+ }
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🐍️.py
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🐍️.py
+@@ -1,4 +1,4 @@
+-"""🔢️ Independent Python oracle of the front-end thread bound (standard library only): for each case, the arguments rustc must receive when the run was admitted `tokens` parallel jobs. A `threads` count of 0 becomes `tokens`, a larger count is capped to it, a smaller or non-numeric one stays; both spellings (`-Z threads=N`, `-Zthreads=N`) are read; without a grant (no tokens, or 0) nothing changes; a `cdylib` final (a plugin component, whose work is codegen and link-time optimisation of its dependency closure) always gets one front-end thread and a serial LLVM back end (`-Z no-parallel-backend` appended). usage: 🐍️.py <corpus.json> prints the expected arguments of every case as JSON."""
++"""🔢️ Independent Python oracle of the front-end thread bound (standard library only): for each case, the arguments rustc must receive when the run was admitted `tokens` parallel jobs. A `threads` count of 0 becomes `tokens`, a larger count is capped to it, a smaller or non-numeric one stays; both spellings (`-Z threads=N`, `-Zthreads=N`) are read; without a grant (no tokens, or 0) nothing changes; a `cdylib` final (a plugin component, whose work is codegen and link-time optimisation of its dependency closure) always gets one front-end thread, and a serial LLVM back end (`-Z no-parallel-backend` appended) only when the grant is exactly one job: with more cores the back end takes its threads from the jobserver. usage: 🐍️.py <corpus.json> prints the expected arguments of every case as JSON."""
+ import json, re, sys
+ 
+ 
+@@ -7,8 +7,8 @@
+         return list(args)
+     serial = False
+     if "--crate-type=cdylib" in args or any(a == "--crate-type" and i + 1 < len(args) and args[i + 1] == "cdylib" for i, a in enumerate(args)):
++        serial = tokens == 1
+         tokens = 1
+-        serial = True
+     def fix(value):
+         return str(tokens) if re.fullmatch(r"[0-9]+", value) and (int(value) == 0 or int(value) > tokens) else value
+     out, i = [], 0
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧪️tests/🧵️frontend-threads/🟦️.ts
+@@ -2,7 +2,7 @@
+ /** 🧵️ Contract: the scheduler hands rustc the front-end thread count the run was admitted, not the cores of the host. Cargo's authored `-Z threads=0` becomes the admitted parallelism, a larger count is capped to it, a smaller one stays, both spellings are read and nothing changes without a grant. The real scheduler binary runs a stand-in rustc that prints its arguments; the verdict of every language-agnostic corpus case (`./🔣️.json`) must equal the independent Python oracle (`./🐍️.py`). Measured on one 2.7 MB crate (opt-level 0, debuginfo 1, 256 codegen units, fresh incremental cache, load 23 to 35): 1 thread 181 s wall / 129 s CPU / 2.9 GB peak, 4 threads 119 s / 132 s / 5.4 GB, 10 threads (`-Z threads=0`) 90 s / 143 s / 5.2 GB. */
+ import {expect,test} from "bun:test";
+ import {spawnSync} from "node:child_process";
+-import {chmodSync,existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
++import {chmodSync,closeSync,existsSync,mkdirSync,mkdtempSync,openSync,readdirSync,readFileSync,rmSync,writeFileSync,writeSync} from "node:fs";
+ import {createHash} from "node:crypto";
+ import {tmpdir} from "node:os";
+ import {join,resolve} from "node:path";
+@@ -14,6 +14,16 @@
+ 
+ const manifest=resolve(fileURLToPath(new URL("../../📦️packages/🦀️rust/Cargo.toml",import.meta.url))),oracle=fileURLToPath(new URL("./🐍️.py",import.meta.url));
+ 
++const scratchRoot=()=>process.env.SEMIO_TEST_ARTIFACT_DIR?resolve(process.env.SEMIO_TEST_ARTIFACT_DIR):tmpdir();
++let builtScheduler:string|undefined;
++function schedulerBinary(scratch:string):string{
++ if(process.env.SEMIO_TEST_SCHEDULER)return process.env.SEMIO_TEST_SCHEDULER;
++ if(builtScheduler&&existsSync(builtScheduler))return builtScheduler;
++ const built=spawnSync(registeredToolExecutableV1("cargo"),["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
++ expect(built.status,built.stderr).toBe(0);
++ return builtScheduler=join(scratch,"target","release","semio-build-scheduler");
++}
++
+ test("the corpus is closed by its schema and agrees with the independent Python oracle",()=>{
+  const ajv=new Ajv({strict:false});
+  expect(ajv.validate(corpusSchema,corpus),JSON.stringify(ajv.errors)).toBe(true);
+@@ -25,14 +35,9 @@
+ 
+ test("the scheduler binary hands the stand-in rustc exactly the corpus arguments",()=>{
+  if(process.platform==="win32"||!existsSync(manifest))return;
+- const scratch=mkdtempSync(join(tmpdir(),"ft-"));
++ const scratch=mkdtempSync(join(scratchRoot(),"ft-"));
+  try{
+-  let scheduler=process.env.SEMIO_TEST_SCHEDULER;
+-  if(!scheduler){
+-   const built=spawnSync(registeredToolExecutableV1("cargo"),["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
+-   expect(built.status,built.stderr).toBe(0);
+-   scheduler=join(scratch,"target","release","semio-build-scheduler");
+-  }
++  const scheduler=schedulerBinary(scratch);
+   const rustc=join(scratch,"rustc.sh");writeFileSync(rustc,'#!/bin/sh\nfor a in "$@"; do printf "%s\\n" "$a"; done\n');chmodSync(rustc,0o755);
+   for(const item of corpus.cases){
+    const env:Record<string,string|undefined>={...process.env,SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined,SEMIO_COMPILER_PARALLELISM:item.tokens===null?undefined:String(item.tokens)};
+@@ -69,3 +74,27 @@
+   for(const row of digests.slice(1))expect(row).toEqual(digests[0]);
+  }finally{rmSync(scratch,{recursive:true,force:true});}
+ },300000);
++
++test("a cdylib final with a granted jobserver runs its ThinLTO back end on more than one thread and a one-job grant stays serial",()=>{
++ const toolchain=/channel\s*=\s*"([^"]+)"/u.exec(readFileSync(resolve(fileURLToPath(new URL("../../../../../../../../rust-toolchain.toml",import.meta.url))),"utf8"))?.[1];
++ if(process.platform==="win32"||!toolchain||spawnSync("rustc",[`+${toolchain}`,"--version"],{encoding:"utf8"}).status!==0||!existsSync("/usr/bin/time"))return;
++ const scratch=mkdtempSync(join(scratchRoot(),"ft-par-"));let handle:number|undefined;
++ try{
++  const scheduler=schedulerBinary(scratch),modules=32;
++  writeFileSync(join(scratch,"lib.rs"),Array.from({length:modules},(_,at)=>`mod m${at};`).join("\n")+"\n");
++  for(let at=0;at<modules;at++)writeFileSync(join(scratch,`m${at}.rs`),`pub struct S<T>(pub T);\nimpl<T: Clone + std::fmt::Debug> S<T> { pub fn go(&self) -> String { format!("{:?}", self.0.clone()) } }\n`+Array.from({length:12},(_,k)=>`#[unsafe(no_mangle)] pub extern "C" fn f${at}_${k}(x: u64) -> u64 { let v: Vec<u64> = (0..x % 97).map(|n| n.wrapping_mul(${at+k+1}) ^ ${k}).collect(); v.iter().fold(0u64, |a, b| a.wrapping_mul(31).wrapping_add(*b)) + S(x).go().len() as u64 }\n`).join(""));
++  const pool=join(scratch,"pool");expect(spawnSync("mkfifo",["-m","600",pool]).status).toBe(0);
++  handle=openSync(pool,"r+");writeSync(handle,"+++");
++  const grant=`-j --jobserver-auth=fifo:${pool}`,measure=(grantedJobs:number,name:string)=>{
++   const out=join(scratch,name);mkdirSync(out);
++   const run=spawnSync("/usr/bin/time",["-p",scheduler,"rustc",`+${toolchain}`,"--edition","2021","--crate-type","cdylib","--crate-name","par","-C","opt-level=2","-C","lto=thin","-C","codegen-units=16","-C","metadata=x","-Z","threads=0","--out-dir",out,"lib.rs"],{cwd:scratch,env:{...process.env,CARGO_MAKEFLAGS:grant,MAKEFLAGS:grant,SEMIO_COMPILER_PARALLELISM:String(grantedJobs),SEMIO_BUILD_BROKER:undefined,SEMIO_BUILD_PASS:undefined} as NodeJS.ProcessEnv,encoding:"utf8"});
++   expect(run.status,run.stderr).toBe(0);
++   const seconds=(label:string)=>Number(new RegExp(`^${label} ([0-9.]+)$`,"mu").exec(run.stderr)?.[1]);
++   return{ratio:(seconds("user")+seconds("sys"))/seconds("real")};
++  };
++  const parallel=measure(4,"parallel"),serial=measure(1,"serial");
++  expect(parallel.ratio,"4 granted cores, one unit running: the codegen and LTO workers use the three idle tokens").toBeGreaterThan(1.25);
++  expect(parallel.ratio,"one granted core stays on one thread").toBeGreaterThan(serial.ratio);
++  expect(serial.ratio).toBeLessThan(1.25);
++ }finally{if(handle!==undefined)closeSync(handle);rmSync(scratch,{recursive:true,force:true});}
++},600000);

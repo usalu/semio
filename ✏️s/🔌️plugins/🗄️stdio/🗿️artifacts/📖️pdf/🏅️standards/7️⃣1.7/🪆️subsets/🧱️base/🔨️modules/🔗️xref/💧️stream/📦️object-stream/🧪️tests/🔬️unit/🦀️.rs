@@ -10,7 +10,7 @@ const SOURCE: &[u8] = include_bytes!("../../../../../../🧪️tests/🧫️fixt
 fn decoded_fixture() -> Vec<u8> {
     let offset = SOURCE.windows(8).position(|bytes| bytes == b"4 0 obj\n").unwrap();
     let (_, PdfObject::Stream { dict, data, .. }) = parse_indirect_at(SOURCE, offset).unwrap() else { panic!("fixture object stream"); };
-    decode_stream_admitted(&dict, &data).unwrap().0
+    decode_stream_admitted(&dict, &data.to_vec_owner()).unwrap().0
 }
 
 fn member(decoded: &[u8], start: usize, end: usize) -> PdfObject {

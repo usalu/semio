@@ -34,8 +34,7 @@ where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageUserUnit>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_set_page_user_unit(self.index, self.user_unit))
+        diff::outcome_over(base, diff::diff_set_page_user_unit(self.index, self.user_unit))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

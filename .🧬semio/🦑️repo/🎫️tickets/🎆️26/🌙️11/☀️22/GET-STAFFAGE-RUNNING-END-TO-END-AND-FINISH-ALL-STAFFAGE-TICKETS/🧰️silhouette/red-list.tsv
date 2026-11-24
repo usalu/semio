@@ -1,0 +1,202 @@
+animals	dairy-cow	1:500 plan Hausdorff: expected 0.2229195479007248 to be less than or equal to 0.15
+animals	domestic-cat	1:50 axis 0: 0.759865789563426 m against 0.77 m: expected 0.010134210436574032 to be less than or equal to 0.0075
+animals	goat	1:500 plan: expected 0.9074311926605505 to be greater than or equal to 0.92
+animals	hedgehog	1:100 front: expected 0.9045461487552818 to be greater than or equal to 0.92
+animals	herring-gull	1:50 plan Hausdorff: expected 0.017286645857424163 to be less than or equal to 0.015
+animals	horse	1:100 elevation Hausdorff: expected 0.054083269131959835 to be less than or equal to 0.03
+animals	labrador-dog	1:500 elevation: expected 0.9187080384685176 to be greater than or equal to 0.92
+animals	mallard-duck	1:200 front: expected 0.9120184392492592 to be greater than or equal to 0.92
+animals	pig	1:100 elevation Hausdorff: expected 0.030233466556119557 to be less than or equal to 0.03
+animals	pigeon	1:200 elevation: expected 0.9093859370028635 to be greater than or equal to 0.92
+animals	red-fox	1:50 axis 0: 1.0892041174235128 m against 1.1 m: expected 0.010795882576487337 to be less than or equal to 0.0075
+animals	red-squirrel	1:100 elevation Hausdorff: expected 0.03577526068101029 to be less than or equal to 0.03
+animals	roe-deer	1:50 plan Hausdorff: expected 0.016770509831248424 to be less than or equal to 0.015
+animals	sheep	1:50 axis 1: 0.8378174753613551 m against 0.823 m: expected 0.014817475361355137 to be less than or equal to 0.0075
+appliances	duct-fan	1:50 elevation Hausdorff: expected 0.026640625 to be less than or equal to 0.015
+appliances	electric-kettle	1:50 elevation Hausdorff: expected 0.015214286795205605 to be less than or equal to 0.015
+appliances	hot-water-cylinder	1:50 axis 2: 0.6095600241553372 m against 0.6 m: expected 0.009560024155337188 to be less than or equal to 0.0075
+appliances	server-rack	1:100 axis 2: 1.0164999999999997 m against 1 m: expected 0.016499999999999737 to be less than or equal to 0.015
+appliances	shower-head	1:100 elevation: expected 0.9121844127332601 to be greater than or equal to 0.92
+appliances	used-dishwasher	1:50 elevation Hausdorff: expected 0.026115728019720223 to be less than or equal to 0.015
+appliances	used-electric-bass-and-cabinet	1:50 elevation Hausdorff: expected 0.01602000702247037 to be less than or equal to 0.015
+appliances	used-electronic-drum-kit	1:50 elevation Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+appliances	used-fridge-freezer	1:50 elevation Hausdorff: expected 0.016875 to be less than or equal to 0.015
+appliances	used-sewing-machine	1:50 front Hausdorff: expected 0.031875 to be less than or equal to 0.015
+appliances	used-stage-piano	1:100 plan Hausdorff: expected 0.0375 to be less than or equal to 0.03
+appliances	vacuum-cleaner	1:50 front Hausdorff: expected 0.043125 to be less than or equal to 0.015
+components	masonry-wall-with-lintel	1:100 front Hausdorff: expected 0.1275 to be less than or equal to 0.03
+components	panel-radiator	1:100 elevation Hausdorff: expected 0.0305078125 to be less than or equal to 0.03
+components	reclaimed-concrete-wall-panel	1:500 axis 0: 6 m against 6.12 m: expected 0.1200000000000001 to be less than or equal to 0.075
+components	reclaimed-floorboard-stack	1:50 elevation Hausdorff: expected 0.015116733278059779 to be less than or equal to 0.015
+components	reclaimed-lattice-girder	1:50 elevation Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	reclaimed-paving-slab-pallet	1:50 front Hausdorff: expected 0.016875 to be less than or equal to 0.015
+components	reclaimed-precast-stair	1:200 axis 0: 3.25366 m against 3.2958 m: expected 0.042139999999999844 to be less than or equal to 0.03
+components	reclaimed-steel-column	1:50 elevation Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+components	reclaimed-steel-stair	1:200 axis 0: 4.9150030000000005 m against 4.974 m: expected 0.058996999999999744 to be less than or equal to 0.03
+components	reclaimed-timber-roof-truss	1:50 front Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	reclaimed-trapezoidal-sheet-stack	1:100 front Hausdorff: expected 0.03181980515339464 to be less than or equal to 0.03
+components	sectional-garage-door	1:100 elevation Hausdorff: expected 0.0557477578024444 to be less than or equal to 0.03
+components	sliding-door	1:500 elevation Hausdorff: expected 0.157421875 to be less than or equal to 0.15
+components	spiral-stair	1:50 elevation Hausdorff: expected 0.04950142043416532 to be less than or equal to 0.015
+components	stair-flight	1:50 elevation Hausdorff: expected 0.021378289220608835 to be less than or equal to 0.015
+components	tilt-window	1:200 front Hausdorff: expected 0.06206250000000001 to be less than or equal to 0.06
+components	used-buffer-storage-tank	1:50 front Hausdorff: expected 0.01875 to be less than or equal to 0.015
+components	used-insulated-copper-coils	1:100 elevation Hausdorff: expected 0.042962090407414256 to be less than or equal to 0.03
+components	used-radiant-ceiling-strip	1:100 front Hausdorff: expected 0.045 to be less than or equal to 0.03
+components	used-steel-pipe-rack	1:50 elevation Hausdorff: expected 0.04596619002049223 to be less than or equal to 0.015
+components	used-trench-convector	1:50 front Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	wheelchair-ramp	1:200 elevation Hausdorff: expected 0.105 to be less than or equal to 0.06
+furniture	bar-stool	1:50 plan Hausdorff: expected 0.058876194255403434 to be less than or equal to 0.015
+furniture	height-adjustable-desk	1:100 front Hausdorff: expected 0.08657547285461396 to be less than or equal to 0.03
+furniture	office-swivel-chair	1:50 elevation Hausdorff: expected 0.041249999999999995 to be less than or equal to 0.015
+furniture	operating-table	1:100 front Hausdorff: expected 0.0675 to be less than or equal to 0.03
+furniture	park-bench	1:500 elevation: expected 0.9028271280704465 to be greater than or equal to 0.92
+furniture	picnic-table	1:50 elevation Hausdorff: expected 0.025155764746872634 to be less than or equal to 0.015
+furniture	used-beer-garden-set	1:50 elevation Hausdorff: expected 0.032745467243574335 to be less than or equal to 0.015
+furniture	used-bentwood-dining-chairs	1:500 front Hausdorff: expected 0.3758927230377559 to be less than or equal to 0.15
+furniture	used-bunk-bed	1:50 elevation Hausdorff: expected 0.024375 to be less than or equal to 0.015
+furniture	used-double-bed	1:50 front Hausdorff: expected 0.016875 to be less than or equal to 0.015
+furniture	used-extendable-dining-table	1:50 elevation Hausdorff: expected 0.039375 to be less than or equal to 0.015
+furniture	used-hinged-wardrobe	1:50 front Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+furniture	used-kitchen-base-cabinet	1:50 front Hausdorff: expected 0.0544073179820509 to be less than or equal to 0.015
+furniture	used-recliner-chair	1:200 front Hausdorff: expected 0.12034687750153925 to be less than or equal to 0.06
+furniture	used-shoe-cabinet	1:100 axis 1: 1.4649999999999999 m against 1.49 m: expected 0.025000000000000133 to be less than or equal to 0.015
+furniture	used-sun-lounger-bench	1:50 plan Hausdorff: expected 0.080625 to be less than or equal to 0.015
+furniture	used-wall-unit	1:50 front Hausdorff: expected 0.080625 to be less than or equal to 0.015
+humans	barista	1:100 front Hausdorff: expected 0.0375 to be less than or equal to 0.03
+humans	basketball-player	1:50 plan Hausdorff: expected 0.03 to be less than or equal to 0.015
+humans	child-on-kick-scooter	1:200 elevation Hausdorff: expected 0.08800593711585926 to be less than or equal to 0.06
+humans	construction-worker-with-shovel	1:50 front Hausdorff: expected 0.025015620120236875 to be less than or equal to 0.015
+humans	courier-with-hand-truck	1:500 plan: expected 0.8848212743912969 to be greater than or equal to 0.92
+humans	cyclist	1:500 elevation: expected 0.9048786717752235 to be greater than or equal to 0.92
+humans	dancer	1:500 front: expected 0.9055993531433192 to be greater than or equal to 0.92
+humans	elderly-with-cane	1:50 axis 0: 0.4704904977110541 m against 0.48 m: expected 0.00950950228894587 to be less than or equal to 0.0075
+humans	jogger	1:100 front Hausdorff: expected 0.04562071897723664 to be less than or equal to 0.03
+humans	kneeling-gardener	1:50 axis 1: 1.0248201968596147 m against 1.033 m: expected 0.008179803140385244 to be less than or equal to 0.0075
+humans	leaning-person	1:200 front Hausdorff: expected 0.06157766968407532 to be less than or equal to 0.06
+humans	painter-at-easel	1:50 elevation Hausdorff: expected 0.017286645857424163 to be less than or equal to 0.015
+humans	parent-carrying-toddler	1:50 axis 1: 1.7571993255971314 m against 1.744 m: expected 0.01319932559713144 to be less than or equal to 0.0075
+humans	parent-with-stroller	1:500 elevation: expected 0.8990735945681569 to be greater than or equal to 0.92
+humans	person-carrying-ladder	1:500 elevation Hausdorff: expected 0.16209353960033074 to be less than or equal to 0.15
+humans	person-carrying-shopping-bags	1:50 front Hausdorff: expected 0.025502757203878956 to be less than or equal to 0.015
+humans	person-checking-watch	1:50 plan Hausdorff: expected 0.0278738789012222 to be less than or equal to 0.015
+humans	person-cooking	1:50 elevation Hausdorff: expected 0.021213203435596427 to be less than or equal to 0.015
+humans	person-drinking-coffee	1:50 axis 2: 0.5514731728520788 m against 0.564 m: expected 0.012526827147921193 to be less than or equal to 0.0075
+humans	person-eating-standing	1:50 elevation Hausdorff: expected 0.01957557470420728 to be less than or equal to 0.015
+humans	person-hanging-laundry	1:100 plan Hausdorff: expected 0.03354101966249685 to be less than or equal to 0.03
+humans	person-on-crutches	1:50 elevation Hausdorff: expected 0.03005853664102762 to be less than or equal to 0.015
+humans	person-pushing-bicycle	1:50 plan Hausdorff: expected 0.031875 to be less than or equal to 0.015
+humans	person-signing	1:100 axis 2: 0.522942725758124 m against 0.548 m: expected 0.025057274241876093 to be less than or equal to 0.015
+humans	person-stretching	1:500 elevation: expected 0.9090248962655602 to be greater than or equal to 0.92
+humans	person-sweeping	1:50 axis 1: 1.6646940663731662 m against 1.679 m: expected 0.014305933626833855 to be less than or equal to 0.0075
+humans	person-taking-selfie	1:50 elevation Hausdorff: expected 0.016978847134007657 to be less than or equal to 0.015
+humans	person-with-guide-dog	1:50 elevation Hausdorff: expected 0.020194368026754388 to be less than or equal to 0.015
+humans	person-with-rollator	1:200 elevation Hausdorff: expected 0.10058359424384966 to be less than or equal to 0.06
+humans	person-with-umbrella	1:100 elevation Hausdorff: expected 0.04562071897723664 to be less than or equal to 0.03
+humans	person-with-white-cane	1:500 front Hausdorff: expected 0.16700614079724987 to be less than or equal to 0.15
+humans	photographer-with-camera	1:50 plan Hausdorff: expected 0.01993152339887747 to be less than or equal to 0.015
+humans	pregnant-person	1:100 elevation Hausdorff: expected 0.035575623676894264 to be less than or equal to 0.03
+humans	runner-with-blade-prosthesis	1:200 plan: expected 0.9185431643990256 to be greater than or equal to 0.92
+humans	running-child	1:500 elevation: expected 0.9150114742423043 to be greater than or equal to 0.92
+humans	seated-guitarist	1:100 elevation Hausdorff: expected 0.03181980515339464 to be less than or equal to 0.03
+humans	seated-office-worker	1:500 elevation Hausdorff: expected 0.22095815878741354 to be less than or equal to 0.15
+humans	seated-reader	1:100 elevation Hausdorff: expected 0.042426406871192854 to be less than or equal to 0.03
+humans	skateboarder	1:200 elevation: expected 0.91575146682714 to be greater than or equal to 0.92
+humans	sleeping-person	1:50 elevation Hausdorff: expected 0.024375 to be less than or equal to 0.015
+humans	standing-adult	1:500 elevation: expected 0.9063638912251192 to be greater than or equal to 0.92
+humans	standing-phone-user	1:100 elevation Hausdorff: expected 0.034573291714848325 to be less than or equal to 0.03
+humans	standing-violinist	1:100 front Hausdorff: expected 0.030923292192132454 to be less than or equal to 0.03
+humans	sunbather-on-towel	1:100 axis 0: 1.8 m against 1.827 m: expected 0.026999999999999913 to be less than or equal to 0.015
+humans	tennis-player	1:500 plan: expected 0.9152107085878828 to be greater than or equal to 0.92
+humans	tour-guide	1:100 front Hausdorff: expected 0.034573291714848325 to be less than or equal to 0.03
+humans	walking-commuter	1:100 elevation Hausdorff: expected 0.030233466556119557 to be less than or equal to 0.03
+humans	wheelchair-user	1:200 elevation Hausdorff: expected 0.11250302930060767 to be less than or equal to 0.06
+humans	worker-carrying-box	1:50 elevation Hausdorff: expected 0.10744911586420801 to be less than or equal to 0.015
+humans	worker-with-pallet-jack	1:50 elevation Hausdorff: expected 0.01590990257669732 to be less than or equal to 0.015
+machinery	concrete-mixer-truck	1:500 elevation Hausdorff: expected 0.6541036328442154 to be less than or equal to 0.15
+machinery	diesel-generator	1:200 elevation Hausdorff: expected 0.0675 to be less than or equal to 0.06
+machinery	evaporative-humidifier	1:50 axis 2: 0.40750000000000003 m against 0.4 m: expected 0.007500000000000007 to be less than or equal to 0.0075
+machinery	excavator	1:500 elevation Hausdorff: expected 0.31875 to be less than or equal to 0.15
+machinery	forklift	1:500 elevation Hausdorff: expected 0.256359375 to be less than or equal to 0.15
+machinery	heat-pump-outdoor-unit	1:50 axis 0: 0.479 m against 0.47 m: expected 0.009000000000000008 to be less than or equal to 0.0075
+machinery	oil-pumpjack	1:500 axis 0: 9.100000000000001 m against 9.2 m: expected 0.09999999999999787 to be less than or equal to 0.075
+machinery	plate-heat-exchanger	1:50 elevation Hausdorff: expected 0.01875 to be less than or equal to 0.015
+machinery	scissor-lift	1:200 elevation Hausdorff: expected 0.1575 to be less than or equal to 0.06
+machinery	tower-crane	1:500 elevation: expected 0.7935860609714293 to be greater than or equal to 0.92
+machinery	wheel-loader	1:500 plan Hausdorff: expected 0.2466177457118607 to be less than or equal to 0.15
+objects	bicycle-stand	1:500 front: expected 0.833744449925999 to be greater than or equal to 0.92
+objects	chalkboard	1:100 front: expected 0.9023872679045093 to be greater than or equal to 0.92
+objects	charcoal-grill	1:50 axis 0: 0.6094900000000001 m against 0.6 m: expected 0.00949000000000011 to be less than or equal to 0.0075
+objects	drinking-fountain	1:200 elevation Hausdorff: expected 0.07175786459168994 to be less than or equal to 0.06
+objects	market-parasol	1:200 axis 0: 2.55228579662323 m against 2.59 m: expected 0.037714203376769895 to be less than or equal to 0.03
+objects	patio-heater	1:50 elevation Hausdorff: expected 0.026316879089284123 to be less than or equal to 0.015
+objects	playground-swing	1:50 axis 1: 2.513500309787494 m against 2.5 m: expected 0.013500309787493947 to be less than or equal to 0.0075
+objects	shopping-trolley	1:100 front Hausdorff: expected 0.0525 to be less than or equal to 0.03
+objects	stepladder	1:500 front Hausdorff: expected 0.21377091924028727 to be less than or equal to 0.15
+objects	street-lamp	1:50 elevation Hausdorff: expected 0.018466608378367694 to be less than or equal to 0.015
+objects	tealight	1:50 elevation: expected 0.9137720313907114 to be greater than or equal to 0.92
+objects	used-baby-grand-piano	1:100 plan Hausdorff: expected 0.0675 to be less than or equal to 0.03
+objects	used-basketball-hoop	1:100 elevation Hausdorff: expected 0.047434164902525694 to be less than or equal to 0.03
+objects	used-bathtub	1:50 front Hausdorff: expected 0.320625 to be less than or equal to 0.015
+objects	used-bicycle-shelter	1:500 front: expected 0.8837863167760075 to be greater than or equal to 0.92
+objects	used-climbing-net-pyramid	1:500 plan Hausdorff: expected 0.3606634511563377 to be less than or equal to 0.15
+objects	used-dog-waste-station	1:50 elevation Hausdorff: expected 0.04230192814754429 to be less than or equal to 0.015
+objects	used-double-bass	1:200 plan Hausdorff: expected 0.07424621202458749 to be less than or equal to 0.06
+objects	used-drum-kit	1:100 elevation Hausdorff: expected 0.10297147663309486 to be less than or equal to 0.03
+objects	used-football-goal	1:50 elevation Hausdorff: expected 0.024375 to be less than or equal to 0.015
+objects	used-marching-snare-and-bass-drum	1:500 elevation: expected 0.9076132602144162 to be greater than or equal to 0.92
+objects	used-recycling-bin-cluster	1:50 front Hausdorff: expected 0.01590990257669732 to be less than or equal to 0.015
+objects	used-seesaw	1:50 plan Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+objects	used-slide-tower	1:200 axis 1: 4.355342309449 m against 4.427342 m: expected 0.0719996905510003 to be less than or equal to 0.03
+objects	used-upright-piano	1:50 front Hausdorff: expected 0.080625 to be less than or equal to 0.015
+objects	used-viola	1:50 plan Hausdorff: expected 0.028124999999999997 to be less than or equal to 0.015
+objects	used-water-play-table	1:100 elevation Hausdorff: expected 0.041249999999999995 to be less than or equal to 0.03
+vegetation	agave	1:500 elevation: expected 0.9121383203952012 to be greater than or equal to 0.92
+vegetation	apple-tree	1:500 elevation Hausdorff: expected 0.1511673327805978 to be less than or equal to 0.15
+vegetation	bamboo-clump	1:100 elevation: expected 0.908022579269059 to be greater than or equal to 0.92
+vegetation	black-alder	1:500 axis 0: 7.855784957265996 m against 7.9611 m: expected 0.10531504273400394 to be less than or equal to 0.075
+vegetation	black-locust	1:500 axis 0: 12.891711866071311 m against 12.686 m: expected 0.20571186607131153 to be less than or equal to 0.075
+vegetation	common-ash	1:200 elevation Hausdorff: expected 0.9299999999999999 to be less than or equal to 0.06
+vegetation	crab-apple	1:200 elevation Hausdorff: expected 0.28272115237456147 to be less than or equal to 0.06
+vegetation	date-palm	1:500 elevation Hausdorff: expected 0.25155764746872633 to be less than or equal to 0.15
+vegetation	english-oak	1:500 axis 0: 19.3000863678492 m against 19.07 m: expected 0.2300863678492 to be less than or equal to 0.075
+vegetation	european-beech	1:200 axis 0: 21.262195578963926 m against 21.299 m: expected 0.03680442103607362 to be less than or equal to 0.03
+vegetation	field-maple	1:500 front Hausdorff: expected 0.26115728019720225 to be less than or equal to 0.15
+vegetation	fig-tree	1:200 elevation Hausdorff: expected 0.06408002808988147 to be less than or equal to 0.06
+vegetation	ginkgo	1:500 elevation Hausdorff: expected 0.37217687327398513 to be less than or equal to 0.15
+vegetation	hawthorn	1:200 plan Hausdorff: expected 0.3575699232318065 to be less than or equal to 0.06
+vegetation	honey-locust	1:500 elevation Hausdorff: expected 1.2420371371259395 to be less than or equal to 0.15
+vegetation	hornbeam-hedge	1:200 axis 0: 3.192573 m against 3.14 m: expected 0.05257299999999976 to be less than or equal to 0.03
+vegetation	horse-chestnut	1:200 axis 2: 18.03273337180938 m against 18.076 m: expected 0.043266628190622214 to be less than or equal to 0.03
+vegetation	hosta-clump	1:100 elevation: expected 0.9030535174794994 to be greater than or equal to 0.92
+vegetation	italian-cypress	1:200 axis 2: 2.5751999999999997 m against 2.622 m: expected 0.046800000000000175 to be less than or equal to 0.03
+vegetation	ivy-on-trellis	1:200 front: expected 0.9124378109452737 to be greater than or equal to 0.92
+vegetation	japanese-cherry	1:200 front Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.06
+vegetation	japanese-maple	1:500 front Hausdorff: expected 0.5450415695155737 to be less than or equal to 0.15
+vegetation	lombardy-poplar	1:200 axis 0: 4.402543665182144 m against 4.464 m: expected 0.06145633481785673 to be less than or equal to 0.03
+vegetation	london-plane-pollarded	1:100 axis 1: 8.614540793055658 m against 8.634 m: expected 0.019459206944342 to be less than or equal to 0.015
+vegetation	miscanthus-grass	1:100 axis 0: 2.124781008593139 m against 2.14 m: expected 0.015218991406861004 to be less than or equal to 0.015
+vegetation	multi-stem-birch	1:500 elevation: expected 0.9002776736622609 to be greater than or equal to 0.92
+vegetation	norway-maple	1:100 axis 2: 14.160915689951532 m against 14.182 m: expected 0.02108431004846878 to be less than or equal to 0.015
+vegetation	olive-tree	1:500 elevation Hausdorff: expected 0.16978847134007657 to be less than or equal to 0.15
+vegetation	red-oak	1:500 axis 0: 18.709882366058594 m against 18.394 m: expected 0.3158823660585952 to be less than or equal to 0.075
+vegetation	rowan	1:200 elevation Hausdorff: expected 0.2520044642461716 to be less than or equal to 0.06
+vegetation	saucer-magnolia	1:100 front Hausdorff: expected 0.04889401803901987 to be less than or equal to 0.03
+vegetation	scots-pine	1:200 axis 0: 12.04128452611754 m against 12.076 m: expected 0.03471547388246066 to be less than or equal to 0.03
+vegetation	small-leaved-lime	1:200 elevation Hausdorff: expected 0.255 to be less than or equal to 0.06
+vegetation	stone-pine	1:500 axis 1: 20.61579872339632 m against 20.494 m: expected 0.1217987233963207 to be less than or equal to 0.075
+vegetation	sweetgum	1:500 elevation Hausdorff: expected 0.4275657844121767 to be less than or equal to 0.15
+vegetation	sycamore-maple	1:200 elevation Hausdorff: expected 0.07386643351347078 to be less than or equal to 0.06
+vegetation	tulip-tree	1:500 axis 0: 13.768771371411031 m against 13.509 m: expected 0.25977137141103057 to be less than or equal to 0.075
+vegetation	weeping-willow	1:500 axis 2: 13.8520832 m against 14 m: expected 0.14791680000000085 to be less than or equal to 0.075
+vehicles	cargo-bike	1:200 elevation Hausdorff: expected 0.07115124735378853 to be less than or equal to 0.06
+vehicles	city-bicycle	1:200 elevation Hausdorff: expected 0.06300924460383969 to be less than or equal to 0.06
+vehicles	city-bus	1:500 front Hausdorff: expected 0.29648467764352343 to be less than or equal to 0.15
+vehicles	city-car	1:100 axis 0: 3.9320054188198403 m against 3.9 m: expected 0.032005418819840425 to be less than or equal to 0.015
+vehicles	delivery-van	1:200 elevation Hausdorff: expected 0.075 to be less than or equal to 0.06
+vehicles	electric-kick-scooter	1:200 plan Hausdorff: expected 0.0677708501009312 to be less than or equal to 0.06
+vehicles	motor-scooter	1:500 front: expected 0.9094617773863057 to be greater than or equal to 0.92
+vehicles	tram	1:500 front Hausdorff: expected 0.16978847134007657 to be less than or equal to 0.15
+vehicles	vintage-car-1929	1:100 elevation Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.03
+furniture	single-bed	Test timed out in 900000ms
+components	reclaimed-cobblestone-bag	Error: Input buffer has corrupt header: glib XML parse error, buffer size limit exceeded (the rendered view is larger than 10 MB)

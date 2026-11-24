@@ -99,11 +99,15 @@ pub fn check_fire(
     }
     let t_target = t_lo;
     let u_loads = if mu0 > 0.8 { (mu0 * 1.2375).max(1.0001) } else { 0.0 };
-    let temperature_remedies = |u: f64| -> Vec<Remedy> {
+    let carried = weighted_actions(&member.actions, |a| part_en1990::psi_row(a.category).psi_2);
+    let u_theta = |theta_a: f64| fire_utilisation_at(member, section, material, annex, part_1_2::member_temperature_c(theta_a, a_m_v, fire.duration_s.max(0.0), cover.as_ref()));
+    let failing = u_cs > 1.0 || u_buck > 1.0 || u_ltb > 1.0 || theta > theta_cr.max(1.0);
+    let theta_lowers = semio_s_plugin_norm_compliance::record_ndp_reads(|| failing && fire.theta_a > target && u_theta(target).zip(u_theta(fire.theta_a)).is_some_and(|(lowered, current)| lowered < current)).0;
+    let temperature_remedies = |u: f64, reads: &[(&str, f64)]| -> Vec<Remedy> {
         let mut rem = Vec::new();
         if u <= 1.0 { return rem; }
         let subject = |path: &str| SubjectRef::new(&fire.id, format!("fireScenarios[id={}].{path}", fire.id), loc("Fire scenario", "Brandszenario"));
-        if fire.theta_a > target {
+        if theta_lowers {
             rem.push(Remedy::at_most(subject("thetaA"), q_temp(fire.theta_a), q_temp(target), loc("Lower the member design temperature below the critical temperature.", "Bemessungstemperatur des Bauteils unter die kritische Temperatur senken.")));
         }
         if theta_calc > target {
@@ -115,9 +119,11 @@ pub fn check_fire(
                 rem.push(Remedy::at_least(SubjectRef::new(&i.id, format!("fireInsulations[id={}].thickness", i.id), loc("Fire insulation", "Brandschutzbekleidung")), q_length(i.thickness), q_length(d), loc("Thicken the fire insulation.", "Brandschutzbekleidung verstärken.")));
             }
         }
-        rem.extend(leaf_remedies("members", &member.id, &member.actions, u_loads, &member_label(&member.id), "Reduce the fire-situation load", "Last der Brandsituation senken", "mYK"));
-        if rem.is_empty() {
-            rem.extend(leaf_remedies("members", &member.id, &member.actions, u.max(1.0001), &member_label(&member.id), "Reduce the fire-situation load", "Last der Brandsituation senken", "mYK"));
+        if u < 1.0e6 && mu0 < 1.0e6 {
+            rem.extend(leaf_remedies("members", &member.id, &carried, u_loads, &member_label(&member.id), "Reduce the fire-situation load", "Last der Brandsituation senken", reads));
+            if rem.is_empty() {
+                rem.extend(leaf_remedies("members", &member.id, &carried, u.max(1.0001), &member_label(&member.id), "Reduce the fire-situation load", "Last der Brandsituation senken", reads));
+            }
         }
         rem
     };
@@ -125,22 +131,25 @@ pub fn check_fire(
     let tag_de = format!("θ_a = {theta:.0} °C (Start {:.0} °C, A_m/V = {a_m_v:.0} 1/m), k_θ = {k:.3}, γ_M,fi = {:.2} (Brand {}, führend {})", fire.theta_a, params.gamma_m_fi, gov.combination, gov.action_id);
     let subject = SubjectRef::new(&fire.id, format!("fireScenarios[id={}].durationS", fire.id), fire_label(&fire.id));
     let cl = |s: &str| ClauseId::new("EN 1999-1-2", format!("§{s}"), s);
-    let mk = |id: String, sec: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl_en: String, expl_de: String, u: f64| {
-        utilization_check(id, "DIN EN 1999-1-2", cl(sec), subject.clone(), loc(title.0, title.1), computed, limit, annex, loc(&expl_en, &expl_de), temperature_remedies(u))
+    let mk = |id: String, sec: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl_en: String, expl_de: String, u: f64, reads: &[(&str, f64)]| {
+        utilization_check(id, "DIN EN 1999-1-2", cl(sec), subject.clone(), loc(title.0, title.1), computed, limit, annex, loc(&expl_en, &expl_de), temperature_remedies(u, reads))
     };
+    part_1_2::log_table_reads();
+    let theta_reads = [("nK", n), ("mYK", my), ("mZK", mz)];
+    let mu0_reads = if mu0 < 1.0 { theta_reads.len() } else { 0 };
     let mut out = vec![
         mk(format!("en1999.1-2.fire.{}", fire.id), "4.2", ("Fire resistance of the cross-section", "Feuerwiderstand des Querschnitts"), q_dim(u_cs), q_dim(1.0),
             format!("N_fi,Rd = {:.1} kN (tension) / {:.1} kN (compression), M_fi,y,Rd = {:.2} kNm, M_fi,z,Rd = {:.2} kNm, N_Ed = {:.1} kN, M_y,Ed = {:.2} kNm; {tag_en}", r.n_t / 1e3, r.n_c / 1e3, r.m_y / 1e3, r.m_z / 1e3, n / 1e3, my / 1e3),
-            format!("N_fi,Rd = {:.1} kN (Zug) / {:.1} kN (Druck), M_fi,y,Rd = {:.2} kNm, M_fi,z,Rd = {:.2} kNm, N_Ed = {:.1} kN, M_y,Ed = {:.2} kNm; {tag_de}", r.n_t / 1e3, r.n_c / 1e3, r.m_y / 1e3, r.m_z / 1e3, n / 1e3, my / 1e3), u_cs),
+            format!("N_fi,Rd = {:.1} kN (Zug) / {:.1} kN (Druck), M_fi,y,Rd = {:.2} kNm, M_fi,z,Rd = {:.2} kNm, N_Ed = {:.1} kN, M_y,Ed = {:.2} kNm; {tag_de}", r.n_t / 1e3, r.n_c / 1e3, r.m_y / 1e3, r.m_z / 1e3, n / 1e3, my / 1e3), u_cs, &theta_reads),
         mk(format!("en1999.1-2.fire.buckling.{}", fire.id), "4.2.3", ("Flexural buckling in fire", "Biegeknicken im Brandfall"), q_force(nc), q_force(floor_limit(nc, r.n_b)),
             format!("N_b,fi,Rd = {:.1} kN with λ̄_θ = λ̄·√(k_0.2/k_E); {tag_en}", r.n_b / 1e3),
-            format!("N_b,fi,Rd = {:.1} kN mit λ̄_θ = λ̄·√(k_0.2/k_E); {tag_de}", r.n_b / 1e3), u_buck),
+            format!("N_b,fi,Rd = {:.1} kN mit λ̄_θ = λ̄·√(k_0.2/k_E); {tag_de}", r.n_b / 1e3), u_buck, &[("nK", n.min(0.0))]),
         mk(format!("en1999.1-2.fire.ltb.{}", fire.id), "4.2.3", ("Lateral-torsional buckling in fire", "Biegedrillknicken im Brandfall"), q_moment(my.abs()), q_moment(floor_limit(my, r.m_b)),
             format!("M_b,fi,Rd = {:.2} kNm; {tag_en}", r.m_b / 1e3),
-            format!("M_b,fi,Rd = {:.2} kNm; {tag_de}", r.m_b / 1e3), u_ltb),
+            format!("M_b,fi,Rd = {:.2} kNm; {tag_de}", r.m_b / 1e3), u_ltb, &[("mYK", my)]),
         mk(format!("en1999.1-2.fire.theta-cr.{}", fire.id), "4.2.5", ("Member temperature against critical temperature", "Bauteiltemperatur gegen kritische Temperatur"), q_temp(theta), q_temp(theta_cr.max(1.0)),
             format!("μ_0 = {mu0:.3} gives θ_cr = {theta_cr:.0} °C; {tag_en}"),
-            format!("μ_0 = {mu0:.3} ergibt θ_cr = {theta_cr:.0} °C; {tag_de}"), theta / theta_cr.max(1.0)),
+            format!("μ_0 = {mu0:.3} ergibt θ_cr = {theta_cr:.0} °C; {tag_de}"), theta / theta_cr.max(1.0), &theta_reads[..mu0_reads]),
     ];
     let expansion = CheckResult::assess(format!("en1999.1-2.fire.thermal-elongation.{}", fire.id), "DIN EN 1999-1-2",
         cl("3.3.1.1"), subject.clone(), loc("Free thermal elongation of the member", "Freie Wärmedehnung des Bauteils")).annex(annex);

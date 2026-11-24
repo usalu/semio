@@ -64,7 +64,7 @@ pub mod document_io {
         Generation3dFormatRow { id: "ply", label_en: "PLY Mesh", label_de: "PLY-Netz", kind_id: "s.stdio.ply.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_ply::formats },
         Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
         Generation3dFormatRow { id: "las", label_en: "LAS Point Cloud", label_de: "LAS-Punktwolke", kind_id: "s.stdio.las.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_las::formats },
-        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
+        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1024.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
         Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole artifact)", label_de: "Semio-Text (ganzes Artefakt)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
     ];
 
@@ -79,7 +79,7 @@ pub mod document_io {
         Generation3dFormatRow { id: "obj", label_en: "OBJ Mesh", label_de: "OBJ-Netz", kind_id: "s.stdio.obj.standard.3-0.representation.document", descriptors: semio_s_artifact_stdio_obj::formats },
         Generation3dFormatRow { id: "ply", label_en: "PLY Mesh", label_de: "PLY-Netz", kind_id: "s.stdio.ply.standard.1-0.representation.document", descriptors: semio_s_artifact_stdio_ply::formats },
         Generation3dFormatRow { id: "gltf", label_en: "glTF Mesh", label_de: "glTF-Netz", kind_id: "s.stdio.gltf.standard.2-0.representation.document", descriptors: semio_s_artifact_stdio_gltf::formats },
-        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1018.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
+        Generation3dFormatRow { id: "dwg", label_en: "DWG Drawing", label_de: "DWG-Zeichnung", kind_id: "s.stdio.dwg.standard.ac1024.representation.document", descriptors: semio_s_artifact_stdio_dwg::formats },
         Generation3dFormatRow { id: "json", label_en: "Generation JSON", label_de: "Generation-JSON", kind_id: "s.stdio.json.standard.rfc8259.representation.document", descriptors: semio_s_artifact_stdio_json::formats },
         Generation3dFormatRow { id: "txt", label_en: "Semio Text (whole artifact)", label_de: "Semio-Text (ganzes Artefakt)", kind_id: "s.stdio.txt.standard.utf-8.representation.document", descriptors: semio_s_artifact_stdio_txt::formats },
     ];

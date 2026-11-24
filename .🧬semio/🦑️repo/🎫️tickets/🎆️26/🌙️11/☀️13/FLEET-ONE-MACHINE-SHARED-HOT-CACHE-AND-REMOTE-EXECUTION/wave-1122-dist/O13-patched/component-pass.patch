@@ -1,0 +1,46 @@
+--- a/component-pass.ts
++++ b/component-pass.ts
+@@ -49,7 +49,7 @@
+ import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoDepInfoChecksumV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
+ import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, appendUnitHistoryV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🎟️admission/🟦️.ts";
+ import { nativeBuildPassOffloadableV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
+-import { createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
++import { cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
+ import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
+ import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
+ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+@@ -514,6 +514,7 @@
+   const fleet = await options.fleetJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), signal }).catch(() => undefined), fleetRemote = fleet?.remote ?? 0;
+   const componentJobs = fleetRemote > 0 ? await options.componentJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), crates: [...new Set(plan.passes.filter(pass => nativeBuildPassOffloadableV1(pass)).flatMap(pass => pass.packages.map(row => row.name.replaceAll("-", "_"))))], signal }).catch(() => undefined) : undefined, jobSlots = Math.max(1, Math.min(componentJobs?.jobs ?? 1, tokens + fleetRemote));
+   if (fleetRemote > 0) options = { ...options, environment: { ...options.environment, SEMIO_UNIT_CACHE_SLOTS: options.environment.SEMIO_UNIT_CACHE_SLOTS ?? String(tokens), SEMIO_UNIT_CACHE_LIGHT_SLOTS: String(fleetRemote) } };
++  const cargoJobs: Readonly<Record<string, string>> = fleetRemote > 0 ? { CARGO_BUILD_JOBS: String(cargoJobsV1(tokens, options.environment)) } : {};
+   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
+   const physicalControl = () => cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, remainingMs: () => {inputContinuations.check();planContinuations.check();return checkResourceLeaseControl(admission);}, scale: Math.max(1, components.length), onProgress: cargoProvenanceProgressSinkV1(() => inputContinuations.check()) });
+   const custody = sharedProvenanceCustodyV1(options.cwd, physicalControl);let sessionOwner:CargoProvenanceSessionV1|undefined,sourceWitness:CargoSourceWitnessV1|undefined;
+@@ -659,7 +660,7 @@
+         requireNativeStoragePathV1(options.storage.backing.root, path);
+       }
+       const attempt = async (capture: (line: string) => void, inherited?: Readonly<Record<string, string>>): Promise<number> => {
+-        const environment = { ...withoutJobserverEnvironmentV1(inputs.environment), ...inherited };
++        const environment = { ...withoutJobserverEnvironmentV1(inputs.environment), ...(job.workerProtocol === "jobserver" ? cargoJobs : {}), ...inherited };
+         const child = spawn(job.command[0]!, [...inputs.arguments], { cwd: job.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(control,environment) });
+         const terminal = nativeBuildChildTerminalV1(child), watch = watchNativeBuildJobV1(Date.now());
+         children.add(child);
+@@ -694,7 +695,7 @@
+       }, async capture => {
+         await options.storage.recheck();
+         checkAttempt();
+-        return job.workerProtocol === "jobserver" ? jobserver.withClient(inherited => attempt(capture, inherited)) : attempt(capture);
++        return job.workerProtocol === "jobserver" ? (fleetServer ?? jobserver).withClient(inherited => attempt(capture, inherited)) : attempt(capture);
+       });
+     },inputs.control.signal);
+     const manifest=nativeBuildJobManifestV1(job);if(manifest)await withNativeBuildCargoInputsV1(options,{manifest,cwd:job.cwd,arguments:job.command.slice(1),environment,control:options.control},execute);else await execute({arguments:job.command.slice(1),environment,control:options.control});
+@@ -905,7 +906,7 @@
+         const missingWitnesses = new Map<string, { claim: CargoDepInfoChecksumV1; drift: CargoSourceDriftV1 }>();
+         let stream = !retryWarm;
+         const compilerErrors = new Map<string,Set<string>>(), passFiles = new Set<string>(), attemptFailures:string[] = [];
+-        const child = spawn(port.command, [...port.args, ...args], { cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...withoutJobserverEnvironmentV1(inputs.environment), SEMIO_COMPILER_PARALLELISM:String(tokens), SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...inherited, RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, nativeBuildLaneRootV1(generation), options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
++        const child = spawn(port.command, [...port.args, ...args], { cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: scriptResourceProcessEnvironmentV1(effectControl,{ ...withoutJobserverEnvironmentV1(inputs.environment), SEMIO_COMPILER_PARALLELISM:String(tokens), SEMIO_BUILD_MODE: profileBuildModeV1(pass.profile), ...cargoJobs, ...inherited, RUSTC_WRAPPER: scheduler, ...compilerWrapperEnvironmentV1(scheduler, nativeBuildLaneRootV1(generation), options.environment), [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" }) });
+         const terminal=nativeBuildChildTerminalV1(child);children.add(child);
+         const storageCheck = setInterval(() => {
+           if (stopped || child.exitCode !== null || child.signalCode !== null) return;

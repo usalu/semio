@@ -5,7 +5,7 @@
   "description": "Language-neutral linear-memory budget every Semio plugin component is linked and admitted under. `maximumBytes` is the wasm memory `maximum` the component's core module declares (`wasm-ld --max-memory`, set uniformly for `wasm32-wasip2` in `.cargo/config.toml`); `stackBytes` is the shadow stack carved out of it (`wasm-ld -zstack-size`, set uniformly for `wasm32-wasip2` in `.cargo/config.toml`); `installPeakPercent` is the share of `maximumBytes` the boot + contributions-install + first-mesh sequence may peak at before a law fails, so a growing extension closure is caught while headroom still exists rather than as a `rust_oom` trap in a browser tab; `contiguousRequestCeilingBytes` bounds the size of any single block a routine per-command or per-turn path may ask that memory for.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["maximumBytes", "stackBytes", "installPeakPercent", "contiguousRequestCeilingBytes", "hostAnswerCeilingBytes"],
+  "required": ["maximumBytes", "stackBytes", "installPeakPercent", "refusalPercent", "contiguousRequestCeilingBytes", "hostAnswerCeilingBytes"],
   "properties": {
     "maximumBytes": {
       "const": 536870912,
@@ -18,6 +18,10 @@
     "installPeakPercent": {
       "const": 60,
       "description": "Share of `maximumBytes`, in percent, the boot + contributions-install + first-mesh sequence's retained-heap peak must stay under."
+    },
+    "refusalPercent": {
+      "const": 85,
+      "description": "Share of `maximumBytes`, in percent, past which a guest refuses to start or continue unbounded work with a typed fault instead of allocating into a `rust_oom` abort. Above `installPeakPercent`, which is only a diagnostic ceiling."
     },
     "contiguousRequestCeilingBytes": {
       "const": 65536,

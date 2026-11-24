@@ -2,6 +2,60 @@
 
 use super::*;
 
+/// 🩹 Writes the `required` value (or the first option) of one remedy into the JSON tree of a document; `false` when the path does not take the value.
+fn write_remedy(tree: &mut serde_json::Value, remedy: &semio_s_plugin_norm_compliance::Remedy) -> bool {
+    let path = remedy.target.path.as_str();
+    if path.is_empty() {
+        return false;
+    }
+    if matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) {
+        let option = remedy.options.first().cloned().unwrap_or_default();
+        return set_string_at_path(tree, path, &option).is_ok()
+            || set_u64_at_path(tree, path, option.parse().unwrap_or(0)).is_ok()
+            || set_number_at_path(tree, path, option.parse().unwrap_or(0.0)).is_ok();
+    }
+    let rounded = remedy.required.value.round();
+    if rounded >= 0.0 && (remedy.required.value - rounded).abs() < 1e-9 {
+        set_u64_at_path(tree, path, rounded as u64).is_ok() || set_number_at_path(tree, path, remedy.required.value).is_ok()
+    } else {
+        set_number_at_path(tree, path, remedy.required.value).is_ok() || set_u64_at_path(tree, path, remedy.required.value.round().max(0.0) as u64).is_ok()
+    }
+}
+
+/// 🩹 Applies every applicable remedy of `check` to `doc` at once and evaluates the result; `None` when no remedy took.
+fn apply_applicable(doc: &En1999Snapshot, check: &semio_s_plugin_norm_compliance::CheckResult) -> Option<En1999Snapshot> {
+    let mut tree = serde_json::to_value(doc).expect("json");
+    let applied = check.remedies.iter().filter(|r| r.applicable).fold(false, |any, remedy| write_remedy(&mut tree, remedy) | any);
+    applied.then(|| serde_json::from_value(tree).expect("decode"))
+}
+
+/// 🩹 The remedy law is iterative: a remedy that lowers the check alone may leave it failing at a finite utilisation (a hot member whose resistance vanished only regains a finite resistance once the temperature drops), whose new remedies then clear it. Each round applies every applicable remedy of the current report and must lower the utilisation strictly.
+fn cleared_by_rounds(doc: &En1999Snapshot, id: &str, rounds: usize, partials: &mut Vec<String>) -> bool {
+    let mut current = doc.clone();
+    for round in 0..rounds {
+        let check = evaluate_structure(&current).checks.into_iter().find(|c| c.id == id);
+        let Some(check) = check.filter(|c| matches!(c.status, CheckStatus::Fail)) else { return true };
+        let Some(next) = apply_applicable(&current, &check) else {
+            partials.push(format!("round {round}: no remedy took"));
+            return false;
+        };
+        let after = evaluate_structure(&next).checks.into_iter().find(|c| c.id == id);
+        match after {
+            None => return true,
+            Some(u) if !matches!(u.status, CheckStatus::Fail) => return true,
+            Some(u) if u.utilization < check.utilization => {
+                partials.push(format!("round {round}: utilisation {:.4}→{:.4}", check.utilization, u.utilization));
+                current = next;
+            }
+            Some(u) => {
+                partials.push(format!("round {round}: left failing without progress (u={:.4})", u.utilization));
+                return false;
+            }
+        }
+    }
+    false
+}
+
 #[test]
 fn gate_parity_every_fail_remedy_clears_status() {
     let doc = En1999Snapshot::noncompliant_multi_fail();
@@ -31,135 +85,28 @@ fn gate_parity_every_fail_remedy_clears_status() {
     ];
 
     for id in listed {
-        let check = report
-            .checks
-            .iter()
-            .find(|c| c.id == id)
-            .unwrap_or_else(|| panic!("missing listed check {id}"));
-        assert!(
-            matches!(check.status, CheckStatus::Fail),
-            "{id} should start Fail (got {:?})",
-            check.status
-        );
-        assert!(
-            !check.remedies.is_empty(),
-            "{id}: Fail without remedies"
-        );
-        let applicables: Vec<(usize, &semio_s_plugin_norm_compliance::Remedy)> = check
-            .remedies
-            .iter()
-            .enumerate()
-            .filter(|(_, r)| r.applicable)
-            .collect();
+        let check = report.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("missing listed check {id}"));
+        assert!(matches!(check.status, CheckStatus::Fail), "{id} should start Fail (got {:?})", check.status);
+        assert!(!check.remedies.is_empty(), "{id}: Fail without remedies");
+        let applicables: Vec<_> = check.remedies.iter().filter(|r| r.applicable).collect();
         assert!(!applicables.is_empty(), "{id}: no applicable remedies");
-        let mut cleared = false;
         let mut partials = Vec::new();
-        for &(remedy_index, remedy) in &applicables {
+        let mut cleared = false;
+        for (remedy_index, remedy) in applicables.iter().enumerate() {
             let mut tree = serde_json::to_value(&doc).expect("json");
-            let path = remedy.target.path.as_str();
-            if path.is_empty() {
-                partials.push(format!("remedy[{remedy_index}] empty path"));
-                continue;
-            }
-            let ok = if matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) {
-                let opt = remedy.options.first().cloned().unwrap_or_default();
-                set_string_at_path(&mut tree, path, &opt).is_ok()
-                    || set_u64_at_path(&mut tree, path, opt.parse().unwrap_or(0)).is_ok()
-                    || set_number_at_path(&mut tree, path, opt.parse().unwrap_or(0.0)).is_ok()
-            } else {
-                let rounded = remedy.required.value.round();
-                let as_u64 = rounded >= 0.0 && (remedy.required.value - rounded).abs() < 1e-9;
-                if as_u64 {
-                    set_u64_at_path(&mut tree, path, rounded as u64).is_ok()
-                        || set_number_at_path(&mut tree, path, remedy.required.value).is_ok()
-                } else {
-                    set_number_at_path(&mut tree, path, remedy.required.value).is_ok()
-                        || set_u64_at_path(&mut tree, path, remedy.required.value.round().max(0.0) as u64).is_ok()
-                }
-            };
-            if !ok {
-                partials.push(format!("remedy[{remedy_index}] apply failed at {path}"));
+            if !write_remedy(&mut tree, remedy) {
+                partials.push(format!("remedy[{remedy_index}] apply failed at {}", remedy.target.path));
                 continue;
             }
             let fixed: En1999Snapshot = serde_json::from_value(tree).expect("decode");
-            let after = evaluate_structure(&fixed);
-            let updated = after.checks.iter().find(|c| c.id == id);
-            match updated {
-                None => {
+            match evaluate_structure(&fixed).checks.iter().find(|c| c.id == id) {
+                Some(u) if matches!(u.status, CheckStatus::Fail) => partials.push(format!("remedy[{remedy_index}] left failing (u={:.4}→{:.4})", check.utilization, u.utilization)),
+                _ => {
                     cleared = true;
                     break;
                 }
-                Some(u) if !matches!(u.status, CheckStatus::Fail) => {
-                    cleared = true;
-                    break;
-                }
-                Some(u) if u.utilization < check.utilization => {
-                    partials.push(format!(
-                        "remedy[{remedy_index}] only lowered utilization {:.4}→{:.4}",
-                        check.utilization, u.utilization
-                    ));
-                }
-                Some(u) if u.utilization > check.utilization + 1e-9 => {
-                    partials.push(format!(
-                        "remedy[{remedy_index}] raised utilization {:.4}→{:.4}",
-                        check.utilization, u.utilization
-                    ));
-                }
-                Some(u) => {
-                    partials.push(format!(
-                        "remedy[{remedy_index}] left failing (u={:.4})",
-                        u.utilization
-                    ));
-                }
             }
         }
-        if !cleared && applicables.len() > 1 {
-            let mut tree = serde_json::to_value(&doc).expect("json");
-            let mut sequential_ok = true;
-            for (remedy_index, remedy) in &applicables {
-                let path = remedy.target.path.as_str();
-                let ok = if matches!(remedy.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) {
-                    let opt = remedy.options.first().cloned().unwrap_or_default();
-                    set_string_at_path(&mut tree, path, &opt).is_ok()
-                        || set_u64_at_path(&mut tree, path, opt.parse().unwrap_or(0)).is_ok()
-                        || set_number_at_path(&mut tree, path, opt.parse().unwrap_or(0.0)).is_ok()
-                } else {
-                    let rounded = remedy.required.value.round();
-                    let as_u64 = rounded >= 0.0 && (remedy.required.value - rounded).abs() < 1e-9;
-                    if as_u64 {
-                        set_u64_at_path(&mut tree, path, rounded as u64).is_ok()
-                            || set_number_at_path(&mut tree, path, remedy.required.value).is_ok()
-                    } else {
-                        set_number_at_path(&mut tree, path, remedy.required.value).is_ok()
-                            || set_u64_at_path(&mut tree, path, remedy.required.value.round().max(0.0) as u64).is_ok()
-                    }
-                };
-                if !ok {
-                    sequential_ok = false;
-                    partials.push(format!("sequential remedy[{remedy_index}] apply failed"));
-                    break;
-                }
-            }
-            if sequential_ok {
-                if let Ok(fixed) = serde_json::from_value::<En1999Snapshot>(tree) {
-                    let after = evaluate_structure(&fixed);
-                    match after.checks.iter().find(|c| c.id == id) {
-                        None => cleared = true,
-                        Some(u) if !matches!(u.status, CheckStatus::Fail) => cleared = true,
-                        Some(u) => partials.push(format!(
-                            "sequential applicables left failing (u={:.4})",
-                            u.utilization
-                        )),
-                        _ => {}
-                    }
-                }
-            }
-        }
-        assert!(
-            cleared,
-            "{}: no applicable remedy cleared the Fail ({})",
-            id,
-            partials.join("; ")
-        );
+        assert!(cleared || cleared_by_rounds(&doc, id, 4, &mut partials), "{id}: no applicable remedy cleared the Fail ({})", partials.join("; "));
     }
 }

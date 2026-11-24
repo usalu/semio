@@ -306,7 +306,7 @@ export function LeaderboardCard(props: { readonly session: CourseSession; readon
       title={text("course.leaderboard.title")}
       footerLeft={board === undefined ? undefined : <Updated board={board} text={text} locale={locale} />}
       footerRight={
-        <CardAction primary onClick={onOpen}>
+        <CardAction icon="list-ordered" primary onClick={onOpen}>
           {text("course.leaderboard.full")}
         </CardAction>
       }
@@ -420,7 +420,7 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
   const bests = state.board.quiz === undefined;
 
   return (
-    <PageFrame page={HOME_PAGES.leaderboard} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "leaderboard" })} opened={view.opened} />}>
+    <PageFrame page={HOME_PAGES.leaderboard} overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "leaderboard" })} opened={view.opened} />}>
       <CourseCard
         flush
         id={`${scope}-title`}
@@ -461,8 +461,8 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
                 {board.board.learners > rows.length ? <span className="course-nowrap text-muted-foreground">{text("course.leaderboard.shown", { count: rows.length })}</span> : null}
               </p>
             </CardSection>
-            <Records fold={bests ? 80 : 44} role="region" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`} tabIndex={0}>
-              <table {...TABLE.table} data-head="sort" className="course-fold w-full border-collapse text-sm" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`}>
+            <div data-board-table="" role="region" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`} tabIndex={0} className="course-table-scroll">
+              <table {...TABLE.table} data-head="sort" className="course-table text-sm" aria-labelledby={`${scope}-title`} aria-describedby={`${scope}-description`}>
                 <thead {...TABLE.group}>
                   <tr {...TABLE.row}>
                     {shown.map((column) => (
@@ -487,7 +487,7 @@ export function LeaderboardPage(props: { readonly session: CourseSession; readon
                   </tbody>
                 )}
               </table>
-            </Records>
+            </div>
             <CardSection>
               <p className="m-0 text-xs text-muted-foreground">{text("course.leaderboard.forFun")}</p>
             </CardSection>

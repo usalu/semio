@@ -3,10 +3,10 @@
 use semio_framework_value::ByteReadSource;
 
 use super::{
-    admit_box, failed, more, object_stream, projection, release, released, report, retire_object_stream_header, retire_projection,
+    admit_box, failed, more, object_stream, projection, release_paged, released, report, retire_object_stream_header, retire_projection,
     CosGrant, CosLimits, GraphImportCursor, GraphImportEvent, GraphImportReceipt, NormalProjection, NormalProjectionCursor,
     NormalProjectionEvent, ObjRef, ObjectStreamCursor, ObjectStreamEvent, ObjectStreamHeader, PdfObject,
-    RetiringValue, XrefEntry, XrefIndex, XrefIndexLookup,
+    PdfStreamBytes, RetiringValue, XrefEntry, XrefIndex, XrefIndexLookup,
 };
 
 pub(super) struct CompressedLength {
@@ -15,7 +15,7 @@ pub(super) struct CompressedLength {
     stream_lookup: XrefIndexLookup,
     member_index: u32,
     header: Option<ObjectStreamHeader>,
-    data: Vec<u8>,
+    data: PdfStreamBytes,
     member: Option<Box<ObjectStreamCursor>>,
     result: Option<Option<usize>>,
     pub(super) projection: Option<Box<NormalProjectionCursor>>,
@@ -23,7 +23,7 @@ pub(super) struct CompressedLength {
 
 impl CompressedLength {
     pub(super) fn new(reference: ObjRef, stream_number: u32, member_index: u32) -> Self {
-        Self { reference, stream_number, stream_lookup: XrefIndexLookup::new(stream_number), member_index, header: None, data: Vec::new(), member: None, result: None, projection: None }
+        Self { reference, stream_number, stream_lookup: XrefIndexLookup::new(stream_number), member_index, header: None, data: PdfStreamBytes::default(), member: None, result: None, projection: None }
     }
 
     pub(super) fn stream_number(&self) -> u32 { self.stream_number }
@@ -100,7 +100,7 @@ impl GraphImportCursor {
                     Some(NormalProjection::ObjectStream(PdfObject::Stream { dict, data, filters })) => {
                         lookup.header = Some(ObjectStreamHeader::new(dict));
                         lookup.data = data;
-                        self.retiring = Some(RetiringValue::new(PdfObject::Stream { dict: Vec::new(), data: Vec::new(), filters }));
+                        self.retiring = Some(RetiringValue::new(PdfObject::Stream { dict: Vec::new(), data: PdfStreamBytes::default(), filters }));
                     }
                     Some(NormalProjection::Value(value) | NormalProjection::ObjectStream(value)) => {
                         self.retiring = Some(RetiringValue::new(value));
@@ -135,7 +135,7 @@ impl GraphImportCursor {
             self.retiring = retire_object_stream_header(&mut header);
             return more(1);
         }
-        if lookup.data.capacity() != 0 { return release(&mut lookup.data, grant); }
+        if !lookup.data.retained_bytes().terminal_is_empty() { return release_paged(&mut lookup.data, grant); }
         self.compressed_length = None;
         more(1)
     }
@@ -172,7 +172,7 @@ mod tests {
         for number in [4, 10] {
             let object = file.graph.objects.iter().find(|object| object.id == ObjRef { num: number, gen: 0 }).unwrap();
             let PdfObject::Stream { data, .. } = &object.value else { panic!("expected content stream"); };
-            assert_eq!(data.as_slice(), CONTENT);
+            assert_eq!(data.to_vec_owner(), CONTENT);
         }
         for (number, value) in [(6, 42), (7, CONTENT.len() as i64)] {
             let object = file.graph.objects.iter().find(|object| object.id == ObjRef { num: number, gen: 0 }).unwrap();
@@ -243,6 +243,6 @@ mod tests {
         let file = prepare(&input).unwrap();
         let first = file.graph.objects.iter().find(|object| object.id.num == 4).unwrap();
         let PdfObject::Stream { data, .. } = &first.value else { panic!("expected content stream"); };
-        assert_eq!(data.as_slice(), b"BT /F1 12 Tf 10 70 Td (prefix");
+        assert_eq!(data.to_vec_owner(), b"BT /F1 12 Tf 10 70 Td (prefix");
     }
 }

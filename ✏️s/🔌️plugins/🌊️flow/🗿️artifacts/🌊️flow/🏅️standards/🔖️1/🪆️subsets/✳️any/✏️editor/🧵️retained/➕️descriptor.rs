@@ -44,7 +44,7 @@ impl FlowAddDescriptorWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.copy.is_none()&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl Drop for FlowAddDescriptorWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Add descriptor must close its actual selected text and result");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowAddDescriptorWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Add descriptor must close its actual selected text and result");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
 #[cfg(test)]
 #[path="🧪️descriptor.rs"]

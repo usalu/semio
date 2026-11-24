@@ -55,6 +55,19 @@ pub struct IfcTypedValue {
 }
 
 impl IfcValue {
+    /// 🛡️ Reports whether every nested Part 21 binary literal has valid leading padding-bit and hexadecimal content.
+    pub fn binary_literals_admitted(&self) -> bool {
+        let mut frontier = vec![self];
+        while let Some(value) = frontier.pop() {
+            match value {
+                IfcValue::Binary(text) if !semio_s_artifact_stdio_contract::part21::is_part21_binary(text) => return false,
+                IfcValue::Aggregate(items) => frontier.extend(items),
+                IfcValue::TypedValue(typed) => frontier.extend(&typed.items),
+                _ => {}
+            }
+        }
+        true
+    }
     pub fn as_reference(&self) -> Option<u64> {
         if let IfcValue::Reference(id) = self {
             Some(*id)

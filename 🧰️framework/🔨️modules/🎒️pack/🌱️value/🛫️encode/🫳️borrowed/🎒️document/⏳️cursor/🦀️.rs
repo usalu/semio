@@ -113,6 +113,22 @@ impl BorrowedPackDocumentCursor{
  pub fn advance(&mut self,source:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>)->Result<BorrowedPackDocumentProgress,BorrowedPackDocumentFailure>{
   let before=effect.performed_work();let result=self.advance_inner(source,spec,output,effect);Self::record_own(effect,before,u128::from(self.last_work),result)
  }
+ /// 📦️ Performs up to `maximum_events` consecutive bounded events as ONE owner action: every event is still quoted, funded and recorded as its own work unit, byte currencies sum exactly, and the batch is one copied item because a byte-level codec event owns no item of its own. It stops before an event the remaining grant, output or work cannot fund, so an allocating or releasing event always starts the next action.
+ pub fn advance_batch(&mut self,source:&dyn FieldProjectionSource,spec:BorrowedRecordSpec,output:&mut[u8],effect:&mut RetainedAllocationEffect<'_>,maximum_events:usize)->Result<BorrowedPackDocumentProgress,BorrowedPackDocumentFailure>{
+  let grant=effect.grant();let mut total=BorrowedPackDocumentProgress::default();let mut events=0usize;
+  while events<maximum_events&&total.written_bytes<output.len()&&effect.remaining_work_units().is_ok_and(|left|left>0){
+   let spent=total.progress;
+   let left=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(spent.copied_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(spent.retained_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(spent.released_bytes),..grant};
+   let step=match self.advance(source,spec,&mut output[total.written_bytes..],&mut effect.nested(left)){
+    Ok(step)=>step,
+    Err(mut failure)=>{let held=failure.reason.retained_progress();failure.reason=failure.reason.with_retained_progress(RetainedCloneProgress{copied_items:held.copied_items,copied_bytes:held.copied_bytes+spent.copied_bytes,retained_capacity_bytes:held.retained_capacity_bytes+spent.retained_capacity_bytes,released_bytes:held.released_bytes+spent.released_bytes});failure.written_bytes+=total.written_bytes;return Err(failure)}
+   };
+   if self.last_work==0{break}
+   events+=1;total.written_bytes+=step.written_bytes;total.progress.copied_bytes+=step.progress.copied_bytes;total.progress.retained_capacity_bytes+=step.progress.retained_capacity_bytes;total.progress.released_bytes+=step.progress.released_bytes;
+   if step.complete{break}
+  }
+  total.progress.copied_items=usize::from(events!=0);total.complete=self.is_complete();self.last_work=events as u64;Ok(total)
+ }
  fn record_own<R>(effect:&mut RetainedAllocationEffect<'_>,before:u128,own:u128,result:Result<R,BorrowedPackDocumentFailure>)->Result<R,BorrowedPackDocumentFailure>{
   if effect.performed_work()!=before||own==0{return result}let recorded=u64::try_from(own).map_err(|_|invalid("retained Pack action work overflow")).and_then(|work|effect.performed(work).map_err(|error|error).and_then(|admitted|if admitted{Ok(())}else{Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained Pack action exceeded its original work"))}));
   match(result,recorded){(Ok(value),Ok(()))=>Ok(value),(Err(failure),_)=>Err(failure),(Ok(_),Err(error))=>Err(error.into())}

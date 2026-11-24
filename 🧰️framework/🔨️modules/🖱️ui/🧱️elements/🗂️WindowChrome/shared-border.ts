@@ -1,5 +1,5 @@
 import * as React from "react";
-import { borderStatePriority, boxDrawnSides, resolveBorderSegments, resolveBoxStates, type BorderPoint, type BorderSide, type BorderState, type StateBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
+import { borderStatePriority, boxDrawnSides, resolveBorderSegments, resolveBoxStates, withoutLoneEmphasis, type BorderPoint, type BorderSide, type BorderState, type StateBox } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { type SharedBorderClip, type SharedBorderTransform, createSharedBorderSnap, sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments, visibleSharedOutlineSegments, createSharedBorderJunctionResolver, leadingSharedOutlineSegments, sharedBorderPaintPoints, type SharedOutlineSegment } from "../🔲️WindowFrame/shared-border.ts";
 import { WINDOW_FRAME_PATH_INSET, type WindowFrameChipRegion, type WindowFrameGeometry } from "../🔲️WindowFrame/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
@@ -107,7 +107,7 @@ function snapRect(rect: DOMRect): DOMRect {
   return { left, top, right, bottom, x: left, y: top, width: right - left, height: bottom - top, toJSON: () => ({}) } as DOMRect;
 }
 
-/** 🫥️ Props of a borderless box (a tab, tree row, menu item, icon button): no line in the normal state, the full closed outline in its own overlay while it is stated. The overlay exists only while the box is stated. */
+/** 🫥️ Props of a borderless box (a tab, tree row, menu item, icon button): no line in the normal state; on hover it emphasises its foreground and the lines of other boxes that lie on its perimeter and adds none; while a state that closes it (focus, active, invalid, …) holds it paints the full closed outline. Its overlay exists only while the box is stated. */
 export const sharedBorderlessBoxProps = { "data-shared-border-frame": "", "data-shared-border-edges": "" } as const;
 
 /** 📜️ A group that scrolls its content cannot hold an overlay that stays on the strip: its cells are painted by the next owner out. */
@@ -226,7 +226,7 @@ function marksOf(holders: readonly (Element | null)[]): BorderState[] {
   return marks;
 }
 
-/** 🪡️ Root-local resolver; original owners paint only winning portions of their unchanged outline. */
+/** 🪡️ Root-local resolver; original owners paint only winning portions of their unchanged outline. A line shared with an owner inside an elevation root (`data-elevation-root`: a band that lies above the content) is always painted by that owner, in whatever state won it: painted from beneath, half of the line would lie under the band, so it would look thinner and change with every hover. */
 export class BorderCompositor {
   readonly windows = new Map<string, Registration>();
   private frames = new Map<HTMLElement, Frame>();
@@ -474,8 +474,7 @@ export class BorderCompositor {
       if (box.entry && box.entry.state !== "normal") marks.push(box.entry.state);
       const disabled = target.matches(":disabled") || target.closest('[aria-disabled="true"]') !== null;
       if (disabled) disabledBoxes.add(box.id);
-      const hover = box.element.getAttribute("data-shared-border-hover");
-      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), hoverWithin: hover === "declared" || hover === "frame", disabled, marks };
+      return { id: box.id, parent: box.parent?.id ?? null, interactive: holder !== null || (box.kind === "chip" && box.element.querySelector(interactiveSelector) !== null), hoverWithin: box.element.hasAttribute("data-shared-border-hover"), disabled, marks };
     });
     const tracked = new Set<Element>();
     for (const box of boxes) for (let element: Element | null = box.element; element && !tracked.has(element); element = element.parentElement) tracked.add(element);
@@ -559,6 +558,7 @@ export class BorderCompositor {
       const paint = [{ x: l, y: t }, { x: r, y: t }, { x: r, y: b }, { x: l, y: b }];
       sources.push(...sharedOutlineSegments(window.id, logical, paint, state, window, snap, box.id).map(edge => ({ ...edge, follows: true as const })));
     }
+    const emphasis = new Set<string>();
     const borderOf = (element: Element, side: BorderSide): number => parseFloat(element.ownerDocument.defaultView?.getComputedStyle(element).getPropertyValue(`border-${side}-width`) ?? "") || 0;
     const flushRect = (box: Box, rect: { left: number; top: number; right: number; bottom: number }) => {
       const out = { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
@@ -590,8 +590,7 @@ export class BorderCompositor {
       const normalBox = { id: box.id, parent: outer?.id ?? null, owner: frame.id, rect, edges: declared(box), state: "normal" } as const;
       const parentBox = outer ? { id: outer.id, parent: null, owner: outer.id, rect: this.measure(outer.element).snapped, edges: declared(outer), state: "normal" } as const : undefined;
       const normalSides = boxDrawnSides(normalBox, parentBox);
-      const declaredHover = state === "hover" && box.element.getAttribute("data-shared-border-hover") === "declared";
-      const drawn = state === "normal" || declaredHover ? normalSides : allSides;
+      const drawn = state === "normal" ? normalSides : allSides;
       const chipWindow = windowOf(box);
       if (chipWindow) {
         const top = (rect.top - chipWindow.top) / chipWindow.scaleY;
@@ -606,6 +605,7 @@ export class BorderCompositor {
       const kept = edges.flatMap(edge => {
         const side = allSides[Number(edge.id.slice(edge.id.lastIndexOf(":") + 1))]!;
         if (!drawn.includes(side)) return [];
+        if (!normalSides.includes(side) && state === "hover") emphasis.add(edge.id);
         return [chipWindow || !normalSides.includes(side) ? { ...edge, follows: true as const } : edge];
       });
       sources.push(...(state === "normal" ? this.visibleSources(box.kind === "cell" ? box.element : box.paint, kept, box.paint) : kept));
@@ -613,7 +613,14 @@ export class BorderCompositor {
     sources = visibleSharedOutlineSegments(sources);
     const byId = new Map(sources.map(source => [source.id, source]));
     const output = new Map<string, SharedBorderPaintSegment[]>();
-    const resolved = resolveBorderSegments(sources);
+    const raised = new Map<string, boolean>();
+    for (const [id, entry] of this.windows) raised.set(id, entry.element.closest("[data-elevation-root]") !== null);
+    for (const [element, frame] of this.frames) raised.set(frame.id, element.closest("[data-elevation-root]") !== null);
+    const resolved = withoutLoneEmphasis(resolveBorderSegments(sources), id => emphasis.has(id.split(":", 2).join(":"))).map(segment => {
+      if (raised.get(segment.owner)) return segment;
+      const upper = segment.contributors.map(id => byId.get(id)!).find(source => raised.get(source.owner));
+      return upper ? { ...segment, id: upper.id, owner: upper.owner } : segment;
+    });
     const junction = createSharedBorderJunctionResolver(sources);
     const interacting = new Set<string>();
     for (const source of sources) {

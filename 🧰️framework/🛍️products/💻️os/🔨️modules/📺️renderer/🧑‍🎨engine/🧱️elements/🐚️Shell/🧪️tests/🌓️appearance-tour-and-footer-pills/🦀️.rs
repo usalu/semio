@@ -20,8 +20,7 @@ fn engine_root() -> std::path::PathBuf {
 }
 
 fn wgpu_shell_source() -> String {
-    let path = engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
-    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))
+    semio_renderer_wgpu_test_support::shell_source().to_string()
 }
 
 fn preferences_with_appearance(appearance: Option<OsUiAppearance>) -> UiPreferences {
@@ -97,7 +96,7 @@ fn the_browser_appearance_door_is_wired_end_to_end() {
     assert!(renderer.contains("js_name = semioWgpuSetHostAppearance"), "the renderer exports the appearance hook");
     let code_asks_the_window = renderer.lines().any(|line| line.contains("match_media") && !line.trim_start().starts_with("//"));
     assert!(!code_asks_the_window, "the renderer no longer asks a `window` it does not have — the phrase survives only in the docstring that explains why");
-    let worker = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts")).expect("frame worker source");
+    let worker = ["🔌️boot-and-plugins", "📨️receive"].iter().map(|part| std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎞️frame-worker").join(part).join("🟦️.ts")).expect("frame worker source")).collect::<Vec<_>>().join("\n");
     assert!(worker.contains("semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark)"), "the frame Worker forwards the boot value AND live changes");
     assert!(worker.contains("host-appearance"), "the live message kind is handled");
     let page = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts")).expect("browser boot source");
@@ -186,9 +185,9 @@ fn dismissing_the_tour_records_the_answer_and_stops_the_read_that_would_re_arm_i
 fn the_introduction_read_arms_the_tour() {
     let source = wgpu_shell_source();
     assert!(!source.contains("#[cfg(test)]\n    fn start_introduction"), "`start_introduction` is production code, not a test-only helper");
-    let arm = source.split("introduction_read.take()").nth(1).expect("the introduction-seen read arm exists");
-    let arm = &arm[..arm.find("introduction_write").unwrap_or(arm.len())];
-    assert!(arm.contains("self.auto_start_introduction(&seen_key, seen)"), "the landing read arms the tour");
+    assert!(source.contains("introduction_read.take()"), "the introduction-seen read arm exists");
+    let armed = source.split("introduction_read.take()").skip(1).any(|arm| arm[..arm.find("introduction_write").unwrap_or(arm.len())].contains("auto_start_introduction(&seen_key, seen,"));
+    assert!(armed, "the landing read arms the tour");
 }
 
 /// 🧪️ The card's own chrome, against `UIIntroduction` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): Skip in the

@@ -1,0 +1,10 @@
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts
+@@ -210,6 +210,7 @@
+    for(const path of outputs.filter(path=>path.endsWith(".rmeta"))){const written=writeDependenciesV1(path,settings.inner,environment);if(written!==undefined)outputs.push(written);else if(ifaceKeyed)tables=false;}
+    const incrementalBuild=unit.incremental!==undefined&&remote===undefined&&!(shared&&!settings.focus.has(crate));
+    const provenance=facts&&!remote?await recallProvenanceV1(environment,facts):undefined;
++   if(provenance!==undefined&&provenance.peakRssBytes>0)void import("../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts").then(module=>{module.writeUnitPeakV1(settings.root,crate,provenance.peakRssBytes/1048576);}).catch(()=>undefined);
+    const publish=(spill=false)=>publishUnitV1(settings.root,{key,crate,cwd,outDir,laneRoot:settings.laneRoot,outputs,expected,stdout:outcome.stdout,stderr:outcome.stderr,stampDirectory:settings.stamps,extra,provenance:provenance??null,retention:{workspace:workspaceOf,externs:keyInput.externs.map(row=>row.sha256),toolchain:keyInput.toolchain},...(basics?{slot:basics.slot}:{}),...(incrementalBuild?{session:true}:{}),...(spill?{spill:true}:{})});
+    let entry:ReturnType<typeof publishUnitV1>;
+    if(outputs.length===0||lacking.length>0||!tables)entry=undefined;else try{entry=publish();}catch{await new Promise(done=>setTimeout(done,250));try{entry=publish();}catch(error){if(!fleet)throw error;entry=publish(true);if(entry)event("publish",key,Date.now()-compiled,0,"spill: the host store refused the objects, the fleet upload reads them from the spill folder");}}

@@ -421,17 +421,23 @@ fn closed_perimeter(rect: [f32; 4], stroke: f32) -> [[f32; 4]; 4] {
 }
 
 #[test]
-fn a_hovered_cell_of_a_shared_group_paints_its_whole_perimeter_in_hover_colour_and_the_group_stays_normal() {
+fn a_hovered_cell_of_a_shared_group_recolours_the_lines_it_paints_when_normal_and_adds_none() {
     let (_, _, theme, _) = setup(&toggle("t"));
     let stroke = theme.stroke_hairline;
     let (normal, hover) = (Rgba { r: 0.2, g: 0.3, b: 0.4, a: 1.0 }, Rgba { r: 0.9, g: 0.8, b: 0.7, a: 1.0 });
-    for hovered in 0..3 {
+    let group = |hovered: Option<usize>| {
         let mut draw = DrawList::default();
         for cell in 0..3 {
-            let (color, state) = if cell == hovered { (hover, semio_ui_draw_contract::SharedBorderState::Hover) } else { (normal, semio_ui_draw_contract::SharedBorderState::Normal) };
+            let (color, state) = if hovered == Some(cell) { (hover, semio_ui_draw_contract::SharedBorderState::Hover) } else { (normal, semio_ui_draw_contract::SharedBorderState::Normal) };
             semio_ui_wgpu_layout::chrome::push_control_border(&mut draw, Rect::new(20.0 * cell as f32, 0.0, 20.0, 20.0), &theme, color, Rgba::TRANSPARENT, state);
         }
-        let lines = resolved_border_instances(&mut draw);
+        resolved_border_instances(&mut draw)
+    };
+    let ink = |lines: &[([f32; 4], [f32; 4])]| lines.iter().map(|(rect, _)| rect[2] * rect[3]).sum::<f32>();
+    let rest = ink(&group(None));
+    for hovered in 0..3 {
+        let lines = group(Some(hovered));
+        assert!((ink(&lines) - rest).abs() < 1e-3, "hovered cell {hovered} paints the line length the group paints at rest");
         let paint = |color: Rgba| lines.iter().filter(|(_, c)| *c == [color.r, color.g, color.b, color.a]).map(|(rect, _)| *rect).collect::<Vec<_>>();
         let hover_lines = paint(hover);
         for edge in closed_perimeter([20.0 * hovered as f32, 0.0, 20.0, 20.0], stroke) {
@@ -439,6 +445,23 @@ fn a_hovered_cell_of_a_shared_group_paints_its_whole_perimeter_in_hover_colour_a
         }
         assert_eq!(hover_lines.len(), 4, "no second parallel hover line beside the seams");
         assert!(paint(normal).iter().all(|rect| !hover_lines.contains(rect)));
+    }
+}
+
+#[test]
+fn a_hovered_box_paints_exactly_the_sides_it_draws_when_normal() {
+    let (_, _, theme, _) = setup(&toggle("t"));
+    let bounds = Rect::new(20.0, 10.0, 30.0, 20.0);
+    let color = Rgba { r: 0.9, g: 0.8, b: 0.7, a: 1.0 };
+    let sides = |state, edges| {
+        let mut draw = DrawList::default();
+        draw.push_shared_border_edges(bounds, theme.stroke_hairline, color, state, edges);
+        resolved_border_instances(&mut draw).into_iter().map(|(rect, _)| rect).collect::<Vec<_>>()
+    };
+    for edges in [[false; 4], [false, false, true, false], [false, true, false, true], [true; 4]] {
+        let rest = sides(semio_ui_draw_contract::SharedBorderState::Normal, edges);
+        assert_eq!(rest.len(), edges.iter().filter(|edge| **edge).count());
+        assert_eq!(sides(semio_ui_draw_contract::SharedBorderState::Hover, edges), rest, "{edges:?}");
     }
 }
 

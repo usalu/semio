@@ -1,8 +1,8 @@
-import{lstatSync,mkdtempSync,rmdirSync,statfsSync}from"node:fs";
+import{chmodSync,lstatSync,mkdtempSync,rmdirSync,statfsSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import imageSchema from"../../🧬️schema/🔣️.json" with { type: "json" };
-import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../👤️owners/🟦️.ts";
+import{attachNativeImageV1}from"../🔗️attach/🟦️.ts";
 import{nativeImageInformationV1}from"../📥️information/🟦️.ts";
 import{invalidateNativeImageRosterV1}from"../📡️roster/🟦️.ts";
 import{nativeImageHdiutilProgramV1}from"../🛠️hdiutil/🟦️.ts";
@@ -134,8 +134,9 @@ export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:strin
      catch(last){if(await find(phase)!==null)throw last;}
     }
    }
+   guardDetachedNativeImageMountV1(options.mountPoint);
   },
-  async attach(phase?:"cleanup"){const target=options.mountPoint??(scratch=mkdtempSync(join(tmpdir(),protocol.scratchPrefix)));try{await runner(phase)(nativeImageAttachProgramV1,[...nativeImageAttachArgumentsV1(target,options.image)]);}catch(error){failedAttach=true;throw error;}},
+  async attach(phase?:"cleanup"){const target=options.mountPoint??(scratch=mkdtempSync(join(tmpdir(),protocol.scratchPrefix)));try{await attachNativeImageV1(runner(phase),target,options.image);}catch(error){failedAttach=true;throw error;}},
   allocatedBytes(){return lstatSync(options.image).blocks*512;},
   volumeAvailableBytes(){const point=options.mountPoint??mounted;if(point===undefined)return undefined;try{const row=statfsSync(point);return Number(row.bavail)*row.bsize;}catch{return undefined;}},
   dispose(){if(scratch!==undefined){removeReclaimScratchV1(scratch);scratch=undefined;}},
@@ -143,6 +144,11 @@ export function createNativeImageDarwinReclaimPortV1(given:Readonly<{image:strin
  });
 }
 
+/** 🛡️ Makes the plain directory a detached image leaves behind at its mount point read-only (0555): a writer that resolves a path below it fails loudly with EACCES instead of silently filling the host disk, and the next attach mounts over it as before. A mounted or absent mount point is left alone. */
+export function guardDetachedNativeImageMountV1(mountPoint:string|undefined):void{
+ if(mountPoint===undefined)return;
+ try{const row=lstatSync(mountPoint);if(row.isDirectory()&&!row.isSymbolicLink()&&row.dev===lstatSync(dirname(mountPoint)).dev)chmodSync(mountPoint,0o555);}catch{}
+}
 const fill=(template:readonly string[],values:Readonly<Record<string,string>>):string[]=>template.map(part=>part.replace(/<([A-Za-z]+)>/gu,(_,key)=>values[key]??_));
 type CommandRunnerV1=(program:string,args:readonly string[])=>Promise<string>;
 /** ⏱️ A command of the image cycle that ended by its deadline or by cancellation, bilingual, naming the program and the seconds. */

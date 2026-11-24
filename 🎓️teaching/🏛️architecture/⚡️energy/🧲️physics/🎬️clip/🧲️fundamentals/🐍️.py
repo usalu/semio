@@ -712,7 +712,7 @@ class Beat1_Leistung(Scene):
         _reveal(self, p_read, t_read, e_read)
 
         def start_vacuum():
-            power_control[1].become(Text("An", font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK).move_to(power_control[1]))
+            power_control[1].become(Text(tr("On", "An"), font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK).move_to(power_control[1]))
             device_icon.rate = VACUUM_RATE
             self.play(T.animate.set_value(1.0 / 0.7), run_time=3.0, rate_func=linear)
 
@@ -2258,7 +2258,8 @@ class Beat5_Strahlung(Scene):
         out_blind = _blind(gx - 0.3, room["win_hi"] + 0.06, room["win_lo"] + 0.18)
         blind_group = out_blind["group"]
         blind_lbl = Text(tr("Venetian blind", "Raffstore"), font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
-            np.array([gx - 0.85, room["win_lo"] - 0.35, 0.0]))
+            np.array([gx - 0.85, room["win_lo"] - 0.7, 0.0]))
+        blind_lbl.align_to(np.array([gx - 0.15, 0.0, 0.0]), RIGHT)
         stopped, shade_paths = VGroup(), []
         for start in starts:
             stop = _blind_hit(out_blind, start, sun_dir)
@@ -2453,7 +2454,7 @@ class Beat6_ThermischeMasse(Scene):
         g_h_lbl = _m(r"4\,\mathrm{m}", size=LABEL_FONT_SIZE).next_to(g_h, LEFT, buff=0.08)
         n_tiles = ValueTracker(1)
         total_read = _readout(
-            lambda: rf"{int(n_tiles.get_value())}\,\mathrm{{m^{{2}}}} \cdot {label_number(0.133, 3)}\,\mathrm{{kWh}} = "
+            lambda: rf"{int(n_tiles.get_value())}\,\mathrm{{m^{{2}}}} \cdot {label_number(0.133, 3)}\,\frac{{\mathrm{{kWh}}}}{{\mathrm{{m^{{2}}}}}} = "
                     rf"{label_number(0.1333 * n_tiles.get_value(), 1)}\,\mathrm{{kWh}}",
             np.array([col_x, rows[1], 0.0]), color=P_YELLOW)
         self.play(stage.transition("physics.fundamentals.tiles.slab-to-first", source=slab, target=tiles[0]), FadeOut(kwh_read), run_time=1.0)
@@ -2543,7 +2544,7 @@ class Beat6_ThermischeMasse(Scene):
             return (sky_sun if 6 <= h <= 19 else sky_moon).copy()
 
         sky_live = always_redraw(sky)
-        hour_read = _readout(lambda: tr(rf"{int(clock_h.get_value()) % 24:02d}{{:}}00\,\mathrm{{h}}", rf"{int(clock_h.get_value()) % 24:02d}{{:}}00\,\mathrm{{Uhr}}"),
+        hour_read = _readout(lambda: tr(rf"{int(clock_h.get_value()) % 24:02d}{{:}}00\,\mathrm{{h}}", rf"{int(clock_h.get_value()) % 24:02d}{{:}}00\;\mathrm{{Uhr}}"),
                              sky_c + RIGHT * 0.45 + DOWN * 0.08, size=LABEL_FONT_SIZE, color=P_WHITE, edge="left")
         self.play(FadeIn(cax["group"]), FadeIn(h_ticks), FadeIn(legend), FadeIn(small["group"]), run_time=0.9)
         self.add(c_out, c_light, c_heavy, cursor, ceil_live, flux_live, sky_live)
@@ -2602,7 +2603,7 @@ class Beat6_ThermischeMasse(Scene):
             (big["wall_r"].get_center(), tr("Radiation exchange with all surfaces", "Strahlung mit allen Flächen"), P_YELLOW),
         ], x=1.95, align="left", min_gap=0.55)
         norm = _m(tr(rf"\text{{{_references.cite('din-en-iso-13786')} · heat storage}}", rf"\text{{{_references.cite('din-en-iso-13786')} · Wärmespeicherung}}"),
-                  np.array([6.6, -1.75, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
+                  np.array([6.6, -1.98, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         self.play(FadeIn(big["group"]), run_time=1.0)
         self.play(FadeIn(tags[0]), Create(tag_leaders[0]), Indicate(big["ceiling"], color=P_ORANGE, scale_factor=1.0),
                   run_time=1.0)

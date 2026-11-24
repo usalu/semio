@@ -1,13 +1,13 @@
 //! 📈️ Annex diagrams: the hoop buckling stress of a ring-stiffened shell over the ring spacing, the corrugated web shear resistance over the web thickness with its local and global branches, the clamped deck strip moments under the wheel patch and the free-flange moment of a purlin with and without the sheeting spring.
 
-use super::super::checks::clauses::shell_stability;
-use super::super::checks::clauses_annex::{corrugated_web, orthotropic_deck, purlin_free_flange, shell_pressure};
-use super::super::checks::{clauses::cold_formed, AnnexParams};
-use super::super::model::{BridgeFatigue, ColdFormedMember, En1993Snapshot, PlatedPanel, SiloShell};
-use super::super::norm::CheckReport;
-use super::super::scene::diagram_kit::Xy;
-use super::super::scene::projection_kit::diagram_parts::{axis, column, stroke};
-use super::super::scene::*;
+use crate::checks::clauses::shell_stability;
+use crate::checks::clauses_annex::{corrugated_web, orthotropic_deck, purlin_free_flange, shell_pressure};
+use crate::checks::{clauses::cold_formed, AnnexParams};
+use crate::model::{BridgeFatigue, ColdFormedMember, En1993Snapshot, PlatedPanel, SiloShell};
+use crate::norm::CheckReport;
+use crate::scene::diagram_kit::Xy;
+use crate::scene::projection_kit::diagram_parts::{axis, column, stroke};
+use crate::scene::*;
 
 const SAMPLES: usize = 40;
 const E_MPA: f64 = 210_000.0;
@@ -18,7 +18,7 @@ fn loc(en: &str, de: &str) -> LocalizedCopy {
 }
 
 fn tone(ratio: f64) -> Tone {
-    super::super::scene::utilisation_tone(ratio)
+    crate::scene::utilisation_tone(ratio)
 }
 
 fn range(values: &[f64]) -> (f64, f64) {

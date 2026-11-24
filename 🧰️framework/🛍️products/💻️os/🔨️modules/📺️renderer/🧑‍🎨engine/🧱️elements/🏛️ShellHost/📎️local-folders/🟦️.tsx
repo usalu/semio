@@ -76,11 +76,15 @@ export function commitLocalFoldersConfigMutationV1(storage: StoragePort, mutatio
 /** 🪪️ The program and the document identity a booted session holds. */
 export type LocalFolderIdentityV1 = Readonly<{ documentId: string; pluginId: string; appId: string }>;
 
-/** 📎️ The binding to offer for reconnection: the one remembered for this document in this program, unless the document is
- * attached already. */
+/** 📎️ The binding to offer for reconnection, unless the document is attached already: the one remembered for this very
+ * document in this program, else the program's most recently attached one. A program that mints a fresh document identity
+ * on every boot never meets its remembered identity again, so its own folder is offered back instead and the reconnect
+ * adopts the remembered identity ({@link SyncAttachTargetV1}'s `documentId`). */
 export function localFolderReconnectOfferV1(bindings: LocalFolderBindings, identity: LocalFolderIdentityV1 | null, attachedDocumentIds: ReadonlySet<string>): LocalFolderBinding | null {
   if (identity === null || attachedDocumentIds.has(identity.documentId)) return null;
-  return bindings.bindings.find((binding) => binding.documentId === identity.documentId && binding.pluginId === identity.pluginId && binding.appId === identity.appId) ?? null;
+  const ofProgram = bindings.bindings.filter((binding) => binding.pluginId === identity.pluginId && binding.appId === identity.appId);
+  const offer = ofProgram.find((binding) => binding.documentId === identity.documentId) ?? ofProgram.at(-1) ?? null;
+  return offer !== null && attachedDocumentIds.has(offer.documentId) ? null : offer;
 }
 
 /** 🏷️ The name a person knows a folder by: its last path segment. */

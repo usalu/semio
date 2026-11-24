@@ -1172,7 +1172,7 @@ const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts
   closureFailuresV1 = createBoundedCacheV1({ name: "inference:closure-failures", maxEntries: 1024, maxBytes: 1024 }),
   knownClosureInputsV1 = createBoundedCacheV1({ name: "inference:closure-inputs", maxEntries: 65536, maxBytes: 67108864, sizeOf: inputs => 128 + JSON.stringify(inputs).length });
 
-const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0, fetched: 0 };
+const closureCountsV1 = { derived: 0, loaded: 0, stale: 0, checked: 0, fetched: 0, reasked: 0, reaskFailed: 0, reaskEqual: 0, reaskDifferent: 0 };
 /** 🔢️ How many closure entries this process derived, loaded from the durable store, found stale there and verified row by row (once per discovery pass, however many owners ask) since the last reset. */
 export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
 
@@ -1268,6 +1268,14 @@ export function canonicalSidecarV1(sidecar) {
   return { ...sidecar, members: sidecar.members.map(list => list ? list.filter(walk => own.has(walk)).sort() : list) };
 }
 const TRAVEL_DIGEST_V1 = /^[0-9a-f]{64}$/u;
+/** 🚫️ The first own row of a shipped closure entry that did not hold in this tree when the entry was refused at the intake (the entry is then not stored here), by entry id, bounded: a take that later finds no entry names the refusing row instead of "no moved row found".
+ * @see ./🧪️tests/🚫️import-refused */
+export const importRefusalsV1 = createBoundedCacheV1({ name: "inference:import-refusals", maxEntries: 4096, maxBytes: 4096 });
+export function rememberImportRefusalV1(id, bundle) {
+  let row;
+  try { row = (bundle?.rows ?? []).find(item => !observationRowFreshV1(item)); } catch {}
+  importRefusalsV1.set(id, row ?? null);
+}
 /** 🧪️ Whether the own rows of a bundle hold in this tree (true while no scripts are bound, where nothing can be decided): a bundle whose own rows do not hold is stale and is not stored, since every consumer checks the rows of a stored entry against its own tree and derives it again when they do not hold, so storing it only costs the write; its layers are left to that check, which a bundle that holds pays anyway. */
 async function bundleRowsHoldV1(workspaceRoot, bundle) {
   const scripts = closureScriptsV1.get(workspaceRoot);
@@ -1336,7 +1344,8 @@ export const closureTravelV1 = Object.freeze({
       try {
         if (closureRecipeKeyV1(bundle?.recipe) !== recipeKey) continue;
         const id = workspaceRoot + "\0" + recipeKey, stored = await store.load(id);
-        if (stored === undefined ? await bundleRowsHoldV1(workspaceRoot, bundle) : await bundleSupersedesStoredV1(workspaceRoot, store, stored, bundle)) { await store.adopt(id, bundle); taken++; }
+        if (stored === undefined ? await bundleRowsHoldV1(workspaceRoot, bundle) : await bundleSupersedesStoredV1(workspaceRoot, store, stored, bundle)) { await store.adopt(id, bundle); importRefusalsV1.delete(id); taken++; }
+        else if (stored === undefined) rememberImportRefusalV1(id, bundle);
         if (typeof source === "string" && TRAVEL_DIGEST_V1.test(source)) await store.remember(source, recipeKey);
         if (typeof neutral === "string" && TRAVEL_DIGEST_V1.test(neutral)) await store.rememberNeutral(neutral, recipeKey);
       } catch { continue; }
@@ -1599,9 +1608,9 @@ export function deriveClosureRecipeV1(workspaceRoot, recipe, scripts) { return o
 export async function deriveClosureRecipeForChildV1(workspaceRoot, recipe, scripts) { const walked = await deriveClosureRecipeV1(workspaceRoot, recipe, scripts); return { ...walked, sidecar: closureSidecarV1(walked.layers) }; }
 
 /** 🏭️ The walk of one recipe in a walk child while one is granted, else on this thread: the owners that wait for a shared entry wait on the child, this thread parses the answer and hands the walk facts and members of the layers back to the process. */
-async function walkClosureRecipeV1(workspaceRoot, recipe, scripts) {
-  const farmed = await offloadClosureRecipeV1(workspaceRoot, recipe);
-  if (farmed === undefined) return deriveClosureRecipeV1(workspaceRoot, recipe, scripts);
+async function walkClosureRecipeV1(workspaceRoot, recipe, scripts, { farmOnly = false } = {}) {
+  const farmed = await offloadClosureRecipeV1(workspaceRoot, recipe, farmOnly ? { after: 0 } : {});
+  if (farmed === undefined) return farmOnly ? undefined : deriveClosureRecipeV1(workspaceRoot, recipe, scripts);
   farmed.layers.forEach((layer, at) => { const fact = farmed.sidecar?.facts[at], members = farmed.sidecar?.members[at]; if (fact) walkFactsV1.set(layer, fact); if (members) walkMembersV1.set(layer, new Set(members)); });
   return farmed;
 }
@@ -1614,20 +1623,87 @@ async function ensureClosureEntryV1(workspaceRoot, recipe) {
 const closureTakeV1 = new AsyncLocalStorage();
 
 /** 🪤️ Runs a look at a stored owner record (the take pass) so that no closure entry is derived inside it: an entry that is not stored or no longer holds ends the look with `BUILD_TAKE_MISS` (the owner is then inferred by the governed owner loop, with its own memory limit, one hand-off to the fleet and the plan guard), instead of the ungoverned walk of hundreds of recipes in the parent that grew the slice worker of a 16 GB machine by gigabytes in seconds.
- * @see ./🧪️tests/🪤️take-no-derive */
-export function runClosureTakeV1(body, signal) { return closureTakeV1.run({ signal }, body); }
+ * `reask` lets the take hand a stale or absent entry to a walk child instead of ending the look: `true` asks the walk farm of this process (never this thread), a function `(workspaceRoot, recipe) => walked | undefined` asks that port; the owner record then stays valid when the answer equals the recorded one.
+ * @see ./🧪️tests/🪤️take-no-derive
+ * @see ./🧪️tests/🔁️answer-validity */
+export function runClosureTakeV1(body, signal, { reask } = {}) { return closureTakeV1.run({ signal, reask }, body); }
 
-/** 📖️ The stored entry of one recipe for a take: loaded and checked like a derivation's first step, never derived. */
-async function takenClosureEntryV1(workspaceRoot, id) {
+/** 🧭️ The first row of a stored closure entry that no longer holds in this tree (its own rows, then its layers in order), so a verdict on a stale entry names the moved file instead of the whole entry; undefined when none is found within `budgetMilliseconds` or the layers are gone. Rows that stand for machine-local paths hold by definition, so only an input of the walk is ever named.
+ * @see ./🧪️tests/🧭️moved-row */
+export function firstMovedRowOfEntryV1(entry, budgetMilliseconds = INFERENCE_LIMITS_V1.closureMovedRowMilliseconds) {
+  const until = performance.now() + budgetMilliseconds, moved = row => performance.now() <= until && row !== undefined && !observationRowFreshV1(row);
+  try {
+    for (const row of entry.rows ?? []) { if (performance.now() > until) return undefined; if (moved(row)) return row; }
+    if (entry.layers) { for (const layer of entry.layers) for (const row of layer) { if (performance.now() > until) return undefined; if (moved(row)) return row; } return undefined; }
+    for (const digest of entry.digests ?? []) for (const batch of entry.store.layerBatchesSync(digest, ROW_LOG_POLICY_V1.batchRows)) for (const row of batch) { if (performance.now() > until) return undefined; if (moved(row)) return row; }
+  } catch {}
+  return undefined;
+}
+
+/** 🏷️ Why one group of closure rows could not be verified, in the words of the verdict: a take that met a stale stored entry (never derived inside a take) says so, any other failure carries its code and first line, and always the recipe key, so `closure-probe` is never the whole story.
+ * @see ./🧪️tests/🧭️moved-row */
+export function closureFailureWhyV1(error, key) {
+  const recipe = String(key).slice(0, 12), moved = error?.movedRow;
+  if (error?.code === "BUILD_TAKE_MISS" && error.absent === true) return "closure-entry-absent (recipe " + recipe + (moved === undefined ? ", never shipped or taken here" : ", refused at the intake, moved " + moved.kind + " " + String(moved.path).slice(-120)) + ")";
+  if (error?.code === "BUILD_TAKE_MISS") return "closure-entry-stale (recipe " + recipe + (moved === undefined ? ", no moved row found" : ", moved " + moved.kind + " " + String(moved.path).slice(-120)) + ")";
+  return "closure-probe " + String(error?.code ?? error?.name ?? "Error") + ": " + String(error?.message ?? error).split("\n")[0].slice(0, 160) + " (recipe " + recipe + ")";
+}
+
+/** 🗂️ The first moved row of the stale entries a take judged, per round and entry id, beside {@link staleTakesV1}: bounded by the entries of one round. */
+const movedTakesV1 = new WeakMap();
+
+/** 📖️ The stored entry of one recipe for a take: loaded and checked like a derivation's first step, never derived; the miss of a stale entry carries the first moved row of the entry (`movedRow`). */
+async function takenClosureEntryV1(workspaceRoot, id, recipe) {
   const scripts = closureScriptsV1.get(workspaceRoot), store = closureStoreOfV1(workspaceRoot);
   if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
-  const miss = () => Object.assign(new Error("A closure entry is not stored here or no longer holds: the owner is inferred by the owner loop, not taken"), { code: "BUILD_TAKE_MISS" });
-  const round = closurePassV1 ?? observationRoundV1(), stamp = round !== null && typeof round === "object" && store ? await store.stamp(id) : undefined, judged = stamp === undefined ? undefined : staleTakesV1.get(round) ?? staleTakesV1.set(round, new Map()).get(round);
-  if (judged?.get(id) === stamp) throw miss();
+  const miss = (movedRow, absent = false) => Object.assign(new Error("A closure entry is not stored here or no longer holds: the owner is inferred by the owner loop, not taken"), { code: "BUILD_TAKE_MISS", movedRow, absent });
+  const round = closurePassV1 ?? observationRoundV1(), stamp = round !== null && typeof round === "object" && store ? await store.stamp(id) : undefined, judged = stamp === undefined ? undefined : staleTakesV1.get(round) ?? staleTakesV1.set(round, new Map()).get(round), moves = stamp === undefined ? undefined : movedTakesV1.get(round) ?? movedTakesV1.set(round, new Map()).get(round);
+  if (stamp !== undefined && judged?.get(id) === stamp) throw miss(moves?.get(id));
   const stored = store ? await store.load(id) : undefined, entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null };
   if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; }
-  if (entry) { closureCountsV1.stale++; judged?.set(id, stamp); }
-  throw miss();
+  if (entry) closureCountsV1.stale++;
+  const reasked = await reaskClosureEntryV1(workspaceRoot, id, recipe, scripts, store, closureTakeV1.getStore());
+  if (reasked) return reasked;
+  let movedRow;
+  if (entry) { judged?.set(id, stamp); movedRow = firstMovedRowOfEntryV1(entry); if (movedRow !== undefined) moves?.set(id, movedRow); }
+  if (!entry) throw miss(importRefusalsV1.get(id) ?? undefined, true);
+  throw miss(movedRow);
+}
+
+/** 🔁️ The re-derivations of closure entries in flight, by entry id: the owners of one closure group that meet the same stale or absent entry wait for one walk. */
+const closureReasksV1 = createBoundedCacheV1({ name: "inference:closure-reasks", maxEntries: 4096, maxBytes: 4096 });
+
+/** 🪦️ The entries whose re-derivation failed, per round: the next look of the round meets the miss at once. */
+const reaskFailedV1 = new WeakMap();
+
+/** 🔁️ Re-asks the closure question of a stale or absent entry in a walk child (never on this thread, never in a read parent that has a farm), keeps the answer as the stored entry and answers it, so that an owner record is judged on the answer its closure rows recorded and not on the bytes of every file of the closure; undefined (the miss stands, as before) when no walk child answers, the walk fails, takes longer than `closureReaskMilliseconds` or `SEMIO_CLOSURE_REASK=off`. One walk serves every owner that asks for the entry while it runs, and the stored entry serves every later one.
+ * @see ./🧪️tests/🔁️answer-validity */
+async function reaskClosureEntryV1(workspaceRoot, id, recipe, scripts, store, { signal, reask } = {}) {
+  if (!reask || !store || recipe === undefined || process.env.SEMIO_CLOSURE_REASK === "off") return undefined;
+  signal?.throwIfAborted();
+  const round = closurePassV1 ?? observationRoundV1(), failed = round !== null && typeof round === "object" ? reaskFailedV1.get(round) ?? reaskFailedV1.set(round, new Set()).get(round) : undefined;
+  if (failed?.has(id)) return undefined;
+  let flight = closureReasksV1.get(id);
+  if (!flight) {
+    const started = performance.now();
+    flight = (async () => {
+      assertNotReadParentV1("derive", recipe?.fn ?? "");
+      const walked = reask === true ? await walkClosureRecipeV1(workspaceRoot, recipe, scripts, { farmOnly: true }) : await reask(workspaceRoot, recipe);
+      if (walked === undefined) return undefined;
+      const entry = await keepDerivedClosureV1(id, recipe, store, walked);
+      entry.reasked = true; closureCountsV1.reasked++;
+      for (const language of ["en", "de"]) { try { process.stderr.write("[owners] " + (language === "de" ? "Closure-Frage neu gestellt: Rezept " + id.split("\0")[1]?.slice(0, 12) + " in " + Math.round(performance.now() - started) + " ms" : "closure question asked again: recipe " + id.split("\0")[1]?.slice(0, 12) + " in " + Math.round(performance.now() - started) + " ms") + "\n"); } catch {} }
+      return entry;
+    })().catch(() => undefined).finally(() => closureReasksV1.delete(id));
+    closureReasksV1.set(id, flight);
+  }
+  const entry = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(undefined), INFERENCE_LIMITS_V1.closureReaskMilliseconds), abort = () => { clearTimeout(timer); reject(signal.reason); };
+    signal?.addEventListener("abort", abort, { once: true });
+    flight.then(found => { clearTimeout(timer); signal?.removeEventListener("abort", abort); resolve(found); });
+  });
+  if (entry === undefined) { closureCountsV1.reaskFailed++; failed?.add(id); }
+  return entry;
 }
 
 /** 🪦️ The entries a take found stale, per round, with the stamp of the stored entry that was judged: the next look of the same round that meets the same stored entry is a miss at once, without loading and verifying it again (a take pass met the same stale shared entries in every owner: 13 084 stale verdicts over 582 looks, each a load of the entry file and a check of its layers). A round is one snapshot of the tree, so the verdict cannot change within it; a stored entry of another stamp is judged anew.
@@ -1677,19 +1753,22 @@ export async function claimDerivationV1(id, store, scripts) {
   }
   return undefined;
 }
+/** 🗄️ Keeps a derived closure entry: its rows shared, the entry saved to the durable store (when there is one) and held in memory, counted as derived. */
+async function keepDerivedClosureV1(id, recipe, store, { value, rows, layers }) { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; }
+
 async function produceClosureEntryV1(workspaceRoot, recipe) {
   const id = workspaceRoot + "\0" + closureRecipeKeyV1(recipe), known = closureEntriesV1.get(id);
   if (known && await closureEntryHoldsAsyncV1(known, closureScriptsV1.get(workspaceRoot))) return known;
   const failed = closureFailuresV1.get(id);
   if (failed) { if (await closureEntryHoldsAsyncV1(failed, closureScriptsV1.get(workspaceRoot))) throw failed.error; closureFailuresV1.delete(id); }
-  if (closureTakeV1.getStore() !== undefined && !closureInflightV1.has(id)) return takenClosureEntryV1(workspaceRoot, id);
+  if (closureTakeV1.getStore() !== undefined && !closureInflightV1.has(id)) return takenClosureEntryV1(workspaceRoot, id, recipe);
   let flight = closureInflightV1.get(id);
   if (!flight) {
     const scripts = closureScriptsV1.get(workspaceRoot);
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
     const signal = scripts.context?.ownerSignal ?? scripts.context?.phaseControl?.signal ?? scripts.context?.invocation?.control?.signal;
     signal?.throwIfAborted();
-    const store = closureStoreOfV1(workspaceRoot), derive = () => { assertNotReadParentV1("derive", recipe?.fn ?? ""); return walkClosureRecipeV1(workspaceRoot, recipe, scripts); }, deriveAndKeep = () => derive().then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; if (saved?.digests) { entry.sidecar = closureSidecarV1(layers); seedLayerDigestsV1(entry); entry.layers = undefined; } } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
+    const store = closureStoreOfV1(workspaceRoot), derive = () => { assertNotReadParentV1("derive", recipe?.fn ?? ""); return walkClosureRecipeV1(workspaceRoot, recipe, scripts); }, deriveAndKeep = () => derive().then(derived => keepDerivedClosureV1(id, recipe, store, derived));
     flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { signal?.throwIfAborted(); const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { signal?.throwIfAborted(); closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++;
       const claim = await claimDerivationV1(id, store, scripts);
       try {
@@ -1873,12 +1952,14 @@ registerClosureProviderV1({
       if (!recipe) { failed?.(undefined, "closure-recipe-unavailable"); return false; }
       try {
         let entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry);
+        const reasked = entry.reasked === true;
         for (const [query, row] of queries) {
           signal?.throwIfAborted();
           const answer = await answeredAgainstFreshProvidersV1(() => closureAnswerV1(workspaceRoot, entry, query, providers), async () => { entry = await ensureClosureEntryV1(workspaceRoot, recipe); providers = await ensureProviderEntriesV1(workspaceRoot, entry); });
-          if (answer === undefined || JSON.stringify(answer) !== row.fact) { failed?.(row, answer === undefined ? "closure-unavailable" : "closure-value"); return false; }
+          if (answer === undefined || JSON.stringify(answer) !== row.fact) { if (reasked) closureCountsV1.reaskDifferent++; failed?.(row, answer === undefined ? "closure-unavailable" : "closure-value"); return false; }
+          if (reasked) closureCountsV1.reaskEqual++;
         }
-      } catch { failed?.(undefined, "closure-probe"); return false; }
+      } catch (error) { signal?.throwIfAborted(); failed?.(error?.movedRow ?? queries[0]?.[1], closureFailureWhyV1(error, key)); return false; }
     }
     return true;
   },

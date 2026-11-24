@@ -1,0 +1,26 @@
+--- a/🚀️offload/📜️action/🟦️.ts
++++ b/🚀️offload/📜️action/🟦️.ts
+@@ -30,11 +30,11 @@
+  return commit&&host?{commit,host,digest:sha(text).slice(0,16)}:undefined;
+ }
+ 
+-/** 🪶️ The arguments of a `cdylib` final the way the build scheduler runs one locally: one front-end thread (`-Z threads=<n>` becomes `threads=1`) and a serial LLVM back end (`-Z no-parallel-backend`; the codegen units and ThinLTO stay), so the peak is the front end plus one module instead of one per core and the worker's memory matches the predicted peak. Output bytes do not depend on it. Every other unit is returned unchanged. */
+-export function offloadSerialArgumentsV1(args:readonly string[]):readonly string[]{
++/** 🪶️ The arguments of a `cdylib` final the way the build scheduler runs one locally: one front-end thread (`-Z threads=<n>` becomes `threads=1`). The LLVM back end is not decided here: the worker that runs the unit grants it code generation threads from its own free cores and memory (the schema's `worker.codegen`) and runs it serially (`-Z no-parallel-backend`) only when it grants one, so a final sent to an idle machine uses its cores. Output bytes do not depend on the thread count. Every other unit is returned unchanged. */
++export function offloadFrontEndArgumentsV1(args:readonly string[]):readonly string[]{
+  if(!offloadCrateTypesOfV1(args).includes("cdylib"))return args;
+  const threads=(argument:string):string=>/^threads=[0-9]{1,3}$/u.test(argument)?"threads=1":argument;
+- return [...args.map((argument,index)=>args[index-1]==="-Z"?threads(argument):argument.startsWith("-Zthreads=")?"-Z"+threads(argument.slice(2)):argument),"-Z","no-parallel-backend"];
++ return args.map((argument,index)=>args[index-1]==="-Z"?threads(argument):argument.startsWith("-Zthreads=")?"-Z"+threads(argument.slice(2)):argument);
+ }
+ 
+ /** 🧬️ The command of one planned unit in argv form, the same on every operating system and run without a shell: the program `@tool:rustc`, the compiler arguments (the working-directory remap and, for a macOS host, the object-prefix flag first; the remaps of the shipped directories and the source of an absolute path last) and the environment, where every path below the worker's private input root is spelled `@root/<relative posix path>` and mapped to native separators by the worker. The platform key decides who may run it, never its encoding: remapped names are written with `/`, and no input carries an executable bit, so the same unit described from a POSIX and from a Windows requester has one digest. */
+@@ -45,7 +45,7 @@
+  const variables:[string,string][]=Object.entries(env).filter(([name])=>!name.startsWith("SEMIO_")&&!absolute.includes(name)).map(([name,value])=>[name,value]);
+  for(const name of absolute)variables.push([name,rooted(env[`SEMIO_REL_${name}`]??"")]);
+  variables.push(["HOME",rooted(policy.root.home)],[policy.root.report,policy.virtual.root]);
+- const argumentsList=[`${policy.tool.placeholder}:${policy.tool.name}`,`--remap-path-prefix=${mark}=${spelled(env.SEMIO_CWD_NAME??"")}`,...host.includes("apple-darwin")&&(plan.target===undefined||plan.target.includes("-apple-"))?[`-Clink-arg=-Wl,-oso_prefix,${rooted(policy.virtual.out)}/`]:[],...offloadSerialArgumentsV1(plan.arguments),...remaps.map(entry=>{const equals=entry.indexOf("=");return `--remap-path-prefix=${rooted(entry.slice(0,equals))}=${spelled(entry.slice(equals+1))}`;}),...source===undefined?[]:[rooted(source)]];
++ const argumentsList=[`${policy.tool.placeholder}:${policy.tool.name}`,`--remap-path-prefix=${mark}=${spelled(env.SEMIO_CWD_NAME??"")}`,...host.includes("apple-darwin")&&(plan.target===undefined||plan.target.includes("-apple-"))?[`-Clink-arg=-Wl,-oso_prefix,${rooted(policy.virtual.out)}/`]:[],...offloadFrontEndArgumentsV1(plan.arguments),...remaps.map(entry=>{const equals=entry.indexOf("=");return `--remap-path-prefix=${rooted(entry.slice(0,equals))}=${spelled(entry.slice(equals+1))}`;}),...source===undefined?[]:[rooted(source)]];
+  return Object.freeze({arguments:Object.freeze(argumentsList),environment:Object.freeze(variables.sort(([left],[right])=>left<right?-1:left>right?1:0))});
+ }
+ 

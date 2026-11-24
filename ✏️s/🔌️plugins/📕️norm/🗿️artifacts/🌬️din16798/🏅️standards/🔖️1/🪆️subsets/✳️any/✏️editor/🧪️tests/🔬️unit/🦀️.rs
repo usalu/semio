@@ -127,8 +127,8 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        let printed = protocol::OpText::print_op(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }
 }
@@ -140,7 +140,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// of the three payload shapes involves the per-standard `Din16798Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
-    let hex = |command: &Din16798Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let hex = |command: &Din16798Command| semio_os_kernel::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
     assert_eq!(hex(&Din16798Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }
@@ -302,7 +302,7 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
 fn visible_examples_have_distinct_bilingual_labels_and_documents() {
     use semio_plugin::ArtifactEditor;
     use semio_ui_locale::{Locale, Terminology};
-    let examples = Din16798PlayApp::examples();
+    let examples = <Din16798PlayApp as semio_plugin::ArtifactEditor>::examples();
     let expected = include_str!("🧫️fixtures/examples.tsv").lines().map(|line| line.split('\t').collect::<Vec<_>>()).collect::<Vec<_>>();
     assert_eq!(examples.len(), expected.len());
     let mut bodies = std::collections::BTreeSet::new();

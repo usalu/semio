@@ -84,3 +84,14 @@ async fn shared_picker_switches_load_distinct_snapshots_without_history_edits() 
         }
     }
 }
+
+/// ⚖️ LAW: the canonical empty example id `""` replaces the open example with the empty document, as a load and not an edit.
+#[semio_framework_async_macros::async_test]
+async fn the_empty_id_loads_the_empty_document() {
+    let mut app = app_with_registry().await;
+    let dispatched = dispatch(&mut app, RemodelingCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::ID.into() })).await;
+    assert!(!dispatched.edited_document());
+    let dispatched = dispatch(&mut app, RemodelingCommand::SetActiveExample(SetActiveExample { example_id: String::new() })).await;
+    assert!(!dispatched.edited_document(), "an example switch is a load, never an edit: {:?}", dispatched.lanes);
+    assert_eq!(app.snapshot().expect("snapshot after"), semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot::default());
+}

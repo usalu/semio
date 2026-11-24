@@ -3,7 +3,7 @@
 #[macro_export]
 macro_rules! native_encode_producer_work{()=>{
 struct PerformedClaim<'a,'b,'c>{work:&'a mut crate::OriginalWorkTurn<'b,'c>,settlement:&'a NativeEncodeEffectSettlement,receipt:&'a mut Option<semio_framework_value_control_contract::OriginalWorkPerformedReceipt>,claim:&'a mut Option<Result<u128,ValueError>>}
-impl Drop for PerformedClaim<'_,'_,'_>{fn drop(&mut self){assert!(self.claim.is_none(),"original work claim slot occupied");*self.claim=Some(self.settlement.claim_performed(self.work,self.receipt).and_then(|()|self.settlement.performed_total(self.work)))}}
+impl Drop for PerformedClaim<'_,'_,'_>{fn drop(&mut self){assert!(std::thread::panicking()||(self.claim.is_none()),"original work claim slot occupied");*self.claim=Some(self.settlement.claim_performed(self.work,self.receipt).and_then(|()|self.settlement.performed_total(self.work)))}}
 impl NativeEncodeEffectProgress<'_>{
  fn reconcile_work_claim(&mut self)->Result<(),ValueError>{if self.work_claim.as_ref().is_some_and(Result::is_err)&&self.claim_refusal.is_some(){return Err(refusal("original work claim refusal occupied"))}if self.work_claim.as_ref().is_some_and(|claim|claim.as_ref().is_ok_and(|actual|*actual<*self.actual_work)){return Err(refusal("original performed work moved backwards"))}if let Some(claim)=self.work_claim.take(){match claim{Ok(actual)=>*self.actual_work=actual,Err(error)=>*self.claim_refusal=Some(error)}}Ok(())}
  /// 🧮️ Transfers this action's newly performed work exactly once.

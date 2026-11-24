@@ -68,7 +68,17 @@
         },
         "group": "value",
         "order": 30,
-        "widget": "select"
+        "widget": "select",
+        "options": {
+          "simplified": {
+            "en": "Simplified (cracked-stiffness factor of the registry, EN 1998-1 4.3.1(6))",
+            "de": "Vereinfacht (Faktor der gerissenen Steifigkeit aus dem Register, EN 1998-1 4.3.1(6))"
+          },
+          "declared": {
+            "en": "Declared (effective share from a more accurate analysis)",
+            "de": "Angegeben (wirksamer Anteil aus genauerer Berechnung)"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1998_model::StiffnessBasis"

@@ -180,4 +180,4 @@ impl OriginalScratchWork<FlowHostSnapshot> for ProvisionalTransformWork{
  fn advance(&mut self,source:&mut FlowHostSnapshot,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{ProvisionalTransformWork::advance(self,source,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.progress}
 }
-impl Drop for ProvisionalTransformWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"provisional transform retains original targets, native reads or paid parameter owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ProvisionalTransformWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"provisional transform retains original targets, native reads or paid parameter owners");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

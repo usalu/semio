@@ -88,7 +88,7 @@ fn restore_boot_descriptor(descriptor: semio_renderer_wgpu_host_base::WgpuBootDe
 fn the_shell_reads_its_platform_from_the_host_platform_door() {
     let source = semio_renderer_wgpu_test_support::shell_source().to_string();
     let body = rust_fn_body(&source, "fn command_host_platform() -> semio_framework::manifest::Platform {");
-    assert!(body.contains("crate::host_platform()"), "`command_host_platform` answers the door: {body}");
+    assert!(body.contains("semio_renderer_wgpu_host_base::host_platform()"), "`command_host_platform` answers the door: {body}");
     assert!(!body.contains("web_sys::window()"), "and never re-derives the platform from a `window` the frame Worker realm does not own: {body}");
 
     let restore = semio_renderer_wgpu_host_base::boot_descriptor();

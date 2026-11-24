@@ -3,10 +3,16 @@
   "emoji": "📄",
   "status": "closed",
   "description": "Create a complete bilingual heating and cooling assignment from supplied slide content using the assignment print class and return the German PDF.",
-  "summary": "Created and delivered a four-page German Heating + Cooling assignment PDF, with bilingual course sources, build declarations and independent numerical fixtures. Both actual assignment-class PDFs compile and pass visual review; 156 course/integration tests pass. Standard target planning was stopped by host memory, so native target publication remains unverified; registered direct compiler succeeded. See completion.md. Temporary generated outputs removed.",
+  "summary": "Navbar and footer bands are now closed rectangles in semio-window.sty: the navbar gained its top rule, the footer its bottom rule, and both their left and right edges, shared with the chips, which keep drawing only their dividers. Page chrome test updated (band closure, divider-only chips); all four page chrome checks and the assignment content test pass; both assignment languages compile to five pages with local MiKTeX. Other Print documents were not recompiled; managed repo build not verified. See rework-2026-11-24.md.",
   "goal": "energy",
   "sessions": [
-    "5f266037-6590-444e-955c-32ebf0f44257"
+    "5f266037-6590-444e-955c-32ebf0f44257",
+    "a65f523d-5e7f-436c-9ba1-12febdeba8fd",
+    "55fc10bd-b34b-45e1-b450-ad7ab1aaf455",
+    "5d094497-9e28-4a89-b95a-f00e8b7f3420",
+    "6ea4e259-cfbc-4f0a-b377-b6306839e09a",
+    "2bfeb141-f3aa-4022-bb60-cc679148b23d",
+    "ff002967-f8e2-4cb1-b321-a978e2402389"
   ],
   "interactions": [
     {
@@ -89,6 +95,270 @@
         },
         {
           "path": "output/pdf/Fingeruebung-Heizen-Kuehlen.pdf"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 18:56:50",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Adapt the heating and cooling assignment: no concrete energy values given (part of the exercise), only the geometry and the output CSV (energiebilanz.csv layout) must be exact; recommend doing it directly in Grasshopper; use the provided screenshot as cover image.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 19:26:48",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Reworked the Heating + Cooling finger exercise: cover page with the supplied screenshot, exact geometry (plan, elevations, coordinate tables read from entwurf.gh), exact 60-row energiebilanz.csv contract, Grasshopper recommended, and no prescribed energy values. Added cover-image-fit to the assignment style and fixed a double image draw in semio-window.sty. Content test passes; both languages compile to five pages with local MiKTeX against the real class. The managed repo build and the Print/course test targets were not completed because the project graph read did not finish. See rework-2026-11-23.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️📝️assignment💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests⚙️🧬️casesschema"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🏗️builder🗃️📖️assignments💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests⚙️🧫️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semioassignment"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semiowindow"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾decontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾encontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾model"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💾🥒️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 02:52:29",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Replace the geometry with the tiny home shown on the Fingerübung slides of the lecture A+T_02_Heizen+Kuehlen.pdf, draw it as an axonometry, and address students with Du instead of Sie in the German text.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 03:05:08",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Replaced the geometry with the tiny home of the lecture's Fingerübung slides (3.0 x 9.0 x 2.6 m box, south window, east sliding door, canopy; dimensions set by the assignment because the lecture gives none), drawn as one isometric axonometry with a coordinate table. German text now uses Du, enforced by the content test. Content test passes; both languages compile to five pages with local MiKTeX. Managed repo build and Print/course test targets not verified. Cover image still shows the earlier Rhino model. See rework-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💾🥒️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests⚙️🧫️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests⚙️🧬️casesschema"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾decontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾encontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾model"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 03:12:33",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Use the axonometry of the tiny home as the cover image instead of the screenshot of the earlier Rhino model.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 03:13:03",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "The cover now shows the axonometry of the lecture tiny home. Added a cover-content key to semio-assignment.sty for typeset cover content; both languages pass the axonometry through it. The earlier screenshot was moved from the assignment folder into the ticket folder and removed from the builder sources. Content test passes; both languages compile to five pages with local MiKTeX. Managed repo build and Print/course test targets not verified. See rework-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semioassignment"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾encontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️📝️assignment💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾cover"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾decontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🏗️builder🗃️📖️assignments💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 05:06:46",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "State the Stud.IP submission details in the assignment: upload folder and file name, template location, reference solution and its Grasshopper definition, deadline Friday 10:00.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 05:13:53",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Section 4 now states the Stud.IP submission details: upload folder, file name Fingerübung_Heizen+Kühlen_NAME.csv, deadline Friday 10:00, template and reference solution with its Grasshopper definition, linked to the Stud.IP files folder. The template in the assignment folder was renamed to Fingerübung_Heizen+Kühlen.csv. Content test passes; both languages compile to five pages with local MiKTeX. Managed repo build not verified. The cover illustration with staffage runs in a separate session. See rework-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💾🥒️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests⚙️🧫️cases"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾decontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾encontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾model"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾energiebilanz"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 05:44:56",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Align the assignment with the design system: use the framed Figure, Table and Listing components and design tokens instead of raw LaTeX tabulars, quote blocks and ad hoc greys.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 05:45:46",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Aligned the assignment content with the design system: the axonometry is a Figure, the coordinate table a Table with SemioTable, the CSV example and the 60-row listing are Listing windows, the drawing uses design tokens, and forced page breaks are gone. Compiled against the current consolidated-border styles; content test passes, both languages compile to five pages with local MiKTeX. Framework-side leftovers (hyphen touching the frame in lists, very small table text) are noted, not changed. Managed repo build not verified. See rework-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾model"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment🗃️🧪️tests💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾decontent"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️⚡️energy🗃️📝️assignment💾encontent"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 05:52:42",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Navbar and footer bands miss their outer borders: draw each band as a closed rectangle whose chips share its borders.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 05:59:15",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Navbar and footer bands are now closed rectangles in semio-window.sty: the navbar gained its top rule, the footer its bottom rule, and both their left and right edges, shared with the chips, which keep drawing only their dividers. Page chrome test updated (band closure, divider-only chips); all four page chrome checks and the assignment content test pass; both assignment languages compile to five pages with local MiKTeX. Other Print documents were not recompiled; managed repo build not verified. See rework-2026-11-24.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🏷️pagechrome💾🥒️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semiowindow"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🧪️tests🗃️🏷️pagechrome💻🟦️"
         }
       ]
     }

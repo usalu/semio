@@ -71,11 +71,11 @@ const imageRow=(image:string):{device:string;mounts:string[]}|undefined=>{
 const attachImage=(image:string,mount:string):void=>{expect(imageTool("/usr/sbin/diskutil",["image","attach","--nobrowse","--mountOptions","owners","--mountPoint",mount,image]).exitCode).toBe(0);};
 const releaseImage=(image:string):void=>{const row=imageRow(image);if(row)imageTool("/usr/bin/hdiutil",["detach","-force",row.device]);};
 
-test("storage-images: the plan names the partitions to repair, the leases image first, a damaged image never and a detached image only while the loader is blocked",()=>{
+test("storage-images: the plan names the partitions to repair, the leases image first, a damaged image never and every detached image whether or not the loader is blocked",()=>{
  const part=(id:string,state:"mounted"|"detached"|"misplaced"|"directory"|"absent",image:"ok"|"damaged"|"none"="ok")=>({id,state,capacityBytes:null,freeBytes:null,imageBytes:null,backing:"present" as const,publication:"none" as const,publicationAgeSeconds:null,image});
  const partitions=[part("graph","detached"),part("dependencies","misplaced"),part("tools","misplaced","damaged"),part("leases","detached"),part("nx","mounted")];
  expect(imageRepairPlanV1({loaderBlocked:true,partitions})).toEqual([{id:"leases",steps:["attach"]},{id:"graph",steps:["attach"]},{id:"dependencies",steps:["detach","attach"]}]);
- expect(imageRepairPlanV1({loaderBlocked:false,partitions})).toEqual([{id:"dependencies",steps:["detach","attach"]}]);
+ expect(imageRepairPlanV1({loaderBlocked:false,partitions})).toEqual([{id:"leases",steps:["attach"]},{id:"graph",steps:["attach"]},{id:"dependencies",steps:["detach","attach"]}]);
  expect(imageRepairPlanV1(undefined)).toEqual([]);
 });
 
@@ -97,7 +97,7 @@ test("storage-images: other platforms have no attachable images and say so",asyn
  expect(repair.area).toBe("storage");
 });
 
-test.skipIf(process.platform!=="darwin")("storage-images: a stray image moves back to its mount point, a detached one behind a dangling node_modules attaches, a held lease keeps both untouched and a settled state changes nothing",async()=>{
+test.skipIf(process.platform!=="darwin")("storage-images: a stray image moves back to its mount point, a detached one attaches, a held lease keeps both untouched and a settled state changes nothing",async()=>{
  const root=fresh(),directory=partitionDirectory(root,"dependencies");
  mkdirSync(join(directory,"m"),{recursive:true});
  const real=realpathSync(directory),image=join(real,"fixed.dmg"),mount=join(real,"m");
@@ -126,7 +126,8 @@ test.skipIf(process.platform!=="darwin")("storage-images: a stray image moves ba
   expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
   imageTool("/usr/bin/hdiutil",["detach",imageRow(image)!.device]);
   expect(await state()).toMatchObject({state:"detached"});
-  expect(await repair.run(port,context(),false)).toMatchObject({removed:0,status:"nothing"});
+  expect(await repair.run(port,context(),true)).toMatchObject({removed:1});
+  expect(imageRow(image)).toBeUndefined();
   symlinkSync(join(root,"gone"),join(root,"node_modules"),"junction");
   const dry=await runDoctorV1(port,{only:new Set(["storage"]),fix:true,dryRun:true,probes:[storageProbeV1]});
   expect(dry.report.findings.map(row=>row.id)).toContain("storage.image-detached-blocking");
@@ -163,12 +164,12 @@ test("storage: an image attached at a private scratch mount is an error with the
  expect(canonical.partitions.find(row=>row.id==="dependencies")).not.toHaveProperty("device");
  expect(canonical.loaderBlocked).toBe(false);
  const info=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:canonical}).findings.find(row=>row.subject==="dependencies")!;
- expect(`${info.id}:${info.severity}`).toBe("storage.image-detached:info");
+ expect(`${info.id}:${info.severity}`).toBe("storage.image-detached:error");
  symlinkSync(join(root,"gone"),join(root,"node_modules"),"junction");
  const blocked=await facts(withRoster("<plist version=\"1.0\"><dict><key>images</key><array/></dict></plist>"));
  expect(blocked.loaderBlocked).toBe(true);
  const warn=analyzeDoctorV1({version:1,atMs:Date.now(),platform:"darwin",probes:[],storage:blocked}).findings.find(row=>row.subject==="dependencies")!;
- expect(`${warn.id}:${warn.severity}`).toBe("storage.image-detached-blocking:warn");
+ expect(`${warn.id}:${warn.severity}`).toBe("storage.image-detached-blocking:error");
  for(const text of[warn.detail.en,warn.detail.de,warn.fix.note.en,warn.fix.note.de,warn.title.en])expect(text).not.toMatch(/any repo command attaches|jeder repo-Befehl hängt/u);
  expect(warn.fix).toMatchObject(fixed);expect(warn.fix.note.en).toContain(`${relative}/m`);expect(warn.fix.note.de).toContain(`${relative}/m`);
  const linux=await facts(ports(root,{platform:"linux",command:async()=>{throw Error("no hdiutil off macOS");}}));

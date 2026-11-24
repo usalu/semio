@@ -390,6 +390,8 @@ test("a build script run that lost the object of a stream it replays is a miss a
  rmSync(casObjectPathV1(join(root,"cas"),entry!.stdout!),{force:true});
  expect(lookupBuildRunV1(root,key,context),"an empty replay would drop every cargo: directive").toBeUndefined();
  expect(pruneEntriesV1(root,Date.now()).entries).toBe(1);expect(existsSync(join(root,"r",key.slice(0,2),key))).toBe(false);
+ const record=readFileSync(join(root,"y","evictions.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line) as Record<string,unknown>).find(row=>row.entries===1);
+ expect(record,"a lost-object prune is attributable").toMatchObject({reason:"lost",role:"prune",pid:process.pid});
 });
 
 const schedulerManifest=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"),brokerModule=resolve(here,"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts");

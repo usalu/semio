@@ -61,6 +61,9 @@ def judge(scenario):
     for key, row in entries.items():
         if not row["declared"]:
             result[key] = "undeclared"
+        elif row.get("kind") == "graph":
+            result[key] = "live"
+            roots.add(key)
         elif key in stale and not young(row):
             result[key] = "stale:" + stale[key]
         elif row["sources"] or row.get("kind") == "stage-output":
@@ -76,7 +79,7 @@ def judge(scenario):
             found |= named.get(unit, set())
         for name in found:
             other = entries[name]
-            if name in result or name in reached or not other["declared"] or other["sources"] or other.get("kind") == "stage-output":
+            if name in result or name in reached or not other["declared"] or other["sources"] or other.get("kind") in ("stage-output", "graph"):
                 continue
             reached.add(name)
             frontier.append(name)

@@ -28,7 +28,7 @@ semio-s-artifact-norm-en1998-model = { workspace = true }
 serde = { workspace = true, optional = true }
 
 [features]
-test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support"]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-members-joints-rest/test-support"]
 
 [dev-dependencies]
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

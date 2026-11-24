@@ -50,7 +50,7 @@ impl FlowEvaluationSeeds{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.is_none()&&self.retirement.is_none()}
 }
-impl Drop for FlowEvaluationSeeds{fn drop(&mut self){assert!(self.terminal_is_empty(),"original builtin seed must finish explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
+impl Drop for FlowEvaluationSeeds{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original builtin seed must finish explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 /// 🧹️ Owns a closing builtin seed projection as its retirement cursor.
 pub struct SeedRetirement(FlowEvaluationSeeds);
 impl RetirementCursor for SeedRetirement{

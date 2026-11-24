@@ -10,6 +10,7 @@
     "id": "demo",
     "label": "Demo"
   },
+  "exampleLayer": "emblem-orange",
   "blankExample": {
     "id": "blank",
     "labels": {

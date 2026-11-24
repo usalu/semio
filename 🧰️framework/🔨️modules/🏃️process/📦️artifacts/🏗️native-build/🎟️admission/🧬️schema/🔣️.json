@@ -31,7 +31,159 @@
           "node_modules",
           "dist",
           ".git"
-        ]
+        ],
+        "available": {
+          "description": "Admission against the measured available memory of the host, on top of the resident-set budget: a unit starts only when its predicted peak fits the available bytes less the margin (a share of total memory) and less what running units have yet to realize; the host warden's guard and danger levels hold every start; a machine that never has the room starts one unit after the wait (twice the wait for a unit the warden cancelled, whose prediction is raised to the cancelled megabytes times the factor).",
+          "marginBasisPoints": 1500,
+          "waitMilliseconds": 180000,
+          "pollMilliseconds": 1000,
+          "cancelledFactorBasisPoints": 12500,
+          "cancelledMemoryMilliseconds": 3600000
+        },
+        "unitCeiling": {
+          "description": "The most one compile unit may hold at its peak so that it fits a 16 GB worker that also runs its own stage. `carving` is the closed list of units known to exceed it, each with its measured peak and the reduction it waits for; the list may only shrink.",
+          "megabytes": 4096,
+          "hostMegabytes": 16384,
+          "carving": [
+            {
+              "crate": "semio_hub_cad_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 6550,
+              "action": "thin-lto-closure"
+            },
+            {
+              "crate": "semio_hub_puzzle_component",
+              "target": "wasm32-wasip2",
+              "measuredMegabytes": 6148,
+              "action": "thin-lto-closure"
+            },
+            {
+              "crate": "semio_s_artifact_stdio_dwg_snapshot_objects",
+              "target": "wasm32-unknown-unknown",
+              "measuredMegabytes": 4894,
+              "action": "split-families"
+            }
+          ]
+        }
+      }
+    },
+    "UnitCeilingVerdictV1": {
+      "description": "The unit ceiling applied to recorded observations: every unit above the ceiling (listed on the carving list or not), every carving entry that no longer exceeds it, and whether the ledger is within the law.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "ceilingMegabytes",
+        "exceeded",
+        "resolved",
+        "ok"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "ceilingMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "exceeded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "crate",
+              "target",
+              "peakMegabytes",
+              "listed"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "crate": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "peakMegabytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "listed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "resolved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "crate",
+              "target",
+              "peakMegabytes"
+            ],
+            "properties": {
+              "crate": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "peakMegabytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "held": {
+            "available": "unit {unit} is held back: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s",
+            "warden": "unit {unit} is held back: the host warden is at level {level} ({available} MB available, it needs about {predicted} MB); waited {seconds} s",
+            "cancelled": "unit {unit} was cancelled by the host warden before and is held back until it fits: it needs about {predicted} MB, the host has {available} MB available with a margin of {margin} MB (warden level {level}); waited {seconds} s"
+          },
+          "unitCeiling": {
+            "exceeded": "unit {key} peaked at {peak} MB, above the unit ceiling of {ceiling} MB (16 GB class); it is not on the carving list: reduce it or declare it",
+            "resolved": "carving entry {crate} now peaks at {peak} MB, at or below the ceiling of {ceiling} MB: remove it from the carving list"
+          }
+        },
+        "de": {
+          "held": {
+            "available": "Einheit {unit} wird zurückgehalten: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet",
+            "warden": "Einheit {unit} wird zurückgehalten: der Host-Warden steht auf Stufe {level} ({available} MB verfügbar, sie braucht etwa {predicted} MB); {seconds} s gewartet",
+            "cancelled": "Einheit {unit} wurde zuvor vom Host-Warden abgebrochen und wird zurückgehalten, bis sie passt: sie braucht etwa {predicted} MB, der Host hat {available} MB verfügbar bei einem Abstand von {margin} MB (Warden-Stufe {level}); {seconds} s gewartet"
+          },
+          "unitCeiling": {
+            "exceeded": "Einheit {key} erreichte {peak} MB und liegt über der Einheiten-Obergrenze von {ceiling} MB (16-GB-Klasse); sie steht nicht auf der Carving-Liste: verkleinern oder eintragen",
+            "resolved": "Carving-Eintrag {crate} erreicht jetzt {peak} MB, höchstens die Obergrenze von {ceiling} MB: aus der Carving-Liste entfernen"
+          }
+        }
       }
     },
     "Path": {

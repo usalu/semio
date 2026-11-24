@@ -1,5 +1,6 @@
 pub(crate) mod context {
     use crate::*;
+    use semio_s_artifact_norm_en1995_editor::modes::edit::windows::checks;
     use semio_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -57,7 +58,7 @@ pub(crate) mod context {
                 focused_window_id: Some(checks::WINDOW_CHECKS.into()),
                 window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
-            });
+            }.into());
         }
         let result = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
@@ -71,6 +72,19 @@ pub(crate) mod context {
 
 use crate::*;
 use semio_plugin::PluginApp;
+use semio_s_plugin_norm_compliance::NormHost;
+use semio_s_artifact_norm_en1995_editor::commands::selected_check;
+use semio_s_artifact_norm_en1995_editor::commands::set_field;
+use semio_s_artifact_norm_en1995_editor::modes::edit::windows::checks;
+use semio_s_artifact_norm_en1995_editor::modes::edit::windows::diagrams;
+use semio_s_artifact_norm_en1995_editor::modes::edit::windows::outliner;
+use semio_s_artifact_norm_en1995_editor::modes::edit::windows::properties;
+use semio_s_artifact_norm_en1995_editor::modes::edit::windows::viewport;
+use semio_s_artifact_norm_en1995_editor::panels::catalogue as catalogue_panel;
+use semio_s_artifact_norm_en1995_editor::panels::document as document_panel;
+use semio_s_artifact_norm_en1995_editor::panels::inspection as inspection_panel;
+use semio_s_artifact_norm_en1995_model::En1995Snapshot;
+use semio_plugin::InteractiveJobClassification;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
@@ -114,8 +128,8 @@ async fn command_ids_cover_every_row_and_are_unique() {
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
     let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&command);
-        let printed = protocol::OpText::print_op(&command);
+        semio_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
+        let printed = semio_os_kernel::OpText::print_op(&command);
         assert!(printed.starts_with(keyword), "row {} printed {printed:?}, expected keyword {keyword}", command.command_id());
     }
 }
@@ -127,7 +141,7 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 /// of the three payload shapes involves the per-standard `En1995Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pinned_wire_bytes() {
-    let hex = |command: &En1995Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let hex = |command: &En1995Command| semio_os_kernel::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     assert_eq!(hex(&En1995Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01000001000402");
     assert_eq!(hex(&En1995Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01000000");
 }

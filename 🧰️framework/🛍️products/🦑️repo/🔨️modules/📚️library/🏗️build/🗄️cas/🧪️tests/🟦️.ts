@@ -12,7 +12,7 @@ import traces from "./📋️traces/🔣️.json" with {type:"json"};
 import enforcement from "./📋️enforcement/🔣️.json" with {type:"json"};
 import {collectCasV1,createCasPlannerV1,formatCasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {casEnforceTickV1,createCasGuardV1,resetCasGuardsV1} from "../🚦️guard/🟦️.ts";
-import {casEffectiveCapBytesV1,casPartitionNeedBytesV1,decideCasEnforcementV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
+import {casEffectiveCapBytesV1,casPartitionNeedBytesV1,declareCasRoleV1,decideCasEnforcementV1,measureCasPartitionV1,readCasRoleV1,type CasPartitionV1} from "../🌡️partition/🟦️.ts";
 import {casUsageHintPathV1,readCasUsageHintV1,type CasCollectionV1} from "../🧹️collector/🟦️.ts";
 import {putCasObjectSyncV1} from "../🗃️store/🔁️sync/🟦️.ts";
 import {casLedgerShardV1,foldCasShardV1,openCasShardViewV1} from "../📒️ledger/🟦️.ts";
@@ -24,7 +24,7 @@ import {httpRemoteExecutionContentV1} from "../../🌐️remote-execution/🗄�
 import {casPinClosuresV1} from "../📂️areas/🟦️.ts";
 import {releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {casUsageV1} from "../🗃️store/📏️usage/🟦️.ts";
-import {CAS_MESSAGES_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
+import {CAS_MESSAGES_V1,CAS_POLICY_V1,casTextV1,requireCasPolicyV1,type CasPolicyV1,type CasRoleV1} from "../🧬️schema/🟦️.ts";
 
 const directories:string[]=[];
 const scratch=(name:string):string=>{const path=mkdtempSync(join(tmpdir(),`cas-${name}-`));directories.push(path);return path;};
@@ -69,7 +69,7 @@ test("seeded random traces: the streaming planner equals the Python least-recent
 
 test("the policy is authored in both languages and rejects unordered watermarks",()=>{
  for(const key of Object.keys(CAS_MESSAGES_V1) as (keyof typeof CAS_MESSAGES_V1)[]){expect(casTextV1(key,"en").length,key).toBeGreaterThan(0);expect(casTextV1(key,"de").length,key).toBeGreaterThan(0);}
- expect(CAS_POLICY_V1.capBytes).toBe(32*1024**3);expect(CAS_POLICY_V1.areas.map(area=>area.id)).toEqual(["graph-memo"]);
+ expect(CAS_POLICY_V1.capBytes).toBe(96*1024**3);expect(CAS_POLICY_V1.areas.map(area=>area.id)).toEqual(["graph-memo"]);
  expect(()=>requireCasPolicyV1({...CAS_POLICY_V1,lowWatermark:0.95})).toThrow();
  expect(casRootV1({},"linux","/h")).toBe("/h/.cache/semio/cas");expect(casRootV1({LOCALAPPDATA:"C:\\L"},"win32","C:\\u")).toContain("semio");expect(casRootV1({SEMIO_CAS_ROOT:"/x"},"linux","/h")).toBe("/x");
 });
@@ -142,6 +142,18 @@ test("an object read between the plan and the removal survives, and a concurrent
   if(path===store.objectPath(hashes[1]!)){clock.value+=10;racing=store.get(hashes[1]!);await racing;}
  }});
  expect(second).toBe("locked");expect(result.skipped).toBeGreaterThanOrEqual(1);expect((await store.has([hashes[1]!]))[0]).toBe(true);
+});
+
+test("a manual collection waits for the running one and then collects, and the holder's heartbeat proves its progress",async()=>{
+ const root=scratch("join"),clock={value:2_000_000_000},{store,put}=fill(root,0,MIB,clock);
+ for(let index=0;index<24;index++)await put(index);
+ const lock=join(root,"v1","gc.lock"),beats:number[]=[];let waiting:Promise<CasCollectionV1>|undefined;
+ const first=await collectCasV1({root,policy:{...small,checkEvery:1,progressMs:0},now:()=>clock.value,beforeEvict:async()=>{
+  clock.value+=1000;await new Promise(done=>setTimeout(done,20));beats.push(JSON.parse(readFileSync(lock,"utf8")).atMs);
+  waiting??=collectCasV1({root,policy:small,now:()=>clock.value,waitMs:10_000});await new Promise(done=>setTimeout(done,150));
+ }});
+ expect(first.status).toBe("collected");expect(new Set(beats).size).toBeGreaterThan(1);expect(beats).toEqual([...beats].sort((left,right)=>left-right));
+ const joined=await waiting!;expect(joined.status).not.toBe("locked");expect(existsSync(lock)).toBe(false);
 });
 
 test("cancellation stops promptly with a consistent store and the next run completes the work",async()=>{
@@ -396,13 +408,13 @@ test("a collection frees the least recently accessed objects down to the low sha
  const quiet=await collectCasV1({root,policy,now:()=>clock.value,dryRun:true});expect(quiet.evicted).toBe(0);
  const result=await collectCasV1({root,policy,partition,now:()=>clock.value});
  expect(result.evicted).toBe(15);expect(result.freedBytes).toBe(15*MIB);expect(result.byReason.host).toBe(15);
- expect(result.partition).toEqual({partition:"/volume",usedFraction:0.95,needBytes:15*MIB});
+ expect(result.partition).toEqual({partition:"/volume",totalBytes:100*MIB,usedFraction:0.95,needBytes:15*MIB});
  const left=await store.has(hashes);expect(left.slice(0,15).some(Boolean)).toBe(false);expect(left.slice(15).every(Boolean)).toBe(true);
  expect(formatCasCollectionV1(result,policy,"en")).toContain("Partition /volume was 95% used (high watermark 90%, low watermark 80%)");
  expect(formatCasCollectionV1(result,policy,"de")).toContain("Partition /volume war zu 95 % belegt (obere Marke 90 %, untere Marke 80 %)");
  const idle=await collectCasV1({root,policy,partition:{...partition,freeBytes:30*MIB},now:()=>clock.value});expect(idle.status).toBe("idle");
  const stuck=await collectCasV1({root,policy:{...policy,minAgeMs:3_600_000_000},partition,now:()=>clock.value});
- expect(stuck.evicted).toBe(0);expect(formatCasCollectionV1(stuck,policy,"en")).toContain("15 MiB short of its low-water target");
+ expect(stuck.evicted).toBe(0);expect(formatCasCollectionV1(stuck,policy,"en")).toContain("pressure is not the store's");expect(stuck.totals.partitionShortfallBytes).toBe(15*MIB);expect(stuck.totals.capShortfallBytes).toBe(0);
 });
 
 test("a collection on a full disk deletes without creating its lock, and the lock-less run is reported",async()=>{
@@ -426,7 +438,7 @@ test("a finished collection leaves a usage hint of what the store and its areas 
 });
 
 const hinted=(root:string,bytes:number):string=>{mkdirSync(join(root,"v1"),{recursive:true});writeFileSync(casUsageHintPathV1(root),JSON.stringify({version:1,bytes,atMs:1}));return root;};
-const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
+const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,capShortfallBytes:0,partitionShortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
 const critical:CasPartitionV1={partition:"/volume",totalBytes:1000*MIB,freeBytes:10*MIB};
 const refusal=async(promise:Promise<unknown>):Promise<any>=>promise.then(()=>{throw Error("expected a refusal");},error=>error);
 
@@ -685,26 +697,27 @@ test("direct CAS relief is applied at the current pressure after an unrelated au
  }
 });
 
-test("the cap in force is a host share bounded by the free disk above the host floor and shrinks as the disk fills; agrees with an independent Python model",()=>{
- const GiB=2**30,rows:[number,number,number|null][]=[];
- for(const total of[60*GiB,238*GiB,926*GiB,4096*GiB])for(const free of[GiB,10*GiB,16*GiB,33*GiB,62*GiB,400*GiB])for(const store of[null,0,13.9*GiB,36.3*GiB,41.6*GiB])if(free<=total)rows.push([total,free,store===null?null:Math.floor(store)]);
- const model=`import json,sys
-policy,floor,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2]),json.loads(sys.argv[3])
-out=[]
-for total,free,store in rows:
-    fl=min(floor["hostFreeFloorBytes"],max(floor["alignBytes"],(total*floor["hostFreeFloorPercent"]//100//floor["alignBytes"])*floor["alignBytes"]))
-    share=total*policy["capHostSharePercent"]//100
-    room=float("inf") if store is None else store+max(0,free-fl)
-    wanted=max(policy["minimumCapBytes"],min(share,room))
-    aligned=max(policy["minimumCapBytes"],int(wanted//floor["alignBytes"])*floor["alignBytes"])
-    out.append(min(policy["capBytes"],aligned))
-print(json.dumps(out))`;
- const floor={hostFreeFloorBytes:16106127360,hostFreeFloorPercent:6,alignBytes:268435456},run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(CAS_POLICY_V1),JSON.stringify(floor),JSON.stringify(rows)]);
- expect(run.exitCode,run.stderr.toString()).toBe(0);
- const independent=JSON.parse(run.stdout.toString()) as number[];
- rows.forEach(([total,freeBytes,store],index)=>expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:total,freeBytes},store??undefined),JSON.stringify([total,freeBytes,store])).toBe(independent[index]));
- expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:33*GiB},36.3*GiB)).toBeLessThan(32*GiB);
- expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:5*GiB},36.3*GiB)).toBeLessThanOrEqual(Math.ceil(36.3*GiB));
+test("the cap in force is sized per role from the partition: share, floor, free room above the high watermark; the language-agnostic vectors, the independent Python oracle and the implementation agree",()=>{
+ const GiB=2**30,vectors=JSON.parse(readFileSync(new URL("./📋️capacity/🔣️.json",import.meta.url),"utf8")) as {capBytes:number;minimumCapBytes:number;sizing:typeof CAS_POLICY_V1.sizing;rows:{role:CasRoleV1;total:number;free:number;store:number|null}[];expected:number[]};
+ const oracle=spawnSync(testPythonV1()??"python3",["-I",fileURLToPath(new URL("./🐍️capacity.py",import.meta.url))],{input:JSON.stringify(vectors),encoding:"utf8"});
+ expect(oracle.status,oracle.stderr).toBe(0);const independent=JSON.parse(oracle.stdout) as number[];
+ expect(independent).toEqual(vectors.expected);expect(vectors.sizing).toEqual(CAS_POLICY_V1.sizing);expect(vectors.capBytes).toBe(CAS_POLICY_V1.capBytes);
+ vectors.rows.forEach((row,index)=>expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:row.total,freeBytes:row.free,role:row.role},row.store??undefined),JSON.stringify(row)).toBe(vectors.expected[index]!));
+ const at=(role:CasRoleV1,total:number,free:number,store?:number)=>casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:total*GiB,freeBytes:free*GiB,role},store===undefined?undefined:store*GiB)/GiB;
+ expect(at("cache-host",926,175,27.75)).toBe(60);expect(at("builder",256,100)).toBe(20);expect(at("worker",256,100)).toBe(7.5);
+ expect(at("cache-host",926,33,41.6)).toBeLessThan(60);expect(at("cache-host",926,5,36.3)).toBeLessThanOrEqual(Math.ceil(36.3));
+ expect(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:175*GiB})).toBe(casEffectiveCapBytesV1(CAS_POLICY_V1,{totalBytes:926*GiB,freeBytes:175*GiB,role:"builder"}));
+ expect(at("cache-host",926,175)*0.5).toBeGreaterThanOrEqual(CAS_POLICY_V1.sizing.serverBytes/GiB);
+});
+
+test("a machine's role is declared by the environment or by a live record the fleet cache server renews, the strongest live role wins, and a record expires",()=>{
+ const root=scratch("role"),t0=1_000_000,policy=CAS_POLICY_V1;
+ expect(readCasRoleV1(root,policy,{},t0)).toBe("builder");
+ declareCasRoleV1(root,"worker",policy,t0);expect(readCasRoleV1(root,policy,{},t0+1)).toBe("worker");
+ declareCasRoleV1(root,"cache-host",policy,t0);expect(readCasRoleV1(root,policy,{},t0+1)).toBe("cache-host");
+ expect(readCasRoleV1(root,policy,{SEMIO_CAS_ROLE:"worker"},t0+1)).toBe("worker");expect(readCasRoleV1(root,policy,{SEMIO_CAS_ROLE:"nonsense"},t0+1)).toBe("cache-host");
+ expect(readCasRoleV1(root,policy,{},t0+policy.sizing.roleTtlMs+1)).toBe("builder");
+ expect(measureCasPartitionV1(root)?.role).toBeDefined();
 });
 
 test("a collection above the high watermark frees only one increment below it when it runs continuously, and down to the low watermark when run by hand; the independent Python oracle agrees",()=>{

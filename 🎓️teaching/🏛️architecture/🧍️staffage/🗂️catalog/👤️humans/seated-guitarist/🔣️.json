@@ -7467,7 +7467,18 @@
               "region": "jeans",
               "material": "denim",
               "kind": "poly",
-              "points": [[-0.0336, 0.0013], [-0.0336, 0.0522], [-0.0183, 0.0594], [-0.0061, 0.0619], [0, 0.0623], [0.11, 0.0643], [0.3, 0.0568], [0.4, 0.0593], [0.424, 0.0548], [0.424, 0.0013]],
+              "points": [
+                [-0.06542, 0.0013],
+                [-0.06542, 0.0522],
+                [-0.05012, 0.0594],
+                [-0.03792, 0.0619],
+                [-0.03182, 0.0623],
+                [0.07818, 0.0643],
+                [0.26818, 0.0568],
+                [0.36818, 0.0593],
+                [0.39218, 0.0548],
+                [0.39218, 0.0013]
+              ],
               "closed": true,
               "solid": {
                 "kind": "revolved",
@@ -21923,6 +21934,24 @@
                 "at": [0.5757, -0.0635, -0.15452],
                 "rx": 0.00065,
                 "ry": 0.00065
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-1-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.15452],
+                "rx": 0.00065,
+                "ry": 0.00065
               },
               {
                 "at": [0.61, -0.05045, -0.1555],
@@ -21947,6 +21976,24 @@
                 "rx": 0.00055,
                 "ry": 0.00055
               },
+              {
+                "at": [0.5757, -0.0635, -0.14731],
+                "rx": 0.00055,
+                "ry": 0.00055
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-2-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.14731],
                 "rx": 0.00055,
@@ -21979,6 +22026,24 @@
                 "at": [0.5757, -0.0635, -0.1401],
                 "rx": 0.00045,
                 "ry": 0.00045
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-3-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.1401],
+                "rx": 0.00045,
+                "ry": 0.00045
               },
               {
                 "at": [0.69, -0.0305, -0.1555],
@@ -22003,6 +22068,24 @@
                 "rx": 0.00035,
                 "ry": 0.00035
               },
+              {
+                "at": [0.5757, -0.0635, -0.1329],
+                "rx": 0.00035,
+                "ry": 0.00035
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-4-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.1329],
                 "rx": 0.00035,
@@ -22035,6 +22118,24 @@
                 "at": [0.5757, -0.0635, -0.12569],
                 "rx": 0.0003,
                 "ry": 0.0003
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-5-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.12569],
+                "rx": 0.0003,
+                "ry": 0.0003
               },
               {
                 "at": [0.65, -0.04047, -0.1175],
@@ -22059,6 +22160,24 @@
                 "rx": 0.0003,
                 "ry": 0.0003
               },
+              {
+                "at": [0.5757, -0.0635, -0.11848],
+                "rx": 0.0003,
+                "ry": 0.0003
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-6-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.11848],
                 "rx": 0.0003,
@@ -25722,8 +25841,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-1-head",
+            "of": "guitar-string-1-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-2",
             "of": "guitar-string-2",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-2-head",
+            "of": "guitar-string-2-head",
             "region": "guitar"
           },
           {
@@ -25732,8 +25861,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-3-head",
+            "of": "guitar-string-3-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-4",
             "of": "guitar-string-4",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-4-head",
+            "of": "guitar-string-4-head",
             "region": "guitar"
           },
           {
@@ -25742,8 +25881,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-5-head",
+            "of": "guitar-string-5-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-6",
             "of": "guitar-string-6",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-6-head",
+            "of": "guitar-string-6-head",
             "region": "guitar"
           },
           {
@@ -29636,8 +29785,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-1-head",
+            "of": "guitar-string-1-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-2",
             "of": "guitar-string-2",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-2-head",
+            "of": "guitar-string-2-head",
             "member": "guitar",
             "part": "member"
           },
@@ -29648,8 +29809,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-3-head",
+            "of": "guitar-string-3-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-4",
             "of": "guitar-string-4",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-4-head",
+            "of": "guitar-string-4-head",
             "member": "guitar",
             "part": "member"
           },
@@ -29660,8 +29833,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-5-head",
+            "of": "guitar-string-5-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-6",
             "of": "guitar-string-6",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-6-head",
+            "of": "guitar-string-6-head",
             "member": "guitar",
             "part": "member"
           },
@@ -33038,6 +33223,24 @@
                 "at": [0.5757, -0.0635, -0.15452],
                 "rx": 0.00065,
                 "ry": 0.00065
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-1-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.15452],
+                "rx": 0.00065,
+                "ry": 0.00065
               },
               {
                 "at": [0.61, -0.05045, -0.1555],
@@ -33062,6 +33265,24 @@
                 "rx": 0.00055,
                 "ry": 0.00055
               },
+              {
+                "at": [0.5757, -0.0635, -0.14731],
+                "rx": 0.00055,
+                "ry": 0.00055
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-2-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.14731],
                 "rx": 0.00055,
@@ -33094,6 +33315,24 @@
                 "at": [0.5757, -0.0635, -0.1401],
                 "rx": 0.00045,
                 "ry": 0.00045
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-3-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.1401],
+                "rx": 0.00045,
+                "ry": 0.00045
               },
               {
                 "at": [0.69, -0.0305, -0.1555],
@@ -33118,6 +33357,24 @@
                 "rx": 0.00035,
                 "ry": 0.00035
               },
+              {
+                "at": [0.5757, -0.0635, -0.1329],
+                "rx": 0.00035,
+                "ry": 0.00035
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-4-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.1329],
                 "rx": 0.00035,
@@ -33150,6 +33407,24 @@
                 "at": [0.5757, -0.0635, -0.12569],
                 "rx": 0.0003,
                 "ry": 0.0003
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-5-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
+              {
+                "at": [0.5757, -0.0635, -0.12569],
+                "rx": 0.0003,
+                "ry": 0.0003
               },
               {
                 "at": [0.65, -0.04047, -0.1175],
@@ -33174,6 +33449,24 @@
                 "rx": 0.0003,
                 "ry": 0.0003
               },
+              {
+                "at": [0.5757, -0.0635, -0.11848],
+                "rx": 0.0003,
+                "ry": 0.0003
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "slender": true
+          },
+          {
+            "id": "guitar-string-6-head",
+            "kind": "loft",
+            "bone": "guitar",
+            "material": "steel",
+            "role": "texture",
+            "tone": 0.7,
+            "sections": [
               {
                 "at": [0.5757, -0.0635, -0.11848],
                 "rx": 0.0003,
@@ -34302,8 +34595,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-1-head",
+            "of": "guitar-string-1-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-2",
             "of": "guitar-string-2",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-2-head",
+            "of": "guitar-string-2-head",
             "region": "guitar"
           },
           {
@@ -34312,8 +34615,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-3-head",
+            "of": "guitar-string-3-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-4",
             "of": "guitar-string-4",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-4-head",
+            "of": "guitar-string-4-head",
             "region": "guitar"
           },
           {
@@ -34322,8 +34635,18 @@
             "region": "guitar"
           },
           {
+            "id": "th-guitar-string-5-head",
+            "of": "guitar-string-5-head",
+            "region": "guitar"
+          },
+          {
             "id": "th-guitar-string-6",
             "of": "guitar-string-6",
+            "region": "guitar"
+          },
+          {
+            "id": "th-guitar-string-6-head",
+            "of": "guitar-string-6-head",
             "region": "guitar"
           },
           {
@@ -37342,8 +37665,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-1-head",
+            "of": "guitar-string-1-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-2",
             "of": "guitar-string-2",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-2-head",
+            "of": "guitar-string-2-head",
             "member": "guitar",
             "part": "member"
           },
@@ -37354,8 +37689,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-3-head",
+            "of": "guitar-string-3-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-4",
             "of": "guitar-string-4",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-4-head",
+            "of": "guitar-string-4-head",
             "member": "guitar",
             "part": "member"
           },
@@ -37366,8 +37713,20 @@
             "part": "member"
           },
           {
+            "id": "st-guitar-string-5-head",
+            "of": "guitar-string-5-head",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
             "id": "st-guitar-string-6",
             "of": "guitar-string-6",
+            "member": "guitar",
+            "part": "member"
+          },
+          {
+            "id": "st-guitar-string-6-head",
+            "of": "guitar-string-6-head",
             "member": "guitar",
             "part": "member"
           },

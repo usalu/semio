@@ -209,6 +209,17 @@ fn absorb_option<T>(slot: &mut Option<T>, other: Option<T>, merge: impl FnOnce(T
     };
 }
 
+/// 🛡️ The outcome of a leaf whose targets must exist in `base`: the freshly built `diff` when every index it addresses is present, otherwise an empty diff with a `mutation.target-missing` error (the in-place replay can never meet a diff that cannot apply).
+pub fn outcome_over(base: &PdfSnapshot, diff: PdfDiff) -> protocol::MutationOutcome<PdfDiff> {
+    match validate_pdf_diff(&diff, base) {
+        Ok(()) => protocol::MutationOutcome::new(diff),
+        Err(error) => {
+            <PdfDiff as MutationDiff<PdfSnapshot>>::retire_cold(diff);
+            protocol::MutationOutcome::error("mutation.target-missing", error.message, error.target)
+        }
+    }
+}
+
 impl MutationDiff<PdfSnapshot> for PdfDiff {}
 
 impl protocol::ColdMutationDiff<PdfSnapshot> for PdfDiff {

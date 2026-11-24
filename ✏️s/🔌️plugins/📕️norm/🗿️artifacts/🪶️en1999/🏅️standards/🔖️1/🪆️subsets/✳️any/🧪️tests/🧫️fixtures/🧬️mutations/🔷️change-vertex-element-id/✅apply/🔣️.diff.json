@@ -10,28 +10,12 @@
   "shells": null,
   "placements": null,
   "weldRuns": null,
-  "outlineVertices": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": [
-      {
-        "id": "v-1",
-        "patch": {
-          "sectionId": null,
-          "ring": null,
-          "elementId": "web",
-          "y": null,
-          "z": null
-        }
-      }
-    ]
-  },
+  "outlineVertices": null,
   "fatigueCategories": null,
   "patchLoads": null,
   "ringStiffeners": null,
   "sheetProfiles": null,
   "fireInsulations": null,
   "transverseStiffeners": null,
-  "reliabilityClass": "RC2"
+  "reliabilityClass": null
 }

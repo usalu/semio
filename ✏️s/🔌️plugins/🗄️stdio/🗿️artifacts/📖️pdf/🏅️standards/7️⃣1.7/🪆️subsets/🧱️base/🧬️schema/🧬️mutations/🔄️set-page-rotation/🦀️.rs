@@ -33,8 +33,8 @@ impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageRotation
 where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageRotation>,
 {
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_rotation(self.index, self.rotation as i32))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        diff::outcome_over(base, diff::diff_set_page_rotation(self.index, self.rotation as i32))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

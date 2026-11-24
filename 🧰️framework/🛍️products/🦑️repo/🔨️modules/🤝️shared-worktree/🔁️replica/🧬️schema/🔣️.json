@@ -317,6 +317,20 @@
             }
           ]
         },
+        "bootstrap": {
+          "description": "Present on the group server that builds the bootstrap archive: the archive the manifest names and its bytes, the superseded archive bytes still held for readers inside the grace, the bytes retired by the latest build, and the last refusal for lack of space (null after a build succeeded). See `BootstrapRecord` of the bootstrap schema.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["wallMs", "archive", "bytes", "held", "retiredBytes", "refusal"],
+          "properties": {
+            "wallMs": { "$ref": "#/definitions/Count" },
+            "archive": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+            "bytes": { "$ref": "#/definitions/Count" },
+            "held": { "type": "object", "additionalProperties": false, "required": ["files", "bytes"], "properties": { "files": { "$ref": "#/definitions/Count" }, "bytes": { "$ref": "#/definitions/Count" } } },
+            "retiredBytes": { "$ref": "#/definitions/Count" },
+            "refusal": { "oneOf": [{ "type": "null" }, { "type": "object", "additionalProperties": false, "required": ["need", "free", "reserve", "wallMs"], "properties": { "need": { "type": "string" }, "free": { "type": "string" }, "reserve": { "type": "string" }, "wallMs": { "$ref": "#/definitions/Count" } } }] }
+          }
+        },
         "store": {
           "description": "Null while the store is unreachable, else the size report of the store (see `Store` of the compaction schema, which validates it): journal size, newest snapshot, what a compaction would reclaim now.",
           "oneOf": [{ "type": "null" }, { "type": "object" }]

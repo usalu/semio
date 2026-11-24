@@ -1274,7 +1274,7 @@
               "region": "leaf-frame",
               "material": "steel",
               "kind": "poly",
-              "points": [[2.09, -0.5], [2.09, 0.5], [0.05, 0.5], [0.05, -0.5]],
+              "points": [[2.09, -0.5], [2.09, 0.5], [0.1, 0.5], [0.1, -0.5]],
               "closed": true
             },
             {
@@ -1499,6 +1499,66 @@
               "material": "glass",
               "kind": "poly",
               "points": [[2.09, -0.5], [2.09, 0.5], [0.1, 0.5], [0.1, -0.5]],
+              "closed": true
+            },
+            {
+              "id": "trolley-2",
+              "bone": "leaf",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  0.305
+                ],
+                [
+                  0.1,
+                  0.395
+                ],
+                [
+                  0.05,
+                  0.395
+                ],
+                [
+                  0.05,
+                  0.305
+                ]
+              ],
+              "closed": true
+            },
+            {
+              "id": "trolley-1",
+              "bone": "leaf",
+              "role": "body",
+              "z": 1.5,
+              "filled": true,
+              "tone": 0.3,
+              "region": "leaf-frame",
+              "material": "steel",
+              "kind": "poly",
+              "points": [
+                [
+                  0.1,
+                  -0.395
+                ],
+                [
+                  0.1,
+                  -0.305
+                ],
+                [
+                  0.05,
+                  -0.305
+                ],
+                [
+                  0.05,
+                  -0.395
+                ]
+              ],
               "closed": true
             }
           ],

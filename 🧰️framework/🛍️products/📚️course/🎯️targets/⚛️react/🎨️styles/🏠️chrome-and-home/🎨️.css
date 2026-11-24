@@ -63,7 +63,7 @@
 
 /* 🏠️ The overview's cards over the glass, tiled edge to edge on the design system's card grid (`data-card-grid`): the card
    layer takes its track lists from home (`--course-home-columns`, `--course-home-rows`), has no gaps and no cell padding, and
-   each card fills its cell, so neighbours share one border line and the first row starts on the navbar's bottom line; the
+   each card fills its cell, so neighbours share one border line and the first row starts on the navbar's bottom line; the layer scrolls without a scrollbar gutter (`ui-scrollbar-hidden`), so the last column ends on the right edge; the
    text spacing lies inside the cards. Extra rows scroll inside the card layer. Where the learner swipes through the grid
    instead (below 768 px) the overview places every card on its page itself. DOM order is reading order at every width. */
 .course-home-grid {
@@ -75,7 +75,10 @@
 }
 
 .course-home-cell {
-  overflow: hidden;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: clip;
+  overflow-clip-margin: var(--stroke-hairline);
 }
 
 /* 🃏️ The card itself takes the whole cell — the overview hosts each card in a `display: contents` element, which has no
@@ -132,7 +135,6 @@
   max-width: 100%;
   align-items: center;
   gap: var(--spacing-single);
-  border-radius: var(--spacing-single);
   padding: 0 var(--spacing-single);
   background: var(--base);
   color: var(--foreground);

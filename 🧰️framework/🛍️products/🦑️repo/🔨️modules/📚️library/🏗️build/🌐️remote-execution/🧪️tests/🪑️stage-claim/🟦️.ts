@@ -14,7 +14,7 @@ const temporary=():string=>{const path=mkdtempSync(join(testScratchRootV1("rexec
 const NOW=1_800_000_000_000;
 const host=(total:number,available:number,pressure:"normal"|"warn"|"critical"="normal")=>({version:1,atMs:NOW,platform:"darwin",cores:10,totalMegabytes:total,availableMegabytes:available,pressure,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:null,openFiles:1000,openFilesMaximum:200000,attachedImages:0});
 const view=(total:number,available:number,pressure:"normal"|"warn"|"critical"="normal"):RemoteExecutionHostViewV1=>({host:host(total,available,pressure),grants:[],waiters:[]} as never);
-const claim=(entitlementMegabytes:number,observedMegabytes:number,atMs:number=NOW):ReadyStageClaimV1=>({version:1,stage:"workspace",pid:4242,entitlementMegabytes,observedMegabytes,atMs});
+const claim=(entitlementMegabytes:number,observedMegabytes:number,atMs:number=NOW,waiting:boolean=false):ReadyStageClaimV1=>({version:1,stage:"workspace",pid:4242,entitlementMegabytes,observedMegabytes,waiting,atMs});
 
 test("The entitlement of every host size and run history equals the Python oracle",()=>{
  for(const row of fixture.entitlements){
@@ -28,19 +28,23 @@ test("The entitlement of every host size and run history equals the Python oracl
  expect(sixteen("huge")).toBe(16384*P.maximumShareBasisPoints/10000);
 });
 
-test("The hold is what the stage may still grow into and a stale claim holds nothing",()=>{
- for(const row of fixture.holds)expect(readyStageHoldV1(claim(row.entitlementMegabytes,row.observedMegabytes,NOW),NOW+row.ageMilliseconds),`${row.observedMegabytes} ${row.ageMilliseconds}`).toBe(row.holdMegabytes);
+test("The hold is the measured use plus the margin less what is used (never above the learned peak), nothing while the stage waits, and a stale claim holds nothing",()=>{
+ for(const row of fixture.holds)expect(readyStageHoldV1(claim(row.entitlementMegabytes,row.observedMegabytes,NOW,row.waiting),NOW+row.ageMilliseconds),`${row.observedMegabytes} ${row.waiting} ${row.ageMilliseconds}`).toBe(row.holdMegabytes);
  expect(readyStageHoldV1(undefined,NOW)).toBe(0);
+ expect(readyStageHoldV1(claim(4915,1200),NOW),"running: 1200 x 1.25 less 1200").toBe(300);
+ expect(readyStageHoldV1(claim(4915,1200,NOW,true),NOW),"waiting").toBe(0);
+ expect(readyStageHoldV1(claim(4915,0),NOW),"a stage that just started keeps the floor").toBe(P.floorMegabytes);
 });
 
 test("The claim file round-trips, a stale, malformed or foreign file reads as no claim and only the owner clears it",()=>{
  const directory=temporary(),file=join(directory,P.fileName);
  expect(readReadyStageClaimV1(directory,NOW)).toBeUndefined();
- writeReadyStageClaimV1(directory,claim(4915,1200));
- expect(readReadyStageClaimV1(directory,NOW)).toEqual(claim(4915,1200));
+ writeReadyStageClaimV1(directory,claim(4915,1200,NOW,true));
+ expect(readReadyStageClaimV1(directory,NOW)).toEqual(claim(4915,1200,NOW,true));
  expect(readReadyStageClaimV1(directory,NOW+P.freshMilliseconds+1)).toBeUndefined();
  clearReadyStageClaimV1(directory,1);expect(existsSync(file)).toBe(true);
  clearReadyStageClaimV1(directory,4242);expect(existsSync(file)).toBe(false);
+ writeFileSync(file,JSON.stringify({version:1,stage:"workspace",pid:4242,entitlementMegabytes:4915,observedMegabytes:1200,atMs:NOW}));expect(readReadyStageClaimV1(directory,NOW),"a claim without the waiting flag is not a claim").toBeUndefined();
  writeFileSync(file,"{\"version\":1,\"stage\":\"workspace\"}");expect(readReadyStageClaimV1(directory,NOW)).toBeUndefined();
  writeFileSync(file,"not json");expect(readReadyStageClaimV1(directory,NOW)).toBeUndefined();
 });
@@ -52,7 +56,10 @@ test("The publisher learns the entitlement once, writes on a size change or afte
  publisher.observe(1000);expect(at().observedMegabytes).toBe(1000);expect(at().entitlementMegabytes).toBe(5643);
  clock+=1000;publisher.observe(1030);expect(at().observedMegabytes).toBe(1000);
  clock+=1000;publisher.observe(1100);expect(at().observedMegabytes).toBe(1100);
- clock+=P.writeMilliseconds;publisher.observe(1101);expect(at().observedMegabytes).toBe(1101);
+ clock+=P.writeMilliseconds;publisher.observe(1101);expect(at().observedMegabytes).toBe(1101);expect(at().waiting).toBe(false);
+ clock+=1000;publisher.observe(1101,true);expect(at().waiting,"a stage that starts waiting is written at once").toBe(true);
+ clock+=1000;publisher.observe(1102,true);expect(at().observedMegabytes).toBe(1101);
+ clock+=1000;publisher.observe(1102,false);expect(at().waiting,"and when it runs again").toBe(false);
  expect(reads).toBe(1);
  publisher.clear();expect(existsSync(join(directory,P.fileName))).toBe(false);
 });
@@ -65,7 +72,7 @@ test("The reader adds the stage of this machine to the view and takes its growth
  writeReadyStageClaimV1(directory,claim(4915,1200,Date.now()));
  const seen=await readRemoteExecutionHostViewV1(environment);
  expect(seen.stage?.entitlementMegabytes).toBe(4915);
- expect(seen.host.availableMegabytes).toBe(9000-3715);
+ expect(seen.host.availableMegabytes,"1200 x 1.25 less 1200 is held, not the 3715 of the entitlement").toBe(9000-300);
  expect(seen.grants.map(row=>row.id)).toEqual(["ready-stage"]);
  expect(seen.grants[0]!.observedMegabytes).toBe(1200);
 });
@@ -82,20 +89,20 @@ test("A 16 GB worker's pool runs fewer children while its stage still grows, as 
  }
 });
 
-test("The agent of a 16 GB worker refuses an offload while its stage still has to grow, accepts it without a stage and refuses under pressure with a stage",()=>{
- const now=Date.now(),plain=view(16384,7000);
- expect(admitRemoteExecutionActionV1({view:plain,running:0,concurrency:10,nowMs:now})).toEqual({admit:true});
- const staged=withReadyStageV1(plain,claim(4915,1200,now),now);
- const verdict=admitRemoteExecutionActionV1({view:staged,running:0,concurrency:10,nowMs:now});
- expect(verdict.admit).toBe(false);
- expect(verdict.admit?"":verdict.reason).toBe("memory");
- const grown=withReadyStageV1(plain,claim(4915,4915,now),now);
- expect(admitRemoteExecutionActionV1({view:grown,running:0,concurrency:10,nowMs:now})).toEqual({admit:true});
- const warn=withReadyStageV1(view(16384,12000,"warn"),claim(4915,4915,now),now);
- const refused=admitRemoteExecutionActionV1({view:warn,running:0,concurrency:10,nowMs:now});
+test("The agent of a 16 GB worker keeps back only the measured growth of its stage, nothing while the stage waits, and judges raised pressure by the size of the unit",()=>{
+ const now=Date.now(),plain=view(16384,7000),ask=(one:RemoteExecutionHostViewV1,megabytes?:number)=>admitRemoteExecutionActionV1({view:one,running:0,concurrency:10,nowMs:now,...megabytes===undefined?{}:{megabytes}});
+ expect(ask(plain)).toEqual({admit:true});
+ expect(ask(withReadyStageV1(plain,claim(4915,1200,now),now)),"the stage holds 300 more, not the 3715 of its entitlement").toEqual({admit:true});
+ const tight=view(16384,4300),running=ask(withReadyStageV1(tight,claim(4915,1200,now),now));
+ expect(running.admit).toBe(false);
+ expect(running.admit?"":running.reason).toBe("memory");
+ expect(ask(withReadyStageV1(tight,claim(4915,1200,now,true),now)),"the same stage waiting holds nothing back").toEqual({admit:true});
+ expect(ask(withReadyStageV1(tight,claim(4915,1200,now),now),1024),"a small unit fits beside the growing stage").toEqual({admit:true});
+ const warn=withReadyStageV1(view(16384,12000,"warn"),claim(4915,4915,now),now),refused=ask(warn);
  expect(refused.admit?"":refused.reason).toBe("pressure-warn");
+ expect(ask(warn,512),"raised pressure alone does not refuse a small unit").toEqual({admit:true});
  const critical=withReadyStageV1(view(16384,12000,"critical"),claim(4915,4915,now),now);
- expect((admitRemoteExecutionActionV1({view:critical,running:0,concurrency:10,nowMs:now}) as {reason?:string}).reason).toBe("pressure-critical");
+ expect((ask(critical,512) as {reason?:string}).reason).toBe("pressure-critical");
 });
 
 test("The oracle vectors are current",()=>{

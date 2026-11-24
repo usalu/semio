@@ -23,6 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-ui-contract-values = { workspace = true, features = ["testkit"] }
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust", features = ["testkit"] }
 semio-renderer-wgpu-dock = { path = "../../../🛰️dock/📦️packages/🦀️rust" }
 semio-renderer-wgpu-fixtures = { path = "../../../🧰️fixtures/📦️packages/🦀️rust", features = ["testkit"] }

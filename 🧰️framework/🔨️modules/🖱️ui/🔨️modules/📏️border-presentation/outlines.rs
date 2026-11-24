@@ -1,4 +1,4 @@
-//! 🫥 Closed state outlines: every stated box paints its whole perimeter.
+//! 🫥 State outlines: a hovered box emphasises the lines that lie on its perimeter without the hover and adds none, a box in any other state paints its whole perimeter.
 
 use super::{resolve_shared_border_segments, ResolvedSharedBorderSegment, SharedBorderError, SharedBorderSegment, SharedBorderState};
 
@@ -36,7 +36,10 @@ pub const fn box_segment_id(box_id: usize, side: usize) -> usize { box_id * BOX_
 /// 🧮 Bytes the source segments of `count` boxes occupy.
 pub fn box_outline_allocation_byte_demand(count: usize) -> Option<usize> { count.checked_mul(BOX_SIDE_COUNT)?.checked_mul(std::mem::size_of::<SharedBorderSegment>()) }
 
-fn drawn(entry: &BoxOutlineInput) -> [bool; BOX_SIDE_COUNT] { if entry.state == SharedBorderState::Normal { entry.edges } else { [true; BOX_SIDE_COUNT] } }
+/// 🖍️ Whether `state` closes the whole perimeter of its box. Hover does not: it emphasises the lines that lie on the perimeter without the hover and never adds one.
+pub const fn border_state_closes(state: SharedBorderState) -> bool { !matches!(state, SharedBorderState::Normal | SharedBorderState::Hover) }
+
+fn drawn(entry: &BoxOutlineInput) -> [bool; BOX_SIDE_COUNT] { if border_state_closes(entry.state) { [true; BOX_SIDE_COUNT] } else { entry.edges } }
 
 fn sides(rect: [f64; 4]) -> [([f64; 2], [f64; 2]); BOX_SIDE_COUNT] {
     let [left, top, right, bottom] = rect;
@@ -45,21 +48,31 @@ fn sides(rect: [f64; 4]) -> [([f64; 2], [f64; 2]); BOX_SIDE_COUNT] {
 
 fn flush(rect: [f64; 4], parent: [f64; 4], side: usize) -> bool { rect[[1, 2, 3, 0][side]] == parent[[1, 2, 3, 0][side]] }
 
-/// 🧱 Source segments of every drawn side; a normal box drops sides flush on an edge its parent does not draw, a stated box draws all four.
-pub fn box_outline_source_segments(boxes: &[BoxOutlineInput]) -> Result<Vec<SharedBorderSegment>, BoxOutlineError> {
+fn collect(boxes: &[BoxOutlineInput], emphasis: bool) -> Result<Vec<SharedBorderSegment>, BoxOutlineError> {
     let mut output = Vec::with_capacity(box_outline_allocation_byte_demand(boxes.len()).ok_or(SharedBorderError::CapacityOverflow)? / std::mem::size_of::<SharedBorderSegment>());
     for entry in boxes {
         let parent = match entry.parent { Some(id) => Some(boxes.iter().find(|candidate| candidate.id == id).ok_or(BoxOutlineError::UnknownParent)?), None => None };
         let parent_drawn = parent.map(drawn);
         for (side, (from, to)) in sides(entry.rect).into_iter().enumerate() {
-            let suppressed = entry.state == SharedBorderState::Normal && parent.zip(parent_drawn).is_some_and(|(parent, parent_drawn)| !parent_drawn[side] && flush(entry.rect, parent.rect, side));
-            if drawn(entry)[side] && !suppressed { output.push(SharedBorderSegment { id: box_segment_id(entry.id, side), owner: entry.owner, from, to, state: entry.state }); }
+            let suppressed = !border_state_closes(entry.state) && parent.zip(parent_drawn).is_some_and(|(parent, parent_drawn)| !parent_drawn[side] && flush(entry.rect, parent.rect, side));
+            let painted = drawn(entry)[side] && !suppressed;
+            if if emphasis { !painted && entry.state == SharedBorderState::Hover } else { painted } { output.push(SharedBorderSegment { id: box_segment_id(entry.id, side), owner: entry.owner, from, to, state: entry.state }); }
         }
     }
     Ok(output)
 }
 
-/// 🖼️ Resolved outline: on every collinear overlap the highest-priority state wins, so a stated box's perimeter is always covered.
+/// 🧱 Source segments of every drawn side; a normal or hovered box drops sides flush on an edge its parent does not draw, a box in any other state draws all four.
+pub fn box_outline_source_segments(boxes: &[BoxOutlineInput]) -> Result<Vec<SharedBorderSegment>, BoxOutlineError> { collect(boxes, false) }
+
+/// 🖍️ Emphasis segments: the sides a hovered box does not draw. They take the hover state onto the lines of other boxes they lie on and paint nothing where no other segment lies.
+pub fn box_outline_emphasis_segments(boxes: &[BoxOutlineInput]) -> Result<Vec<SharedBorderSegment>, BoxOutlineError> { collect(boxes, true) }
+
+/// 🖼️ Resolved outline: on every collinear overlap the highest-priority state wins, so the perimeter of a box whose state closes it is always covered and a hovered box recolours only lines that are drawn without the hover.
 pub fn box_outline_segments(boxes: &[BoxOutlineInput]) -> Result<Vec<ResolvedSharedBorderSegment>, BoxOutlineError> {
-    Ok(resolve_shared_border_segments(&box_outline_source_segments(boxes)?)?)
+    let (mut sources, emphasis) = (box_outline_source_segments(boxes)?, box_outline_emphasis_segments(boxes)?);
+    sources.extend(emphasis.iter().copied());
+    let mut resolved = resolve_shared_border_segments(&sources)?;
+    resolved.retain(|span| !span.contributors.iter().all(|id| emphasis.iter().any(|segment| segment.id == *id)));
+    Ok(resolved)
 }

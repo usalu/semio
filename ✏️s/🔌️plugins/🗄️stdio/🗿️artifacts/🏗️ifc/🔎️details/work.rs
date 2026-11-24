@@ -4,12 +4,12 @@ use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork,
 use semio_plugin::{EditorApp, Emit};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetainedAllocationEffect;
-use source_loan::{advance_cursor, closed_cursor, funded_turn, take_cursor, SnapshotLease};
+use source_loan::{advance_cursor, close_quote, closed_cursor, closed_in_source, funded_turn, take_cursor, SnapshotLease};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 
 pub type Source = wire::SnapshotSource;
-pub type SourceAdmission = semio_framework_value::retained_clone::StagedSourceAdmission<IfcSnapshot, SnapshotLease>;
+pub type SourceAdmission = source_staging::SourceStaging<IfcSnapshot, SnapshotLease>;
 pub fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
     let editing::SnapshotEditEvent::InsertValue{path,..}=event else{return None;};
     if address.field_count()!=4||!address.field_is(path,2,"args"){return None;}
@@ -208,6 +208,20 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         self.domain.turns()
     }
     #[cfg(any(test, feature = "testkit"))]
+    pub fn debug_residue(&self) -> String {
+        let mut out = String::new();
+        macro_rules! t { ($n:expr, $e:expr) => { if !$e { out.push_str($n); out.push(' '); } }; }
+        t!("rules", self.rules.terminal_is_empty()); t!("cursor", self.cursor.terminal_is_empty()); t!("admission", self.admission.terminal_is_empty());
+        t!("command_wire", self.command_wire.terminal_is_empty()); t!("address", self.address.terminal_is_empty()); t!("reference", self.reference.terminal_is_empty());
+        t!("enumeration", self.enumeration.terminal_is_empty()); t!("domain", self.domain.terminal_is_empty()); t!("entity_removal", self.entity_removal.terminal_is_empty());
+        t!("roster", self.constituent_roster.terminal_is_empty()); t!("parts_cursor", self.parts_cursor.terminal_is_empty()); t!("parts", self.parts.is_none());
+        t!("value_cursor", self.value_cursor.terminal_is_empty()); t!("header_cursor", self.header_cursor.terminal_is_empty()); t!("value_edit", self.value_edit.terminal_is_empty());
+        t!("value", self.value.is_none()); t!("original_event", self.original_event.is_none()); t!("header_values", self.header_values.is_none()); t!("entity", self.entity.is_none());
+        t!("garbage", self.garbage.is_none()); t!("pending", self.pending.is_none()); t!("semantic_emit", self.semantic_emit.is_none()); t!("unborn", self.unborn.is_none());
+        t!("source_admission", self.source_admission.is_none()); t!("retirement", self.retirement.is_empty()); t!("codec", !self.publication.codec_live());
+        t!("source", self.source.as_ref().is_none_or(Source::terminal_is_empty)); t!("pub_source", self.publication.view.source.as_ref().is_none_or(Source::terminal_is_empty));
+        out
+    }
     pub fn reduction_ticks(&self) -> usize {
         self.control.ticks
     }
@@ -280,15 +294,15 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
             return self.publication.close_demands();
         }
         if !self.cursor.terminal_is_empty() {
-            return self.cursor.close_demands(body);
+            return close_quote(&self.cursor, body);
         }
         if !self.value_cursor.terminal_is_empty() {
-            return self.value_cursor.close_demands(body);
+            return close_quote(&self.value_cursor, body);
         }
         if !self.header_cursor.terminal_is_empty() {
-            return self.header_cursor.close_demands(body);
+            return close_quote(&self.header_cursor, body);
         }
-        if !self.parts_cursor.terminal_is_empty(){return self.parts_cursor.close_demands(body);}
+        if !self.parts_cursor.terminal_is_empty(){return close_quote(&self.parts_cursor, body);}
         if !self.value_edit.terminal_is_empty() {
             return self.value_edit.close_demands();
         }
@@ -639,6 +653,7 @@ where
             let prefix=self.prefix;
             let remove_argument = self.argument.is_some() && matches!(event, editing::SnapshotEditEvent::RemoveValue { path } if path.len() == prefix);
             if !self.value_edit_done {
+                if self.header_column.is_some() { self.control.tick(cx).map_err(|message| ValueError::new(ValueRefusalKind::WorkLimit, message))?; }
                 self.value_edit_done = remove_argument || self.value_edit.advance(&mut self.value, event, prefix, self.header_column.is_some()||constituent_argument_collection(event,input.snapshot,&self.address).is_some(),self.reference.request, cx)?;
                 return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-native-value", preview: b"" });
             }
@@ -800,7 +815,7 @@ where
             return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         let demand = self.close_demand(cx.retained_grant().maximum_copy_bytes.min(4096))?;
-        closed_in(cx, demand, |effect| {
+        closed_in_source(cx, demand, |effect| {
             let grant = RetainedCloneGrant { maximum_copy_bytes: effect.grant().maximum_copy_bytes.min(4096), ..effect.grant() };
             if !self.rules.terminal_is_empty() {
                 return self.rules.close_step(effect);

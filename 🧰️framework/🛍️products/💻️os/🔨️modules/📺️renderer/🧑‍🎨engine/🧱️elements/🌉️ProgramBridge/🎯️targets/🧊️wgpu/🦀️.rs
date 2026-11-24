@@ -109,7 +109,7 @@ pub use document_render_plugin_install_and_native_loading::{
 pub use document_render_plugin_install_and_native_loading::{
     cancel_js_plugin_install, install_js_extension, install_js_plugin,
     js_extension_install_door_available, js_plugin_install_door_available, parse_plugin_entries,
-    retire_js_extension,
+    request_on_demand_activation, retire_js_extension,
 };
 #[cfg(not(target_arch="wasm32"))]
 pub use document_render_plugin_install_and_native_loading::{

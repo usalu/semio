@@ -21,18 +21,21 @@
           "textSize": null,
           "fillRule": null,
           "transform": {
-            "x": 20,
-            "y": -10,
-            "scaleX": 1,
-            "scaleY": 1,
-            "shear": 0,
-            "rotation": 0
+            "x": 20.0,
+            "y": -10.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "shear": 0.0,
+            "rotation": 0.0
           },
           "fill": null,
           "stroke": null,
           "traceParams": null,
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       },
       {
@@ -49,18 +52,21 @@
           "textSize": null,
           "fillRule": null,
           "transform": {
-            "x": 20,
-            "y": 5,
-            "scaleX": 1,
-            "scaleY": 1,
-            "shear": 0,
-            "rotation": 0
+            "x": 20.0,
+            "y": 5.0,
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "shear": 0.0,
+            "rotation": 0.0
           },
           "fill": null,
           "stroke": null,
           "traceParams": null,
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       }
     ]

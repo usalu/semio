@@ -113,13 +113,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.42,
-    "densityKgM3": 2700.0,
+    "densityKgM3": 2700,
     "conductivityWmK": 110,
     "specificHeatJKgK": 900,
     "source": "literature",
     "reference": "en-1706-2020",
-    "elasticModulusPa": 72000000000.0,
-    "strengthPa": 140000000.0
+    "elasticModulusPa": 72000000000,
+    "strengthPa": 140000000
    },
    {
     "id": "chromed-zinc",
@@ -129,7 +129,7 @@
     },
     "emissivity": 0.15,
     "solarAbsorptivity": 0.4,
-    "densityKgM3": 6700.0,
+    "densityKgM3": 6700,
     "conductivityWmK": 110,
     "specificHeatJKgK": 390,
     "source": "authored-estimate",
@@ -143,13 +143,13 @@
     },
     "emissivity": 0.12,
     "solarAbsorptivity": 0.45,
-    "densityKgM3": 7850.0,
+    "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
     "source": "literature",
     "reference": "incropera-2018",
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 350000000.0
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 350000000
    },
    {
     "id": "abs-ivory",
@@ -159,13 +159,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.45,
-    "densityKgM3": 1050.0,
+    "densityKgM3": 1050,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
     "source": "authored-estimate",
     "reference": "iso-10456-2007",
-    "elasticModulusPa": 2200000000.0,
-    "strengthPa": 40000000.0
+    "elasticModulusPa": 2200000000,
+    "strengthPa": 40000000
    },
    {
     "id": "abs-brown",
@@ -175,13 +175,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.85,
-    "densityKgM3": 1050.0,
+    "densityKgM3": 1050,
     "conductivityWmK": 0.17,
     "specificHeatJKgK": 1400,
     "source": "authored-estimate",
     "reference": "iso-10456-2007",
-    "elasticModulusPa": 2200000000.0,
-    "strengthPa": 40000000.0
+    "elasticModulusPa": 2200000000,
+    "strengthPa": 40000000
    },
    {
     "id": "pvc-cable",
@@ -191,7 +191,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.7,
-    "densityKgM3": 1800.0,
+    "densityKgM3": 1800,
     "conductivityWmK": 0.3,
     "specificHeatJKgK": 1000,
     "source": "authored-estimate",
@@ -205,13 +205,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.7,
-    "densityKgM3": 650.0,
+    "densityKgM3": 650,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
     "source": "literature",
     "reference": "en-312-2010",
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000
    },
    {
     "id": "rubber",
@@ -221,7 +221,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.9,
-    "densityKgM3": 1200.0,
+    "densityKgM3": 1200,
     "conductivityWmK": 0.16,
     "specificHeatJKgK": 1500,
     "source": "authored-estimate",
@@ -235,7 +235,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 900.0,
+    "densityKgM3": 900,
     "conductivityWmK": 0.1,
     "specificHeatJKgK": 1200,
     "source": "authored-estimate",
@@ -249,7 +249,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.65,
-    "densityKgM3": 400.0,
+    "densityKgM3": 400,
     "conductivityWmK": 0.06,
     "specificHeatJKgK": 1300,
     "source": "authored-estimate",
@@ -263,13 +263,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.6,
-    "densityKgM3": 680.0,
+    "densityKgM3": 680,
     "conductivityWmK": 0.14,
     "specificHeatJKgK": 1700,
     "source": "literature",
     "reference": "en-312-2010",
-    "elasticModulusPa": 1600000000.0,
-    "strengthPa": 11000000.0
+    "elasticModulusPa": 1600000000,
+    "strengthPa": 11000000
    },
    {
     "id": "beech-lacquered",
@@ -279,13 +279,13 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.55,
-    "densityKgM3": 720.0,
+    "densityKgM3": 720,
     "conductivityWmK": 0.16,
     "specificHeatJKgK": 1600,
     "source": "literature",
     "reference": "en-338-2016",
-    "elasticModulusPa": 12000000000.0,
-    "strengthPa": 35000000.0
+    "elasticModulusPa": 12000000000,
+    "strengthPa": 35000000
    },
    {
     "id": "felt-blanket",
@@ -295,7 +295,7 @@
     },
     "emissivity": 0.9,
     "solarAbsorptivity": 0.8,
-    "densityKgM3": 134.0,
+    "densityKgM3": 134,
     "conductivityWmK": 0.045,
     "specificHeatJKgK": 1300,
     "source": "authored-estimate",
@@ -313,8 +313,8 @@
       "en": "Floor reference",
       "de": "Bodenbezug"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -345,7 +345,7 @@
      },
      "section": {
       "areaM2": 0.0081,
-      "secondMomentM4": 1.36687e-06,
+      "secondMomentM4": 0.00000136687,
       "extremeFibreM": 0.0225,
       "material": "beech-lacquered",
       "title": {
@@ -371,7 +371,7 @@
      "mass": {
       "kg": 0.648346,
       "comX": 0.36,
-      "comY": 0.0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "moving-blanket-catalogue"
@@ -384,7 +384,7 @@
       "en": "Carrier's hand: lift",
       "de": "Hand des Trägers: Heben"
      },
-     "x": 0.0,
+     "x": 0,
      "y": 0.75,
      "angleDeg": 0,
      "lengthM": 0,
@@ -402,8 +402,8 @@
       "en": "Carrier's hand: walking away",
       "de": "Hand des Trägers: Weggehen"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -437,7 +437,7 @@
      },
      "section": {
       "areaM2": 0.0072,
-      "secondMomentM4": 1.536e-07,
+      "secondMomentM4": 1.536e-7,
       "extremeFibreM": 0.008,
       "material": "vinyl-chipboard",
       "title": {
@@ -461,7 +461,7 @@
       "type": "fixed"
      },
      "mass": {
-      "kg": 8.0,
+      "kg": 8,
       "comX": 0.085,
       "comY": 0.0925,
       "distribution": "point",
@@ -470,7 +470,7 @@
      },
      "section": {
       "areaM2": 0.00322,
-      "secondMomentM4": 4.03594e-06,
+      "secondMomentM4": 0.00000403594,
       "extremeFibreM": 0.0375,
       "material": "cast-aluminium",
       "title": {
@@ -575,8 +575,8 @@
       "en": "Hood: lift",
       "de": "Haube: Heben"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -593,8 +593,8 @@
       "en": "Hood: slide over the machine",
       "de": "Haube: über die Maschine schieben"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -644,8 +644,8 @@
       "en": "Pedal: lift",
       "de": "Anlasser: Heben"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -662,8 +662,8 @@
       "en": "Pedal: slide",
       "de": "Anlasser: Schieben"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -697,7 +697,7 @@
      },
      "section": {
       "areaM2": 0.000615,
-      "secondMomentM4": 1.02247e-07,
+      "secondMomentM4": 1.02247e-7,
       "extremeFibreM": 0.014,
       "material": "abs-brown",
       "title": {
@@ -730,8 +730,8 @@
       "en": "Cable coil: drop",
       "de": "Kabelrolle: Absenken"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -748,8 +748,8 @@
       "en": "Cable coil: slide",
       "de": "Kabelrolle: Schieben"
      },
-     "x": 0.0,
-     "y": 0.0,
+     "x": 0,
+     "y": 0,
      "angleDeg": 0,
      "lengthM": 0,
      "joint": {
@@ -775,8 +775,8 @@
      },
      "mass": {
       "kg": 0.095506,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "sewing-machine-catalogue"
@@ -926,7 +926,7 @@
     "bone": "hood",
     "x": 0.12,
     "y": 0.201,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "The carrier's hand round the handle bar",
@@ -1242,8 +1242,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.035,
        "ry": 0.035,
        "region": "handwheel",
@@ -1461,8 +1461,8 @@
          -0.006
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ],
         [
          0.002,
@@ -1487,7 +1487,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.017
         ],
         [
@@ -1499,7 +1499,7 @@
          0.017
         ],
         [
-         0.0,
+         0,
          0.005
         ]
        ],
@@ -1541,7 +1541,7 @@
         ],
         [
          0.05,
-         0.0
+         0
         ],
         [
          0.048928,
@@ -1569,7 +1569,7 @@
         ],
         [
          -0.05,
-         0.0
+         0
         ],
         [
          -0.048928,
@@ -1713,7 +1713,7 @@
        "points": [
         [
          0.004,
-         0.0
+         0
         ],
         [
          0.004,
@@ -1725,7 +1725,7 @@
         ],
         [
          -0.004,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -1995,7 +1995,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0375
         ],
         [
@@ -2027,7 +2027,7 @@
          0.0375
         ],
         [
-         0.0,
+         0,
          0.0325
         ]
        ],
@@ -2271,7 +2271,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.008
         ],
         [
@@ -2283,7 +2283,7 @@
          0.008
         ],
         [
-         0.0,
+         0,
          0.008
         ]
        ],
@@ -2301,7 +2301,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -2313,7 +2313,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -2331,7 +2331,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -2343,7 +2343,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -2473,7 +2473,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -2490,7 +2490,7 @@
         ],
         [
          0.72,
-         0.0
+         0
         ],
         [
          0.719196,
@@ -2505,7 +2505,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -2534,7 +2534,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.025
         ],
         [
@@ -2543,11 +2543,11 @@
         ],
         [
          0.8,
-         0.0
+         0
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -2597,11 +2597,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -2627,11 +2627,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -2651,36 +2651,46 @@
        "bone": "hood",
        "role": "body",
        "z": -0.255,
-       "filled": true,
        "tone": 0.3,
+       "region": "hood",
+       "material": "abs-brown",
+       "filled": true,
        "kind": "poly",
        "points": [
         [
-         0.11,
-         0.175
+         -0.08,
+         1.112
         ],
         [
-         0.13,
-         0.175
+         -0.0619,
+         1.112
         ],
         [
-         0.13,
-         0.207
+         -0.0619,
+         1.132
         ],
         [
-         0.11,
-         0.207
+         0.0619,
+         1.132
+        ],
+        [
+         0.0619,
+         1.112
+        ],
+        [
+         0.08,
+         1.112
+        ],
+        [
+         0.08,
+         1.1439
+        ],
+        [
+         -0.08,
+         1.1439
         ]
        ],
-       "closed": true,
-       "region": "hood",
-       "material": "abs-brown",
-       "solid": {
-        "kind": "extruded",
-        "sweep": "w",
-        "z0": -0.08,
-        "z1": 0.08
-       }
+       "closed": true
       },
       {
        "id": "hood-walls",
@@ -2692,7 +2702,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -2704,7 +2714,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -2728,7 +2738,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -2740,7 +2750,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -2962,7 +2972,7 @@
        "id": "presser-shank",
        "bone": "presser",
        "role": "body",
-       "z": 0.0,
+       "z": 0,
        "filled": true,
        "tone": 0.7,
        "kind": "poly",
@@ -3817,11 +3827,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -3847,11 +3857,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -4172,7 +4182,7 @@
        "id": "table-top",
        "bone": "table",
        "role": "body",
-       "z": 0.0,
+       "z": 0,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
@@ -4540,11 +4550,11 @@
          -0.156
         ],
         [
-         0.0,
+         0,
          -0.156
         ],
         [
-         0.0,
+         0,
          -0.144
         ],
         [
@@ -4924,7 +4934,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -4936,7 +4946,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -5164,8 +5174,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.035,
        "ry": 0.035,
        "region": "handwheel",
@@ -5301,7 +5311,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.017
         ],
         [
@@ -5313,7 +5323,7 @@
          0.027
         ],
         [
-         0.0,
+         0,
          0.022
         ]
        ],
@@ -5344,7 +5354,7 @@
         ],
         [
          0.05,
-         0.0
+         0
         ],
         [
          0.048928,
@@ -5372,7 +5382,7 @@
         ],
         [
          -0.05,
-         0.0
+         0
         ],
         [
          -0.048928,
@@ -5489,7 +5499,7 @@
        "points": [
         [
          0.0075,
-         0.0
+         0
         ],
         [
          0.0075,
@@ -5501,7 +5511,7 @@
         ],
         [
          -0.0075,
-         0.0
+         0
         ]
        ],
        "closed": true,
@@ -5665,7 +5675,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0375
         ],
         [
@@ -5681,7 +5691,7 @@
          0.0375
         ],
         [
-         0.0,
+         0,
          0.0375
         ]
        ],
@@ -5805,7 +5815,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -5817,7 +5827,7 @@
          0.008
         ],
         [
-         0.0,
+         0,
          0.008
         ]
        ],
@@ -5835,7 +5845,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -5847,7 +5857,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -5865,7 +5875,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -5877,7 +5887,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -5996,7 +6006,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -6016,7 +6026,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -6034,7 +6044,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.025
         ],
         [
@@ -6043,11 +6053,11 @@
         ],
         [
          0.8,
-         0.0
+         0
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -6097,11 +6107,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -6127,11 +6137,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -6192,7 +6202,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -6204,7 +6214,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -6228,7 +6238,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -6240,7 +6250,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -6889,11 +6899,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -6919,11 +6929,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -7244,7 +7254,7 @@
        "id": "table-top",
        "bone": "table",
        "role": "body",
-       "z": 0.0,
+       "z": 0,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
@@ -7723,7 +7733,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -7735,7 +7745,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -7952,8 +7962,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.035,
        "ry": 0.035,
        "region": "handwheel",
@@ -8059,7 +8069,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.017
         ],
         [
@@ -8071,7 +8081,7 @@
          0.027
         ],
         [
-         0.0,
+         0,
          0.022
         ]
        ],
@@ -8269,7 +8279,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.0375
         ],
         [
@@ -8281,7 +8291,7 @@
          0.0375
         ],
         [
-         0.0,
+         0,
          0.0375
         ]
        ],
@@ -8389,7 +8399,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.016
         ],
         [
@@ -8401,7 +8411,7 @@
          0.008
         ],
         [
-         0.0,
+         0,
          0.008
         ]
        ],
@@ -8419,7 +8429,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -8431,7 +8441,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -8449,7 +8459,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -8461,7 +8471,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -8569,7 +8579,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.006
         ],
         [
@@ -8581,7 +8591,7 @@
          0.006
         ],
         [
-         0.0,
+         0,
          0.006
         ]
        ],
@@ -8599,7 +8609,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.025
         ],
         [
@@ -8608,11 +8618,11 @@
         ],
         [
          0.8,
-         0.0
+         0
         ],
         [
-         0.0,
-         0.0
+         0,
+         0
         ]
        ],
        "closed": true,
@@ -8662,11 +8672,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -8692,11 +8702,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -8757,7 +8767,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          -0.175
         ],
         [
@@ -8769,7 +8779,7 @@
          0.172
         ],
         [
-         0.0,
+         0,
          0.172
         ]
        ],
@@ -8793,7 +8803,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -8805,7 +8815,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -9310,11 +9320,11 @@
        "points": [
         [
          0.225,
-         0.0
+         0
         ],
         [
          0.27,
-         0.0
+         0
         ],
         [
          0.27,
@@ -9340,11 +9350,11 @@
        "points": [
         [
          -0.27,
-         0.0
+         0
         ],
         [
          -0.225,
-         0.0
+         0
         ],
         [
          -0.225,
@@ -9665,7 +9675,7 @@
        "id": "table-top",
        "bone": "table",
        "role": "body",
-       "z": 0.0,
+       "z": 0,
        "filled": true,
        "tone": 0.6,
        "kind": "poly",
@@ -10076,7 +10086,7 @@
        "kind": "poly",
        "points": [
         [
-         0.0,
+         0,
          0.172
         ],
         [
@@ -10088,7 +10098,7 @@
          0.175
         ],
         [
-         0.0,
+         0,
          0.175
         ]
        ],
@@ -10356,7 +10366,7 @@
       "dy": -0.402
      },
      "carry-travel": {
-      "dx": 1.0
+      "dx": 1
      }
     },
     "ground": "authored",
@@ -10472,7 +10482,7 @@
       "dy": -0.762
      },
      "pedal-slide": {
-      "dx": 0.0
+      "dx": 0
      },
      "cable-lift": {
       "dy": -0.044
@@ -10481,7 +10491,7 @@
       "dx": -0.13
      },
      "tread": {
-      "angleDeg": 3.0
+      "angleDeg": 3
      }
     },
     "ground": "authored",
@@ -10635,7 +10645,7 @@
       "dy": -0.762
      },
      "pedal-slide": {
-      "dx": 0.0
+      "dx": 0
      },
      "cable-lift": {
       "dy": -0.044
@@ -11684,12 +11694,12 @@
       "ease": "smooth"
      },
      {
-      "t": 5.0,
+      "t": 5,
       "pose": "hood-over-key",
       "ease": "smooth"
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "closed-key",
       "ease": "smooth"
      },
@@ -11732,7 +11742,7 @@
      },
      {
       "anchor": "grip",
-      "fromS": 6.0,
+      "fromS": 6,
       "toS": 10
      }
     ],
@@ -11749,7 +11759,7 @@
      {
       "id": "close-hood",
       "fromS": 2.4,
-      "toS": 6.0,
+      "toS": 6,
       "title": {
        "en": "Put the hood on",
        "de": "Haube aufsetzen"
@@ -11757,7 +11767,7 @@
      },
      {
       "id": "lift",
-      "fromS": 6.0,
+      "fromS": 6,
       "toS": 7.2,
       "title": {
        "en": "Lift by the handle",
@@ -11784,7 +11794,7 @@
       }
      },
      {
-      "t": 6.0,
+      "t": 6,
       "kind": "contact-on",
       "title": {
        "en": "Hand takes the handle",
@@ -11811,11 +11821,11 @@
         "v": 1
        },
        {
-        "t": 5.0,
+        "t": 5,
         "v": 1
        },
        {
-        "t": 6.0,
+        "t": 6,
         "v": 0
        }
       ]
@@ -11833,7 +11843,7 @@
         "v": 0.4
        },
        {
-        "t": 8.0,
+        "t": 8,
         "v": 0.5
        }
       ]
@@ -11856,21 +11866,21 @@
     "rootMotion": "none",
     "keys": [
      {
-      "t": 0.0,
+      "t": 0,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 0.0
+        "angleDeg": 0
        },
        "fabric": {
-        "dx": 0.0
+        "dx": 0
        }
       }
      },
@@ -11886,7 +11896,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 180.0
+        "angleDeg": 180
        },
        "fabric": {
         "dx": -0.00125
@@ -11899,13 +11909,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 360.0
+        "angleDeg": 360
        },
        "fabric": {
         "dx": -0.0025
@@ -11924,7 +11934,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 540.0
+        "angleDeg": 540
        },
        "fabric": {
         "dx": -0.00375
@@ -11937,13 +11947,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 720.0
+        "angleDeg": 720
        },
        "fabric": {
         "dx": -0.005
@@ -11962,7 +11972,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 900.0
+        "angleDeg": 900
        },
        "fabric": {
         "dx": -0.00625
@@ -11975,13 +11985,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 1080.0
+        "angleDeg": 1080
        },
        "fabric": {
         "dx": -0.0075
@@ -12000,7 +12010,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 1260.0
+        "angleDeg": 1260
        },
        "fabric": {
         "dx": -0.00875
@@ -12013,13 +12023,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 1440.0
+        "angleDeg": 1440
        },
        "fabric": {
         "dx": -0.01
@@ -12038,7 +12048,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 1620.0
+        "angleDeg": 1620
        },
        "fabric": {
         "dx": -0.01125
@@ -12046,18 +12056,18 @@
       }
      },
      {
-      "t": 1.0,
+      "t": 1,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 1800.0
+        "angleDeg": 1800
        },
        "fabric": {
         "dx": -0.0125
@@ -12076,7 +12086,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 1980.0
+        "angleDeg": 1980
        },
        "fabric": {
         "dx": -0.01375
@@ -12089,13 +12099,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 2160.0
+        "angleDeg": 2160
        },
        "fabric": {
         "dx": -0.015
@@ -12114,7 +12124,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 2340.0
+        "angleDeg": 2340
        },
        "fabric": {
         "dx": -0.01625
@@ -12127,13 +12137,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 2520.0
+        "angleDeg": 2520
        },
        "fabric": {
         "dx": -0.0175
@@ -12152,7 +12162,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 2700.0
+        "angleDeg": 2700
        },
        "fabric": {
         "dx": -0.01875
@@ -12165,13 +12175,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 2880.0
+        "angleDeg": 2880
        },
        "fabric": {
         "dx": -0.02
@@ -12190,7 +12200,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 3060.0
+        "angleDeg": 3060
        },
        "fabric": {
         "dx": -0.02125
@@ -12203,13 +12213,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 3240.0
+        "angleDeg": 3240
        },
        "fabric": {
         "dx": -0.0225
@@ -12228,7 +12238,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 3420.0
+        "angleDeg": 3420
        },
        "fabric": {
         "dx": -0.02375
@@ -12236,18 +12246,18 @@
       }
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "in-use",
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 3600.0
+        "angleDeg": 3600
        },
        "fabric": {
         "dx": -0.025
@@ -12266,7 +12276,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 3780.0
+        "angleDeg": 3780
        },
        "fabric": {
         "dx": -0.02625
@@ -12279,13 +12289,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 3960.0
+        "angleDeg": 3960
        },
        "fabric": {
         "dx": -0.0275
@@ -12304,7 +12314,7 @@
         "dy": -0.03
        },
        "handwheel": {
-        "angleDeg": 4140.0
+        "angleDeg": 4140
        },
        "fabric": {
         "dx": -0.02875
@@ -12317,13 +12327,13 @@
       "ease": "smooth",
       "bones": {
        "needle-bar": {
-        "dy": 0.0
+        "dy": 0
        },
        "take-up": {
-        "dy": 0.0
+        "dy": 0
        },
        "handwheel": {
-        "angleDeg": 4320.0
+        "angleDeg": 4320
        },
        "fabric": {
         "dx": -0.03
@@ -12513,13 +12523,13 @@
        "kind": "metal",
        "material": "cast-aluminium",
        "thicknessM": 0.0035,
-       "resistanceM2KW": 3.18182e-05,
-       "heatCapacityJM2K": 8505.0,
+       "resistanceM2KW": 0.0000318182,
+       "heatCapacityJM2K": 8505,
        "source": "literature",
        "reference": "en-1706-2020"
       }
      ],
-     "heatCapacityJM2K": 8505.0,
+     "heatCapacityJM2K": 8505,
      "source": "authored-estimate",
      "reference": "iec-60335-2-28",
      "operating": {
@@ -12552,13 +12562,13 @@
        "kind": "metal",
        "material": "cast-aluminium",
        "thicknessM": 0.003,
-       "resistanceM2KW": 2.72727e-05,
-       "heatCapacityJM2K": 7290.0,
+       "resistanceM2KW": 0.0000272727,
+       "heatCapacityJM2K": 7290,
        "source": "literature",
        "reference": "en-1706-2020"
       }
      ],
-     "heatCapacityJM2K": 7290.0,
+     "heatCapacityJM2K": 7290,
      "source": "authored-estimate",
      "reference": "iec-60335-2-28",
      "operating": {
@@ -12591,13 +12601,13 @@
        "kind": "metal",
        "material": "chromed-zinc",
        "thicknessM": 0.004,
-       "resistanceM2KW": 3.63636e-05,
-       "heatCapacityJM2K": 10452.0,
+       "resistanceM2KW": 0.0000363636,
+       "heatCapacityJM2K": 10452,
        "source": "authored-estimate",
        "reference": "incropera-2018"
       }
      ],
-     "heatCapacityJM2K": 10452.0,
+     "heatCapacityJM2K": 10452,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12625,12 +12635,12 @@
        "material": "abs-brown",
        "thicknessM": 0.003,
        "resistanceM2KW": 0.017647,
-       "heatCapacityJM2K": 4410.0,
+       "heatCapacityJM2K": 4410,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 4410.0,
+     "heatCapacityJM2K": 4410,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12657,13 +12667,13 @@
        "kind": "metal",
        "material": "chromed-steel",
        "thicknessM": 0.004,
-       "resistanceM2KW": 8e-05,
-       "heatCapacityJM2K": 14130.0,
+       "resistanceM2KW": 0.00008,
+       "heatCapacityJM2K": 14130,
        "source": "literature",
        "reference": "incropera-2018"
       }
      ],
-     "heatCapacityJM2K": 14130.0,
+     "heatCapacityJM2K": 14130,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12691,12 +12701,12 @@
        "material": "thread",
        "thicknessM": 0.013,
        "resistanceM2KW": 0.13,
-       "heatCapacityJM2K": 14040.0,
+       "heatCapacityJM2K": 14040,
        "source": "authored-estimate",
        "reference": "incropera-2018"
       }
      ],
-     "heatCapacityJM2K": 14040.0,
+     "heatCapacityJM2K": 14040,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12724,12 +12734,12 @@
        "material": "cotton",
        "thicknessM": 0.002,
        "resistanceM2KW": 0.033333,
-       "heatCapacityJM2K": 1040.0,
+       "heatCapacityJM2K": 1040,
        "source": "authored-estimate",
        "reference": "incropera-2018"
       }
      ],
-     "heatCapacityJM2K": 1040.0,
+     "heatCapacityJM2K": 1040,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12757,12 +12767,12 @@
        "material": "vinyl-chipboard",
        "thicknessM": 0.016,
        "resistanceM2KW": 0.114286,
-       "heatCapacityJM2K": 17680.0,
+       "heatCapacityJM2K": 17680,
        "source": "literature",
        "reference": "en-312-2010"
       }
      ],
-     "heatCapacityJM2K": 17680.0,
+     "heatCapacityJM2K": 17680,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12790,12 +12800,12 @@
        "material": "abs-ivory",
        "thicknessM": 0.003,
        "resistanceM2KW": 0.017647,
-       "heatCapacityJM2K": 4410.0,
+       "heatCapacityJM2K": 4410,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 4410.0,
+     "heatCapacityJM2K": 4410,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -12823,12 +12833,12 @@
        "material": "abs-brown",
        "thicknessM": 0.0025,
        "resistanceM2KW": 0.014706,
-       "heatCapacityJM2K": 3675.0,
+       "heatCapacityJM2K": 3675,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 3675.0,
+     "heatCapacityJM2K": 3675,
      "source": "authored-estimate",
      "reference": "sewing-machine-catalogue",
      "operating": {
@@ -12860,12 +12870,12 @@
        "material": "pvc-cable",
        "thicknessM": 0.008,
        "resistanceM2KW": 0.026667,
-       "heatCapacityJM2K": 14400.0,
+       "heatCapacityJM2K": 14400,
        "source": "authored-estimate",
        "reference": "iso-10456-2007"
       }
      ],
-     "heatCapacityJM2K": 14400.0,
+     "heatCapacityJM2K": 14400,
      "source": "authored-estimate",
      "reference": "iso-10456-2007"
     },
@@ -13060,7 +13070,7 @@
        "translation": [
         0.4,
         -0.0125,
-        0.0
+        0
        ]
       }
      },
@@ -13200,7 +13210,7 @@
        "translation": [
         0.76,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -13220,7 +13230,7 @@
        "translation": [
         0.04,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -13234,7 +13244,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -13251,7 +13261,7 @@
        ],
        [
         0.72,
-        0.0
+        0
        ],
        [
         0.719196,
@@ -13266,7 +13276,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -13289,7 +13299,7 @@
        "translation": [
         0.12,
         -3.46945e-18,
-        0.0
+        0
        ]
       }
      },
@@ -13303,7 +13313,7 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.012,
@@ -13315,7 +13325,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13339,7 +13349,7 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.012,
@@ -13351,7 +13361,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13375,7 +13385,7 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.012,
@@ -13387,7 +13397,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13411,7 +13421,7 @@
       "profile": [
        [
         0.012,
-        0.0
+        0
        ],
        [
         0.012,
@@ -13423,7 +13433,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13447,7 +13457,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.0375
        ],
        [
@@ -13479,7 +13489,7 @@
         0.0375
        ],
        [
-        0.0,
+        0,
         0.0325
        ]
       ],
@@ -13699,7 +13709,7 @@
       "profile": [
        [
         0.185,
-        0.0
+        0
        ],
        [
         0.185,
@@ -13719,7 +13729,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13728,9 +13738,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -13743,7 +13753,7 @@
       "profile": [
        [
         0.066,
-        0.0
+        0
        ],
        [
         0.066,
@@ -13759,7 +13769,7 @@
        ],
        [
         0.085,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13783,7 +13793,7 @@
       "profile": [
        [
         0.066,
-        0.0
+        0
        ],
        [
         0.066,
@@ -13799,7 +13809,7 @@
        ],
        [
         0.082,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13823,7 +13833,7 @@
       "profile": [
        [
         0.326,
-        0.0
+        0
        ],
        [
         0.326,
@@ -13835,7 +13845,7 @@
        ],
        [
         0.338,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13859,7 +13869,7 @@
       "profile": [
        [
         0.326,
-        0.0
+        0
        ],
        [
         0.326,
@@ -13887,7 +13897,7 @@
        ],
        [
         0.366,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13911,7 +13921,7 @@
       "profile": [
        [
         0.151,
-        0.0
+        0
        ],
        [
         0.151,
@@ -13923,7 +13933,7 @@
        ],
        [
         0.211,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13932,7 +13942,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.151,
        -0.15
       ]
@@ -13951,8 +13961,8 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         -0.15
        ]
       }
@@ -13967,7 +13977,7 @@
       "profile": [
        [
         0.128,
-        0.0
+        0
        ],
        [
         0.128,
@@ -13979,7 +13989,7 @@
        ],
        [
         0.216,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14057,7 +14067,7 @@
       "transform": {
        "translation": [
         1.38778e-17,
-        0.0,
+        0,
         -0.165
        ]
       }
@@ -14072,7 +14082,7 @@
       "profile": [
        [
         0.123,
-        0.0
+        0
        ],
        [
         0.123,
@@ -14084,7 +14094,7 @@
        ],
        [
         0.161,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14093,7 +14103,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.151,
        -0.15
       ],
@@ -14114,7 +14124,7 @@
       "transform": {
        "translation": [
         4.33681e-18,
-        0.0,
+        0,
         -0.143
        ]
       },
@@ -14131,7 +14141,7 @@
       "profile": [
        [
         -0.205,
-        0.0
+        0
        ],
        [
         -0.215,
@@ -14191,7 +14201,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "from": -0.175,
@@ -14276,7 +14286,7 @@
       "profile": [
        [
         -0.205,
-        0.0
+        0
        ],
        [
         -0.215,
@@ -14336,7 +14346,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "from": 0.172,
@@ -14398,7 +14408,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.017
        ],
        [
@@ -14410,7 +14420,7 @@
         0.017
        ],
        [
-        0.0,
+        0,
         0.005
        ]
       ],
@@ -14431,8 +14441,8 @@
         -0.006
        ],
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
         0.002,
@@ -14529,7 +14539,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.0635,
        -0.0225
       ]
@@ -15015,11 +15025,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -15028,7 +15038,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15054,11 +15064,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -15067,7 +15077,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15093,11 +15103,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -15106,7 +15116,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15132,11 +15142,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -15145,7 +15155,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15178,7 +15188,7 @@
        "translation": [
         0.4,
         -0.105,
-        0.0
+        0
        ]
       },
       "member": "table",
@@ -15199,7 +15209,7 @@
       "transform": {
        "translation": [
         0.36,
-        0.0,
+        0,
         0.26
        ]
       },
@@ -15221,8 +15231,8 @@
       "transform": {
        "translation": [
         0.12,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "member": "case",
@@ -15266,7 +15276,7 @@
        "translation": [
         0.12,
         -0.087,
-        0.0
+        0
        ]
       },
       "member": "hood",
@@ -15330,7 +15340,7 @@
        "translation": [
         0.4,
         -0.0125,
-        0.0
+        0
        ]
       }
      },
@@ -15470,7 +15480,7 @@
        "translation": [
         0.76,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -15490,7 +15500,7 @@
        "translation": [
         0.04,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -15504,7 +15514,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -15524,7 +15534,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -15548,7 +15558,7 @@
        "translation": [
         0.12,
         -0.004,
-        0.0
+        0
        ]
       }
      },
@@ -15562,7 +15572,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.0375
        ],
        [
@@ -15578,7 +15588,7 @@
         0.0375
        ],
        [
-        0.0,
+        0,
         0.0375
        ]
       ],
@@ -15750,7 +15760,7 @@
       "profile": [
        [
         0.185,
-        0.0
+        0
        ],
        [
         0.185,
@@ -15762,7 +15772,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15771,9 +15781,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -15786,7 +15796,7 @@
       "profile": [
        [
         0.066,
-        0.0
+        0
        ],
        [
         0.066,
@@ -15798,7 +15808,7 @@
        ],
        [
         0.085,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15822,7 +15832,7 @@
       "profile": [
        [
         0.066,
-        0.0
+        0
        ],
        [
         0.066,
@@ -15834,7 +15844,7 @@
        ],
        [
         0.085,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15858,7 +15868,7 @@
       "profile": [
        [
         0.326,
-        0.0
+        0
        ],
        [
         0.326,
@@ -15870,7 +15880,7 @@
        ],
        [
         0.366,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15894,7 +15904,7 @@
       "profile": [
        [
         0.151,
-        0.0
+        0
        ],
        [
         0.151,
@@ -15906,7 +15916,7 @@
        ],
        [
         0.211,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15915,7 +15925,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.151,
        -0.15
       ]
@@ -15930,7 +15940,7 @@
       "profile": [
        [
         0.128,
-        0.0
+        0
        ],
        [
         0.128,
@@ -15942,7 +15952,7 @@
        ],
        [
         0.216,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15986,7 +15996,7 @@
       "profile": [
        [
         0.123,
-        0.0
+        0
        ],
        [
         0.123,
@@ -15998,7 +16008,7 @@
        ],
        [
         0.161,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16007,7 +16017,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.151,
        -0.15
       ],
@@ -16028,7 +16038,7 @@
       "transform": {
        "translation": [
         4.33681e-18,
-        0.0,
+        0,
         -0.143
        ]
       },
@@ -16045,7 +16055,7 @@
       "profile": [
        [
         -0.205,
-        0.0
+        0
        ],
        [
         -0.219142,
@@ -16089,7 +16099,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "from": -0.175,
@@ -16158,7 +16168,7 @@
       "profile": [
        [
         -0.205,
-        0.0
+        0
        ],
        [
         -0.219142,
@@ -16202,7 +16212,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "from": 0.172,
@@ -16264,7 +16274,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.017
        ],
        [
@@ -16276,7 +16286,7 @@
         0.027
        ],
        [
-        0.0,
+        0,
         0.022
        ]
       ],
@@ -16366,7 +16376,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.0635,
        -0.0225
       ]
@@ -16783,11 +16793,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -16796,7 +16806,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16822,11 +16832,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -16835,7 +16845,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16861,11 +16871,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -16874,7 +16884,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16900,11 +16910,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -16913,7 +16923,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16946,7 +16956,7 @@
        "translation": [
         0.4,
         -0.105,
-        0.0
+        0
        ]
       },
       "member": "table",
@@ -16967,7 +16977,7 @@
       "transform": {
        "translation": [
         0.36,
-        0.0,
+        0,
         0.26
        ]
       },
@@ -16990,7 +17000,7 @@
        "translation": [
         0.12,
         -0.004,
-        0.0
+        0
        ]
       },
       "member": "case",
@@ -17034,7 +17044,7 @@
        "translation": [
         0.12,
         -0.087,
-        0.0
+        0
        ]
       },
       "member": "hood",
@@ -17098,7 +17108,7 @@
        "translation": [
         0.4,
         -0.0125,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -17239,7 +17249,7 @@
        "translation": [
         0.755,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -17259,7 +17269,7 @@
        "translation": [
         0.045,
         -0.07,
-        0.0
+        0
        ]
       }
      },
@@ -17273,7 +17283,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.006
        ],
        [
@@ -17285,7 +17295,7 @@
         0.006
        ],
        [
-        0.0,
+        0,
         0.006
        ]
       ],
@@ -17309,7 +17319,7 @@
        "translation": [
         0.12,
         -0.004,
-        0.0
+        0
        ]
       }
      },
@@ -17323,7 +17333,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.0375
        ],
        [
@@ -17335,7 +17345,7 @@
         0.0375
        ],
        [
-        0.0,
+        0,
         0.0375
        ]
       ],
@@ -17459,7 +17469,7 @@
       "profile": [
        [
         0.175,
-        0.0
+        0
        ],
        [
         0.175,
@@ -17471,7 +17481,7 @@
        ],
        [
         0.205,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -17480,9 +17490,9 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ]
      },
      {
@@ -17515,7 +17525,7 @@
       "profile": [
        [
         0.326,
-        0.0
+        0
        ],
        [
         0.326,
@@ -17527,7 +17537,7 @@
        ],
        [
         0.366,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -17576,7 +17586,7 @@
       "transform": {
        "translation": [
         4.33681e-18,
-        0.0,
+        0,
         -0.143
        ]
       },
@@ -17593,7 +17603,7 @@
       "profile": [
        [
         -0.225,
-        0.0
+        0
        ],
        [
         -0.225,
@@ -17605,7 +17615,7 @@
        ],
        [
         0.225,
-        0.0
+        0
        ]
       ],
       "from": -0.175,
@@ -17642,7 +17652,7 @@
       "profile": [
        [
         -0.225,
-        0.0
+        0
        ],
        [
         -0.225,
@@ -17654,7 +17664,7 @@
        ],
        [
         0.225,
-        0.0
+        0
        ]
       ],
       "from": 0.172,
@@ -17677,7 +17687,7 @@
        "translation": [
         0.12,
         0.191,
-        0.0
+        0
        ]
       }
      },
@@ -17691,7 +17701,7 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         -0.017
        ],
        [
@@ -17703,7 +17713,7 @@
         0.027
        ],
        [
-        0.0,
+        0,
         0.022
        ]
       ],
@@ -17720,7 +17730,7 @@
       "profile": [
        [
         0.0555,
-        0.0
+        0
        ],
        [
         0.0555,
@@ -17732,7 +17742,7 @@
        ],
        [
         0.0855,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -17741,7 +17751,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.0635,
        -0.0225
       ]
@@ -18138,11 +18148,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -18151,7 +18161,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -18177,11 +18187,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -18190,7 +18200,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -18216,11 +18226,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -18229,7 +18239,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -18255,11 +18265,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -18268,7 +18278,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -18301,7 +18311,7 @@
        "translation": [
         0.4,
         -0.105,
-        0.0
+        0
        ]
       },
       "member": "table",
@@ -18322,7 +18332,7 @@
       "transform": {
        "translation": [
         0.36,
-        0.0,
+        0,
         0.26
        ]
       },
@@ -18345,7 +18355,7 @@
        "translation": [
         0.12,
         -0.004,
-        0.0
+        0
        ]
       },
       "member": "case",
@@ -18389,7 +18399,7 @@
        "translation": [
         0.12,
         -0.087,
-        0.0
+        0
        ]
       },
       "member": "hood",

@@ -6,7 +6,8 @@
   "required": [
     "version",
     "cases",
-    "readers"
+    "readers",
+    "storeEntry"
   ],
   "properties": {
     "version": {
@@ -69,7 +70,7 @@
           },
           "owner": {
             "enum": [
-              "withComponentModelV1",
+              "readRetainedComponentModelV1",
               "verifyModel"
             ]
           },
@@ -79,6 +80,24 @@
               "intent.mode"
             ]
           }
+        }
+      }
+    },
+    "storeEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "owner"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "owner": {
+          "const": "withComponentModelV1"
         }
       }
     }

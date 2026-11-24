@@ -41,11 +41,11 @@ fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no
     assert_eq!(queue.owners.front().map(|owner| owner.generation), Some(2));
 }
 
-fn ingress_opportunity_document() -> UiDocumentLease {
+fn ingress_opportunity_document(generation: u64) -> UiDocumentLease {
     let fixture: Value = serde_json::from_str(semio_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).unwrap();
     let source = &fixture["document"];
     let mut builder = ui_contract::UiDocumentBuilder::try_new(
-        1,
+        generation,
         ui_contract::SurfaceId::try_from(source["surface"].as_str().unwrap()).unwrap(),
         ui_contract::UiRevision(1),
         Some(ui_contract::UiNodeId(source["root"].as_u64().unwrap())),
@@ -61,7 +61,7 @@ fn ingress_opportunity_document() -> UiDocumentLease {
 #[test]
 fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_same_page() {
     for (fuel, deadline, clock, cancelled) in [(0, u64::MAX, (|| Some(0)) as fn() -> Option<u64>, false), (1, 1, (|| Some(2)) as fn() -> Option<u64>, false), (1, u64::MAX, (|| Some(0)) as fn() -> Option<u64>, true)] {
-        let mut document = ingress_opportunity_document();
+        let mut document = ingress_opportunity_document(1);
         let header = document.header().unwrap();
         let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
         let mut cursor = UiDocumentFrameCursor::default();
@@ -92,19 +92,19 @@ fn retained_document_page_budget_refusal_preserves_the_cursor_and_retries_the_sa
 }
 
 #[test]
-fn retained_document_page_with_a_live_wrong_generation_remains_a_terminal_fault() {
-    let mut document = ingress_opportunity_document();
+fn retained_document_page_of_another_generation_remains_a_terminal_fault() {
+    let mut document = ingress_opportunity_document(1);
+    let mut foreign = ingress_opportunity_document(2);
     let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     let mut cursor = UiDocumentFrameCursor::default();
     let mut sequence = 0;
     let cancel = semio_framework_job::CancelToken::root_now();
-    let mut admitted_retained = semio_framework_job::RetainedCloneProgress::default();
-    let mut admitted = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut sequence, &mut admitted_retained);
-    engine.begin_document("wrong-generation", document.header().unwrap(), &mut admitted).unwrap();
-    drop(admitted);
-    let mut stale_retained = semio_framework_job::RetainedCloneProgress::default();
-    let mut stale = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel, || Some(0), &mut sequence, &mut stale_retained);
-    apply_retained_document_page(&mut engine, &mut cursor, "wrong-generation", document.read_node_page(0).unwrap().unwrap(), &mut stale);
+    let mut retained = semio_framework_job::RetainedCloneProgress::default();
+    let mut step = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(2, u64::MAX, UNBOUNDED_STEP_GRANT), cancel, || Some(0), &mut sequence, &mut retained);
+    engine.begin_document("wrong-generation", document.header().unwrap(), &mut step).unwrap();
+    apply_retained_document_page(&mut engine, &mut cursor, "wrong-generation", foreign.read_node_page(0).unwrap().unwrap(), &mut step);
     assert!(cursor.terminal_is_fault());
+    drop(step);
     while !document.close_step() {}
+    while !foreign.close_step() {}
 }

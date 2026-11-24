@@ -126,6 +126,10 @@
       "en": "commit: working tree must be clean before tag/squash/push",
       "de": "commit: Der Arbeitsbaum muss vor Tag, Squash und Push sauber sein"
     },
+    "run.history-is-shallow": {
+      "en": "commit: this repository reads its history through a shallow boundary (.git/shallow), so a commit made here can cut the archive; the replica daemon removes a boundary whose history is present, otherwise fetch the missing history first",
+      "de": "commit: Dieses Repository liest seine Historie durch eine flache Grenze (.git/shallow), ein Commit von hier kann das Archiv abschneiden; der Replica-Daemon entfernt eine Grenze, deren Historie vorhanden ist, andernfalls zuerst die fehlende Historie holen"
+    },
     "run.no-contributor-for-git-user": {
       "en": "commit: no contributor for git user.email {email}",
       "de": "commit: Kein Contributor für git user.email {email}"
@@ -173,6 +177,10 @@
     "bullets.read-diff-again": {
       "en": "micro-commit: read `micro-commit diff` again (include ticket plans, product code, repo, …)",
       "de": "micro-commit: `micro-commit diff` erneut lesen (Ticket-Pläne, Produktcode, Repo, … einbeziehen)"
+    },
+    "micro.history-is-shallow": {
+      "en": "micro-commit: this repository reads its history through a shallow boundary (.git/shallow), so a commit made here can cut the archive; the replica daemon removes a boundary whose history is present, otherwise fetch the missing history first",
+      "de": "micro-commit: Dieses Repository liest seine Historie durch eine flache Grenze (.git/shallow), ein Commit von hier kann das Archiv abschneiden; der Replica-Daemon entfernt eine Grenze, deren Historie vorhanden ist, andernfalls zuerst die fehlende Historie holen"
     },
     "micro.no-contributor-for-git-user": {
       "en": "micro-commit: no contributor for git user.email {email}",

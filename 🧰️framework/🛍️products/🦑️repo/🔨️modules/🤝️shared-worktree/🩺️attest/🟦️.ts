@@ -156,8 +156,8 @@ export function maskBucketsV1(mask:string):ReadonlySet<number>{
 /** 🎭️ The mask of every bucket: a view in which nothing can be compared. */
 export const everyBucketMaskV1="f".repeat(bucketCountV1/4);
 
-/** 🌿️ Tells whether a path decides the `HEAD` commit, the stage or what a view calls tracked, ignored or attributed: the virtual index realm, `.git/HEAD`, `.git/refs/heads/**`, `.git/packed-refs`, `.git/shallow` and every `.gitignore`, `.gitattributes` and `.gitmodules`. Git objects, remote-tracking refs and tags (an auto-fetch writes them all the time) change none of them. */
-export function gitPathV1(path:string):boolean{return realmPathV1(path)||path===".git/HEAD"||path===".git/packed-refs"||path===".git/shallow"||path.startsWith(".git/refs/heads/")||/(?:^|\/)\.git(?:ignore|attributes|modules)$/u.test(path);}
+/** 🌿️ Tells whether a path decides the `HEAD` commit, the stage or what a view calls tracked, ignored or attributed: the virtual index realm, `.git/HEAD`, `.git/refs/heads/**`, `.git/packed-refs` and every `.gitignore`, `.gitattributes` and `.gitmodules`. Git objects, remote-tracking refs and tags (an auto-fetch writes them all the time) change none of them. */
+export function gitPathV1(path:string):boolean{return realmPathV1(path)||path===".git/HEAD"||path===".git/packed-refs"||path.startsWith(".git/refs/heads/")||/(?:^|\/)\.git(?:ignore|attributes|modules)$/u.test(path);}
 
 /** 🧾️ One event of a journal, as far as the comparison needs it: the cursor behind it, its path and the wall-clock milliseconds in its hybrid logical clock. */
 export type GapEventV1=Readonly<{end:FleetCursorV1;path:string;ms:number}>;

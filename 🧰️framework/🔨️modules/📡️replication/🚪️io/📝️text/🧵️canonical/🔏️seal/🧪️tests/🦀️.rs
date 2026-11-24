@@ -50,7 +50,7 @@ fn canonical_native_edit_seal_preserves_original_box_and_fields_after_framed_dig
      let work_contract:serde_json::Value=serde_json::from_str(include_str!("work.json")).unwrap();
      let(zero,spent)=polled(RetainedCloneGrant::default(),|effect|cursor.advance(effect));assert_eq!(zero.progress(),RetainedCloneProgress::default());assert_eq!(cursor.last_turn_work(),u128::from(work_contract["deniedWork"].as_u64().unwrap()));assert_eq!(spent,(0,0));
     for refused in [RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..admitted},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..admitted},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..admitted},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..admitted}]{if refused==admitted{continue;}let(step,spent)=polled(refused,|effect|cursor.advance(effect));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(spent,(0,0));}
-     let bound=cursor.next_work_demand().unwrap();let(step,_)=polled(admitted,|effect|cursor.advance(effect));assert!(cursor.last_turn_work()<=u128::from(bound));assert!(step.progress().fits(admitted));turns+=1;
+     let bound=cursor.next_work_demand().unwrap();assert!(bound>0,"a live seal always quotes at least one work unit");let(step,_)=polled(admitted,|effect|cursor.advance(effect));assert!(cursor.last_turn_work()<=u128::from(bound));assert!(step.progress().fits(admitted));assert_ne!(step.progress(),RetainedCloneProgress::default(),"the exact quoted grant must move a live seal");turns+=1;
    }
    assert!(cursor.terminal_is_empty());let(_,heap)=observe(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }}
@@ -124,4 +124,36 @@ fn canonical_native_edit_seal_settles_every_exact_quote_within_its_own_grant_for
   assert!(cursor.terminal_is_empty());
  }}
  for pair in digests.chunks(2){assert_eq!(pair[0],pair[1],"exact and wide grants must agree on the digest");}
+}
+
+/// 🪟️ A turn granted a wide copy window chains fill and hash in place: every receipt fits its grant, the work stays within the window quote, and the digest equals the narrow seal's in far fewer turns.
+#[test]
+fn a_wide_window_seal_chains_fill_and_hash_to_the_narrow_digest_in_fewer_turns(){
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let mut row=cases["cases"][1]["edit"].clone();
+ row["forwards"]=serde_json::Value::Array(vec![serde_json::Value::Bool(true);4096]);
+ row["inverse"]=serde_json::Value::Array(vec![serde_json::Value::Bool(false);4096]);
+ let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:1024};
+ let seal=|window:usize|{
+  let original=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&row).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+  let mut source=Some(stage(original));
+  let(mut cursor,_)=ArtifactCanonicalEditSealCursor::admit_source(&mut source,grant(ArtifactCanonicalEditSealCursor::<bool>::source_constructor_demand())).unwrap().unwrap();
+  let mut turns=0usize;
+  while !cursor.is_ready(){
+   assert!(turns<1_000_000);turns+=1;
+   let admitted=RetainedCloneGrant{maximum_depth:cursor.next_demand().unwrap().depth,..wide};let quote=cursor.next_work_demand_within(window).unwrap();
+   let(step,_)=polled(admitted,|effect|cursor.advance_within(window,effect));
+   assert!(step.progress().fits(admitted));assert!(cursor.last_turn_work()<=u128::from(quote));
+  }
+  let digest=(cursor.canonical_length(),hex(cursor.digest().unwrap()));
+  let(edit,_,_)=cursor.take_edit(grant(cursor.next_take_demand())).unwrap().unwrap();
+  let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("{error}"));
+  for _ in 0..1_000_000{if owner.terminal_is_empty(){break;}let work=owner.next_copy_byte_demand().unwrap();stepped(&mut owner,grant(RetirementDemand{copy_bytes:work,capacity_bytes:owner.next_capacity_byte_demand(work).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()}));}
+  assert!(owner.terminal_is_empty()&&cursor.terminal_is_empty());
+  (digest,turns)
+ };
+ let(narrow,narrow_turns)=seal(256);
+ let(chained,chained_turns)=seal(ArtifactCanonicalEditSealCursor::<bool>::work_window(wide));
+ assert_eq!(chained,narrow,"the chained window must hash the same canonical bytes");
+ assert!(chained_turns*8<narrow_turns,"{chained_turns} chained vs {narrow_turns} narrow turns");
 }

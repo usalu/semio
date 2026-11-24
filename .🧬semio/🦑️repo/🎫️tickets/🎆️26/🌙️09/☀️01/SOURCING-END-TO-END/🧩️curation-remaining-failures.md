@@ -37,15 +37,20 @@ resets the baseline. File `🧰️framework/🔨️modules/🌱️value/🎟️c
 
 ## 3. History acceptance and archive/example loads
 
-`history_edits_end_to_end`, `conflict_history_edits_end_to_end` and the archive reload died on
-`initialization requires its original installed native semantic producer` and
-`original report requires its installed semantic and retirement issuers`: the document store had no replay preparation factory.
-The store installs one issuer for both publication and replay (`original_semantic_issuer_is_shared`), and sourcing's
-`SourcingCurationArtifactPreparationFactory` hand-implemented only the one-item publication half.
+Archive reload and the example load died on `initialization requires its original installed native semantic producer`,
+history on `original report requires its installed semantic and retirement issuers`: the document owner catalog carried no replay issuer.
+Sourcing hand-implemented only the one-item publication half (`SourcingCurationArtifactPreparationFactory`) and used the default catalog.
 
-Fix: delete the hand-written document preparation (about 180 lines) and install the shared bounded cold apply factory
-(`store::bounded_cold_mutation_apply_preparation_factory`) over the same fixed envelope (4096 items, 256 byte ids, 512 KiB).
-It implements publication, replay, report and initialization. Footprint checks became `ColdPreparationBounds` byte measures.
+Fixes (production, wasm):
+- `🗄️artifact-store-preparation/🦀️.rs` rewritten: the hand-written preparation (about 180 lines) is replaced by the shared `ColdMutationApplyFactory`
+  with `ColdPreparationBounds` (same 4096 items, 256 byte ids, 512 KiB envelope), installed as ONE shared issuer through
+  `bounded_artifact_store_owners_with_shared_semantic_preparation`; `ArtifactEditor` overrides `document_store_owners_source_demands` / `build_document_store_owners`
+  (`🧩️sourcing-app/🦀️.rs`). Operation wire: `with_original_receiving()` plus `whole_document_target` as conflict target.
+- `NativeReceive` + `DslReceiving`/`DslEnum` derives on `SourcingMutation`, its three leaves and `CuratedItem` (required by `with_original_receiving`).
+- Conflict target is the whole document (conservative). Per-object targets (`curated/<objectId>`) would need an `ArtifactOperationTargets` impl and a dependency on `semio-os-store-operation-wire`; left as a multi-user refinement.
+
+Open: `history_edits_end_to_end` still fails with `faulted original JSON receiving requires cleanup` (a JSON mutation receive in the acceptance law faults, then the
+cleanup masks the first cause). `conflict_history_edits_end_to_end` and the archive tests now pass. Not root-caused further.
 
 ## 4. `retained_example_load` doc id
 
@@ -55,3 +60,11 @@ The test now compares with the live store's own archive id.
 ## 5. `renders_pool_table_scene` "captured shared original changed its Work or destination"
 
 No longer reproduces: it was a consequence of operations wedged by the empty payloads (item 1) leaving a half-closed shared custody.
+
+## Result
+Curation lib `--test-threads=1`: 96 passed, 1 failed (`history_edits_end_to_end`).
+
+## Coordinator question: why is a tests crate in the windows component closure
+`semio-s-artifact-sourcing-curation-tests` is a mirror crate that `#[path]`-includes the editor sources (`🪞️mirror`); the lib compiles into whatever links the
+sourcing editor, so a compile error in editor code shows in both. My intermediate `with_original_receiving()` (E0599: `SourcingMutation: NativeReceive`) was the cause and is fixed
+by the `NativeReceive` derives; the final tree compiles natively, wasm32 not re-run here.

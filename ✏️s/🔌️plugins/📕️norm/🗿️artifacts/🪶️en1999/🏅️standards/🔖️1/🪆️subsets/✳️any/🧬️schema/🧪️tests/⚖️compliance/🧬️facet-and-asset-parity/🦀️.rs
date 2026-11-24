@@ -6,7 +6,7 @@ use super::*;
 fn example_snapshot_validates_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
-        let instance = serde_json::to_string(&snap).expect("instance");
+        let instance = semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&snap);
         let tmp = std::env::temp_dir().join(format!("en1999-instance-{}.json", snap.members[0].id));
         std::fs::write(&tmp, &instance).unwrap();
         let status = semio_s_plugin_norm_compliance::python_oracle::command()
@@ -96,7 +96,7 @@ fn facet_field_names_match_snapshot_json_schema() {
     assert!(ts.contains("MemberAction") && ts.contains("actions: MemberAction"));
     assert!(gql.contains("nK") && gql.contains("coldFormed") && gql.contains("m1") && !gql.contains("slopeM") && !gql.contains("vYEd"));
     assert!(proto.contains("n_k") && proto.contains("cold_formed") && proto.contains("m1") && !proto.contains("slope_m") && !proto.contains("v_y_ed"));
-    let actions = schema["properties"]["members"]["items"]["properties"]["actions"]["items"]["properties"].as_object().unwrap();
+    let actions = schema["$defs"]["MemberAction"]["properties"].as_object().unwrap();
     for key in ["id","kind","category","source","gKLine","qKLine","nK","vYK","vZK","mYK","mZK"] {
         assert!(actions.contains_key(key), "json schema missing action.{key}");
         assert!(ts.contains(key), "TS missing {key}");
@@ -108,11 +108,11 @@ fn facet_diff_matches_rust() {
     let diff_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🟦️.ts")).unwrap_or_default();
     let diff_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🔗️.graphql")).unwrap_or_default();
     let diff_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🛰️.proto")).unwrap_or_default();
-    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fireScenarios", "fatigueDetails", "coldFormed", "shells", "placements", "weldRuns", "outlineVertices", "fatigueCategories", "patchLoads", "ringStiffeners", "transverseStiffeners"] {
+    for field in ["annex", "materials", "sections", "members", "connections", "fireScenarios", "fatigueDetails", "coldFormed", "shells", "placements", "weldRuns", "outlineVertices", "fatigueCategories", "patchLoads", "ringStiffeners", "transverseStiffeners"] {
         assert!(diff_ts.contains(field), "diff TS missing {field}");
         assert!(diff_gql.contains(field), "diff GraphQL missing {field}");
     }
-    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fire_scenarios", "fatigue_details", "cold_formed", "shells", "placements", "weld_runs", "outline_vertices", "fatigue_categories", "patch_loads", "ring_stiffeners", "transverse_stiffeners"] {
+    for field in ["annex", "materials", "sections", "members", "connections", "fire_scenarios", "fatigue_details", "cold_formed", "shells", "placements", "weld_runs", "outline_vertices", "fatigue_categories", "patch_loads", "ring_stiffeners", "transverse_stiffeners"] {
         assert!(diff_proto.contains(field), "diff proto missing {field}");
     }
     for stale in ["nEdKn", "mEdKnm", "chi?:", "sheetMEdKnm", "sigmaEdShellMpa", "n_ed_kn", "sigma_ed_shell_mpa", "double chi", "chi:"] {
@@ -128,11 +128,15 @@ fn facet_mutations_match_kinds() {
     let mut_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🟦️.ts")).unwrap_or_default();
     let mut_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🔗️.graphql")).unwrap_or_default();
     let mut_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🛰️.proto")).unwrap_or_default();
-    assert_eq!(KINDS.len(), 18, "Rust KINDS length drift");
+    let declared = std::fs::read_dir(family_any_dir().join("🧬️schema/🧬️mutations")).unwrap().filter_map(Result::ok).filter(|entry| entry.path().join("🧬️schema/🔣️.json").is_file()).count();
+    assert_eq!(KINDS.len(), declared, "Rust KINDS length drift");
+    let squash = |text: &str| text.chars().filter(|c| c.is_ascii_alphanumeric()).collect::<String>().to_lowercase();
+    let (ts, gql, proto) = (squash(&mut_ts), squash(&mut_gql), squash(&mut_proto));
     for kind in KINDS {
-        assert!(mut_ts.contains(kind), "mutations TS missing KINDS entry {kind}");
-        assert!(mut_gql.contains(kind), "mutations GraphQL missing KINDS entry {kind}");
-        assert!(mut_proto.contains(kind), "mutations proto missing KINDS entry {kind}");
+        let kind = squash(kind);
+        assert!(ts.contains(&kind), "mutations TS missing KINDS entry {kind}");
+        assert!(gql.contains(&kind), "mutations GraphQL missing KINDS entry {kind}");
+        assert!(proto.contains(&kind), "mutations proto missing KINDS entry {kind}");
     }
     for stale in ["changeNEdKn", "changeChi", "changeSheetMEdKnm", "changeSigmaEdShellMpa", "nEdKn", "change_n_ed_kn"] {
         assert!(!mut_ts.contains(stale), "mutations TS still has stale scalar mutation {stale}");

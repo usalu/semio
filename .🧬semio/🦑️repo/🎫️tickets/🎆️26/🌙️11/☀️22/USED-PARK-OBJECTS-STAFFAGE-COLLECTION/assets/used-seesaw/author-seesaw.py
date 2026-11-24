@@ -994,7 +994,7 @@ def plan_traces(scale):
         return []
     out = []
     u0, v0 = bl("beam-aft", -1.31, SEAT_T[1])
-    out.append(sh("seat-aft-hollow-plan", "beam-aft", "detail", 2.25, False, 0.3, poly([(u0, v0), (u0 - 0.28, v0)], False), solid=sw(-0.09, 0.09), **rgn(LARCH, "seat-aft")))
+    out.append(sh("seat-aft-hollow-plan", "beam-aft", "detail", 2.25, False, 0.3, poly([(u0, v0), (u0 + 0.28, v0)], False), solid=sw(-0.09, 0.09), **rgn(LARCH, "seat-aft")))
     out.append(sh("beam-fore-top-check", "beam-fore", "detail", 2.05, False, 0.3, poly([bl("beam-fore", 0.2, BT1), bl("beam-fore", 0.9, BT1)], False), solid=sw(0.015, 0.02), **rgn(LARCH)))
     out.append(sh("beam-aft-top-check", "beam-aft", "detail", 2.05, False, 0.3, poly([bl("beam-aft", -0.25, BT1), bl("beam-aft", -0.95, BT1)], False), solid=sw(-0.025, -0.02), **rgn(LARCH)))
     return out

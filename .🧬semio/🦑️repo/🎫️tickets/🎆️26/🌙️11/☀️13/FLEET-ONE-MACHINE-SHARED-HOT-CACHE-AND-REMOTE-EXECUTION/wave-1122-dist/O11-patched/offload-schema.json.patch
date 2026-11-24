@@ -1,0 +1,53 @@
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🧬️schema/🔣️.json	2026-11-23 18:06:03
++++ /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🧬️schema/🔣️.json	2026-11-23 18:46:53
+@@ -475,21 +475,32 @@
+         "peak": {
+           "type": "object",
+           "additionalProperties": false,
+-          "description": "How much memory placement reserves for one unit: the peak this machine measured the last compiles of the crate to need (halfway down on a smaller measurement, up at once on a larger one) plus `marginPercent`, between `minimumMegabytes` and `maximumMegabytes`; a unit never measured here takes `unknownMegabytes` (a linked wasm unit the larger `wasm.peakMegabytes`). A unit that a worker killed for memory (`killedExit`) learns `killedFactor` times what it was placed with.",
+-          "required": ["unknownMegabytes", "marginPercent", "minimumMegabytes", "maximumMegabytes", "killedExit", "killedFactor"],
++          "description": "How much memory placement reserves for one unit: the peak this machine measured the last compiles of the crate to need (halfway down on a smaller measurement, up at once on a larger one) plus `marginPercent`, between `minimumMegabytes` and `maximumMegabytes`; a unit never measured here takes `unknownMegabytes` (a linked wasm unit the larger `wasm.peakMegabytes`). A unit that a worker killed for memory (`killedExit`) learns `killedFactor` times what it was placed with. A linked wasm unit of a crate never measured takes the family estimate (`family`) instead of the cold bound once enough crates of its family were measured.",
++          "required": ["unknownMegabytes", "marginPercent", "minimumMegabytes", "maximumMegabytes", "killedExit", "killedFactor", "family"],
+           "properties": {
+             "unknownMegabytes": {"type": "integer", "minimum": 1},
+             "marginPercent": {"type": "integer", "minimum": 0},
+             "minimumMegabytes": {"type": "integer", "minimum": 1},
+             "maximumMegabytes": {"type": "integer", "minimum": 1},
+             "killedExit": {"type": "integer", "minimum": 1},
+-            "killedFactor": {"type": "integer", "minimum": 1}
++            "killedFactor": {"type": "integer", "minimum": 1},
++            "family": {
++              "type": "object",
++              "additionalProperties": false,
++              "description": "The estimate for a crate of a family that was never measured: every crate whose name ends in `crateSuffix` and whose peak is recorded is one sample (its recorded peak, a kill included), the family peak is the `quantilePercent` quantile of the samples (linear between ranks), the placed peak adds `marginPercent`; fewer than `minimumCrates` samples leave the cold bound `wasm.peakMegabytes`.",
++              "required": ["crateSuffix", "quantilePercent", "minimumCrates"],
++              "properties": {
++                "crateSuffix": {"type": "string", "minLength": 1},
++                "quantilePercent": {"type": "integer", "minimum": 1, "maximum": 100},
++                "minimumCrates": {"type": "integer", "minimum": 1}
++              }
++            }
+           }
+         },
+         "wasm": {
+           "type": "object",
+           "additionalProperties": false,
+-          "description": "The one linked crate type that offloads, and only for WebAssembly targets: the targets, the crate types, the numeric linker arguments (full-match patterns) of the release's wasm-ld flags, how long such an action may run and how much memory placement reserves for it.",
++          "description": "The one linked crate type that offloads, and only for WebAssembly targets: the targets, the crate types, the numeric linker arguments (full-match patterns) of the release's wasm-ld flags, how long such an action may run and the cold bound of the memory placement reserves for it (the sign of a linked wasm unit, and its peak only until `peak.family.minimumCrates` crates of its family were measured).",
+           "required": [
+             "targets",
+             "crateTypes",
+@@ -935,7 +946,12 @@
+       "minimumMegabytes": 64,
+       "maximumMegabytes": 16384,
+       "killedExit": 137,
+-      "killedFactor": 2
++      "killedFactor": 2,
++      "family": {
++        "crateSuffix": "_component",
++        "quantilePercent": 90,
++        "minimumCrates": 3
++      }
+     },
+     "wasm": {
+       "targets": [

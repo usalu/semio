@@ -19,7 +19,7 @@ export const OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1:number=contract.definitio
 /** 🧮️ Bounds actual file concurrency and both per-child and complete-cohort output. */
 export interface OwnedBunFilesPolicyV1{readonly version:1;readonly maximumParallelFiles:number;readonly maximumFileOutputBytes:number;readonly maximumFileOutputLines:number;readonly maximumTotalOutputBytes:number}
 /** 📋️ Selects explicit test files beneath one caller's working directory and live Original phase; `timeoutMilliseconds` bounds every test of a file and `capabilities` are authored string grants every child birth receives beside the caller's own. */
-export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly memory?:TestFileMemoryV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}
+export interface OwnedBunFilesRequestV1{readonly invocation:ScriptInvocation;readonly control:ResourceLeaseControl;readonly cwd:string;readonly files:readonly string[];readonly arguments:readonly string[];readonly timeoutMilliseconds?:number;readonly capabilities?:Readonly<Record<string,string>>;readonly launches?:readonly(readonly string[])[];readonly environment:Readonly<Record<string,string|undefined>>;readonly policy:OwnedBunFilesPolicyV1;readonly memory?:TestFileMemoryV1;readonly onFileResult:(result:OwnedBunFileResultV1,index:number,control:ResourceLeaseControl)=>Promise<void>}
 /** 📬️ Returns terminal child DATA in authored file order without escaping a process owner. */
 export interface OwnedBunFileResultV1{readonly file:string;readonly capture:OwnedCommandCaptureV1;readonly memory?:Readonly<{peakMegabytes:number;ceilingMegabytes:number;exceeded:boolean}>}
 
@@ -30,21 +30,29 @@ export function readOwnedBunFilesPolicyV1(value:unknown):OwnedBunFilesPolicyV1{
  if(validateJsonSchemaSubset(contract.definitions.Policy,row,contract).length)throw Error("Complete finite owned Bun policy required");const policy=row as unknown as OwnedBunFilesPolicyV1;if(policy.maximumFileOutputBytes>policy.maximumTotalOutputBytes||policy.maximumParallelFiles*policy.maximumFileOutputBytes>contract.definitions.Protocol.const.maximumBufferedOutputBytes)throw Error("Coherent bounded Bun output policy required");return Object.freeze(policy);
 }
 
+/** 🪪️ The capabilities every child birth receives: the caller's own, the authored string grants and the declared nested Repo launches appended to (never replacing) the caller's launches, so a child can start exactly those and its caller's. */
+function childCapabilitiesV1(parent:object,selection:Readonly<{capabilities?:Readonly<Record<string,string>>;launches?:readonly(readonly string[])[]}>):object|undefined{
+ if(selection.capabilities===undefined&&selection.launches===undefined)return undefined;
+ const launches=[...((parent as {launches?:readonly(readonly string[])[]}).launches??[])];
+ for(const launch of selection.launches??[])if(!launches.some(owned=>JSON.stringify(owned)===JSON.stringify(launch)))launches.push([...launch]);
+ return{...parent,...selection.capabilities,...(selection.launches===undefined?{}:{launches})};
+}
+
 /** 🧪️ Gives each file its own genuine received process birth while retaining the caller through every child drain. */
 export function runOwnedBunFilesV1(options:OwnedBunFilesRequestV1):Promise<readonly OwnedBunFileResultV1[]>{
  try{
   const invocation=options.invocation,control=options.control;requireIssuedResourceControlInvocationV1(control,invocation);
   const onFileResult=options.onFileResult;if(typeof onFileResult!=="function")throw Error("Actual owned Bun terminal result sink required");
-  const policy=readOwnedBunFilesPolicyV1(options.policy),selection=Object.freeze({version:1,cwd:options.cwd,files:Object.freeze([...options.files]),arguments:Object.freeze([...options.arguments]),...(options.timeoutMilliseconds===undefined?{}:{timeoutMilliseconds:Math.min(options.timeoutMilliseconds,OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1)}),...(options.capabilities===undefined?{}:{capabilities:Object.freeze({...options.capabilities})})}),environment=Object.freeze({...options.environment});
+  const policy=readOwnedBunFilesPolicyV1(options.policy),selection=Object.freeze({version:1,cwd:options.cwd,files:Object.freeze([...options.files]),arguments:Object.freeze([...options.arguments]),...(options.timeoutMilliseconds===undefined?{}:{timeoutMilliseconds:Math.min(options.timeoutMilliseconds,OWNED_BUN_TIMEOUT_CEILING_MILLISECONDS_V1)}),...(options.capabilities===undefined?{}:{capabilities:Object.freeze({...options.capabilities})}),...(options.launches===undefined||!options.launches.length?{}:{launches:Object.freeze(options.launches.map(launch=>Object.freeze([...launch])))})}),environment=Object.freeze({...options.environment});
   if(validateJsonSchemaSubset(contract.definitions.Selection,selection,contract).length||!runtimeSupportsV1("test")||!isAbsolute(selection.cwd)||[selection.cwd,...selection.files].some(path=>path.length>contract.definitions.Protocol.const.maximumPathCodeUnits||path.includes("\0")))throw Error("Explicit finite owned Bun file selection required");
   const cwd=resolve(selection.cwd),files=selection.files.map(file=>{const local=relative(cwd,file);if(!isAbsolute(file)||local===".."||local.startsWith(".."+sep)||isAbsolute(local))throw Error("Bun file must belong to the actual working directory");return resolve(file);});
   if(new Set(files).size!==files.length)throw Error("Unique actual Bun files required");
   return withIssuedResourceOperationV1(control,async()=>{
    for(const file of files){checkResourceLeaseControl(control);const stat=lstatSync(file);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>contract.definitions.Protocol.const.maximumSourceBytes)throw Error("Bounded regular Bun source file required");}
    const cancellation=new AbortController();return withRequestedIssuedResourceControlV1(control,0,async phase=>{
-    const results=new Array<OwnedBunFileResultV1>(files.length),started=performance.now();let next=0,total=0,failed=false,failure:unknown;
+    const results=new Array<OwnedBunFileResultV1>(files.length),started=performance.now();const granted=childCapabilitiesV1(invocation.capabilities,selection);let next=0,total=0,failed=false,failure:unknown;
     const worker=async()=>{while(!failed&&next<files.length){const index=next++,file=files[index];try{if(file===undefined)throw Error("Exact admitted Bun file required");
-     checkResourceLeaseControl(phase);const run=(onSpawn?:OwnedCommandSpawnHookV1)=>captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:selection.capabilities===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:{...invocation.capabilities,...selection.capabilities}},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines},...(onSpawn?{onSpawn}:{})});
+     checkResourceLeaseControl(phase);const run=(onSpawn?:OwnedCommandSpawnHookV1)=>captureOwnedCommandResultV1(process.execPath,[...runtimeTestArgumentsV1([file],selection.timeoutMilliseconds===undefined?undefined:{timeoutMilliseconds:selection.timeoutMilliseconds}),...selection.arguments],cwd,{control:phase,env:granted===undefined?scriptInvocationEnvironment(invocation,environment):scriptProcessEnvironment({...readIssuedScriptProcessEnvelopeV1(invocation),capabilities:granted},environment),output:{maximumBytes:policy.maximumFileOutputBytes,maximumLines:policy.maximumFileOutputLines},...(onSpawn?{onSpawn}:{})});
      let capture:OwnedCommandCaptureV1,memory:OwnedBunFileResultV1["memory"];
      if(!options.memory)capture=await run();
      else{

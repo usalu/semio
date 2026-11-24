@@ -252,7 +252,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let window_id = puzzle3d_addressed_window_id(Some(view), None, command.window_id(), &runtime.window_ids);
                 let session = self.session();
                 let instance_owner = self.instance_owner.as_ref();
-                let (emit, ephemeral) = with_puzzle3d_session_for(session, &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
+                let (emit, ephemeral) = with_puzzle3d_session_for(session, &runtime, |app| self.prologue.dispatch_step(app, instance_owner, if self.tool_id=="engagementAbort"{context.and_then(|context|context.original_tool_run())}else{None}, "", command, Some(window_id), &runtime, Some(view), &snapshot_interaction));
                 self.stage = Puzzle3dPrecomputeCommandStage::Complete;
                 Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
             }

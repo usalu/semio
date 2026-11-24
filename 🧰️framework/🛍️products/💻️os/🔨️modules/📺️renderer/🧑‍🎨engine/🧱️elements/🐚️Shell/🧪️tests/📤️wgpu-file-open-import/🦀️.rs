@@ -140,7 +140,7 @@ fn the_host_effect_funnel_owns_request_file_open() {
 /// not tell a comment from a call would forbid saying so.
 #[test]
 fn the_browser_file_door_never_assumes_a_document_in_the_worker() {
-    for needle in [r#""op": "download-media-export""#, r#""op": "request-file-open""#, r#""semioWgpuHostIo""#] {
+    for needle in [r#""op": "download-media-export""#, r#""op": "request-file-open""#, "host_io_call(&request"] {
         assert!(WGPU_SHELL_SOURCE().contains(needle), "the browser file door must route through the page: missing {needle}");
     }
     let door = WGPU_SHELL_SOURCE().split("//#region 📤️FileOpenImport").nth(1).expect("the file-door region");
@@ -162,8 +162,8 @@ fn no_mutation_payload_reader_shadows_the_effect_funnel() {
 /// 🔗️ Backbone sync attach: file mode must reach a file picker, folder mode a folder picker.
 #[test]
 fn sync_backbone_selection_opens_matching_path_pickers() {
-    assert!(WGPU_SHELL_SOURCE().contains("schedule_sync_path_pick(pick_file_path())"), "file sync must open a file picker on native");
-    assert!(WGPU_SHELL_SOURCE().contains("schedule_sync_path_pick(pick_folder())"), "folder sync must open a folder picker on native");
+    assert!(WGPU_SHELL_SOURCE().contains("schedule_sync_path_pick(pick_file_path(), &mut self.settle)"), "file sync must open a file picker on native");
+    assert!(WGPU_SHELL_SOURCE().contains("schedule_sync_path_pick(pick_folder(), &mut self.settle)"), "folder sync must open a folder picker on native");
     assert!(WGPU_SHELL_SOURCE().contains(r#""op": "request-native-file-path""#), "wasm file sync must ask the page door for a file path");
     assert!(WGPU_SHELL_SOURCE().contains(r#""op": "request-native-folder-path""#), "wasm folder sync must ask the page door for a folder path");
     assert!(WGPU_SHELL_SOURCE().contains(r#""setSyncDraft""#), "picker answers must land in the sync draft field");
@@ -175,8 +175,8 @@ fn sync_backbone_selection_opens_matching_path_pickers() {
 fn both_dispatch_paths_answer_through_the_one_host_effect_funnel() {
     assert_eq!(WGPU_SHELL_SOURCE().matches("for effect in core::mem::take(&mut result.requested_effects) {").count(), 2, "the action and the command path must share one fold shape");
     assert!(!WGPU_SHELL_SOURCE().contains("for effect in &result.requested_effects {\n            match effect {"), "a second, partial effect fold drops every effect it does not name");
-    assert!(WGPU_SHELL_SOURCE().contains("self.queue_host_effects(&action.controller_id.clone(), queued);"), "the action path must feed the funnel");
-    assert!(WGPU_SHELL_SOURCE().contains("self.queue_host_effects(&session.app.controller_id.clone(), queued);"), "the command path must feed the funnel");
+    assert!(WGPU_SHELL_SOURCE().contains("self.as_window_actions().queue_host_effects(&action.controller_id.clone(), queued);"), "the action path must feed the funnel");
+    assert!(WGPU_SHELL_SOURCE().contains("self.as_window_actions().queue_host_effects(&session.app.controller_id.clone(), queued);"), "the command path must feed the funnel");
 }
 
 #[test]

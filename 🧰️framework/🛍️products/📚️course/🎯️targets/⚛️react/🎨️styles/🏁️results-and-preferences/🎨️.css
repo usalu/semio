@@ -45,13 +45,35 @@
 .course-kinds {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--spacing-single) calc(2 * var(--spacing-double));
+  gap: 0;
+}
+
+/* 🔘️ A choice of a radio group and a setting that is on or off are toggle cells: the chosen one is filled with the active colour, the others answer a hover with the hover fill and their foreground. */
+.course-choice {
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.course-choice-hint {
+  color: var(--muted-foreground);
+}
+
+.course-choice:hover:not([data-state="on"], :has(:disabled)) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+.course-choice[data-state="on"] {
+  background-color: var(--active-base);
+  color: var(--active-foreground);
+}
+
+.course-choice[data-state="on"] > .course-choice-hint {
+  color: inherit;
 }
 
 @container course-card (min-width: 44rem) {
   .course-kinds {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
   }
 }
 
@@ -62,14 +84,12 @@
 
 /* 🏆️ The learner's own leaderboard row: a bar and a tint of the active colour, besides bold text and "(you)". */
 .course-me {
-  box-shadow: inset 3px 0 0 var(--active-base);
-  background: color-mix(in srgb, var(--active-base) 14%, transparent);
+  background: linear-gradient(to right, var(--active-base) 3px, transparent 3px), color-mix(in srgb, var(--active-base) 14%, transparent);
 }
 
 /* ⚠️ Errors and notices: a warning bar besides the words. */
 .course-alert {
-  box-shadow: inset 4px 0 0 var(--color-warning);
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  background: linear-gradient(to right, var(--color-warning) 4px, transparent 4px), color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
 
 .course-note {
@@ -79,13 +99,6 @@
 .course-progress {
   width: 12em;
   max-width: 100%;
-  accent-color: var(--active-base);
-}
-
-.course-radio,
-.course-check {
-  width: 1.25em;
-  height: 1.25em;
   accent-color: var(--active-base);
 }
 
@@ -131,5 +144,11 @@
 }
 
 :is(.course-page-frame, .course-page-scroll) > [data-card-stack] > [data-overview-card]:last-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+:is(.course-page-frame, .course-page-scroll) > [data-card-stack] > [data-overview-card]:last-child > [data-overview-card-stack] {
   flex: 1 1 auto;
 }

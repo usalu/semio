@@ -125,7 +125,11 @@ impl SceneKit for En1990Kit {
 
     fn layout_stamps(doc: &KitDoc<'_, En1990Snapshot>) -> BTreeMap<String, String> {
         let layout = Layout::of(doc.snapshot, doc.placements);
-        layout.members().map(|(id, pose)| (id.to_owned(), format!("{pose:?}"))).chain(layout.case_poses().map(|(id, pose)| (id.to_owned(), format!("{pose:?}")))).collect()
+        let sole = kit::sole_rows(doc.snapshot);
+        let tagged = |id: &String, pose: String| (id.to_owned(), format!("{pose}|{}", sole.get(id).map_or("", String::as_str)));
+        sole.iter().map(|(id, tag)| (id.clone(), tag.clone())).chain(layout.members().map(|(id, pose)| tagged(id, format!("{pose:?}")))).chain(layout.case_poses().map(|(id, pose)| tagged(id, format!("{pose:?}"))))
+            .chain(std::iter::once((kit::COMBINATION_ENTITY.to_owned(), doc.snapshot.members.iter().map(|m| m.id.as_str()).collect::<Vec<_>>().join(","))))
+            .collect()
     }
 }
 

@@ -42,4 +42,4 @@ impl<T:NativeReceive<DslValue>> ProvisionalFieldWork<T>{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.receiver.is_none()}
 }
-impl<T:NativeReceive<DslValue>> Drop for ProvisionalFieldWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"provisional native receiver retains its original field or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.receiver)}}}}
+impl<T:NativeReceive<DslValue>> Drop for ProvisionalFieldWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"provisional native receiver retains its original field or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.receiver)}}}}

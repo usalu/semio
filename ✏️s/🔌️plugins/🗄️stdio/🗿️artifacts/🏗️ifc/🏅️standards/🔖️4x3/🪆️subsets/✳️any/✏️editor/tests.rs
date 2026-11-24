@@ -240,11 +240,12 @@ fn exact_reference_field_reaches_targets_beyond_the_suggestion_window() {
 
 #[test]
 fn revisioned_host_render_has_localized_named_controls_and_controller_bindings() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let snapshot = IfcSnapshot { entities: vec![IfcEntity { id: 1, name: "IFCCARTESIANPOINT".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Real(0.0)])], complex: Vec::new() }], ..Default::default() };
     for (locale, attribute_label) in [(Locale::En, "Attributes"), (Locale::De, "Attribute")] {
         let rendered =
             editing::render_snapshot_details_provider_revisioned(&Ifc4x3DetailsProvider::new(&snapshot), semio_ui_contract::UiPublicationRevision(42), locale, IFC4X3_CONTROLLER, &semio_plugin::TreeWindows::unhosted()).unwrap();
-        let independent_serialization = serde_json::to_string(&rendered).unwrap();
+        let independent_serialization = super::tree_probe::retired_tree_serialization(rendered);
         assert!(independent_serialization.contains("Coordinates"));
         assert!(independent_serialization.contains(attribute_label));
         assert!(independent_serialization.contains(IFC4X3_CONTROLLER));
@@ -610,6 +611,17 @@ fn retained_edit_case(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapshot
     (emit, ticks)
 }
 
+fn key_sorted(value: DslValue) -> DslValue {
+    match value {
+        DslValue::Object(mut fields) => {
+            fields.sort_by(|left, right| left.0.cmp(&right.0));
+            DslValue::Object(fields.into_iter().map(|(key, value)| (key, key_sorted(value))).collect())
+        }
+        DslValue::Array(items) => DslValue::Array(items.into_iter().map(key_sorted).collect()),
+        other => other,
+    }
+}
+
 fn retained_contiguous_owner_loan() -> semio_framework_value::retained_clone::RetainedCloneGrant {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔎️details/🧪️tests/source-owners.json")).unwrap();
     serde_json::from_value(fixture["contiguousOwnerLoan"].clone()).unwrap()
@@ -693,7 +705,7 @@ fn retained_edit_control_case(
                 if let Some(expected_fault) = expected_fault {
                     assert!(error.primary.message().contains(expected_fault), "unexpected retained failure: {error:?}");
                 } else {
-                    assert!(cancel_at.is_some() || wire_cancel.is_some(), "unexpected retained failure: {error:?}");
+                    assert!(cancel_at.is_some() || wire_cancel.is_some(), "unexpected retained failure: {error:?} for {event:?}");
                     assert!(cx.is_cancelled());
                 }
                 if !work.staged_native_value() {
@@ -731,6 +743,7 @@ fn retained_edit_control_case(
             break;
         }
     }
+    if !work.terminal_is_empty() { eprintln!("[DEBUG] residue {}", work.debug_residue()); }
     assert!(work.terminal_is_empty());
     let fuel = cx.fuel_remaining();
     drop(cx);
@@ -999,7 +1012,7 @@ fn official_4x3_tessellation_projects_real_geometry_and_cancellation_has_no_visi
     assert_eq!(scene.meshes[0].triangles.len(), 12);
     assert!(scene.issues.is_empty());
     let cancelled = semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::geometry::render_with(&snapshot, geometry::GeometryLimits::default(), &mut |_| false, semio_plugin::Locale::En).unwrap();
-    let independent = serde_json::to_string(&cancelled).unwrap();
+    let independent = super::tree_probe::retired_tree_serialization(cancelled);
     assert!(independent.contains("cancelled"));
     assert!(!independent.contains("positions"));
 }
@@ -1018,7 +1031,7 @@ fn domain_insertion_uses_retained_forward_inverse_admission_and_original_cancel(
     let next = protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, &snapshot).diff(), &snapshot).unwrap();
     assert_eq!(next.entities.len(), 1);
     let inverse = protocol::ColdMutation::inverse(mutation, &snapshot).unwrap();
-    assert_eq!(inverse[0].to_value(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&case["inverse"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));
+    assert_eq!(key_sorted(inverse[0].to_value()), key_sorted(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&case["inverse"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())));
     assert_eq!(protocol::apply_diff_cold(protocol::ColdMutation::diff(&inverse[0], &next).diff(), &next).unwrap(), snapshot);
     assert!(turns > 1);
     for turn in 1..=turns {

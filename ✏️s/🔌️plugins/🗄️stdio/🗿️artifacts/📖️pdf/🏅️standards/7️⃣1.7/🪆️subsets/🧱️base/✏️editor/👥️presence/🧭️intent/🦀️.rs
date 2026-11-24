@@ -1,7 +1,7 @@
 //! 🧭️ Presence intents: how a collaborator's own view, pointer and caret become the next [`PdfPresence`]. Pure and total; the editors publish the result on the presence lane only and the document is never touched.
 
 use crate::PdfPresence;
-use semio_s_artifact_stdio_pdf_page_editor_view::{page_size, resolve_zoom, ViewState};
+use semio_s_artifact_stdio_pdf_page_editor_view::{page_index, page_size, resolve_zoom, PageNumberRange, ViewState};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 //#region 🧭️Intent
@@ -13,7 +13,7 @@ pub fn presence_action_definitions() -> Vec<semio_plugin::ActionDefinition> {
     let labels = [("Show Pointer to Peers", "Zeiger für andere zeigen"), ("Hide Pointer from Peers", "Zeiger für andere verbergen"), ("Show Caret to Peers", "Textcursor für andere zeigen"), ("Hide Caret from Peers", "Textcursor für andere verbergen")];
     PRESENCE_ACTION_IDS.iter().zip(labels).map(|(id, (en, de))| {
         let args = match *id {
-            "presence-pointer" => vec![semio_plugin::ActionArgDef::number("page", semio_ui_locale::LocalizedLabel::native("Page", "Seite")).required(), semio_plugin::ActionArgDef::number("x", semio_ui_locale::LocalizedLabel::native("Horizontal per mille", "Waagerecht in Promille")).required(), semio_plugin::ActionArgDef::number("y", semio_ui_locale::LocalizedLabel::native("Vertical per mille", "Senkrecht in Promille")).required()],
+            "presence-pointer" => vec![semio_plugin::ActionArgDef::number("page", semio_ui_locale::LocalizedLabel::native("Page number", "Seitenzahl")).required(), semio_plugin::ActionArgDef::number("x", semio_ui_locale::LocalizedLabel::native("Horizontal per mille", "Waagerecht in Promille")).required(), semio_plugin::ActionArgDef::number("y", semio_ui_locale::LocalizedLabel::native("Vertical per mille", "Senkrecht in Promille")).required()],
             "presence-caret" => vec![semio_plugin::ActionArgDef::text("object", semio_ui_locale::LocalizedLabel::native("Object", "Objekt")).min_length(1).required(), semio_plugin::ActionArgDef::number("offset", semio_ui_locale::LocalizedLabel::native("Offset", "Position")).required(), semio_plugin::ActionArgDef::number("anchor", semio_ui_locale::LocalizedLabel::native("Anchor", "Anker"))],
             _ => Vec::new(),
         };
@@ -37,17 +37,20 @@ pub enum PresenceIntent {
     CaretClear,
 }
 
-/// 🎬️ The intent an action id and its JSON payload stand for.
-pub fn presence_intent(action: &str, payload: &serde_json::Value) -> Option<PresenceIntent> {
+/// 🎬️ The intent an action id and its JSON payload stand for; a pointer's one-based page number becomes the page index among `pages`, and a number outside `1..=pages` is refused.
+pub fn presence_intent(action: &str, payload: &serde_json::Value, pages: usize) -> Result<Option<PresenceIntent>, PageNumberRange> {
     let whole = |key: &str| payload[key].as_f64().map_or(0, |value| value.max(0.0).round() as u32);
     let number = |key: &str| payload[key].as_f64().map_or(0, |value| value.round().clamp(0.0, 1000.0) as u32);
-    Some(match action {
-        "presence-pointer" => PresenceIntent::Pointer { page: payload["page"].as_u64().unwrap_or(0) as u32, x: number("x"), y: number("y") },
+    Ok(Some(match action {
+        "presence-pointer" => PresenceIntent::Pointer { page: page_index(pages, payload["page"].as_u64().unwrap_or(0))? as u32, x: number("x"), y: number("y") },
         "presence-pointer-leave" => PresenceIntent::PointerLeave,
-        "presence-caret" => PresenceIntent::Caret { object: payload["object"].as_str()?.to_string(), offset: whole("x"), anchor: whole("y") },
+        "presence-caret" => match payload["object"].as_str() {
+            Some(object) => PresenceIntent::Caret { object: object.to_string(), offset: whole("x"), anchor: whole("y") },
+            None => return Ok(None),
+        },
         "presence-caret-clear" => PresenceIntent::CaretClear,
-        _ => return None,
-    })
+        _ => return Ok(None),
+    }))
 }
 
 /// 🔭️ The visible rectangle of the view's page as per mille of the page, `[left, top, right, bottom]`: the camera is the page centre, so the visible fraction is the viewport over the zoomed page, centred.

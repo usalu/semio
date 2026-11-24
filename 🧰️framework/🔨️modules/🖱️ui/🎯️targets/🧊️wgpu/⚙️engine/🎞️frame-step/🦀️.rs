@@ -58,7 +58,7 @@ impl Ui {
                 return UiFrameStep::Ready;
             }
             let tooltip = retained_tooltip_paint(window, surface, atlas, &theme);
-            window.paint_frame = Some(RetainedPaintFrame {
+            window.paint_frame = Some(Box::new(RetainedPaintFrame {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate: DrawList::default(),
@@ -84,7 +84,7 @@ impl Ui {
                 hit_candidates: Vec::new(),
                 fault_site: None,
                 progress: 0,
-            });
+            }));
             return UiFrameStep::Pending;
         }
         let fresh = window

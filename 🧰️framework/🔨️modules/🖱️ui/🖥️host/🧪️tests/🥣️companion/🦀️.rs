@@ -7,7 +7,7 @@ use semio_framework_test_fixtures::fixture_path;
 
 pub use semio_ui_host::*;
 use semio_framework_abi::AbiEvent;
-use ui_render::{DispatchEvent, ImeEvent, PointerButton, PointerKind};
+use ui_render::{DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerKind};
 
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::{Mutex, OnceLock}};
 

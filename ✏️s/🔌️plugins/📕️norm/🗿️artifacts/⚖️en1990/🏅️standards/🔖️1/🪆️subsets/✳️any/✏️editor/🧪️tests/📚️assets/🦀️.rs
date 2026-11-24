@@ -9,6 +9,8 @@ use semio_s_plugin_norm_structural_scene::projection_kit::test_support::assert_p
 use semio_s_plugin_norm_structural_scene::EntityRef;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use semio_s_artifact_norm_en1990_editor::modes::edit::windows::checks;
+use semio_s_artifact_norm_en1990_editor::modes::edit::windows::diagrams;
 
 const FIXTURE_ONLY: &[&str] = &["default-office"];
 
@@ -126,7 +128,7 @@ fn every_bundled_asset_evaluates_projects_and_obeys_the_projection_laws() {
         let report = report_of(&document);
         assert!(!report.checks.is_empty(), "{id}: the document emits no check");
         let diagrams = semio_s_artifact_norm_en1990_scene_diagrams::diagrams(&document, &report, None, None);
-        let live = crate::modes::edit::windows::viewport::scene_of(&document, &report, None, None);
+        let live = crate::modes::edit::windows::viewport::scene_of(&document, &report, semio_s_plugin_norm_structural_scene::projection::ViewOptions::none());
         assert_projection_laws(&live, &diagrams, &crate::modes::edit::windows::viewport::handles_of(&document, &select_all(&live)));
         let full = crate::modes::edit::windows::viewport::full_scene_of(&document, &report);
         assert_projection_laws(&full, &diagrams, &crate::modes::edit::windows::viewport::handles_of(&document, &select_all(&full)));

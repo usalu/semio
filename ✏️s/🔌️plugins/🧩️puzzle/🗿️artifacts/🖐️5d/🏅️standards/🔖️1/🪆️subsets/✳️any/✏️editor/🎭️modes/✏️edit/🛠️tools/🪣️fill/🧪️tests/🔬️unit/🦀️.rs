@@ -15,7 +15,6 @@ use semio_ui_locale::LocalizedLabel;
 #[allow(unused_imports)]
 use semio_plugin::ToolDefinition;
 #[allow(unused_imports)]
-use semio_plugin::ToolRunView;
 #[allow(unused_imports)]
 use semio_framework_tool_run::{ToolRunDefinition, ToolRunSettingsReads, TOOL_RUN_ABORT_ACTION_ID, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID};
 use crate::editor::puzzle5d::modes::edit::tools::fill::*;

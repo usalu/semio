@@ -47,15 +47,15 @@ function actionsOf(props: QuizProps, ask?: () => void): { readonly primary: Reac
   const open = openRunOf(state, quiz.id);
   const opened = openChallengeOf(state, quiz.id) ?? challenge;
   const last = lastSubmittedRunOf(state, quiz.id);
-  const shown = last === undefined ? [] : [<CardAction key="last" {...CELL} onClick={() => session.open({ screen: "results", run: last })}>{text("course.home.lastResult")}</CardAction>];
+  const shown = last === undefined ? [] : [<CardAction icon="bar-chart-3" key="last" {...CELL} onClick={() => session.open({ screen: "results", run: last })}>{text("course.home.lastResult")}</CardAction>];
   const start = (
-    <CardAction {...CELL} primary disabled={busy || locked} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
+    <CardAction icon="play" {...CELL} primary disabled={busy || locked} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
       {text(state.learnerView?.best[quiz.id] === undefined ? "course.home.start" : "course.home.again", { challenge: text(CHALLENGE_LABELS[challenge]) })}
     </CardAction>
   );
   if (open === undefined) return { primary: start, secondary: shown };
   const resume = (
-    <CardAction key="resume" {...CELL} primary={ask === undefined || opened === challenge} disabled={busy || locked} onClick={() => act((signal) => session.resumeRun(open, signal))}>
+    <CardAction icon="skip-forward" key="resume" {...CELL} primary={ask === undefined || opened === challenge} disabled={busy || locked} onClick={() => act((signal) => session.resumeRun(open, signal))}>
       {text("course.home.resume", { challenge: text(CHALLENGE_LABELS[opened]) })}
     </CardAction>
   );
@@ -195,12 +195,14 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
   const close = (): void => setAsking(false);
   return (
     <PageFrame page={`quiz:${quiz.id}`} overlay={<PanePeers scope={course === undefined ? undefined : roomScope(course, { screen: "quiz", quiz: quiz.id })} opened={view.opened} />}>
-      <CourseCard flush id={`${id}-quiz`} card="quiz" anchor={PRESENCE_ANCHORS.quiz(quiz.id)} icon={<Glyph emoji={quiz.emoji} className="text-sm" />} title={localized(quiz.title, locale)} footerRight={<>{secondary}{primary}</>}>
+      <CourseCard flush id={`${id}-quiz`} card="quiz" anchor={PRESENCE_ANCHORS.quiz(quiz.id)} icon={<Glyph emoji={quiz.emoji} className="text-sm" />} title={localized(quiz.title, locale)}>
         <CardSection>
           <p className="m-0 text-sm leading-normal">{localized(quiz.description, locale)}</p>
           <Facts items={facts(props, learning)} />
         </CardSection>
-        <ChallengeChooser challenge={challenge} onChange={onChallenge} text={text} locale={locale} />
+      </CourseCard>
+      <CourseCard flush id={`${id}-challenge`} card="quiz-challenge" icon={<Glyph emoji="⛰️" className="text-sm" />} title={text("course.challenge.legend")} footerRight={<>{secondary}{primary}</>}>
+        <ChallengeChooser challenge={challenge} labelledBy={`${id}-challenge`} onChange={onChallenge} text={text} locale={locale} />
         <CardSection>
           {opened === undefined ? null : <p className="m-0 text-xs">{text("course.challenge.openRun", { challenge: text(CHALLENGE_LABELS[opened]) })}</p>}
           <p className="m-0 text-xs text-muted-foreground">{text("course.quizPage.hint")}</p>
@@ -216,12 +218,12 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
           describedBy={`${id}-discard-body`}
           onEscape={close}
           footerLeft={
-            <CardAction data-autofocus="" onClick={close}>
+            <CardAction icon="x" data-autofocus="" onClick={close}>
               {text("course.challenge.keep")}
             </CardAction>
           }
           footerRight={
-            <CardAction
+            <CardAction icon="trash-2"
               primary
               onClick={() => {
                 close();

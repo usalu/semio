@@ -80,36 +80,6 @@ pub mod standards {
                             pub mod set_page_crop_box;
                         }
                     }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../💾️binary/🧬️mutations/👁️set-optional-content/🦀️.rs"]
-                            pub mod set_optional_content;
-                            #[path = "../../💾️binary/🧬️mutations/🔢️set-page-labels/🦀️.rs"]
-                            pub mod set_page_labels;
-                            #[path = "../../💾️binary/🧬️mutations/🔖️remove-properties/🦀️.rs"]
-                            pub mod remove_properties;
-                            #[path = "../../💾️binary/🧬️mutations/✏️set-page-content/🦀️.rs"]
-                            pub mod set_page_content;
-                            #[path = "../../💾️binary/🧬️mutations/🖼️set-page-box/🦀️.rs"]
-                            pub mod set_page_box;
-                            #[path = "../../💾️binary/🧬️mutations/🅾️remove-font/🦀️.rs"]
-                            pub mod remove_font;
-                            #[path = "../../💾️binary/🧬️mutations/🎨️remove-color-space/🦀️.rs"]
-                            pub mod remove_color_space;
-                            #[path = "../../💾️binary/🧬️mutations/🖥️set-page-mode/🦀️.rs"]
-                            pub mod set_page_mode;
-                            #[path = "../../💾️binary/🧬️mutations/🖋️insert-content/🦀️.rs"]
-                            pub mod insert_content;
-                            #[path = "../../💾️binary/🧬️mutations/ℹ️set-info/🦀️.rs"]
-                            pub mod set_info;
-                            #[path = "../../💾️binary/🧬️mutations/🆔️set-document-id/🦀️.rs"]
-                            pub mod set_document_id;
-                            #[path = "../../💾️binary/🧬️mutations/🪄️replace-page/🦀️.rs"]
-                            pub mod replace_page;
-                        }
-                    }
                 }
             }
         }

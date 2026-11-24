@@ -6,7 +6,8 @@ import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
 import{posix}from"node:path";
 import ts from"typescript";
-import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
+import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
+import{settleInventoryRoundsV1}from"../../../🕸️graph/📥️load/🔁️inventory-rounds/🟦️.ts";
 import{observeOwnerWithRetryV1,ownerWithheldTextV1}from"../../../🕸️graph/📥️load/🛟️owner-isolation/🟦️.ts";
 import Ajv from"ajv";
 import{createHash}from"node:crypto";
@@ -79,9 +80,9 @@ const world=(seed:number)=>{
   mkdir:async()=>{},writeFile:async(path:string,text:string)=>{store.set(path,text);},rename:async(from:string,to:string)=>{store.set(to,store.get(from)!);store.delete(from);},rm:async(path:string)=>{store.delete(path);},
   createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
-  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:()=>0,graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1,ownerWithheldTextV1,
+  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:()=>0,forgetOwnerFactsReferencingV1:()=>[],graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1,settleInventoryRoundsV1,awaitPlannerQuietV1:async()=>{},ownerWithheldTextV1,
  };
- const owned=new Map();bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(owned,limits.definitions.Limits.const,observeOwnerWithRetryV1);bindings.evictOwnerFactsReferencingV1=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1",extract("evictOwnerFactsReferencingV1")+";return evictOwnerFactsReferencingV1;")(owned,"same") as()=>number;
+ const owned=new Map();bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(owned,limits.definitions.Limits.const,observeOwnerWithRetryV1);const forget=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1",extract("forgetOwnerFactsReferencingV1")+";return forgetOwnerFactsReferencingV1;")(owned,"same") as()=>string[];bindings.forgetOwnerFactsReferencingV1=forget;bindings.evictOwnerFactsReferencingV1=((...args:[])=>forget(...args).length)as()=>number;
  const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
  const receipt=()=>{const packed=JSON.parse(store.get("/owned/cache/selected/scope.authority.json")!);return {...packed,observations:decodeAuthorityObservationsV1(packed.observations,authoritySchema.definitions.ObservationKind.enum) as Row[],seal:packed.seal as ReturnType<typeof sealVerdictV1>};};
  return{run,tree,names,counts,inferred,observed,changes,lines,receipt,quiesce:()=>{churning=false;},owners,period,records,clock:()=>clock};

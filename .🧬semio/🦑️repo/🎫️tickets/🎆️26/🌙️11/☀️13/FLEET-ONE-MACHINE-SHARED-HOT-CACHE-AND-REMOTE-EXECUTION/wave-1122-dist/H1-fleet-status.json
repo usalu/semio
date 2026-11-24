@@ -1,0 +1,1112 @@
+{
+  "version": 1,
+  "atMs": 1795444014051,
+  "workspace": "/Users/ueli/Documents/semio",
+  "summary": {
+    "running": 4,
+    "blocked": 0,
+    "waiting": 0,
+    "alerts": 0,
+    "warnings": 1
+  },
+  "memory": {
+    "totalMegabytes": 32768,
+    "availableMegabytes": 14174,
+    "floorMegabytes": 4096,
+    "spareMegabytes": 7667,
+    "pressure": "normal",
+    "swapUsedMegabytes": 1751,
+    "load": 73.3,
+    "sampleAgeSeconds": 0,
+    "cores": 10,
+    "admittedMegabytes": 7989,
+    "observedMegabytes": 2384,
+    "unobservedGrants": 0,
+    "overReservedMegabytes": 5605,
+    "underReservedMegabytes": 0,
+    "grants": 3,
+    "waiters": 0
+  },
+  "runs": [
+    {
+      "pid": 76726,
+      "pids": [
+        76726
+      ],
+      "state": "running",
+      "ageSeconds": 65238,
+      "memory": {
+        "admittedMegabytes": null,
+        "observedMegabytes": null,
+        "deltaMegabytes": null,
+        "jobs": 0
+      },
+      "exclusive": []
+    },
+    {
+      "pid": 99697,
+      "pids": [
+        99697
+      ],
+      "state": "running",
+      "ageSeconds": 1932,
+      "agent": "b7259958-a2bc-44f9-9f71-5d45d4cbea2b",
+      "session": "8015997530f4.a1sjuza5c0n",
+      "operation": "cargo",
+      "memory": {
+        "admittedMegabytes": 3584,
+        "observedMegabytes": 1635,
+        "deltaMegabytes": -1949,
+        "jobs": 1
+      },
+      "exclusive": []
+    },
+    {
+      "pid": 41573,
+      "pids": [
+        41573
+      ],
+      "state": "running",
+      "ageSeconds": 998,
+      "agent": "caf759d9-ccba-4796-9909-827125acd710",
+      "session": "a3fba9d52db0.alhfy1ypyg",
+      "operation": "cargo",
+      "memory": {
+        "admittedMegabytes": 1333,
+        "observedMegabytes": 88,
+        "deltaMegabytes": -1245,
+        "jobs": 1
+      },
+      "exclusive": []
+    },
+    {
+      "pid": 34600,
+      "pids": [
+        34600,
+        35722
+      ],
+      "state": "running",
+      "ageSeconds": 186,
+      "agent": "default",
+      "session": "a3fba9d52db0.d",
+      "command": "d7342bef7cd7ff9b76b21e7d4c68e538658f0549aceeddb7d164746044be3ee7 show projects",
+      "operation": "show",
+      "phase": "dependencies:generation-verify",
+      "done": 102400,
+      "priority": "background",
+      "implementation": {
+        "state": "progressing",
+        "digest": "db35cb6176b5",
+        "ageSeconds": 169,
+        "freshness": "current"
+      },
+      "memory": {
+        "admittedMegabytes": 3072,
+        "observedMegabytes": 661,
+        "deltaMegabytes": -2411,
+        "jobs": 1
+      },
+      "exclusive": [
+        ""
+      ]
+    }
+  ],
+  "queues": {
+    "graph": {
+      "builder": null,
+      "computers": 0,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+    },
+    "capacity": {
+      "floorMegabytes": 4096,
+      "spareMegabytes": 7667,
+      "grants": 3,
+      "waiters": []
+    },
+    "leases": [],
+    "leasesOmitted": 0
+  },
+  "bazel": {
+    "slots": 0,
+    "live": 0,
+    "held": 0,
+    "rssMegabytes": 0,
+    "servers": []
+  },
+  "storage": {
+    "hostFreeBytes": 51994136576,
+    "hostFreeFloorBytes": 16106127360,
+    "machine": {
+      "totalBytes": 212937474048,
+      "effectiveTotalBytes": 212937474048,
+      "usedBytes": 45742440448,
+      "footprintBytes": 75919409152,
+      "overBytes": 0,
+      "evictBytes": 0,
+      "blockedBytes": 0,
+      "source": "default"
+    },
+    "overAreas": [],
+    "images": [
+      {
+        "id": "control",
+        "kind": "control",
+        "state": "directory",
+        "usedBytes": null,
+        "capacityBytes": null,
+        "budgetBytes": null,
+        "source": "unknown",
+        "usedBasisPoints": null
+      },
+      {
+        "id": "dependencies",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 15231840256,
+        "capacityBytes": 38653657088,
+        "budgetBytes": 38653657088,
+        "source": "statfs",
+        "usedBasisPoints": 3940
+      },
+      {
+        "id": "diagnostics",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 630784,
+        "capacityBytes": 2146435072,
+        "budgetBytes": 2146435072,
+        "source": "statfs",
+        "usedBasisPoints": 2
+      },
+      {
+        "id": "fleet-state",
+        "kind": "control",
+        "state": "directory",
+        "usedBytes": 3580506112,
+        "capacityBytes": null,
+        "budgetBytes": null,
+        "source": "recorded",
+        "usedBasisPoints": null
+      },
+      {
+        "id": "graph",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 11696615424,
+        "capacityBytes": 19326304256,
+        "budgetBytes": 6441402368,
+        "source": "statfs",
+        "usedBasisPoints": 6052
+      },
+      {
+        "id": "leases",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 4530176,
+        "capacityBytes": 66019328,
+        "budgetBytes": 62914560,
+        "source": "statfs",
+        "usedBasisPoints": 686
+      },
+      {
+        "id": "nx",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 291409920,
+        "capacityBytes": 1609564160,
+        "budgetBytes": 1609564160,
+        "source": "statfs",
+        "usedBasisPoints": 1810
+      },
+      {
+        "id": "products",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 1416531968,
+        "capacityBytes": 25768755200,
+        "budgetBytes": 25768755200,
+        "source": "statfs",
+        "usedBasisPoints": 549
+      },
+      {
+        "id": "rust",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 5818777600,
+        "capacityBytes": 42948624384,
+        "budgetBytes": 103079215104,
+        "source": "statfs",
+        "usedBasisPoints": 1354
+      },
+      {
+        "id": "tools",
+        "kind": "partition",
+        "state": "mounted",
+        "usedBytes": 4005101568,
+        "capacityBytes": 8588886016,
+        "budgetBytes": 8588886016,
+        "source": "statfs",
+        "usedBasisPoints": 4663
+      }
+    ]
+  },
+  "sealed": {
+    "mode": "live",
+    "drifted": 1,
+    "blocked": 0,
+    "entries": [
+      {
+        "entry": "🏛️sealed/🚪️entry",
+        "digest": "26f92099bb6d",
+        "files": 1520,
+        "bytes": 18626484,
+        "promotedAtMs": 1793007314893,
+        "ageSeconds": 2436699,
+        "fresh": false,
+        "changed": 2315,
+        "last": {
+          "atMs": 1793007314895,
+          "added": 4,
+          "removed": 0,
+          "changed": 11
+        }
+      }
+    ]
+  },
+  "generation": null,
+  "scheduler": {
+    "budgetMegabytes": 28672,
+    "reservedMegabytes": 512,
+    "running": 1,
+    "queued": 0,
+    "waiting": 0,
+    "longestWaitSeconds": 0,
+    "sharedTickets": 0,
+    "jobs": [
+      {
+        "key": "run @semio-tech/repo-lib:probe-nx-owner-arguments#6f12533e37c2@712e68463780f74b",
+        "class": "compile",
+        "priority": "agent",
+        "depth": 0,
+        "agents": [
+          "caf759d9-ccba-4796-9909-827125acd710"
+        ],
+        "tickets": 1,
+        "reserveMegabytes": 512,
+        "waitedSeconds": 0,
+        "runSeconds": 30027
+      }
+    ],
+    "agents": [
+      {
+        "agent": "caf759d9-ccba-4796-9909-827125acd710",
+        "running": 1,
+        "queued": 0,
+        "served": 1,
+        "percent": 100
+      }
+    ]
+  },
+  "fleet": {
+    "scheduler": "http://192.168.178.70:8981",
+    "machines": [
+      {
+        "origin": "g1-m01",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "warn",
+        "load": 3.04,
+        "cores": 12,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (pressure-warn)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (pressure-warn)"
+        },
+        "offloadedIn": 159,
+        "offloadedOut": 0,
+        "refused": 4,
+        "cacheHit": 22149,
+        "cacheMiss": 85285,
+        "cacheSkipped": 45573,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 140,
+          "upload-failed": 13077,
+          "upload-expired-down": 339,
+          "publish-refused": 13,
+          "diverged": 1,
+          "upload-expired-ok": 1,
+          "upload-expired": 13,
+          "key-incomplete": 4137,
+          "spool-full": 27743,
+          "path-dependent": 109
+        }
+      },
+      {
+        "origin": "g1-m02",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 10.74,
+        "cores": 10,
+        "running": 5,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 246,
+        "offloadedOut": 2196,
+        "refused": 29,
+        "cacheHit": 39816,
+        "cacheMiss": 155756,
+        "cacheSkipped": 74483,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 302,
+          "upload-failed": 15478,
+          "upload-expired-down": 1158,
+          "publish-interface": 236,
+          "publish-refused": 3,
+          "diverged": 89,
+          "upload-expired": 698,
+          "key-incomplete": 2389,
+          "bypass-native-link": 7,
+          "breaker-down": 2,
+          "spool-full": 53450,
+          "path-dependent": 671
+        }
+      },
+      {
+        "origin": "g1-m03",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "warn",
+        "load": 8.15,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 4,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (pressure-warn)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (pressure-warn)"
+        },
+        "offloadedIn": 1823,
+        "offloadedOut": 0,
+        "refused": 21,
+        "cacheHit": 21665,
+        "cacheMiss": 29575,
+        "cacheSkipped": 1040,
+        "cacheSkipReasons": {}
+      },
+      {
+        "origin": "g1-m04",
+        "platform": "linux-amd64-e77b488815717bdf",
+        "pressure": "normal",
+        "load": 3.31,
+        "cores": 12,
+        "running": 0,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 4,
+        "worker": "idle",
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 15547,
+        "cacheMiss": 52909,
+        "cacheSkipped": 4436,
+        "cacheSkipReasons": {}
+      },
+      {
+        "origin": "g1-m05",
+        "platform": "windows-amd64-20b3468084db2170",
+        "pressure": "normal",
+        "load": 13.48,
+        "cores": 16,
+        "running": 5,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 0,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 0,
+        "cacheMiss": 125,
+        "cacheSkipped": 25,
+        "cacheSkipReasons": {}
+      },
+      {
+        "origin": "g1-m06",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 23,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 203,
+        "offloadedOut": 0,
+        "refused": 11,
+        "cacheHit": 67281,
+        "cacheMiss": 115624,
+        "cacheSkipped": 57334,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 181,
+          "upload-failed": 3185,
+          "run-path-dependent": 4,
+          "upload-expired-down": 377,
+          "publish-interface": 305,
+          "diverged": 8,
+          "root-key-failed": 3,
+          "upload-expired": 310,
+          "key-incomplete": 1661,
+          "bypass-native-link": 31,
+          "spool-full": 50412,
+          "path-dependent": 386,
+          "no-compiler-identity": 471
+        }
+      },
+      {
+        "origin": "g1-m07",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 3.05,
+        "cores": 10,
+        "running": 4,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 4,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 10,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 28830,
+        "cacheMiss": 86866,
+        "cacheSkipped": 36323,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 107,
+          "upload-failed": 12818,
+          "upload-expired-down": 5553,
+          "publish-interface": 60,
+          "diverged": 41,
+          "root-key-failed": 4,
+          "upload-expired-ok": 1,
+          "upload-expired": 597,
+          "key-incomplete": 1325,
+          "spool-full": 15678,
+          "path-dependent": 139
+        }
+      },
+      {
+        "origin": "g1-m08",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 10.83,
+        "cores": 10,
+        "running": 8,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 3,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 10,
+        "offloadedOut": 2968,
+        "refused": 0,
+        "cacheHit": 73971,
+        "cacheMiss": 66763,
+        "cacheSkipped": 19958,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 87,
+          "upload-failed": 14099,
+          "upload-expired-down": 418,
+          "publish-interface": 6,
+          "publish-refused": 14,
+          "diverged": 23,
+          "upload-expired": 208,
+          "key-incomplete": 4398,
+          "spool-full": 470,
+          "unreadable-source": 1,
+          "path-dependent": 234
+        }
+      },
+      {
+        "origin": "g1-m10",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 5.11,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 1,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 61,
+        "offloadedOut": 0,
+        "refused": 1,
+        "cacheHit": 46527,
+        "cacheMiss": 90439,
+        "cacheSkipped": 13857,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 92,
+          "incremental": 1,
+          "upload-failed": 623,
+          "run-path-dependent": 1,
+          "diverged": 65,
+          "upload-expired": 513,
+          "key-incomplete": 2226,
+          "spool-full": 10292,
+          "path-dependent": 44
+        }
+      },
+      {
+        "origin": "g1-m11",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 14.42,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 4,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 30,
+        "offloadedOut": 0,
+        "refused": 0,
+        "cacheHit": 33565,
+        "cacheMiss": 95141,
+        "cacheSkipped": 30754,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 100,
+          "upload-failed": 1249,
+          "publish-interface": 2,
+          "publish-refused": 2,
+          "diverged": 13,
+          "root-key-failed": 1,
+          "upload-expired": 515,
+          "key-incomplete": 1017,
+          "bypass-native-link": 8,
+          "spool-full": 27737,
+          "path-dependent": 110
+        }
+      },
+      {
+        "origin": "g1-m12",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 15.28,
+        "cores": 10,
+        "running": 6,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 4,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (memory)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (memory)"
+        },
+        "offloadedIn": 406,
+        "offloadedOut": 72,
+        "refused": 1,
+        "cacheHit": 49386,
+        "cacheMiss": 74135,
+        "cacheSkipped": 29452,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 157,
+          "upload-failed": 2685,
+          "upload-expired-down": 681,
+          "publish-interface": 22,
+          "publish-refused": 4,
+          "diverged": 14,
+          "upload-breaker": 1,
+          "upload-expired": 652,
+          "key-incomplete": 1122,
+          "publish-no-outputs": 1,
+          "breaker-down": 238,
+          "spool-full": 23769,
+          "path-dependent": 106
+        }
+      },
+      {
+        "origin": "g1-m13",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "warn",
+        "load": 17.64,
+        "cores": 10,
+        "running": 3,
+        "queued": 0,
+        "headroom": false,
+        "ageSeconds": 1,
+        "worker": "refusing",
+        "why": {
+          "code": "no-headroom",
+          "en": "the machine has no headroom for one more action (pressure-warn)",
+          "de": "die Maschine hat keinen Spielraum für eine weitere Aktion (pressure-warn)"
+        },
+        "offloadedIn": 181,
+        "offloadedOut": 0,
+        "refused": 5,
+        "cacheHit": 309,
+        "cacheMiss": 17083,
+        "cacheSkipped": 3880,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 16,
+          "upload-failed": 3668,
+          "key-incomplete": 170,
+          "path-dependent": 26
+        }
+      },
+      {
+        "origin": "g1-server",
+        "platform": "macos-arm64-312cc5b2932fbb31",
+        "pressure": "normal",
+        "load": 73.3,
+        "cores": 10,
+        "running": 12,
+        "queued": 0,
+        "headroom": true,
+        "ageSeconds": 1,
+        "worker": "busy",
+        "offloadedIn": 2465,
+        "offloadedOut": 171,
+        "refused": 3,
+        "cacheHit": 16525,
+        "cacheMiss": 26930,
+        "cacheSkipped": 94,
+        "cacheSkipReasons": {
+          "bypass-no-artifact-messages": 23,
+          "incremental": 2,
+          "upload-failed": 16,
+          "unreadable-extern": 1,
+          "upload-expired": 1,
+          "key-incomplete": 46,
+          "publish-no-outputs": 1,
+          "read-only": 1,
+          "path-dependent": 3
+        }
+      }
+    ],
+    "queued": 0,
+    "executing": 9,
+    "offloadedIn": 5594,
+    "offloadedOut": 5407,
+    "refused": 75,
+    "declined": 406,
+    "retried": 245,
+    "cacheHit": 415571,
+    "cacheMiss": 896631,
+    "cache": {
+      "hits": 1862350,
+      "misses": 195254,
+      "puts": 125860
+    },
+    "claims": {
+      "active": 49,
+      "waiting": 0,
+      "oldestSeconds": 187
+    },
+    "keys": {
+      "origins": 1,
+      "units": 0,
+      "diffs": [],
+      "byComponent": {}
+    }
+  },
+  "workers": {
+    "offlineSeconds": 600,
+    "counts": {
+      "ready": 2,
+      "working": 10,
+      "idle": 0,
+      "silent": 0,
+      "offline": 0,
+      "absent": 2
+    },
+    "rows": [
+      {
+        "origin": "g1-m01",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 5,
+        "recordAgeSeconds": 4,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m02",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 4,
+        "recordAgeSeconds": 2,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m03",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 1,
+        "heartbeatAgeSeconds": 2,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m04",
+        "platform": "linux",
+        "liveness": "working",
+        "recorded": "waiting",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 20,
+        "recordAgeSeconds": 10,
+        "heartbeatAgeSeconds": 2,
+        "refusal": {
+          "code": "disk-collecting",
+          "en": "Stage dependencies needs 6144 MB free in /home/deck/semio/.cache but only 3587 MB are free: freeing space by priority now (derivable caches first, the image slack last), progress is in the log; 2557 MB are still missing; the stage starts as soon as the need is free.",
+          "de": "Stufe dependencies braucht 6144 MB frei in /home/deck/semio/.cache, aber nur 3587 MB sind frei: Platz wird jetzt nach Priorität freigegeben (zuerst ableitbare Caches, der Image-Überhang zuletzt), der Fortschritt steht im Protokoll; es fehlen noch 2557 MB; die Stufe startet, sobald der Bedarf frei ist."
+        }
+      },
+      {
+        "origin": "g1-m05",
+        "platform": "windows",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 28,
+        "recordAgeSeconds": 10,
+        "heartbeatAgeSeconds": 6,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m06",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 7,
+        "recordAgeSeconds": 2,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m07",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 2,
+        "recordAgeSeconds": 2,
+        "heartbeatAgeSeconds": 3,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m08",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 3,
+        "recordAgeSeconds": 5,
+        "heartbeatAgeSeconds": 4,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m09",
+        "platform": null,
+        "liveness": "absent",
+        "recorded": null,
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 0,
+        "attempts": 0,
+        "recordAgeSeconds": null,
+        "heartbeatAgeSeconds": null,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m10",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 12,
+        "recordAgeSeconds": 1,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m11",
+        "platform": "macos",
+        "liveness": "ready",
+        "recorded": "ready",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 0,
+        "recordAgeSeconds": 3,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m12",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "dependencies",
+        "stageIndex": 3,
+        "stageCount": 5,
+        "attempts": 47,
+        "recordAgeSeconds": 7,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null
+      },
+      {
+        "origin": "g1-m13",
+        "platform": "macos",
+        "liveness": "working",
+        "recorded": "running",
+        "stage": "workspace",
+        "stageIndex": 5,
+        "stageCount": 5,
+        "attempts": 9,
+        "recordAgeSeconds": 6,
+        "heartbeatAgeSeconds": 0,
+        "refusal": null
+      },
+      {
+        "origin": "g1-server",
+        "platform": null,
+        "liveness": "absent",
+        "recorded": null,
+        "stage": null,
+        "stageIndex": 0,
+        "stageCount": 0,
+        "attempts": 0,
+        "recordAgeSeconds": null,
+        "heartbeatAgeSeconds": 1,
+        "refusal": null
+      }
+    ]
+  },
+  "cas": {
+    "root": "/Users/ueli/.cache/semio/cas",
+    "usedBytes": 23300428961,
+    "usedBasisPoints": 7819,
+    "capBytes": 34359738368,
+    "effectiveCapBytes": 29796335616,
+    "highWatermarkBytes": 26816702054,
+    "lowWatermarkBytes": 22347251712,
+    "incrementBytes": 2147483648,
+    "leases": {
+      "leased": 0,
+      "expired": 0,
+      "leasedBytes": 0,
+      "expiredBytes": 0
+    },
+    "lastCollection": {
+      "atMs": 1795443455472,
+      "ageSeconds": 558,
+      "bytes": 23300428961
+    }
+  },
+  "retention": {
+    "mode": "dry-run",
+    "sweptAt": 1795443822087,
+    "ageSeconds": 191,
+    "entries": 4854,
+    "judged": 2885,
+    "live": 1281,
+    "grace": 750,
+    "stale": 785,
+    "staleByReason": {
+      "extern": 772,
+      "edited": 13
+    },
+    "unreached": 69,
+    "undeclared": 1969,
+    "retired": 0,
+    "refused": {
+      "would-refuse-stale-on-arrival": 1
+    }
+  },
+  "offload": {
+    "local": 0,
+    "fleet": 0,
+    "builds": [],
+    "out": 1749,
+    "refused": 883,
+    "fellBack": 2276,
+    "deadline": 0,
+    "lost": 0,
+    "silent": 0,
+    "reasons": {
+      "cheap": 830,
+      "queue-timeout": 174,
+      "not-portable": 68,
+      "worker-policy": 223,
+      "pin-failed": 15,
+      "unmapped-path": 3112,
+      "no-idle-machine": 170,
+      "incomplete-inputs": 158,
+      "toolchain-missing": 1,
+      "infrastructure": 1587,
+      "inputs-too-large": 27,
+      "path-dependent-output": 4,
+      "unreadable-input": 53
+    }
+  },
+  "findings": [
+    {
+      "id": "unit-cache-read-only",
+      "severity": "warn",
+      "subject": "g1-server",
+      "values": {
+        "origin": "g1-server",
+        "count": 1
+      },
+      "text": "g1-server may only read the fleet cache (1 unit(s) compiled without sharing): everything it compiles stays local and never seeds the other machines"
+    },
+    {
+      "id": "sealed-drifted",
+      "severity": "info",
+      "subject": "🏛️sealed/🚪️entry",
+      "values": {
+        "entry": "🏛️sealed/🚪️entry",
+        "changed": 2315
+      },
+      "text": "The live tree changed after snapshot 🏛️sealed/🚪️entry (2315 change(s))"
+    },
+    {
+      "id": "worker-absent",
+      "severity": "info",
+      "subject": "g1-m09",
+      "values": {
+        "origin": "g1-m09"
+      },
+      "text": "worker g1-m09 is enrolled but showed no sign of life and never wrote a readiness record"
+    }
+  ],
+  "sources": [
+    {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 998
+    },
+    {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 1071
+    },
+    {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 1071
+    },
+    {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 3678
+    },
+    {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 889
+    },
+    {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 905
+    },
+    {
+      "id": "scheduler",
+      "ok": true,
+      "milliseconds": 1049
+    },
+    {
+      "id": "fleet",
+      "ok": true,
+      "milliseconds": 2361
+    },
+    {
+      "id": "workers",
+      "ok": true,
+      "milliseconds": 949
+    },
+    {
+      "id": "cas",
+      "ok": true,
+      "milliseconds": 1137
+    },
+    {
+      "id": "offload",
+      "ok": true,
+      "milliseconds": 992
+    }
+  ]
+}

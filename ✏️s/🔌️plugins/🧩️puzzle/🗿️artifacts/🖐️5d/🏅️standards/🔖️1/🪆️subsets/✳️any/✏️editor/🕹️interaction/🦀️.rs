@@ -489,9 +489,9 @@ pub struct Puzzle5dActionCtx<'a> {
     /// 🌍️ The host's projected locale×terminology axes — the only source a notice may resolve its
     /// sentence from (`Puzzle5dActionCtx::notice`).
     pub view_state: Option<&'a semio_plugin::ViewModel>,
-    /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::tool_run`) — the
+    /// ⏯️ The instance's tool run as of command admission (`ArtifactOwnedToolJobContext::original_tool_run`) — the
     /// identity Escape's `toolRunAbort` is bound to while a fill run is live.
-    pub tool_run: Option<&'a semio_plugin::ToolRunView>,
+    pub tool_run: Option<semio_plugin::OriginalToolRunView<'a>>,
     /// 🧯️ At most ONE bounded, localized transient notice this arm wants shown, plus whatever host
     /// effects it raised. An arm that REFUSES pushes a notice here instead of completing silently.
     pub effects: Vec<Effect>,

@@ -14,19 +14,21 @@ impl SurfaceState {
     /// 🪦 Advances exactly one retired scene owner under the ordinary frame maintenance budget.
     pub fn world3d_retirement_fault(&self)->Option<infinite_world::world::WorldDynamicFault> {self.world3d_retirement_fault}
 
+    /// 🪦 The grant one retired-world step quotes for its terrain close.
+    const WORLD3D_RETIREMENT_TERRAIN_GRANT: semio_framework_value::retained_clone::RetainedCloneGrant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 16 * 1024 * 1024, maximum_depth: 64 };
+
+    /// 🪦 Advances exactly one retired scene owner on its own maintenance-lane context, which carries no original caller.
     pub fn advance_world3d_retirement_step(&mut self) -> bool {
         let Some((_, state)) = self.retired_world3d_states.front_mut() else { return false };
         if world3d_dynamic_retirement_terminal_is_empty(state) {
-            self.retired_world3d_states.pop_front();
-            assert!(self.world3d_states.set_external_reservations(self.retired_world3d_states.len()), "retired World3d release restores admission credits");
-            return !self.retired_world3d_states.is_empty();
+            return self.advance_world3d_retirement_terminal();
         }
-        let terrain_grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:16*1024*1024,maximum_depth:64};
         let now = semio_framework_job::default_now_us();
-        let Some(budget) = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, terrain_grant)) else {
-            self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
+        let Some(budget) = now.and_then(|now| semio_framework_job::StepBudget::from_duration(1, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, Self::WORLD3D_RETIREMENT_TERRAIN_GRANT)) else {
+            self.world3d_retirement_fault = Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::WorkLimit));
             return true;
         };
+        let mut sequence = self.world3d_retirement_sequence;
         let mut retained_progress = semio_framework_job::RetainedCloneProgress::default();
         let mut context = semio_framework_job::StepContext::new(
             semio_framework_job::OperationId(self.world3d_retirement_epoch),
@@ -34,20 +36,44 @@ impl SurfaceState {
             budget,
             semio_framework_job::root_cancel_token(),
             semio_framework_job::default_now_us,
-            &mut self.world3d_retirement_sequence,
+            &mut sequence,
             &mut retained_progress,
         );
-        let terrain=infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain,terrain_grant,&mut context);
-        if !terrain.ownership.fits(terrain_grant) {self.world3d_retirement_fault=Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));return true;}
-        match terrain.step {
-            infinite_world::world::WorldTerrainMeshPublicationStep::Idle=>{},
-            infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return true,
-            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{self.world3d_retirement_fault=Some(fault);return true;}
-        }
-        step_world3d_dynamic_retirement(state, &mut context);
+        let more = self.advance_world3d_retirement_step_in(&mut context);
+        drop(context);
+        self.world3d_retirement_sequence = sequence;
+        more
+    }
+
+    fn advance_world3d_retirement_terminal(&mut self) -> bool {
+        self.retired_world3d_states.pop_front();
+        assert!(self.world3d_states.set_external_reservations(self.retired_world3d_states.len()), "retired World3d release restores admission credits");
+        !self.retired_world3d_states.is_empty()
+    }
+
+    /// 🪦 Advances exactly one retired scene owner inside the caller's own `context`, whose original source parent a superseded scene bridge needs to close.
+    pub fn advance_world3d_retirement_step_in(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+        let Some((_, state)) = self.retired_world3d_states.front_mut() else { return false };
         if world3d_dynamic_retirement_terminal_is_empty(state) {
-            self.retired_world3d_states.pop_front();
-            assert!(self.world3d_states.set_external_reservations(self.retired_world3d_states.len()), "retired World3d release restores admission credits");
+            return self.advance_world3d_retirement_terminal();
+        }
+        let terrain_grant = Self::WORLD3D_RETIREMENT_TERRAIN_GRANT;
+        let terrain = infinite_world::world::step_world3d_terrain_retirement(&mut state.session, &mut state.terrain, terrain_grant, context);
+        if !terrain.ownership.fits(terrain_grant) {
+            self.world3d_retirement_fault = Some(infinite_world::world::WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));
+            return true;
+        }
+        match terrain.step {
+            infinite_world::world::WorldTerrainMeshPublicationStep::Idle => {}
+            infinite_world::world::WorldTerrainMeshPublicationStep::Pending | infinite_world::world::WorldTerrainMeshPublicationStep::Complete => return true,
+            infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault) => {
+                self.world3d_retirement_fault = Some(fault);
+                return true;
+            }
+        }
+        step_world3d_dynamic_retirement(state, context);
+        if world3d_dynamic_retirement_terminal_is_empty(state) {
+            self.advance_world3d_retirement_terminal();
         }
         !self.retired_world3d_states.is_empty()
     }

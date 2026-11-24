@@ -53,9 +53,10 @@ export async function judgeStalenessV1(all:readonly StalenessEntryV1[],input:Sta
   }
   visiting.delete(key);settled.set(key,verdict);return verdict;
  };
- const rooted=(declaration:DeclarationV1):boolean=>declaration.sources.length>0||declaration.kind==="stage-output",verdicts=new Map<string,StalenessVerdictV1>(),young=(entry:StalenessEntryV1):boolean=>input.now-entry.storedAt<input.graceMilliseconds,reached=new Set<string>(),pending:string[]=[];
+ const rooted=(declaration:DeclarationV1):boolean=>declaration.sources.length>0||declaration.kind==="stage-output"||declaration.kind==="graph",verdicts=new Map<string,StalenessVerdictV1>(),young=(entry:StalenessEntryV1):boolean=>input.now-entry.storedAt<input.graceMilliseconds,reached=new Set<string>(),pending:string[]=[];
  for(const entry of entries){
   if(entry.declaration===undefined){verdicts.set(entry.key,{state:"undeclared"});continue;}
+  if(entry.declaration.kind==="graph"){verdicts.set(entry.key,{state:"live"});pending.push(entry.key);continue;}
   const stale=staleOf(entry.key);
   if(stale!==false&&!young(entry)){verdicts.set(entry.key,{state:"stale",reason:stale.reason,detail:stale.detail});continue;}
   if(rooted(entry.declaration)){verdicts.set(entry.key,{state:young(entry)&&stale!==false?"grace":"live"});pending.push(entry.key);}

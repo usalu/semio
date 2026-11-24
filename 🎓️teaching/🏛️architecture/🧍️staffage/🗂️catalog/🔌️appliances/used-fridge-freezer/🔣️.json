@@ -98,8 +98,8 @@
     "densityKgM3": 140,
     "conductivityWmK": 0.026,
     "specificHeatJKgK": 1450,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 240000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 240000000,
     "source": "authored-estimate",
     "reference": "en-62552-2013"
    },
@@ -128,8 +128,8 @@
     "densityKgM3": 115,
     "conductivityWmK": 0.026,
     "specificHeatJKgK": 1300,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 240000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 240000000,
     "source": "authored-estimate",
     "reference": "en-62552-2013"
    },
@@ -200,8 +200,8 @@
     "densityKgM3": 2000,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 240000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 240000000,
     "source": "authored-estimate",
     "reference": "en-10346-2015"
    },
@@ -214,10 +214,10 @@
     "emissivity": 0.92,
     "solarAbsorptivity": 0.1,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 120000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 120000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -246,8 +246,8 @@
     "densityKgM3": 1000,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 100000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 100000000,
     "source": "literature",
     "reference": "iso-10456-2007"
    },
@@ -262,8 +262,8 @@
     "densityKgM3": 2700,
     "conductivityWmK": 160,
     "specificHeatJKgK": 900,
-    "elasticModulusPa": 70000000000.0,
-    "strengthPa": 150000000.0,
+    "elasticModulusPa": 70000000000,
+    "strengthPa": 150000000,
     "source": "literature",
     "reference": "incropera-2018"
    },
@@ -292,8 +292,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 240000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 240000000,
     "source": "literature",
     "reference": "en-10346-2015"
    },
@@ -406,8 +406,8 @@
     "densityKgM3": 2100,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "authored-estimate",
     "reference": "en-10219-2-2019"
    },
@@ -422,8 +422,8 @@
     "densityKgM3": 7850,
     "conductivityWmK": 50,
     "specificHeatJKgK": 460,
-    "elasticModulusPa": 210000000000.0,
-    "strengthPa": 235000000.0,
+    "elasticModulusPa": 210000000000,
+    "strengthPa": 235000000,
     "source": "literature",
     "reference": "en-10219-2-2019"
    },
@@ -478,7 +478,7 @@
     "emissivity": 0.9,
     "solarAbsorptivity": 0.1,
     "densityKgM3": 2500,
-    "conductivityWmK": 1.0,
+    "conductivityWmK": 1,
     "specificHeatJKgK": 750,
     "source": "authored-estimate",
     "reference": "incropera-2018"
@@ -545,8 +545,8 @@
      },
      "mass": {
       "kg": 5.534036,
-      "comX": 0.0,
-      "comY": 0.0,
+      "comX": 0,
+      "comY": 0,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "hand-truck-catalogue"
@@ -578,7 +578,7 @@
      },
      "section": {
       "areaM2": 0.000326726,
-      "secondMomentM4": 2.77717e-08,
+      "secondMomentM4": 2.77717e-8,
       "extremeFibreM": 0.014,
       "material": "truck-plate",
       "title": {
@@ -602,7 +602,7 @@
       "type": "prismatic",
       "axisDeg": 0,
       "minM": 0,
-      "maxM": 2.0
+      "maxM": 2
      }
     },
     {
@@ -664,7 +664,7 @@
      },
      "section": {
       "areaM2": 0.00113,
-      "secondMomentM4": 5.45414e-05,
+      "secondMomentM4": 0.0000545414,
       "extremeFibreM": 0.265,
       "material": "cabinet-wall",
       "title": {
@@ -725,7 +725,7 @@
      },
      "section": {
       "areaM2": 0.000598,
-      "secondMomentM4": 3.7375e-07,
+      "secondMomentM4": 3.7375e-7,
       "extremeFibreM": 0.025,
       "material": "door-panel",
       "title": {
@@ -763,7 +763,7 @@
      },
      "section": {
       "areaM2": 0.000598,
-      "secondMomentM4": 3.7375e-07,
+      "secondMomentM4": 3.7375e-7,
       "extremeFibreM": 0.025,
       "material": "door-panel",
       "title": {
@@ -779,7 +779,7 @@
     "id": "carton-corner-fr",
     "bone": "cardboard",
     "x": 0.67,
-    "y": 0.0,
+    "y": 0,
     "z": -0.31,
     "kind": "contact",
     "title": {
@@ -796,7 +796,7 @@
     "id": "carton-corner-fl",
     "bone": "cardboard",
     "x": 0.67,
-    "y": 0.0,
+    "y": 0,
     "z": 0.31,
     "kind": "contact",
     "title": {
@@ -813,7 +813,7 @@
     "id": "carton-corner-rr",
     "bone": "cardboard",
     "x": 0.02,
-    "y": 0.0,
+    "y": 0,
     "z": -0.31,
     "kind": "contact",
     "title": {
@@ -830,7 +830,7 @@
     "id": "carton-corner-rl",
     "bone": "cardboard",
     "x": 0.02,
-    "y": 0.0,
+    "y": 0,
     "z": 0.31,
     "kind": "contact",
     "title": {
@@ -846,7 +846,7 @@
    {
     "id": "truck-wheel-r",
     "bone": "truck-base",
-    "x": 0.0,
+    "x": 0,
     "y": -0.13,
     "z": -0.2425,
     "kind": "contact",
@@ -863,7 +863,7 @@
    {
     "id": "truck-wheel-l",
     "bone": "truck-base",
-    "x": 0.0,
+    "x": 0,
     "y": -0.13,
     "z": 0.2425,
     "kind": "contact",
@@ -882,7 +882,7 @@
     "bone": "truck-frame",
     "x": -0.13,
     "y": -0.29,
-    "z": 0.0,
+    "z": 0,
     "kind": "contact",
     "title": {
      "en": "Front edge of the nose plate on the floor",
@@ -1000,8 +1000,8 @@
     "id": "condenser-top",
     "bone": "condenser",
     "x": 1.46,
-    "y": 0.0,
-    "z": 0.0,
+    "y": 0,
+    "z": 0,
     "kind": "emitter",
     "title": {
      "en": "Top of the wire condenser",
@@ -1025,7 +1025,7 @@
     "bone": "cabinet",
     "x": 1.282,
     "y": 0.025,
-    "z": 0.0,
+    "z": 0,
     "kind": "load",
     "title": {
      "en": "Centre of the food in both compartments",
@@ -1071,8 +1071,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.69,
        "h": 0.003,
        "region": "cardboard",
@@ -1086,8 +1086,8 @@
        "filled": true,
        "tone": 0.15,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.13,
        "ry": 0.13,
        "region": "truck-wheels",
@@ -1101,8 +1101,8 @@
        "filled": true,
        "tone": 0.6,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.078,
        "ry": 0.078,
        "region": "truck",
@@ -1116,8 +1116,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.016,
        "ry": 0.016,
        "region": "truck",
@@ -1165,8 +1165,8 @@
        "kind": "capsule",
        "x0": 0.1,
        "y0": -0.09,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.01,
        "r1": 0.01,
        "region": "truck",
@@ -1195,7 +1195,7 @@
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.265,
        "w": 1.82,
        "h": 0.53,
@@ -1383,6 +1383,73 @@
        "d": "M 0.16900 0.27400 L 0.27500 0.27400"
       },
       {
+       "id": "cable-lead",
+       "bone": "cabinet",
+       "role": "detail",
+       "z": 2.95,
+       "filled": false,
+       "tone": 0.2,
+       "kind": "path",
+       "d": "M 0.172 0.274 L 0.092 0.205"
+      },
+      {
+       "id": "pipe",
+       "bone": "cabinet",
+       "role": "body",
+       "z": 2.9,
+       "tone": 0.4,
+       "material": "copper-pipe",
+       "filled": true,
+       "kind": "poly",
+       "points": [
+        [
+         0.313,
+         0.289
+        ],
+        [
+         0.1815,
+         0.2771
+        ],
+        [
+         0.0996,
+         0.2384
+        ],
+        [
+         0.098,
+         0.2362
+        ],
+        [
+         0.098,
+         0.2337
+        ],
+        [
+         0.1005,
+         0.2312
+        ],
+        [
+         0.1037,
+         0.2312
+        ],
+        [
+         0.1824,
+         0.269
+        ],
+        [
+         0.3124,
+         0.2809
+        ],
+        [
+         0.3158,
+         0.2834
+        ],
+        [
+         0.3158,
+         0.2865
+        ]
+       ],
+       "closed": true
+      },
+      {
        "id": "plug",
        "bone": "cabinet",
        "role": "body",
@@ -1414,12 +1481,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -1456,7 +1523,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -1544,8 +1611,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -1610,7 +1677,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.33,
-       "y": 0.0,
+       "y": 0,
        "w": 0.66,
        "h": 0.003,
        "region": "cardboard",
@@ -1620,12 +1687,12 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": -0.285,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -1635,12 +1702,12 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -1672,7 +1739,7 @@
        "tone": 0.4,
        "kind": "rect",
        "x": -0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.4,
        "h": 0.008,
        "region": "truck",
@@ -2052,12 +2119,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -2194,7 +2261,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -2282,8 +2349,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -2366,7 +2433,7 @@
        "tone": 0.98,
        "kind": "rect",
        "x": 0.88,
-       "y": 0.0,
+       "y": 0,
        "w": 0.045,
        "h": 0.0004,
        "region": "doors",
@@ -2386,7 +2453,7 @@
        "tone": 0.6,
        "kind": "rect",
        "x": 0.52,
-       "y": 0.0,
+       "y": 0,
        "w": 0.025,
        "h": 0.0004,
        "region": "doors",
@@ -2406,7 +2473,7 @@
        "tone": 0.6,
        "kind": "rect",
        "x": 0.47,
-       "y": 0.0,
+       "y": 0,
        "w": 0.02,
        "h": 0.0004,
        "region": "doors",
@@ -2426,7 +2493,7 @@
        "tone": 0.1,
        "kind": "rect",
        "x": 0.284,
-       "y": 0.0,
+       "y": 0,
        "w": 0.01,
        "h": 0.0004,
        "region": "doors",
@@ -2446,7 +2513,7 @@
        "tone": 0.1,
        "kind": "rect",
        "x": 0.656,
-       "y": 0.0,
+       "y": 0,
        "w": 0.01,
        "h": 0.0004,
        "region": "doors",
@@ -2465,8 +2532,8 @@
        "filled": true,
        "tone": 0.3,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.012,
        "h": 0.0004,
        "region": "doors",
@@ -2486,7 +2553,7 @@
        "tone": 0.9,
        "kind": "rect",
        "x": 0.28,
-       "y": 0.0,
+       "y": 0,
        "w": 0.39,
        "h": 0.0004,
        "region": "doors",
@@ -2529,7 +2596,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": -0.0004,
-        "z1": 0.0
+        "z1": 0
        }
       },
       {
@@ -2564,7 +2631,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": -0.0004,
-        "z1": 0.0
+        "z1": 0
        }
       },
       {
@@ -2599,7 +2666,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": -0.0004,
-        "z1": 0.0
+        "z1": 0
        }
       }
      ],
@@ -2635,7 +2702,7 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -2650,7 +2717,7 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -2799,7 +2866,7 @@
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.3,
        "w": 0.53,
        "h": 0.6,
@@ -2953,8 +3020,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -3091,7 +3158,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -3179,8 +3246,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -3316,8 +3383,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.69,
        "h": 0.003,
        "region": "cardboard",
@@ -3331,8 +3398,8 @@
        "filled": true,
        "tone": 0.15,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.13,
        "ry": 0.13,
        "region": "truck-wheels",
@@ -3346,8 +3413,8 @@
        "filled": true,
        "tone": 0.6,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.078,
        "ry": 0.078,
        "region": "truck",
@@ -3361,8 +3428,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.016,
        "ry": 0.016,
        "region": "truck",
@@ -3410,8 +3477,8 @@
        "kind": "capsule",
        "x0": 0.1,
        "y0": -0.09,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.01,
        "r1": 0.01,
        "region": "truck",
@@ -3440,7 +3507,7 @@
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.265,
        "w": 1.82,
        "h": 0.53,
@@ -3565,12 +3632,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -3607,7 +3674,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -3632,8 +3699,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -3698,7 +3765,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.33,
-       "y": 0.0,
+       "y": 0,
        "w": 0.66,
        "h": 0.003,
        "region": "cardboard",
@@ -3708,12 +3775,12 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": -0.285,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -3723,12 +3790,12 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -3760,7 +3827,7 @@
        "tone": 0.4,
        "kind": "rect",
        "x": -0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.4,
        "h": 0.008,
        "region": "truck",
@@ -4033,12 +4100,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -4155,7 +4222,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -4180,8 +4247,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -4264,7 +4331,7 @@
        "tone": 0.98,
        "kind": "rect",
        "x": 0.88,
-       "y": 0.0,
+       "y": 0,
        "w": 0.045,
        "h": 0.0004,
        "region": "doors",
@@ -4296,7 +4363,7 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -4311,7 +4378,7 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -4460,7 +4527,7 @@
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.3,
        "w": 0.53,
        "h": 0.6,
@@ -4574,8 +4641,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -4692,7 +4759,7 @@
        "id": "handle-bar",
        "bone": "fridge-door",
        "role": "body",
-       "z": 6.0,
+       "z": 6,
        "filled": true,
        "tone": 0.55,
        "kind": "rect",
@@ -4717,8 +4784,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -4854,8 +4921,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.69,
        "h": 0.003,
        "region": "cardboard",
@@ -4869,8 +4936,8 @@
        "filled": true,
        "tone": 0.15,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.13,
        "ry": 0.13,
        "region": "truck-wheels",
@@ -4884,8 +4951,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.01,
        "ry": 0.01,
        "region": "truck",
@@ -4933,8 +5000,8 @@
        "kind": "capsule",
        "x0": 0.1,
        "y0": -0.09,
-       "x1": 0.0,
-       "y1": 0.0,
+       "x1": 0,
+       "y1": 0,
        "r0": 0.015,
        "r1": 0.015,
        "region": "truck",
@@ -4989,12 +5056,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -5035,8 +5102,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -5080,7 +5147,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.33,
-       "y": 0.0,
+       "y": 0,
        "w": 0.66,
        "h": 0.003,
        "region": "cardboard",
@@ -5090,12 +5157,12 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": -0.285,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -5105,12 +5172,12 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -5142,7 +5209,7 @@
        "tone": 0.4,
        "kind": "rect",
        "x": -0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.4,
        "h": 0.008,
        "region": "truck",
@@ -5312,12 +5379,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -5398,8 +5465,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -5473,7 +5540,7 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -5488,7 +5555,7 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -5620,7 +5687,7 @@
        "filled": true,
        "tone": 0.92,
        "kind": "rect",
-       "x": 0.0,
+       "x": 0,
        "y": -0.3,
        "w": 0.53,
        "h": 0.6,
@@ -5680,8 +5747,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.05,
        "region": "doors",
@@ -5762,8 +5829,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.05,
        "region": "doors",
@@ -5878,8 +5945,8 @@
        "filled": true,
        "tone": 0.7,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.69,
        "h": 0.022,
        "region": "cardboard",
@@ -5893,8 +5960,8 @@
        "filled": true,
        "tone": 0.15,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.13,
        "ry": 0.13,
        "region": "truck-wheels",
@@ -5908,8 +5975,8 @@
        "filled": true,
        "tone": 0.4,
        "kind": "ellipse",
-       "cx": 0.0,
-       "cy": 0.0,
+       "cx": 0,
+       "cy": 0,
        "rx": 0.01,
        "ry": 0.01,
        "region": "truck",
@@ -5984,12 +6051,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.058,
        "regions": [
@@ -6012,8 +6079,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.058,
        "regions": [
@@ -6039,7 +6106,7 @@
        "tone": 0.7,
        "kind": "rect",
        "x": -0.33,
-       "y": 0.0,
+       "y": 0,
        "w": 0.66,
        "h": 0.022,
        "region": "cardboard",
@@ -6049,12 +6116,12 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": -0.285,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -6064,12 +6131,12 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 1.0,
+       "z": 1,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
        "x": 0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.085,
        "h": 0.26,
        "region": "truck-wheels",
@@ -6116,7 +6183,7 @@
        "tone": 0.4,
        "kind": "rect",
        "x": -0.2,
-       "y": 0.0,
+       "y": 0,
        "w": 0.4,
        "h": 0.022,
        "region": "truck",
@@ -6178,12 +6245,12 @@
        "id": "fridge-door-slab",
        "bone": "fridge-door",
        "role": "body",
-       "z": 5.0,
+       "z": 5,
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.058,
        "regions": [
@@ -6206,8 +6273,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.058,
        "regions": [
@@ -6243,7 +6310,7 @@
        "id": "wheel-r",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -6258,7 +6325,7 @@
        "id": "wheel-l",
        "bone": "truck-base",
        "role": "body",
-       "z": 2.0,
+       "z": 2,
        "filled": true,
        "tone": 0.15,
        "kind": "rect",
@@ -6372,8 +6439,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 1.06,
        "h": 0.058,
        "regions": [
@@ -6396,8 +6463,8 @@
        "filled": true,
        "tone": 0.95,
        "kind": "rect",
-       "x": 0.0,
-       "y": 0.0,
+       "x": 0,
+       "y": 0,
        "w": 0.682,
        "h": 0.058,
        "regions": [
@@ -6557,7 +6624,7 @@
       "dx": 1.851
      },
      "truck-frame": {
-      "angleDeg": 38.0
+      "angleDeg": 38
      },
      "carry-roll": {
       "dx": 1.3
@@ -6797,7 +6864,7 @@
       "dy": -0.003
      },
      "fridge-door": {
-      "twistDeg": -100.0
+      "twistDeg": -100
      }
     },
     "ground": "auto",
@@ -7019,7 +7086,7 @@
       "dx": 0.551
      },
      "truck-frame": {
-      "angleDeg": 38.0
+      "angleDeg": 38
      },
      "carry-lift": {
       "dy": -0.004
@@ -7124,7 +7191,7 @@
       "dx": 2.451
      },
      "truck-frame": {
-      "angleDeg": 38.0
+      "angleDeg": 38
      },
      "carry-roll": {
       "dx": 1.9
@@ -7354,7 +7421,7 @@
       "ease": "smooth"
      },
      {
-      "t": 4.0,
+      "t": 4,
       "pose": "tilted-key",
       "ease": "smooth"
      },
@@ -7402,12 +7469,12 @@
      },
      {
       "anchor": "grip-r",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 7
      },
      {
       "anchor": "grip-l",
-      "fromS": 1.0,
+      "fromS": 1,
       "toS": 7
      }
     ],
@@ -7433,7 +7500,7 @@
      {
       "id": "tilt",
       "fromS": 2.4,
-      "toS": 4.0,
+      "toS": 4,
       "title": {
        "en": "Tilt back",
        "de": "Zurückkippen"
@@ -7441,7 +7508,7 @@
      },
      {
       "id": "wheel-away",
-      "fromS": 4.0,
+      "fromS": 4,
       "toS": 7,
       "title": {
        "en": "Wheel away",
@@ -7460,7 +7527,7 @@
       "target": "truck-nose"
      },
      {
-      "t": 1.0,
+      "t": 1,
       "kind": "contact-on",
       "title": {
        "en": "Mover takes the grip",
@@ -7500,7 +7567,7 @@
       "ease": "smooth"
      },
      {
-      "t": 2.0,
+      "t": 2,
       "pose": "arrived-key",
       "ease": "smooth"
      },
@@ -7586,7 +7653,7 @@
      {
       "id": "wheel-in",
       "fromS": 0,
-      "toS": 2.0,
+      "toS": 2,
       "title": {
        "en": "Wheel in",
        "de": "Heranfahren"
@@ -7594,7 +7661,7 @@
      },
      {
       "id": "stand-up",
-      "fromS": 2.0,
+      "fromS": 2,
       "toS": 3.8,
       "title": {
        "en": "Stand up",
@@ -7700,7 +7767,7 @@
       "ease": "linear"
      },
      {
-      "t": 6.0,
+      "t": 6,
       "pose": "door-open",
       "ease": "in"
      },
@@ -7765,7 +7832,7 @@
      {
       "id": "take",
       "fromS": 1.2,
-      "toS": 6.0,
+      "toS": 6,
       "title": {
        "en": "Take the milk",
        "de": "Milch nehmen"
@@ -7773,7 +7840,7 @@
      },
      {
       "id": "close",
-      "fromS": 6.0,
+      "fromS": 6,
       "toS": 7.4,
       "title": {
        "en": "Close",
@@ -7962,7 +8029,7 @@
        },
        "kind": "metal",
        "material": "cabinet-wall",
-       "resistanceM2KW": 1e-05,
+       "resistanceM2KW": 0.00001,
        "heatCapacityJM2K": 1800,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -8009,7 +8076,7 @@
        },
        "kind": "metal",
        "material": "door-panel",
-       "resistanceM2KW": 1e-05,
+       "resistanceM2KW": 0.00001,
        "heatCapacityJM2K": 1800,
        "source": "literature",
        "reference": "iso-10456-2007"
@@ -8156,7 +8223,7 @@
        },
        "kind": "metal",
        "material": "compressor-steel",
-       "resistanceM2KW": 6e-05,
+       "resistanceM2KW": 0.00006,
        "heatCapacityJM2K": 15000,
        "source": "literature",
        "reference": "incropera-2018"
@@ -8372,7 +8439,7 @@
        },
        "kind": "metal",
        "material": "truck-tube",
-       "resistanceM2KW": 4e-05,
+       "resistanceM2KW": 0.00004,
        "heatCapacityJM2K": 7000,
        "source": "literature",
        "reference": "en-10219-2-2019"
@@ -8499,7 +8566,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -8571,8 +8638,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -8586,7 +8653,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -8598,7 +8665,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8607,8 +8674,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -8679,8 +8746,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -8694,7 +8761,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -8706,7 +8773,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -8715,8 +8782,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -8728,13 +8795,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.29
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.29
       ],
       "r0": 0.01,
@@ -8899,8 +8966,8 @@
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "r0": 0.01,
@@ -8914,13 +8981,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.18
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "r0": 0.016,
@@ -8939,8 +9006,8 @@
        0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.01,
@@ -8954,13 +9021,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.18
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.016,
@@ -8982,7 +9049,7 @@
        "translation": [
         -0.126,
         -0.188,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9002,7 +9069,7 @@
       "transform": {
        "translation": [
         0.91,
-        0.0,
+        0,
         -0.275
        ]
       }
@@ -9022,7 +9089,7 @@
       "transform": {
        "translation": [
         0.91,
-        0.0,
+        0,
         0.275
        ]
       }
@@ -9042,8 +9109,8 @@
       "transform": {
        "translation": [
         1.7975,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -9063,7 +9130,7 @@
        "translation": [
         1.027,
         0.24,
-        0.0
+        0
        ]
       }
      },
@@ -9077,11 +9144,11 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         0.095
        ],
        [
-        0.0,
+        0,
         -0.24
        ],
        [
@@ -9136,7 +9203,7 @@
        "translation": [
         0.754,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -9156,7 +9223,7 @@
        "translation": [
         0.001,
         0.18,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9177,7 +9244,7 @@
        "translation": [
         0.035,
         -0.2525,
-        0.0
+        0
        ]
       }
      },
@@ -9190,11 +9257,11 @@
       "tone": 0.25,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -9211,7 +9278,7 @@
        ],
        [
         0.018,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9235,7 +9302,7 @@
       "profile": [
        [
         -0.0075,
-        0.0
+        0
        ],
        [
         -0.0075,
@@ -9247,7 +9314,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9270,11 +9337,11 @@
       "tone": 0.25,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.018
        ],
        [
@@ -9291,7 +9358,7 @@
        ],
        [
         0.018,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9315,7 +9382,7 @@
       "profile": [
        [
         -0.0075,
-        0.0
+        0
        ],
        [
         -0.0075,
@@ -9327,7 +9394,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9397,7 +9464,7 @@
        "translation": [
         1.074,
         0.0325,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9418,7 +9485,7 @@
        "translation": [
         1.072,
         -0.14,
-        0.0
+        0
        ]
       }
      },
@@ -9438,7 +9505,7 @@
        "translation": [
         1.294,
         0.0325,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9459,7 +9526,7 @@
        "translation": [
         1.292,
         -0.14,
-        0.0
+        0
        ]
       }
      },
@@ -9479,7 +9546,7 @@
        "translation": [
         1.514,
         0.0325,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9500,7 +9567,7 @@
        "translation": [
         1.512,
         -0.14,
-        0.0
+        0
        ]
       }
      },
@@ -9520,7 +9587,7 @@
        "translation": [
         0.961,
         0.03,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9601,7 +9668,7 @@
        "translation": [
         0.28,
         -0.0125,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9622,7 +9689,7 @@
        "translation": [
         0.489,
         -0.0125,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -9643,7 +9710,7 @@
        "translation": [
         0.203,
         -0.105,
-        0.0
+        0
        ]
       }
      },
@@ -9663,7 +9730,7 @@
        "translation": [
         0.382,
         -0.0175,
-        0.0
+        0
        ]
       }
      },
@@ -9683,7 +9750,7 @@
        "translation": [
         0.6015,
         -0.0175,
-        0.0
+        0
        ]
       }
      },
@@ -9716,11 +9783,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.066
        ],
        [
@@ -9741,7 +9808,7 @@
        ],
        [
         0.155,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -9848,7 +9915,7 @@
         0.05
        ],
        [
-        0.0,
+        0,
         0.047
        ],
        [
@@ -9856,7 +9923,7 @@
         0.05
        ],
        [
-        0.0,
+        0,
         0.053
        ],
        [
@@ -9985,13 +10052,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.24
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.24
       ],
       "r0": 0.0025,
@@ -10000,8 +10067,8 @@
        "count": 25,
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "slender": true
@@ -10014,13 +10081,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ],
       "p1": [
        1.44,
-       0.0,
+       0,
        -0.2425
       ],
       "r0": 0.0025,
@@ -10035,13 +10102,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ],
       "p1": [
        1.44,
-       0.0,
+       0,
        0.2425
       ],
       "r0": 0.0025,
@@ -10070,8 +10137,8 @@
       "repeat": {
        "count": 69,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.007
        ]
       },
@@ -10099,8 +10166,8 @@
       "repeat": {
        "count": 69,
        "translation": [
-        0.0,
-        0.0,
+        0,
+        0,
         0.007
        ]
       },
@@ -10197,11 +10264,11 @@
       "profile": [
        [
         0.05,
-        0.0
+        0
        ],
        [
         0.01,
-        0.0
+        0
        ],
        [
         0.00617317,
@@ -10216,11 +10283,11 @@
         0.00617317
        ],
        [
-        0.0,
+        0,
         0.01
        ],
        [
-        0.0,
+        0,
         0.588
        ],
        [
@@ -10244,7 +10311,7 @@
         0.598
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 1.06
      },
      {
@@ -10425,11 +10492,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.007
        ],
        [
@@ -10438,7 +10505,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10448,7 +10515,7 @@
       ],
       "origin": [
        0.32,
-       0.0,
+       0,
        0.5565
       ]
      },
@@ -10461,11 +10528,11 @@
       "tone": 0.5,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.007
        ],
        [
@@ -10474,7 +10541,7 @@
        ],
        [
         0.02,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10484,7 +10551,7 @@
       ],
       "origin": [
        0.63,
-       0.0,
+       0,
        0.5565
       ]
      },
@@ -10519,11 +10586,11 @@
       "profile": [
        [
         0.05,
-        0.0
+        0
        ],
        [
         0.01,
-        0.0
+        0
        ],
        [
         0.00617317,
@@ -10538,11 +10605,11 @@
         0.00617317
        ],
        [
-        0.0,
+        0,
         0.01
        ],
        [
-        0.0,
+        0,
         0.588
        ],
        [
@@ -10566,7 +10633,7 @@
         0.598
        ]
       ],
-      "from": 0.0,
+      "from": 0,
       "to": 0.682
      },
      {
@@ -10931,7 +10998,7 @@
        "translation": [
         0.035,
         -0.2525,
-        0.0
+        0
        ]
       },
       "region": "plinth"
@@ -10945,11 +11012,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.072
        ],
        [
@@ -10958,7 +11025,7 @@
        ],
        [
         0.155,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -10989,7 +11056,7 @@
        "translation": [
         1.307,
         0.217,
-        0.0
+        0
        ]
       },
       "region": "fridge-evaporator",
@@ -11011,7 +11078,7 @@
        "translation": [
         0.28,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -11033,7 +11100,7 @@
        "translation": [
         0.489,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -11069,11 +11136,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -11082,7 +11149,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -11092,8 +11159,8 @@
       ],
       "origin": [
        1.4525,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "region": "condenser",
       "tags": [
@@ -11438,13 +11505,13 @@
       "role": "detail",
       "tone": 0.3,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.012,
@@ -11461,11 +11528,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -11474,7 +11541,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -11483,7 +11550,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        -0.2425
       ],
@@ -11500,11 +11567,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0075
        ],
        [
@@ -11513,7 +11580,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -11522,7 +11589,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        0.2425
       ],
@@ -11546,7 +11613,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "member": "cardboard",
@@ -11566,9 +11633,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "truck-base",
@@ -11590,7 +11657,7 @@
        "translation": [
         0.242673,
         -0.09,
-        0.0
+        0
        ]
       },
       "member": "truck-frame",
@@ -11694,7 +11761,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -11766,8 +11833,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -11781,7 +11848,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -11793,7 +11860,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -11802,8 +11869,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -11874,8 +11941,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -11889,7 +11956,7 @@
       "profile": [
        [
         -0.03,
-        0.0
+        0
        ],
        [
         -0.03,
@@ -11901,7 +11968,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -11910,8 +11977,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -11923,13 +11990,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.29
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.29
       ],
       "r0": 0.01,
@@ -12094,8 +12161,8 @@
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "r0": 0.01,
@@ -12109,13 +12176,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.18
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "r0": 0.016,
@@ -12134,8 +12201,8 @@
        0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.01,
@@ -12149,13 +12216,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.18
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.016,
@@ -12177,7 +12244,7 @@
        "translation": [
         -0.126,
         -0.188,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -12197,7 +12264,7 @@
       "transform": {
        "translation": [
         0.91,
-        0.0,
+        0,
         -0.275
        ]
       }
@@ -12217,7 +12284,7 @@
       "transform": {
        "translation": [
         0.91,
-        0.0,
+        0,
         0.275
        ]
       }
@@ -12237,8 +12304,8 @@
       "transform": {
        "translation": [
         1.7975,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -12258,7 +12325,7 @@
        "translation": [
         1.027,
         0.24,
-        0.0
+        0
        ]
       }
      },
@@ -12272,11 +12339,11 @@
       "plane": "xy",
       "profile": [
        [
-        0.0,
+        0,
         0.095
        ],
        [
-        0.0,
+        0,
         -0.24
        ],
        [
@@ -12331,7 +12398,7 @@
        "translation": [
         0.754,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -12351,7 +12418,7 @@
        "translation": [
         0.001,
         0.18,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -12372,7 +12439,7 @@
        "translation": [
         0.035,
         -0.2525,
-        0.0
+        0
        ]
       }
      },
@@ -12406,7 +12473,7 @@
       "profile": [
        [
         -0.0075,
-        0.0
+        0
        ],
        [
         -0.0075,
@@ -12418,7 +12485,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -12462,7 +12529,7 @@
       "profile": [
        [
         -0.0075,
-        0.0
+        0
        ],
        [
         -0.0075,
@@ -12474,7 +12541,7 @@
        ],
        [
         0.0075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -12504,7 +12571,7 @@
        "translation": [
         1.074,
         0.03,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -12525,7 +12592,7 @@
        "translation": [
         1.294,
         0.03,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -12546,7 +12613,7 @@
        "translation": [
         1.514,
         0.03,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -12567,7 +12634,7 @@
        "translation": [
         0.876,
         0.03,
-        0.0
+        0
        ]
       }
      },
@@ -12600,11 +12667,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.072
        ],
        [
@@ -12613,7 +12680,7 @@
        ],
        [
         0.177,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -12681,7 +12748,7 @@
         0.05
        ],
        [
-        0.0,
+        0,
         0.047
        ],
        [
@@ -12689,7 +12756,7 @@
         0.05
        ],
        [
-        0.0,
+        0,
         0.053
        ],
        [
@@ -12798,13 +12865,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.24
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.24
       ],
       "r0": 0.0025,
@@ -12813,8 +12880,8 @@
        "count": 25,
        "translation": [
         0.06,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "slender": true
@@ -12827,13 +12894,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ],
       "p1": [
        1.44,
-       0.0,
+       0,
        -0.2425
       ],
       "r0": 0.0025,
@@ -12848,13 +12915,13 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ],
       "p1": [
        1.44,
-       0.0,
+       0,
        0.2425
       ],
       "r0": 0.0025,
@@ -13457,7 +13524,7 @@
        "translation": [
         0.035,
         -0.2525,
-        0.0
+        0
        ]
       },
       "region": "plinth"
@@ -13471,11 +13538,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.072
        ],
        [
@@ -13484,7 +13551,7 @@
        ],
        [
         0.155,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13515,7 +13582,7 @@
        "translation": [
         1.307,
         0.217,
-        0.0
+        0
        ]
       },
       "region": "fridge-evaporator",
@@ -13537,7 +13604,7 @@
        "translation": [
         0.28,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -13559,7 +13626,7 @@
        "translation": [
         0.489,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -13595,11 +13662,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.02
        ],
        [
@@ -13608,7 +13675,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -13618,8 +13685,8 @@
       ],
       "origin": [
        1.445,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "region": "condenser",
       "tags": [
@@ -13958,13 +14025,13 @@
       "role": "detail",
       "tone": 0.3,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.012,
@@ -13981,11 +14048,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -13994,7 +14061,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14003,7 +14070,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        -0.2425
       ],
@@ -14020,11 +14087,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.015
        ],
        [
@@ -14033,7 +14100,7 @@
        ],
        [
         0.015,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14042,7 +14109,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        0.2425
       ],
@@ -14066,7 +14133,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "member": "cardboard",
@@ -14086,9 +14153,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "truck-base",
@@ -14110,7 +14177,7 @@
        "translation": [
         0.242673,
         -0.09,
-        0.0
+        0
        ]
       },
       "member": "truck-frame",
@@ -14214,7 +14281,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14229,7 +14296,7 @@
       "profile": [
        [
         -0.0425,
-        0.0
+        0
        ],
        [
         -0.0425,
@@ -14249,7 +14316,7 @@
        ],
        [
         0.0425,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14258,8 +14325,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -14273,7 +14340,7 @@
       "profile": [
        [
         -0.0425,
-        0.0
+        0
        ],
        [
         -0.0425,
@@ -14293,7 +14360,7 @@
        ],
        [
         0.0425,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14302,8 +14369,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -14315,13 +14382,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.29
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.29
       ],
       "r0": 0.01,
@@ -14466,8 +14533,8 @@
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "r0": 0.015,
@@ -14486,8 +14553,8 @@
        0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.015,
@@ -14509,7 +14576,7 @@
        "translation": [
         -0.126,
         -0.188,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14529,7 +14596,7 @@
       "transform": {
        "translation": [
         0.901,
-        0.0,
+        0,
         -0.275
        ]
       }
@@ -14549,7 +14616,7 @@
       "transform": {
        "translation": [
         0.901,
-        0.0,
+        0,
         0.275
        ]
       }
@@ -14569,8 +14636,8 @@
       "transform": {
        "translation": [
         1.7975,
-        0.0,
-        0.0
+        0,
+        0
        ]
       }
      },
@@ -14590,7 +14657,7 @@
        "translation": [
         1.027,
         0.24,
-        0.0
+        0
        ]
       }
      },
@@ -14663,7 +14730,7 @@
        "translation": [
         0.754,
         -0.025,
-        0.0
+        0
        ]
       }
      },
@@ -14683,7 +14750,7 @@
        "translation": [
         -0.017,
         0.18,
-        0.0
+        0
        ]
       },
       "sheet": true
@@ -14704,7 +14771,7 @@
        "translation": [
         0.026,
         -0.25,
-        0.0
+        0
        ]
       }
      },
@@ -14737,11 +14804,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.072
        ],
        [
@@ -14750,7 +14817,7 @@
        ],
        [
         0.195,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -14819,8 +14886,8 @@
       "transform": {
        "translation": [
         0.7275,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "sheet": true,
@@ -15177,7 +15244,7 @@
        "translation": [
         0.026,
         -0.25,
-        0.0
+        0
        ]
       },
       "region": "plinth"
@@ -15191,11 +15258,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.072
        ],
        [
@@ -15204,7 +15271,7 @@
        ],
        [
         0.155,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15235,7 +15302,7 @@
        "translation": [
         1.307,
         0.217,
-        0.0
+        0
        ]
       },
       "region": "fridge-evaporator",
@@ -15257,7 +15324,7 @@
        "translation": [
         0.28,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -15279,7 +15346,7 @@
        "translation": [
         0.489,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -15315,11 +15382,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -15328,7 +15395,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15338,8 +15405,8 @@
       ],
       "origin": [
        1.43,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "region": "condenser",
       "tags": [
@@ -15594,13 +15661,13 @@
       "role": "detail",
       "tone": 0.3,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.015,
@@ -15617,11 +15684,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -15630,7 +15697,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15639,7 +15706,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        -0.2425
       ],
@@ -15656,11 +15723,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.03
        ],
        [
@@ -15669,7 +15736,7 @@
        ],
        [
         0.03,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15678,7 +15745,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        0.2425
       ],
@@ -15702,7 +15769,7 @@
        "translation": [
         0.345,
         0.0015,
-        0.0
+        0
        ]
       },
       "member": "cardboard",
@@ -15722,9 +15789,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "truck-base",
@@ -15746,7 +15813,7 @@
        "translation": [
         0.242673,
         -0.09,
-        0.0
+        0
        ]
       },
       "member": "truck-frame",
@@ -15850,7 +15917,7 @@
        "translation": [
         0.345,
         0.011,
-        0.0
+        0
        ]
       }
      },
@@ -15864,7 +15931,7 @@
       "profile": [
        [
         -0.0425,
-        0.0
+        0
        ],
        [
         -0.0425,
@@ -15876,7 +15943,7 @@
        ],
        [
         0.0425,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15885,8 +15952,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.2425
       ]
      },
@@ -15900,7 +15967,7 @@
       "profile": [
        [
         -0.0425,
-        0.0
+        0
        ],
        [
         -0.0425,
@@ -15912,7 +15979,7 @@
        ],
        [
         0.0425,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -15921,8 +15988,8 @@
        1
       ],
       "origin": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.2425
       ]
      },
@@ -15934,13 +16001,13 @@
       "role": "body",
       "tone": 0.4,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.29
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.29
       ],
       "r0": 0.01,
@@ -16003,9 +16070,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
+        0,
         -0.02625,
-        0.0
+        0
        ]
       }
      },
@@ -16025,7 +16092,7 @@
        "translation": [
         -0.119,
         -0.188,
-        0.0
+        0
        ]
       }
      },
@@ -16192,7 +16259,7 @@
        "translation": [
         0.0195,
         -0.2275,
-        0.0
+        0
        ]
       },
       "region": "plinth"
@@ -16212,8 +16279,8 @@
       "transform": {
        "translation": [
         0.72,
-        0.0,
-        0.0
+        0,
+        0
        ]
       },
       "region": "condenser",
@@ -16257,7 +16324,7 @@
        "translation": [
         1.307,
         0.243,
-        0.0
+        0
        ]
       },
       "region": "fridge-evaporator",
@@ -16279,7 +16346,7 @@
        "translation": [
         0.28,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -16301,7 +16368,7 @@
        "translation": [
         0.489,
         -0.01,
-        0.0
+        0
        ]
       },
       "region": "freezer-evaporator",
@@ -16337,11 +16404,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.075
        ],
        [
@@ -16350,7 +16417,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16360,8 +16427,8 @@
       ],
       "origin": [
        1.385,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "region": "condenser",
       "tags": [
@@ -16444,14 +16511,14 @@
       "role": "body",
       "tone": 0.12,
       "p0": [
-       0.0,
-       0.0,
-       0.0
+       0,
+       0,
+       0
       ],
       "p1": [
        1.44,
-       0.0,
-       0.0
+       0,
+       0
       ],
       "r0": 0.0025,
       "r1": 0.0025,
@@ -16555,13 +16622,13 @@
       "role": "detail",
       "tone": 0.3,
       "p0": [
-       0.0,
-       0.0,
+       0,
+       0,
        -0.19
       ],
       "p1": [
-       0.0,
-       0.0,
+       0,
+       0,
        0.19
       ],
       "r0": 0.0375,
@@ -16578,11 +16645,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -16591,7 +16658,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16600,7 +16667,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        -0.2425
       ],
@@ -16617,11 +16684,11 @@
       "tone": 0.2,
       "profile": [
        [
-        0.0,
-        0.0
+        0,
+        0
        ],
        [
-        0.0,
+        0,
         0.0375
        ],
        [
@@ -16630,7 +16697,7 @@
        ],
        [
         0.075,
-        0.0
+        0
        ]
       ],
       "axis": [
@@ -16639,7 +16706,7 @@
        0
       ],
       "origin": [
-       0.0,
+       0,
        -0.13,
        0.2425
       ],
@@ -16663,7 +16730,7 @@
        "translation": [
         0.345,
         0.0375,
-        0.0
+        0
        ]
       },
       "member": "cardboard",
@@ -16683,9 +16750,9 @@
       ],
       "transform": {
        "translation": [
-        0.0,
-        0.0,
-        0.0
+        0,
+        0,
+        0
        ]
       },
       "member": "truck-base",
@@ -16707,7 +16774,7 @@
        "translation": [
         0.242673,
         -0.09,
-        0.0
+        0
        ]
       },
       "member": "truck-frame",

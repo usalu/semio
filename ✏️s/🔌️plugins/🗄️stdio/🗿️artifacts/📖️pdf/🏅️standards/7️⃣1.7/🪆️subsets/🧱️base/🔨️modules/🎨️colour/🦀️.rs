@@ -45,11 +45,11 @@ pub fn push_opt(entries: &mut Vec<PdfDictEntry>, key: &str, value: Option<PdfObj
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn stream(dict: Vec<PdfDictEntry>, data: Vec<u8>) -> PdfObject {
-    PdfObject::Stream { dict, data, filters: vec![crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Flate { predictor: None }] }
+    PdfObject::Stream { dict, data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&data), filters: vec![crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamFilter::Flate { predictor: None }] }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn raw_stream(dict: Vec<PdfDictEntry>, data: Vec<u8>) -> PdfObject {
-    PdfObject::Stream { dict, data, filters: Vec::new() }
+    PdfObject::Stream { dict, data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&data), filters: Vec::new() }
 }
 /// 🧹 Entries of `dict` not in `known` — the lossless `extra` of a typed dictionary.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -91,7 +91,7 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
             let PdfObject::Stream { data, .. } = &resolved else { return None };
             let size:Vec<u32>=dict_get(dict,"Size")?.as_array()?.iter().map(|value|u32::try_from(value.as_i64()?).ok().filter(|value|*value>0)).collect::<Option<_>>()?;
             let bits_per_sample=u32::try_from(dict_i64(dict,"BitsPerSample")?).ok()?;if range.is_empty()||range.len()%2!=0{return None;}let count=size.iter().try_fold(range.len()/2,|count,size|count.checked_mul(*size as usize))?;
-            let samples=unpack_sample_words(data,bits_per_sample,count).ok()?;
+            let samples=unpack_sample_words(&data.to_vec_owner(),bits_per_sample,count).ok()?;
             source.record_role(value, PdfStreamRoleValue::SampledWords { samples: samples.clone() });
             Some(PdfFunction::Sampled {
                 domain,
@@ -111,7 +111,7 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
         }
         4 => {
             let PdfObject::Stream { data, .. } = &resolved else { return None };
-            let code = String::from_utf8_lossy(data).into_owned();
+            let code = String::from_utf8_lossy(&data.to_vec_owner()).into_owned();
             source.record_role(value, PdfStreamRoleValue::CalculatorProgram { code: code.clone() });
             Some(PdfFunction::PostScript { domain, range, code })
         }
@@ -187,7 +187,7 @@ pub fn lift_colour_space(value: &PdfObject, source: &mut dyn ObjectSource) -> Pd
                     let hival = items.get(2).and_then(PdfObject::as_i64).unwrap_or(0).max(0) as u32;
                     let palette = match items.get(3).map(|v| source.deref(v)) {
                         Some(PdfObject::Str(bytes)) => bytes,
-                        Some(PdfObject::Stream { data, .. }) => data,
+                        Some(PdfObject::Stream { data, .. }) => data.to_vec_owner(),
                         _ => Vec::new(),
                     };
                     if let Some(value) = items.get(3) { source.record_role(value, PdfStreamRoleValue::PaletteComponents { components: palette.clone() }); }

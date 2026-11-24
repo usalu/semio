@@ -3890,7 +3890,7 @@
        "kind": "rect",
        "x": 0.05,
        "y": 0.0,
-       "w": 0.37,
+       "w": 0.41,
        "h": 0.005,
        "region": "brackets-galvanised",
        "material": "steel-galvanised"
@@ -4576,7 +4576,7 @@
        "x": -0.06,
        "y": 0.45,
        "w": 0.12,
-       "h": 0.37,
+       "h": 0.41,
        "region": "brackets-galvanised",
        "material": "steel-galvanised"
       },
@@ -12268,13 +12268,13 @@
       "sheet": true,
       "kind": "box",
       "size": [
-       0.37,
+       0.41,
        0.005,
        0.12
       ],
       "transform": {
        "translation": [
-        0.235,
+        0.255,
         0.0025,
         0.0
        ]

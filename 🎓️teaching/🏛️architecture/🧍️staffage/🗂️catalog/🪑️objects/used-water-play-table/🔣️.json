@@ -4153,8 +4153,8 @@
        ]
       ],
       "plane": "zx",
-      "from": -0.0015,
-      "to": 0.0015,
+      "from": -0.0075,
+      "to": 0.0075,
       "holes": [
        [
         [
@@ -4174,8 +4174,7 @@
          0.165
         ]
        ]
-      ],
-      "sheet": true
+      ]
      },
      {
       "id": "gate-gate-2",
@@ -4203,8 +4202,8 @@
        ]
       ],
       "plane": "zx",
-      "from": -0.0015,
-      "to": 0.0015,
+      "from": -0.0075,
+      "to": 0.0075,
       "holes": [
        [
         [
@@ -4224,8 +4223,7 @@
          0.165
         ]
        ]
-      ],
-      "sheet": true
+      ]
      },
      {
       "id": "pool-1",
@@ -11900,6 +11898,21 @@
        "h": 0.5,
        "region": "timber-greyed",
        "material": "douglas-greyed"
+      },
+      {
+       "id": "chute-strap",
+       "bone": "frame",
+       "role": "body",
+       "z": 4.5,
+       "filled": true,
+       "tone": 0.5,
+       "kind": "rect",
+       "x": 0.835,
+       "y": -0.096,
+       "w": 0.03,
+       "h": 0.192,
+       "region": "screw-steel",
+       "material": "stainless-scaled"
       },
       {
        "id": "replaced-board",

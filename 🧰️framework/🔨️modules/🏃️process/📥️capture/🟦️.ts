@@ -13,11 +13,12 @@ export type OwnedProcessCaptureOptions = {
   cwd: string;
   env: Readonly<Record<string, string | undefined>>;
   budgetMs: number;
+  deadline?: Readonly<{ remainingMilliseconds(): number | null }>;
   maxOutputBytes: number;
   stdoutPath: string;
   stderrPath: string;
 };
-/** 📥️ Captures evidence under the original caller's signal, decreasing time and awaited publication. */
+/** 📥️ Captures evidence under the original caller's signal, decreasing time and awaited publication. A nonzero `budgetMs` is one fixed phase; the caller's own deadline and an optional live `deadline` are read again whenever they are believed due, so a renewable (idle-window) deadline keeps a long compile alive while a fixed one is met exactly. */
 export async function captureOwnedProcess(command: string, args: string[], options: OwnedProcessCaptureOptions): Promise<OwnedProcessCaptureResult> {
   const started = performance.now(), invocation = options.invocation;
   if (validateJsonSchemaSubset(policySchema, { budgetMs: options.budgetMs, maxOutputBytes: options.maxOutputBytes }).length) throw Error("Complete original capture policy required");
@@ -28,9 +29,14 @@ export async function captureOwnedProcess(command: string, args: string[], optio
   }
   const originalPolicy=invocation.policy,originalCapabilities=invocation.capabilities,control=invocation.control,{signal:originalSignal,remainingMilliseconds,publish:publication,yieldContinuation}=control,original=structuredClone({policy:originalPolicy,capabilities:originalCapabilities}),execution=structuredClone({args,cwd:options.cwd,env:options.env,budgetMs:options.budgetMs,maxOutputBytes:options.maxOutputBytes,stdoutPath:options.stdoutPath,stderrPath:options.stderrPath});
   const retain=():void=>{if(options.invocation!==invocation||invocation.policy!==originalPolicy||invocation.capabilities!==originalCapabilities||invocation.control!==control||control.signal!==originalSignal||control.remainingMilliseconds!==remainingMilliseconds||control.publish!==publication||control.yieldContinuation!==yieldContinuation||!isDeepStrictEqual(original,structuredClone({policy:invocation.policy,capabilities:invocation.capabilities}))||!isDeepStrictEqual(execution,structuredClone({args,cwd:options.cwd,env:options.env,budgetMs:options.budgetMs,maxOutputBytes:options.maxOutputBytes,stdoutPath:options.stdoutPath,stderrPath:options.stderrPath})))throw Error("Original capture invocation changed");};
+  const liveRemaining = (): number | null => {
+    if (options.deadline === undefined) return null;
+    try { const value = options.deadline.remainingMilliseconds(); return value === null || !Number.isFinite(value) ? null : value; }
+    catch { return 0; }
+  };
   const remaining = (): number | null => {
-    const parent = remainingMilliseconds.call(control), phase = execution.budgetMs === 0 ? null : execution.budgetMs - (performance.now() - started);
-    return parent === null ? phase : phase === null ? parent : Math.min(parent, phase);
+    const parent = remainingMilliseconds.call(control), phase = execution.budgetMs === 0 ? null : execution.budgetMs - (performance.now() - started), live = liveRemaining();
+    return [parent, phase, live].reduce<number | null>((least, value) => value === null ? least : least === null ? value : Math.min(least, value), null);
   };
   const publish = async (stage: ScriptProgress["stage"]): Promise<void> => {
     const budget = remaining();
@@ -78,7 +84,16 @@ export async function captureOwnedProcess(command: string, args: string[], optio
     };
     child.stdout?.on("data", (bytes) => append(stdout, bytes));
     child.stderr?.on("data", (bytes) => append(stderr, bytes));
-    const timer = admittedBudget !== null ? setTimeout(() => terminate("timeout"), admittedBudget) : undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = (): void => {
+      if (finished) return;
+      let left: number | null;
+      try { left = remaining(); } catch { terminate("timeout"); return; }
+      if (left === null) return;
+      if (left <= 0) { terminate("timeout"); return; }
+      timer = setTimeout(arm, Math.max(1, Math.min(2147483647, Math.ceil(left))));
+    };
+    arm();
     let publication: Promise<void> | undefined, publicationFailure: unknown;
     const progress = setInterval(() => {
       if (publication || finished) return;

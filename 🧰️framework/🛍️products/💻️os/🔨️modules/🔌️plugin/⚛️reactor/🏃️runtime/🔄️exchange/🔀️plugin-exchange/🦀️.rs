@@ -55,6 +55,9 @@ struct ExchangeFlags {
     started_typed_operation: Option<u64>,
 }
 
+/// 🪜️ Moves of one retained `MediaIn` custody (descriptor parse, typed receiving, payload donation, metadata, reserved preparation, mount) one turn may chain while each move still moves retained stock and the turn has not yielded; every move is a quote-exact native action, so one move per turn cost the shell thousands of host round trips (ticket 26/11/22 GET-PDF-ARTIFACT-EDITOR-WORKING-END-TO-END).
+const MEDIA_IN_MOVES_PER_TURN: usize = 1_024;
+
 /// 🕹️ The typed operation an `AppCommand::Command` of this exchange STARTED (its reply's
 /// `output.operationId`) — the operation whose inline interaction fold this exchange still
 /// tries to land before the reply is sealed (`TYPED_OPERATION_REPLY_LEFTOVER_PUMPS`).
@@ -158,7 +161,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }else{None};
         if let Some(result)=manifest_result{state.manifest=Some(result)}
-        if let Some((seq,result))=state.manifest.as_ref(){let seq=*seq;
+        if let Some((seq,Err(fault)))=state.manifest.as_ref(){let seq=*seq;push_app_fault(&mut frames,Some(seq),fault.clone()).await;}else if let Some((seq,Ok(result)))=state.manifest.as_ref(){let seq=*seq;
                         let (proposal, report) = with_instances_mut(runtime, |list| {
                             let mut instance = find_instance(list, instance_id)?;
                             Ok((::semio_framework_async::poll::resolve_ready(instance.app.take_pending_transaction_proposal()), ::semio_framework_async::poll::resolve_ready(instance.app.dispatch_report()).clone()))
@@ -199,45 +202,59 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let media_pending=match owner.original_command(){
             Some(protocol::AppCommand::MediaIn { .. }) => {
                 let receiving = async {
-                    if owner.original_media_finished() {
-                        return owner.settle_original_media_import(cx).map(|ready| !ready);
-                    }
-                    if !owner.prepare_media_descriptor(cx)? {
-                        return Ok(true);
-                    }
-                    let accepted = if let Some((port, schema, media_type)) = owner.structured_media_binding() {
-                        with_instances_original_mut(runtime, |list| {
-                            let instance = find_instance(list, instance_id)?;
-                            Ok(instance.app.accepts_original_structured_media(port, schema, media_type))
-                        }).await?
-                    } else if let Some((port, format)) = owner.natural_file_binding() {
-                        let media_type = with_instances_original_mut(runtime, |list| {
-                            let instance = find_instance(list, instance_id)?;
-                            Ok(instance.app.original_natural_file_media_type(port, format))
-                        }).await?;
-                        if let Some(media_type) = media_type {
-                            owner.bind_natural_file_media_type(media_type);
+                    for chained in 0..MEDIA_IN_MOVES_PER_TURN {
+                        if chained > 0 && chained % 128 == 0 { eprintln!("[DEBUG] media-in chained {chained} moves in one turn"); }
+                        let before = cx.retained_progress();
+                        let step: Result<bool, semio_framework_job::OriginalTurnFailure> = async {
+                            if owner.original_media_finished() {
+                                return owner.settle_original_media_import(cx).map(|ready| !ready);
+                            }
+                            if !owner.prepare_media_descriptor(cx)? {
+                                return Ok(true);
+                            }
+                            let accepted = if let Some((port, schema, media_type)) = owner.structured_media_binding() {
+                                with_instances_original_mut(runtime, |list| {
+                                    let instance = find_instance(list, instance_id)?;
+                                    Ok(instance.app.accepts_original_structured_media(port, schema, media_type))
+                                }).await?
+                            } else if let Some((port, format)) = owner.natural_file_binding() {
+                                let media_type = with_instances_original_mut(runtime, |list| {
+                                    let instance = find_instance(list, instance_id)?;
+                                    Ok(instance.app.original_natural_file_media_type(port, format))
+                                }).await?;
+                                if let Some(media_type) = media_type {
+                                    owner.bind_natural_file_media_type(media_type);
+                                }
+                                media_type.is_some()
+                            } else {
+                                false
+                            };
+                            if !owner.media_is_intrinsic() && !owner.media_original_started() && !accepted {
+                                let ready = with_instances_original_mut(runtime, |list| {
+                                    let mut instance = find_instance(list, instance_id)?;
+                                    ::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)
+                                }).await?;
+                                return if ready { owner.take_media_in(cx, &mut state.media_input).map(|ready| !ready) } else { Ok(true) };
+                            }
+                            if !owner.prepare_media_payload(accepted, cx)? {
+                                return Ok(true);
+                            }
+                            if !owner.prepare_media_metadata(runtime, instance_id, cx)? {
+                                return Ok(true);
+                            }
+                            let (port, media, meta, progress) = owner.media_import_parts()?;
+                            let complete = with_instances_original_mut(runtime, |list| {
+                                let mut instance = find_instance(list, instance_id)?;
+                                ::semio_framework_async::poll::resolve_ready(instance.app.advance_original_media_import(port, media, meta, progress, cx)).map_err(Into::into)
+                            }).await?;
+                            advance_media_operation = owner.original_media_mounted() && !complete;
+                            Ok(true)
+                        }.await;
+                        match step {
+                            Ok(true) if !cx.should_yield() && cx.retained_progress() != before => continue,
+                            other => return other,
                         }
-                        media_type.is_some()
-                    } else {
-                        false
-                    };
-                    if !owner.media_is_intrinsic() && !owner.media_original_started() && !accepted {
-                        let ready = with_instances_original_mut(runtime, |list| {
-                            let mut instance = find_instance(list, instance_id)?;
-                            ::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)
-                        }).await?;
-                        return if ready { owner.take_media_in(cx, &mut state.media_input).map(|ready| !ready) } else { Ok(true) };
                     }
-                    if !owner.prepare_media_payload(accepted, cx)? || !owner.prepare_media_metadata(runtime, instance_id, cx)? {
-                        return Ok(true);
-                    }
-                    let (port, media, meta, progress) = owner.media_import_parts()?;
-                    let complete = with_instances_original_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        ::semio_framework_async::poll::resolve_ready(instance.app.advance_original_media_import(port, media, meta, progress, cx)).map_err(Into::into)
-                    }).await?;
-                    advance_media_operation = owner.original_media_mounted() && !complete;
                     Ok(true)
                 }.await;
                 match receiving {

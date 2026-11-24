@@ -32,6 +32,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
 window_chip = _manim_module.window_chip
@@ -91,21 +92,6 @@ if _VO_TIMING.is_file():
 
 TITLE_DE = "Natürliche Lüftung"
 
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
-    that never competes with the diagram. The formula panel sits on the
-    bottom edge, so this corner is clear in every beat.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Shared visual motifs
@@ -344,7 +330,7 @@ class Beat1_Fensterregeln(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The window is a control", "Das Fenster ist ein Regler"))
-        din = _din_ref(_references.cite("din-1946-6"))
+        din = reference_chip(_references.cite("din-1946-6"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -589,8 +575,8 @@ class Beat2_StossOderKipp(Scene):
         e_kipp = e_air + e_rad + e_lb
 
         subtitle = section_heading(tr("Burst ventilation or tilted window", "Stoßlüften oder Kipplüftung"))
-        din = _din_ref(_references.cite("din-1946-6"))
-        source = _din_ref(_references.cite(("maas-1995", "kap8")) + tr(": n = 0.56 … 1.38 1/h", ": n = 0,56 … 1,38 1/h")).next_to(din, DOWN, buff=0.08, aligned_edge=RIGHT)
+        din = reference_chip(_references.cite("din-1946-6"))
+        source = reference_chip(_references.cite(("maas-1995", "kap8")) + tr(": n = 0.56 … 1.38 1/h", ": n = 0,56 … 1,38 1/h")).next_to(din, DOWN, buff=0.08, aligned_edge=RIGHT)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "room"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -818,7 +804,7 @@ class Beat3_Querlueftung(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Cross ventilation: both openings count", "Querlüftung: beide Öffnungen zählen"))
-        din = _din_ref(_references.cite("din-en-16798-7"))
+        din = reference_chip(_references.cite("din-en-16798-7"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1030,7 +1016,7 @@ class Beat4_Auftrieb(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Stack effect: height creates pressure", "Auftrieb: Höhe erzeugt Druck"))
-        din = _din_ref(_references.cite("din-en-16798-7"))
+        din = reference_chip(_references.cite("din-en-16798-7"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -1045,7 +1031,7 @@ class Beat4_Auftrieb(Scene):
         inlet_arrow = Arrow(inlet.get_center() + LEFT * 0.95, inlet.get_center() + LEFT * 0.12, buff=0, color=P_CYAN,
                             stroke_width=4, max_tip_length_to_length_ratio=0.28)
         inlet_lbl = Text(tr("Inlet opening", "Zuluftöffnung"), font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        inlet_lbl.next_to(inlet_arrow, UP, buff=0.10, aligned_edge=RIGHT)
+        inlet_lbl.next_to(inlet_arrow, UP, buff=0.12).align_to(inlet_arrow.get_left() + LEFT * 0.9, LEFT)
         person = _stand(room_c, 1.7, -1.75)
 
         shaft_walls = VGroup(*[
@@ -1089,7 +1075,7 @@ class Beat4_Auftrieb(Scene):
         legend_rows = legend[1]
 
         scaffold = VGroup(room, floor, inlet, inlet_arrow, inlet_lbl, person, shaft_walls, outlet_group, legend)
-        fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
+        fit_band(scaffold, bottom=-0.98)
 
         warm_spots = [person.get_top() + UP * 0.05, np.array([-2.30, floor.get_top()[1] + 0.02, 0.0])]
         stack = {"paths": None, "speed": 0.65}
@@ -1112,6 +1098,13 @@ class Beat4_Auftrieb(Scene):
                              np.array([x_read, 1.20, 0.0]), size=BODY_FONT_SIZE, color=P_CYAN)
         out_q = math_readout(lambda: rf"\dot{{V}} = {label_number(round(chain()['vdot_h'], -1))}\,\frac{{\mathrm{{m^{{3}}}}}}{{\mathrm{{h}}}}",
                              np.array([x_read, 0.60, 0.0]), size=BODY_FONT_SIZE, color=P_GREEN)
+
+        def case_tag(en, de):
+            return Text(tr(en, de), font_size=LABEL_FONT_SIZE, color=P_WHITE).move_to(np.array([6.9, 2.85, 0.0]), aligned_edge=RIGHT)
+
+        case_low = case_tag("Summer night · h = 2.5 m", "Sommernacht · h = 2,5 m")
+        case_tall = case_tag("Summer night · h = 4.4 m", "Sommernacht · h = 4,4 m")
+        case_winter = case_tag("Winter · h = 4.4 m", "Winter · h = 4,4 m")
 
         def ru(value, digits=0):
             return label_number(value, digits)
@@ -1137,8 +1130,8 @@ class Beat4_Auftrieb(Scene):
             return math_panel([
                 ("v", "v", P_CYAN), (None, "=", P_WHITE),
                 ("root", r"\sqrt{2\,\Delta p\,/\,\rho}", P_WHITE), (None, "=", P_WHITE),
-                ("val", rf"\sqrt{{2 \cdot {ru(s['dp'], 1)}\,\mathrm{{Pa}}\,/\,{ru(RHO_AIR, 1)}\,\frac{{\mathrm{{kg}}}}{{\mathrm{{m^{{3}}}}}}}} ={ru(s['v'], 2)}\,\frac{{\mathrm{{m}}}}{{\mathrm{{s}}}}", P_CYAN),
-            ], color=P_CYAN)
+                ("val", rf"\sqrt{{2 \cdot {ru(s['dp'], 1)}\,\mathrm{{Pa}}\,/\,{ru(RHO_AIR, 1)}\,\mathrm{{kg/m^{{3}}}}}} ={ru(s['v'], 2)}\,\mathrm{{m/s}}", P_CYAN),
+            ], color=P_CYAN, size=0.85 * FORMULA_FONT_SIZE, edge_buff=1.86)
 
         def panel_q(s):
             return math_panel([
@@ -1185,7 +1178,7 @@ class Beat4_Auftrieb(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "pressure"))
         new = panel_dp(S_LOW, 2.5)
-        self.play(*swap_panel(panel, new), Create(h_dim), FadeIn(h_tok), FadeIn(out_dp), *rising(1.2), run_time=1.2)
+        self.play(*swap_panel(panel, new), Create(h_dim), FadeIn(h_tok), FadeIn(out_dp), FadeIn(case_low), *rising(1.2), run_time=1.2)
         panel = new
         ring_h = highlight_param(panel[2], "h", color=P_CYAN)
         self.play(Create(ring_h), *rising(0.8), run_time=0.8)
@@ -1205,7 +1198,7 @@ class Beat4_Auftrieb(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "flow"))
         new = panel_q(S_LOW)
         a_lbl = math_label(rf"A = {ru(A_OPENING, 1)}\,\mathrm{{m^{{2}}}}", size=LABEL_FONT_SIZE, color=P_CYAN)
-        a_lbl.next_to(inlet_arrow, DOWN, buff=0.10, aligned_edge=RIGHT)
+        a_lbl.next_to(inlet_arrow, DOWN, buff=0.12).align_to(inlet_arrow.get_left() + LEFT * 0.9, LEFT)
         self.play(*swap_panel(panel, new), FadeIn(out_q), FadeIn(a_lbl), Indicate(inlet, color=P_CYAN, scale_factor=1.3), *rising(1.2), run_time=1.2)
         panel = new
         ring_q = highlight_param(panel[2], "a", color=P_CYAN)
@@ -1233,6 +1226,7 @@ class Beat4_Auftrieb(Scene):
             stage.transition("ventilation.natural.stack-effect.height-dimension-taller", source=h_dim, target=tall_dim),
             stage.transition("ventilation.natural.stack-effect.height-token-taller", source=h_tok, target=h_tok_tall),
             FadeOut(guides_low),
+            FadeOut(case_low), FadeIn(case_tall),
             height.animate.set_value(4.4),
             *swap_panel(panel, new),
             run_time=1.6,
@@ -1249,6 +1243,7 @@ class Beat4_Auftrieb(Scene):
         new = panel_dp(S_WINTER, 4.4)
         self.play(
             stage.transition("ventilation.natural.stack-effect.legend-winter", source=legend, target=legend_winter),
+            FadeOut(case_tall), FadeIn(case_winter),
             t_out_tr.animate.set_value(T_OUT_WINTER), t_in_tr.animate.set_value(T_IN_WINTER),
             *swap_panel(panel, new),
             *rising(1.6),
@@ -1260,7 +1255,7 @@ class Beat4_Auftrieb(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "comfort"))
         low_ring = VGroup(
-            SurroundingRectangle(VGroup(inlet, inlet_arrow), color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
+            SurroundingRectangle(VGroup(inlet, inlet_arrow, inlet_lbl, a_lbl), color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
             SurroundingRectangle(person, color=P_CYAN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5),
         )
         high_ring = SurroundingRectangle(VGroup(outlet, outlet_arrow), color=P_ORANGE, buff=_theme_module.UI_SPACING,
@@ -1319,7 +1314,7 @@ class Beat5_Nachtlueftung(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Night ventilation: discharging the thermal mass", "Nachtlüftung: den Speicher entladen"))
-        din = _din_ref(_references.cite("din-4108-2"))
+        din = reference_chip(_references.cite("din-4108-2"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1556,7 +1551,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Limits of natural ventilation", "Grenzen der freien Lüftung"))
-        din = _din_ref(_references.cite("din-en-16798-7"))
+        din = reference_chip(_references.cite("din-en-16798-7"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1607,7 +1602,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
             buff=0, color=P_ORANGE, stroke_width=4, max_tip_length_to_length_ratio=0.24,
         )
         lost_tag = Text(tr("unused", "ungenutzt"), font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        lost_tag.next_to(lost, UP, buff=0.12).set_x(room.get_left()[0] - 0.12 - lost_tag.width / 2)
+        lost_tag.next_to(lost, UP, buff=0.55).set_x(lost_tag.width / 2 - 6.8)
 
         gaps = VGroup(*[
             VGroup(cross_mark(), Text(t, font_size=BODY_FONT_SIZE, color=P_WHITE)).arrange(RIGHT, buff=0.22)

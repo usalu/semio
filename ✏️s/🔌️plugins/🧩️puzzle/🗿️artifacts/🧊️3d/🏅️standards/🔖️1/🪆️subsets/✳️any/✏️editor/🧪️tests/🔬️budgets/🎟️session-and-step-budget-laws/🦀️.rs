@@ -42,8 +42,10 @@ fn measured_step_loop(original: &mut semio_s_plugin_puzzle_retained::testing::Or
     turns
 }
 
-fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, tool_id: &'static str, run: u32) -> (Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>) {
-    let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default())) };
+/// 🪪️ Builds one measured work and hands back the instance's own operation owner alias, held like a mounted instance holds it: a work alias that were the last one could never return a payload its command filled (an open suggestion menu), because only the instance's own close may retire that payload.
+fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::OriginalFixture, tool_id: &'static str, run: u32) -> (Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>, semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Puzzle3dPlayApp>>, semio_plugin::ArtifactInstanceOperationOwnerHandle) {
+    let owner = semio_plugin::ArtifactInstanceOperationOwnerHandle::new(Box::new(Puzzle3dInstanceOperationOwner::default()));
+    let instance = Puzzle3dInstanceBinding { app_instance_id: 9_000 + run, parent_document_id: format!("measured-{tool_id}-{run}"), owner: owner.clone() };
     let app_instance_id = instance.app_instance_id;
     let work: Box<dyn semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>> = match tool_id {
         "acceptSuggestion" => original.construct_boxed(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope).map(|(work, progress)| (work.bound(instance), progress))),
@@ -59,7 +61,7 @@ fn measured_tool_work(original: &mut semio_s_plugin_puzzle_retained::testing::Or
         0,
         semio_plugin::app::ArtifactOwnedToolJobSnapshots { children: Default::default(), draft: Default::default(), transient: Default::default(), window_config: None, window_transient: None },
     );
-    (work, context)
+    (work, context, owner)
 }
 
 /// ⏱️ Drives one tool id's REAL work to `Complete` `PUZZLE3D_MEASURED_STEP_RUNS` times, each from its
@@ -73,10 +75,11 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
     for run in 0..PUZZLE3D_MEASURED_STEP_RUNS {
             let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
         semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
-        let (mut work, context) = measured_tool_work(&mut original, tool_id, run);
+        let (mut work, context, instance_owner) = measured_tool_work(&mut original, tool_id, run);
         let turns = measured_step_loop(&mut original, work.as_mut(), command, snapshot, config, &context, semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, tool_id);
         original.finish();
         assert!(context.forfeit_unissued(), "a fixture context binds no Store issuer");
+        drop(instance_owner);
         if best.is_empty() {
             best = turns;
             continue;

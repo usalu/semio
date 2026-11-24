@@ -430,12 +430,14 @@ pub fn entities_of(document: &model::En1993Snapshot) -> Vec<EntityRef> {
 
 /// 📍️ What an entity's pose derives from beyond its own row: the default layout slot of a row entity, the member pose and the positions of the member's action rows (their stagger follows the row index).
 pub fn layout_stamps(document: &model::En1993Snapshot, layout: &Layout) -> std::collections::BTreeMap<String, String> {
+    let sole: std::collections::BTreeMap<String, bool> = rows_of(document).into_iter().flat_map(|(_, ids)| { let sole = ids.len() == 1; ids.into_iter().map(move |id| (id.to_owned(), sole)) }).collect();
+    let tag = |id: &str| sole.get(id).copied().unwrap_or(false);
     let members = document.members.iter().map(|m| {
         let indices: Vec<usize> = document.member_actions.iter().enumerate().filter(|(_, a)| a.member_id == m.id).map(|(i, _)| i).collect();
-        (m.id.clone(), format!("{:?}|{indices:?}", layout.member(&m.id)))
+        (m.id.clone(), format!("{:?}|{indices:?}|{}", layout.member(&m.id), tag(&m.id)))
     });
-    let rows = rows_of(document).into_iter().skip(1).flat_map(|(_, ids)| ids).map(|id| (id.to_owned(), format!("{:?}", layout.origin(id))));
-    let actions = document.member_actions.iter().enumerate().map(|(index, a)| (a.id.clone(), format!("{:?}|{index}", layout.member(&a.member_id))));
+    let rows = rows_of(document).into_iter().skip(1).flat_map(|(_, ids)| ids).map(|id| (id.to_owned(), format!("{:?}|{}", layout.origin(id), tag(id))));
+    let actions = document.member_actions.iter().enumerate().map(|(index, a)| (a.id.clone(), format!("{:?}|{index}|{}", layout.member(&a.member_id), tag(&a.id))));
     members.chain(rows).chain(actions).collect()
 }
 

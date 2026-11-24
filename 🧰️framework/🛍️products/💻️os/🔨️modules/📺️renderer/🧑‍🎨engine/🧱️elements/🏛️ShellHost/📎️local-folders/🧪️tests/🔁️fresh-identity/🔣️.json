@@ -1,0 +1,22 @@
+{
+  "schema": "os.config.local-folders",
+  "reading": "A program that mints a fresh document identity on every boot is offered its own most recent folder (bindings are ordered by time-ordered document id, so the last of its program is the newest); an exact identity match still wins, and a binding whose document a session already holds is never offered again.",
+  "program": { "pluginId": "sourcing", "appId": "s.sourcing.curation@1/*#editor" },
+  "bindings": [
+    { "documentId": "01-old", "pluginId": "sourcing", "appId": "s.sourcing.curation@1/*#editor", "folder": { "kind": "path", "path": "/data/old" } },
+    { "documentId": "02-new", "pluginId": "sourcing", "appId": "s.sourcing.curation@1/*#editor", "folder": { "kind": "path", "path": "/data/new" } },
+    { "documentId": "03-other", "pluginId": "puzzle", "appId": "s.puzzle.2d@1/*#editor", "folder": { "kind": "path", "path": "/data/other" } }
+  ],
+  "offers": [
+    { "name": "a fresh identity is offered the program's newest folder", "identity": "09-fresh", "attached": [], "offer": "02-new" },
+    { "name": "an exact identity match wins over the newest", "identity": "01-old", "attached": [], "offer": "01-old" },
+    { "name": "a fresh identity whose newest folder is already attached is offered nothing", "identity": "09-fresh", "attached": ["02-new"], "offer": null },
+    { "name": "the booted identity itself being attached offers nothing", "identity": "09-fresh", "attached": ["09-fresh"], "offer": null },
+    { "name": "a program with no remembered folder is offered nothing", "identity": "09-fresh", "program": { "pluginId": "cad", "appId": "s.cad.drawing@1/*#editor" }, "attached": [], "offer": null }
+  ],
+  "attachTargets": [
+    { "name": "a reconnect names the remembered document", "target": { "kind": "folder", "documentId": "02-new" }, "identity": "09-fresh", "documentId": "02-new" },
+    { "name": "a plain folder attach uses the program's own identity", "target": { "kind": "folder" }, "identity": "09-fresh", "documentId": "09-fresh" },
+    { "name": "a program without a document attaches nothing", "target": { "kind": "folder" }, "identity": null, "documentId": null }
+  ]
+}

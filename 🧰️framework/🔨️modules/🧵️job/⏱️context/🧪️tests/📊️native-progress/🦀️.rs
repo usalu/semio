@@ -63,3 +63,6 @@ mod receiving_floor;
 
 #[path="receiving-refund.rs"]
 mod receiving_refund;
+
+#[path="close-birth-ledger.rs"]
+mod close_birth_ledger;

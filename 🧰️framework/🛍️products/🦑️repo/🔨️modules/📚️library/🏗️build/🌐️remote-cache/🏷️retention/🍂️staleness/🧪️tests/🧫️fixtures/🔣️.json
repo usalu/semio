@@ -1655,6 +1655,63 @@
     "partial": "undeclared",
     "nx": "undeclared"
    }
+  },
+  {
+   "name": "an entry of the graph class is live whatever the tree and the toolchains say, old or young, and nothing it names can make it stale",
+   "now": 10000000,
+   "grace": 600000,
+   "toolchains": [
+    "t2"
+   ],
+   "retired": [],
+   "tree": {
+    "core/lib.rs": "core v2"
+   },
+   "entries": [
+    {
+     "key": "head",
+     "storedAt": 0,
+     "refs": [
+      "blob:head"
+     ],
+     "declared": true,
+     "kind": "graph",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "head-young",
+     "storedAt": 9900000,
+     "refs": [
+      "blob:head-young"
+     ],
+     "declared": true,
+     "kind": "graph",
+     "toolchain": "t1",
+     "sources": {},
+     "externs": []
+    },
+    {
+     "key": "core",
+     "storedAt": 0,
+     "refs": [
+      "blob:core"
+     ],
+     "declared": true,
+     "kind": "rust-unit",
+     "toolchain": "t2",
+     "sources": {
+      "core/lib.rs": "core v1"
+     },
+     "externs": []
+    }
+   ],
+   "expected": {
+    "head": "live",
+    "head-young": "live",
+    "core": "stale:edited"
+   }
   }
  ]
 }

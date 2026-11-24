@@ -92,11 +92,26 @@
         "OriginalOperationReceiptRefusal",
         "OriginalOperationSource",
         "originalTurnWit",
+        "originalContextBudgetWit",
+        "originalGrantWit",
+        "originalJobWallUs",
+        "optionValue",
+        "OriginalJobFunds",
+        "originalSourceJob",
+        "OriginalSelfIssuedTurns",
         "originalOperationWorkerSource",
         "originalReceiptFromWit",
         "originalRetainedReceiptSchema"
       ],
       "types": [
+        "OriginalContextBudgetWit",
+        "OriginalGuestExports",
+        "OriginalGuestJobs",
+        "OriginalGuestReactor",
+        "OriginalJobBudgetWit",
+        "OriginalTurnInputWit",
+        "OriginalTurnShape",
+        "OriginalWireWork",
         "OriginalRetainedGrant",
         "OriginalRetainedProgress",
         "OriginalRetainedInput",
@@ -107,7 +122,9 @@
         "OriginalWireGrant",
         "OriginalWireInput",
         "OriginalWireReceipt",
-        "OriginalOperationPhysicalSpent"
+        "OriginalOperationPhysicalSpent",
+        "OriginalJobControl",
+        "OriginalJobOutputHold"
       ],
       "schema": "🎟️retained-turn/🧬️schema/🔣️.json",
       "schemaExport": "originalRetainedReceiptSchema"

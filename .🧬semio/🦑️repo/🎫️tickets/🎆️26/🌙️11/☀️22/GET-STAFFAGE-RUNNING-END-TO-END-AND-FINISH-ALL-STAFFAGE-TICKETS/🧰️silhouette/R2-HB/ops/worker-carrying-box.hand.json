@@ -1,0 +1,4 @@
+[
+{"op": "solid-add", "scale": "50", "after": "box-end-l", "solid": {"id": "box-load", "kind": "extrude", "bone": "box-r", "material": "cardboard", "role": "body", "tone": 0.6, "plane": "xy", "profile": [[-0.1425, -0.22749999999999998], [0.1425, -0.22749999999999998], [0.1425, 0.05749999999999999], [-0.1425, 0.05749999999999999]], "from": 0.0845, "to": 0.3495}},
+{"op": "solid-add", "scale": "50", "list": "structure", "after": "st-box-end-l", "solid": {"id": "st-box-load", "of": "box-load", "member": "box-r", "part": "member"}}
+]

@@ -18,6 +18,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await.expect("the reference snapshot births");
+        semio_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, 7).await;
                 let before = app.stores.store.snapshot_root();
                 let revision = app.stores.store.content_revision_now();
                 let generation = app.stores.store.generation_now();

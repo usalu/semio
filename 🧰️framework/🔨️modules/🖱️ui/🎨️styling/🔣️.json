@@ -475,6 +475,7 @@
     "veilAlphaExtraSteps": 1,
     "veilAlpha": 0.4,
     "veilBlurPx": 8,
+    "chipTintPercent": 10,
     "zStep": 10
   },
   "presence": {

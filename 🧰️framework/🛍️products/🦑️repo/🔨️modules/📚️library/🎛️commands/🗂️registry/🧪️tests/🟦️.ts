@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import ts from "typescript";
-import { existsSync, readFileSync } from "node:fs";
-import { join, posix, resolve } from "node:path";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, posix, resolve } from "node:path";
+import { pythonEnvironmentInterpreterV1, pythonEnvironmentOfProjectV1 } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts";
 import { createScriptProcessEnvelope, Script, ScriptRouter, withScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { diskZeroTouchTreeV1, scanModuleSpecifiersV1 } from "../../../🏗️build/📥️source/🛗️zero-touch/🟦️.ts";
 import { readRootCommandHelpRequestV1, readRootCommandRegistryV1, registerRootCommandsV1, renderRootCommandHelpV1, rootCommandHelpV1, rootCommandRegistryV1, type RootCommandV1 } from "../🟦️.ts";
@@ -178,6 +180,23 @@ for (const row of fixture.gate) {
 test("dependency availability agrees with the TypeScript loader on accessible generation directories", () => {
   for (const workspace of [root, join(root, "🔣️.json")]) {
     expect(dependencyProvisionPortsV1.available(workspace)).toBe(ts.sys.directoryExists(join(workspace, "node_modules")));
+  }
+});
+
+test("dependencies without a synchronized Python environment are not available, with it they are", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "semio-gate-python-"));
+  try {
+    mkdirSync(join(workspace, "node_modules"));
+    expect(dependencyProvisionPortsV1.available(workspace)).toBe(true);
+    writeFileSync(join(workspace, "pyproject.toml"), "[project]\nname = \"a\"\n");
+    writeFileSync(join(workspace, "uv.lock"), "version = 1\n");
+    expect(dependencyProvisionPortsV1.available(workspace)).toBe(false);
+    const interpreter = pythonEnvironmentInterpreterV1(pythonEnvironmentOfProjectV1(workspace, "workspace"));
+    mkdirSync(dirname(interpreter), { recursive: true });
+    writeFileSync(interpreter, "");
+    expect(dependencyProvisionPortsV1.available(workspace)).toBe(true);
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
   }
 });
 

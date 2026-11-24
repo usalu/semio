@@ -108,7 +108,7 @@ impl OwnedChildEmit {
     pub fn terminal_is_empty(&self)->bool{self.metadata.is_none()&&self.mutations.is_none()&&self.authority.is_none()}
 }
 impl Drop for OwnedChildEmit{
-    fn drop(&mut self){assert!(self.terminal_is_empty(),"applying child emission dropped before original typed source and metadata returned");}
+    fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"applying child emission dropped before original typed source and metadata returned");}
 }
 trait ChildEmitPreparationOwner: Send {
     fn as_any(&self)->&dyn std::any::Any;
@@ -257,7 +257,7 @@ impl ChildEmitPreparation {
     }
 }
 impl Drop for ChildEmitPreparation {
-    fn drop(&mut self){assert!(self.terminal_is_empty(),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
+    fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
 }
 struct TypedChildEmitPreparation<M> {
     remaining:ManuallyDrop<Option<std::vec::IntoIter<M>>>,
@@ -599,7 +599,7 @@ where M:Send+'static {
 }
 impl<M> Drop for TypedChildEmitPreparation<M>{
     fn drop(&mut self){
-        assert!((self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()),"typed child emission lost actual operation, prefix or encoder refusal owners");
+        assert!(std::thread::panicking()||((self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.factory.is_none()&&self.closing_factory.is_none())),"typed child emission lost actual operation, prefix or encoder refusal owners");
         unsafe{ManuallyDrop::drop(&mut self.remaining);ManuallyDrop::drop(&mut self.owned_source);ManuallyDrop::drop(&mut self.current);ManuallyDrop::drop(&mut self.retirement);ManuallyDrop::drop(&mut self.cause);ManuallyDrop::drop(&mut self.cause_close);ManuallyDrop::drop(&mut self.retired_schema);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}
     }
 }

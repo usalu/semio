@@ -2,8 +2,8 @@
 export const HEAVY_QUESTION_POLICY_V1:Readonly<{version:1;environment:string;memoryLimitMegabytes:number;pollMilliseconds:number;timeoutMilliseconds:number;heartbeatMilliseconds:number;livenessMilliseconds:number;silenceMilliseconds:number;maximumScale:number;kinds:readonly("program"|"derive")[]}>;
 /** 🐢️ How many times longer than on the reference machine a child may show no sign of life. */
 export function heavyQuestionScaleV1(policy?:typeof HEAVY_QUESTION_POLICY_V1,environment?:Record<string,string|undefined>,load?:number):number;
-/** 🪆️ The ports of a law: the scale of the machine and the reader of the processor time of a child. */
-export type HeavyQuestionPortsV1=Readonly<{scale?:(policy:typeof HEAVY_QUESTION_POLICY_V1)=>number;cpuOf?:(pid:number)=>number|undefined}>;
+/** 🪆️ The ports of a law: the scale of the machine, the reader of the processor time of a child and the reader of the host warden's cancel record of a pid. */
+export type HeavyQuestionPortsV1=Readonly<{scale?:(policy:typeof HEAVY_QUESTION_POLICY_V1)=>number;cpuOf?:(pid:number)=>number|undefined;cancelOf?:(pid:number)=>Promise<Readonly<{atMs:number;kind:string;megabytes:number;reason:string}>|null>|Readonly<{atMs:number;kind:string;megabytes:number;reason:string}>|null}>;
 /** 🪆️ Whether a derived row must be answered in a child process. */
 export function isHeavyQuestionV1(row:{path:string},environment?:Record<string,string|undefined>):boolean;
 /** 🪆️ Asks one heavy derived question in a child process, one at a time. */

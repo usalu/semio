@@ -64,7 +64,7 @@ mod xref_links;
 pub use xref_links::{XrefLinkCursor, XrefLinks, XrefPrimaryCycle, XrefRevisionSchedule, XrefTarget};
 
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error::{malformed, PResult, PdfEngineError};
-use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
+use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfDecimal, PdfDictEntry, PdfObject};
 use std::collections::HashMap;
 
 
@@ -300,7 +300,7 @@ impl<'a> Lexer<'a> {
             };
             let raw = self.data[span.start..span.end].to_vec();
             self.pos = span.resume;
-            return Ok(PdfObject::Stream { dict: entries, data: raw, filters: Vec::new() });
+            return Ok(PdfObject::Stream { dict: entries, data: stream_bytes(&raw), filters: Vec::new() });
         }
         Ok(PdfObject::Dict(entries))
     }
@@ -395,7 +395,7 @@ pub fn parse_indirect_with_length(data: &[u8], offset: usize, resolve_length: &m
     let NormalObject { id, value, stream, .. } = frame_indirect_with_length(data, offset, resolve_length)?;
     let value = match (value, stream) {
         (PdfObject::Dict(dict), Some(span)) => PdfObject::Stream {
-            dict, data: data[span.start..span.end].to_vec(), filters: Vec::new(),
+            dict, data: stream_bytes(&data[span.start..span.end]), filters: Vec::new(),
         },
         (value, _) => value,
     };
@@ -538,7 +538,7 @@ pub fn write_object(out: &mut Vec<u8>, object: &PdfObject) {
             entries.push(PdfDictEntry::new("Length", PdfObject::Int(data.len() as i64)));
             write_dict(out, &entries);
             out.extend_from_slice(b"\nstream\n");
-            out.extend_from_slice(data);
+            out.extend(data.iter());
             out.extend_from_slice(b"\nendstream");
         }
     }

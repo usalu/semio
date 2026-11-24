@@ -421,7 +421,10 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
     let (fuel, deadline_us) = (1u64 << 24, 1u64 << 52);
     let budget = wit_reactor::ActorContextBudget { input: wit_reactor::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: wit_reactor::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: deadline_us, fuel }, grant: grant() }, retained_policy: grant(), fuel, deadline_us, cancelled: false };
     store
-        .run_concurrent(async |accessor| bindings.semio_framework_describe().call_describe(accessor, budget).await)
+        .run_concurrent(async |accessor| {
+            bindings.semio_framework_reactor().call_stage_actor_context_budget(accessor, budget).await?;
+            bindings.semio_framework_describe().call_describe(accessor).await
+        })
         .await
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))?
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))

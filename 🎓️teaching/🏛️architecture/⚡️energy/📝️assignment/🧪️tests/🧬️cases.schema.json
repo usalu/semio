@@ -2,31 +2,23 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "version",
-    "cases",
-    "locales",
-    "required",
-    "decimal",
-    "performance"
-  ],
+  "required": ["version", "cases", "locales", "required", "withheld", "forbidden", "template", "decimal"],
   "properties": {
-    "version": {
-      "const": 1
+    "version": { "const": 3 },
+    "locales": { "const": ["en", "de"] },
+    "required": { "type": "array", "minItems": 10, "items": { "type": "string", "minLength": 1 } },
+    "withheld": { "type": "array", "minItems": 5, "items": { "type": "string", "minLength": 1 } },
+    "forbidden": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "array", "items": { "type": "string", "minLength": 1 } }, "de": { "type": "array", "items": { "type": "string", "minLength": 1 } } }
     },
-    "locales": {
-      "const": [
-        "en",
-        "de"
-      ]
-    },
-    "required": {
-      "type": "array",
-      "minItems": 10,
-      "items": {
-        "type": "string",
-        "minLength": 1
-      }
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "rows"],
+      "properties": { "file": { "type": "string", "minLength": 1 }, "rows": { "type": "integer", "minimum": 1 } }
     },
     "cases": {
       "type": "array",
@@ -34,61 +26,15 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "expression",
-          "expected"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expression": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expected": {
-            "type": "number"
-          }
-        }
+        "required": ["name", "expression", "expected"],
+        "properties": { "name": { "type": "string", "minLength": 1 }, "expression": { "type": "string", "minLength": 1 }, "expected": { "type": "number" } }
       }
     },
     "decimal": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "en",
-        "de"
-      ],
-      "properties": {
-        "en": {
-          "type": "string",
-          "minLength": 1
-        },
-        "de": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "performance": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "en",
-        "de"
-      ],
-      "properties": {
-        "en": {
-          "type": "string",
-          "minLength": 1
-        },
-        "de": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
     }
   }
 }

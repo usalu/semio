@@ -9,8 +9,8 @@
 import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
-import { shellFloorPaints, shellFloorFillClass } from "../../🔨️modules/🏠️shell-floor-presentation/🟦️.ts";
-import { useSurface, SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
+import { glassClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
+import { SurfaceScope, getLevelZClass } from "../🌈️Surface/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🩺️Navbar
@@ -213,9 +213,6 @@ function NavbarTrailing({ beforeFullscreen, showFullscreenToggle, onFullscreenTo
 
 function Navbar({ items, label, className, showFullscreenToggle = true, onFullscreenToggle, trailingBeforeFullscreen }: NavbarProps) {
   const borderRef = useSharedBorderFrameRef<HTMLElement>();
-  const parent = useSurface();
-  const paints = shellFloorPaints(parent);
-  const bgClass = shellFloorFillClass(parent);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   const body = (
@@ -226,8 +223,8 @@ function Navbar({ items, label, className, showFullscreenToggle = true, onFullsc
     />
   );
   return (
-    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-shared-border-hover="declared" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-band-height)]", getLevelZClass("base"), bgClass, className)}>
-      {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
+    <nav ref={borderRef} id="ui.navbar" aria-label={label} data-slot="navbar" data-shared-border-frame="" data-shared-border-edges="bottom" data-shared-border-hover="" data-level="panel" data-glass-chip="" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-[var(--navbar-band-height)]", getLevelZClass("base"), glassClass, className)}>
+      <SurfaceScope level="panel" fill="glass">{body}</SurfaceScope>
     </nav>
   );
 }

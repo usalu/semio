@@ -631,3 +631,30 @@ Demonstrator and procedural staged with all fixes through 00:25. Energie and Sta
 - Verfolgen: per-step full-grant lending in the seal loop, already `child_grant(left)` in the tree; deterministic `InvariantViolated` preparation refusals now fault immediately instead of stalling (`🔬️publication-stall-0200.md`).
 - Seal test failures were caused by a foreign allocating `[DEBUG]` print, now removed (`🔬️seal-allocation-accounting.md`).
 - Diagnostics pending: `page allocation occupied caller=` (generator, procedural build since 02:30) and `sealer blocked`/`batch blocked at` (koordinator, demonstrator build since 03:30).
+
+## November 23, 07:30 PST: Two Foreign Build Breaks Fixed
+
+- `🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`: `failure.primary` became a method (`primary()`).
+- The PDF page editor crate now embeds `🌈️cmyk-image-clut.bin` (250,563 bytes, added 06:50) and exceeded the default 262,144-byte Rust source boundary. Its `Cargo.toml` now declares `rust-source-boundary` with 524,288 bytes.
+
+## 10:15 Re-Probe (fresh demonstrator 10:12 + procedural 08:20)
+
+- en: 3/8 (Aggregator, Energie, Statik). The digest now advances through phases 0–8 in all four demonstrator panes.
+- The remaining stall is shared: once the digest finishes, `original=true` stays with `original_ready=false`. The original job's work quote is denied with `ready=false` (fuel 64, additional 64). The owner then refuses each granted page, producing `interactive-job.publication-stalled`.
+- This was handed to the gate agent, which records its findings in `🔬️original-ready-stall.md`.
+
+## 12:55 Re-Probe (procedural 11:37 + demonstrator 12:51, with the seal, digest and pump-yield fixes)
+
+- en: Aggregator, Energie and Statik pass. Generator and Verfolgen now fail only on `[DEBUG]` console prints; those are being removed.
+- Koordinator, Aussuchen and Bearbeiten hit a new stall: "turn grant cannot fund one receiving step" with items=0, from `📬️typed-operation-unit/🦀️.rs` ~L120. The fix is with the gate agent.
+
+## 14:30 Re-Probe (demonstrator 14:27, with the unfunded-turn fix and part of the `[DEBUG]` removal)
+
+- Koordinator, Aussuchen, Bearbeiten and Verfolgen now fail within 2 s with the regression `original-turn: scalar close changed Source or Work`, raised by `record/🌳️source/🦀️.rs` L150. The 12:51 build did not show it. The fix is with the gate agent.
+- The `[DEBUG]` removal agent removed 67 lines from 36 files; see `🔬️debug-print-inventory.md`. Procedural is rebuilding (`queue-p-1440.log`).
+
+## 16:00 Re-Probe (demonstrator 15:55, procedural 15:02)
+
+- en: 3/8 (Aggregator, Energie, Statik). The scalar-close regression is gone.
+- All five failing panes report the same cause: "abandoned its pending publication without a retained cause". The gate agent is tracing which caller abandons it.
+- `[DEBUG]` console prints no longer fail the panes.

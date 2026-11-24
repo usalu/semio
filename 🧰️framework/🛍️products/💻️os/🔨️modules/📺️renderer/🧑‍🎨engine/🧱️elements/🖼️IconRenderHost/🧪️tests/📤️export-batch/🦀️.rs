@@ -163,6 +163,7 @@ fn icon_export_prepared_close_borrows_original_work_and_physical_receipt() {
     assert_eq!(text.capacity(), bytes);
 
     let (done, heap) = observed(|| caller.turn(|cx| {
+        let before = (cx.retained_progress(), cx.reserved_return_progress());
         let done = close_prepared(cx, Ok(demand), |effect| {
             assert!(effect.performed(1).unwrap());
             drop(std::mem::take(&mut text));
@@ -170,8 +171,9 @@ fn icon_export_prepared_close_borrows_original_work_and_physical_receipt() {
                 progress: RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() },
             })
         });
-        assert_eq!(cx.retained_progress().released_bytes, bytes);
-        assert_eq!(cx.retained_progress().copied_items, expected["copiedItems"].as_u64().unwrap() as usize);
+        let fresh = cx.fresh_retained_progress_since(before.0, before.1).unwrap();
+        assert_eq!(fresh.released_bytes, bytes);
+        assert_eq!(fresh.copied_items, expected["copiedItems"].as_u64().unwrap() as usize);
         done
     }));
     assert!(done.unwrap());

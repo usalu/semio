@@ -39,7 +39,7 @@ async function read(root:string,corners:string,scope:string,finished:Set<string>
     observation.observedFs.readFileSync(join(root,name+".txt"),"utf8");
     if(name==="owner-"+READER){
      observation.observedFs.readdirSync(corners,{withFileTypes:true});
-     if(vanish)await rm(corners,{recursive:true,force:true});
+     if(vanish){await rm(corners,{recursive:true,force:true});observation.forgetRoundReadsV1();}
      observation.observedFs.readdirSync(corners,{withFileTypes:true});
     }
     finished.add(name);return name;

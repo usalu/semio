@@ -238,7 +238,7 @@ impl Default for RetainedPackAnchorCursor {
 
 impl Drop for RetainedPackAnchorCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained pack anchors reached Drop before handback or close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained pack anchors reached Drop before handback or close");
     }
 }
 //#endregion 🔖️RetainedCanonicalSource

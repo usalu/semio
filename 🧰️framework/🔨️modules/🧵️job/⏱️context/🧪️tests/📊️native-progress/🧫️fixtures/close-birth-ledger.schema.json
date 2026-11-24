@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "born", "releases", "business", "outstanding"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "born": {"type": "integer", "minimum": 0},
+          "releases": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 1, "maximum": 8192}},
+          "business": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 8192}},
+          "outstanding": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}

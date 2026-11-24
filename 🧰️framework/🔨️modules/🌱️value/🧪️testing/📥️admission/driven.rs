@@ -36,6 +36,12 @@ pub fn driven<F:Send+'static>(bank:&mut EffectBank,grant:RetainedCloneGrant,maxi
     bank_run(bank,transfer,1,|effect|{let turn=Authority::<F>::transfer_producer(&mut authority,&Call(&mut *call),&mut producer,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(drop),work:turn.work})});
     (RetainedWorkPoll::Complete(RetainedWorkOutcome{result:output.take().expect("driven reply"),work:spent}),None)
 }
+/// 🏦️ Sums the grants of the three funded runs one [`driven`] call performs (the call, then its reply and producer transfers), so one finite Source stock funds the whole call.
+pub fn driven_stock<F:Send+'static>(grant:RetainedCloneGrant)->RetainedCloneGrant{
+    type Authority<F>=OriginalEffectAuthority<Action<F>>;
+    let reply=quote(Authority::<F>::transfer_reply_demand().expect("reply quote"));let producer=quote(Authority::<F>::producer_transfer_demand().expect("producer quote"));
+    RetainedCloneGrant{maximum_items:grant.maximum_items+reply.maximum_items+producer.maximum_items,maximum_copy_bytes:grant.maximum_copy_bytes+reply.maximum_copy_bytes+producer.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes+reply.maximum_capacity_bytes+producer.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes+reply.maximum_release_bytes+producer.maximum_release_bytes,maximum_depth:grant.maximum_depth.max(reply.maximum_depth).max(producer.maximum_depth)}
+}
 struct ConstructionTurn{original:std::sync::Arc<std::sync::Mutex<RetainedCloneGrant>>,accepted:std::sync::Arc<std::sync::atomic::AtomicBool>,submitted:RetainedCloneProgress,turn:OriginalSourceTurnIdentity}
 impl OriginalConstructionRecipient for ConstructionTurn{
     type Context<'turn,'source>=() where 'source:'turn;

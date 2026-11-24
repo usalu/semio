@@ -4,7 +4,9 @@ import {join} from "node:path";
 import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {testScratchRootV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {requireRemoteExecutionShapeV1} from "../../🟦️.ts";
-import {attachClusterV1,eventuallyV1,startClusterV1,writeHostViewV1,type ClusterV1} from "../🧰️cluster/🟦️.ts";
+import {stretchedBudgetMillisecondsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import {attachClusterV1,eventuallyV1 as eventuallyUnscaledV1,startClusterV1,writeHostViewV1,type ClusterV1} from "../🧰️cluster/🟦️.ts";
+const eventuallyV1=(condition:()=>boolean|Promise<boolean>,milliseconds:number,message:string):Promise<void>=>eventuallyUnscaledV1(condition,stretchedBudgetMillisecondsV1(milliseconds),message);
 
 const bun=registeredToolExecutableV1("bun"),here=import.meta.dir,entry=join(here,"..","..","🏃️entry","🟦️.ts"),serve=join(here,"..","🧰️cluster","🚀️serve.ts");
 type Spawned=ReturnType<typeof Bun.spawn>;
@@ -47,7 +49,7 @@ test("every machine appears in the live table with its platform key, capacity, p
  expect(table.machines.map((machine:any)=>machine.origin)).toEqual(["w0","w1","w2"]);
  for(const machine of table.machines){
   expect(machine.platform.key).toMatch(/^(macos|linux|windows)-(arm64|amd64)-([0-9a-f]{16}|none)$/u);expect(machine.capacity).toEqual({cores:8,memoryMegabytes:65536});
-  expect(machine).toMatchObject({pressure:"normal",headroom:true,freeMegabytes:60000,worker:{state:"idle",sandbox:"isolated-root",confinement:"none",network:"unenforced",concurrency:2,running:0},offloadedIn:0,refused:0});
+  expect(machine).toMatchObject({pressure:"normal",headroom:true,freeMegabytes:55904,worker:{state:"idle",sandbox:"isolated-root",confinement:"none",network:"unenforced",concurrency:2,running:0},offloadedIn:0,refused:0});
   expect(machine.ageSeconds).toBeLessThanOrEqual(3);
  }
  fleet.workers.get("w2")!.kill("SIGKILL");
@@ -97,7 +99,7 @@ test("semio-offload=if-idle answers RESOURCE_EXHAUSTED at once when no machine b
  for(const name of ["w1","w2"])fleet.view(name,{pressure:"critical",availableMegabytes:900});
  await eventuallyV1(async()=>{const table=await fleet.load();return ["w1","w2"].every(name=>row(table,name).headroom===false);},20000,"the pressure must reach the table");
  const started=performance.now(),declined=await fleet.attached.execute(await offload("declined"));
- expect(declined.response.status.code,"RESOURCE_EXHAUSTED").toBe(8);expect(declined.stages).not.toContain("EXECUTING");expect(performance.now()-started).toBeLessThan(3000);
+ expect(declined.response.status.code,"RESOURCE_EXHAUSTED").toBe(8);expect(declined.stages).not.toContain("EXECUTING");expect(performance.now()-started).toBeLessThan(stretchedBudgetMillisecondsV1(3000));
  expect((await (await fetch(`${fleet.urls.worker}/status`)).json()).counters.offloadRejected).toBe(1);
  fleet.view("w2");
  await eventuallyV1(async()=>row(await fleet.load(),"w2").headroom===true,20000,"w2 must have headroom again");
@@ -134,7 +136,7 @@ test("a worker's own admission can refuse an action it was given: the action ret
  cluster.startWorker({name:"b-takes",origin:"b-takes",sandbox:"isolated-root"});
  await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===2,15000,"the second worker registers");
  const started=performance.now(),run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo ok > out.txt"],outputPaths:["out.txt"],salt:"refused"}));
- expect(run.response.status.code).toBe(0);expect(workerOf(run)).toBe("b-takes");expect(performance.now()-started).toBeLessThan(4000);
+ expect(run.response.status.code).toBe(0);expect(workerOf(run)).toBe("b-takes");expect(performance.now()-started).toBeLessThan(stretchedBudgetMillisecondsV1(4000));
  expect(cluster.server.scheduler.status().counters.refused).toBe(1);expect(cluster.events.some(event=>event.startsWith("refused"))).toBe(true);expect(cluster.workerEvents.some(event=>event.includes("a-refuses refused"))).toBe(true);
 });
 

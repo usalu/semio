@@ -19,15 +19,15 @@ import {readClosureLeafV1} from "../🩹️closure-repair/🟨️.mjs";
 import {inventoryDirectoriesV1,expandedClosuresV1,rememberExpandedClosureV1} from "../🕊️release/🟦️.ts";
 
 
-/** 📁️ Discovers real workspace authority while yielding cancellation and progress. */
-export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set()):Promise<string[]> {
+/** 📁️ Discovers real workspace authority while yielding cancellation and progress; with `vanished` a directory that disappeared meanwhile is named to it and walked as empty instead of failing the discovery. */
+export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set(),vanished?:(path:string)=>void):Promise<string[]> {
   const descends=buildWalkDescendsV1(),pending=[""],files:string[]=[],directories:string[]=[];
   let visited=0;
   while(pending.length){
     if(invocation)checkScriptInvocation(invocation);
     const batch=pending.splice(-32),listings=await Promise.all(batch.map(async directory=>{
       try{return {directory,entries:await readdir(join(root,directory),{withFileTypes:true})};}
-      catch(error){if(directory&&volatile.has(directory)&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return {directory,entries:[]};if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[directory]});throw error;}
+      catch(error){if(directory&&vanished!==undefined&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")){vanished(directory);return {directory,entries:[]};}if(directory&&volatile.has(directory)&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return {directory,entries:[]};if(directory&&["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))throw Object.assign(Error(`Build directory removed during discovery: ${directory}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:[directory]});throw error;}
     }));
     if(invocation)checkScriptInvocation(invocation);
     for(const {directory,entries}of listings){
@@ -130,16 +130,17 @@ export function graphMemberPredicateV1():(file:string)=>boolean {
 }
 
 
-/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes; a `volatile` member or directory (root-relative, forward slashes) that kept changing is left out of the hash with everything below it. Every member that vanished or changed type is collected in one pass and named once by `paths`, so a single follow-up round answers all changes seen so far.
+/** 🧾️ Identifies complete admitted physical membership, types and modes independently of implementation bytes; with `vanished` (the last attempt of a read that follows a tree no round of which stays still) a member that vanished or changed type is named to it and left out instead of failing the round; a `volatile` member or directory (root-relative, forward slashes) that kept changing is left out of the hash with everything below it. Every member that vanished or changed type is collected in one pass and named once by `paths`, so a single follow-up round answers all changes seen so far.
  * @see ../📥️load/🧪️tests/🧲️membership-follow */
-export async function buildGraphMembershipV1(root:string,files:string[],invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set()):Promise<string> {
+export async function buildGraphMembershipV1(root:string,files:string[],invocation?:ScriptInvocation,volatile:ReadonlySet<string>=new Set(),vanished?:(path:string)=>void):Promise<string> {
   const records:string[]=[],changed:string[]=[],within=(file:string)=>{for(let at=file.length;at>0;at=file.lastIndexOf("/",at-1))if(volatile.has(file.slice(0,at)))return true;return false;},entries=[...files.map(file=>({file,directory:false})),...(inventoryDirectoriesV1.get(files)??[]).map(file=>({file,directory:true}))].filter(({file})=>![".nxignore","nx.json"].includes(file)&&!(volatile.size>0&&within(file))).sort((a,b)=>a.file.localeCompare(b.file));
   for(let index=0;index<entries.length;index+=64){
     if(invocation)checkScriptInvocation(invocation);
-    records.push(...await Promise.all(entries.slice(index,index+64).map(async({file,directory})=>{let info;try{info=await lstat(join(root,file));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")){changed.push(file);return"";}throw error;}if(info.isSymbolicLink()||(directory?!info.isDirectory():!info.isFile())){changed.push(file);return"";}return JSON.stringify([file,info.isDirectory()?"directory":"file",info.mode]);})));
+    records.push(...await Promise.all(entries.slice(index,index+64).map(async({file,directory})=>{let info;try{info=await lstat(join(root,file));}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??"")){(vanished??changed.push.bind(changed))(file);return"";}throw error;}if(info.isSymbolicLink()||(directory?!info.isDirectory():!info.isFile())){(vanished??changed.push.bind(changed))(file);return"";}return JSON.stringify([file,info.isDirectory()?"directory":"file",info.mode]);})));
   }
+  if(changed.length)changed.sort((a,b)=>a.localeCompare(b));
   if(changed.length)throw Object.assign(Error(`Build membership changed during discovery: ${changed.slice(0,8).join(", ")}${changed.length>8?" (+"+(changed.length-8)+")":""}`),{code:"BUILD_MEMBERSHIP_CHANGED",paths:changed});
-  return createHash("sha256").update(records.join("\n")).digest("hex");
+  return createHash("sha256").update(records.filter(record=>record!=="").join("\n")).digest("hex");
 }
 
 

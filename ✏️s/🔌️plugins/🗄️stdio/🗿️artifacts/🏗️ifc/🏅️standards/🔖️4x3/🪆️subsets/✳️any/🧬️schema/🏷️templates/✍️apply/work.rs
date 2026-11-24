@@ -1,12 +1,12 @@
 //! 🧵️ Native template planning retains the original command and admits real forward and inverse Store wire.
 use super::receive::{fits, fixed, invalid, receipt, ApplicationReceiver};
 use super::*;
-use crate::details::{charged, closed_in, funded_turn, owned_step, settled, IfcPublication, SnapshotLease, SnapshotSource};
+use crate::details::{SourceStaging, charged, closed_in, closed_in_source, funded_turn, owned_step, settled, IfcPublication, SnapshotLease, SnapshotSource};
 use crate::editor::{Ifc4x3AnyEditor, Ifc4x3EditCommand};
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
 use semio_plugin::{EditorApp, Fault};
-use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneProgress, RetainedCloneStep, StagedSourceAdmission};
+use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome};
 use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind};
 use std::{mem::size_of, sync::Arc};
@@ -44,7 +44,7 @@ pub struct IfcTemplateWork {
     publication: IfcPublication,
     semantic: crate::validation::admission::RetainedExpressAdmission,
     unborn: Option<SnapshotLease>,
-    admission: Option<StagedSourceAdmission<IfcSnapshot, SnapshotLease>>,
+    admission: Option<SourceStaging<IfcSnapshot, SnapshotLease>>,
     retirement: RetainedCloneClose,
     phase: Phase,
     closing: bool,
@@ -280,7 +280,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
                 let owner = input.snapshot_owner.ok_or_else(|| invalid("Template preparation requires its original captured snapshot"))?;
                 let alias = size_of::<Arc<IfcSnapshot>>();
                 if self.admission.is_none() {
-                    self.admission = Some(StagedSourceAdmission::borrowed(SnapshotLease::new(Arc::clone(owner))));
+                    self.admission = Some(SourceStaging::borrowed(SnapshotLease::new(Arc::clone(owner))));
                     cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias, ..Default::default() })?;
                     cx.consume_fuel(1);
                 } else {
@@ -364,7 +364,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         let demand = self.close_demand(cx.retained_grant().maximum_copy_bytes.min(4096))?;
-        closed_in(cx, demand, |effect| self.close_owned(effect))
+        closed_in_source(cx, demand, |effect| self.close_owned(effect))
     }
 }
 

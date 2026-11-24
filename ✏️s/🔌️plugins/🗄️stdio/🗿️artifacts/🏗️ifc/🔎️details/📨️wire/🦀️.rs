@@ -16,4 +16,5 @@ pub use receive::{IfcValueReceiveMode, IfcValueReceiver};
 #[path="pointer.rs"]pub mod pointer;
 #[path="wire.rs"]pub mod wire;
 pub use wire::{IfcPublication, SnapshotSource};
+#[path="source_staging.rs"]pub mod source_staging;
 #[path="source_loan.rs"]pub mod source_loan;

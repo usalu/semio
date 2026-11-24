@@ -82,3 +82,16 @@ async fn renders_via_the_app() {
     assert!(scene.meshes_json.contains(crate::schema::SOURCING_UNIT_BOX_MESH_ID));
     assert!(scene.instances_json.contains(object_id));
 }
+
+/// 🔑️ Every curated copy draws under its own instance id, so the React scene never sees two children with one key.
+#[semio_framework_async_macros::async_test]
+async fn grid_instance_ids_stay_unique_across_curated_copies() {
+    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    curation_set(&mut document, "slab-clt-160", 3);
+    let cfg = SourcingCurationConfig { filters: Filters { module_ids: vec!["slabs".into()], ..Default::default() }, ..Default::default() };
+    let node = render(&document, &cfg, &GridWindowConfig::default(), semio_plugin::Locale::En).expect("bounded grid");
+    let scene: semio_ui_scene::World3dScene = semio_plugin::artifact_app_laws::built_surface_scene(&node).expect("assemble world3d scene");
+    let ids: Vec<String> = serde_json::from_str::<serde_json::Value>(&scene.instances_json).unwrap().as_array().unwrap().iter().map(|instance| instance["id"].as_str().unwrap().to_string()).collect();
+    let unique: std::collections::BTreeSet<&String> = ids.iter().collect();
+    assert_eq!(unique.len(), ids.len(), "duplicate instance ids: {ids:?}");
+}

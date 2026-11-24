@@ -12,7 +12,7 @@ import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import texts from "../📖️texts/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import catalogue from "../../⚙️operations/🔣️catalog.json" with {type:"json"};
-import {readTestFilePolicyV1,readTestFileTablesV1,renderTestFilePlanV1,renderTestFileResultV1,resolveTestFilesV1,routeTestFilesV1,testFileArgumentsV1,testFileBunCountsV1,testFileOptionNamesV1,testFileResultV1,testFileTailV1,testFileWantsPythonV1,validateTestFileDocumentV1} from "../🟦️.ts";
+import {readTestFilePolicyV1,readTestFileTablesV1,renderTestFilePlanV1,renderTestFileResultV1,resolveTestFilesV1,routeTestFilesV1,testFileArgumentsV1,testFileBunCountsV1,testFileEnvelopeArgumentsV1,testFileOptionNamesV1,testFileResultV1,testFileTailV1,testFileWantsPythonV1,validateTestFileDocumentV1} from "../🟦️.ts";
 import {TEST_FILE_TEXTS_V1} from "../📖️texts/🟦️.ts";
 import {providedTestEnvironmentV1} from "../🏃️run/🟦️.ts";
 import storageSchema from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json" with {type:"json"};
@@ -232,3 +232,53 @@ test("a file that outlives the deadline of its envelope is a failed row with the
  expect(result.files[0]!.error).toContain("deadline");
  expect(result.status).toBe("failed");
 },120000);
+
+test("a file is born under the declared selection of its suite's own contract target: the arguments are the neutral run of `test-<suite>` of the table's project, the capabilities declare exactly that launch, a third-party schema validator admits them, and the process project declares the target",async()=>{
+ const tables=readTestFileTablesV1(root),{createBuildBootstrapCapabilitiesV1}=await import("../../📥️caller/📤️child/🟦️.ts"),callerSchema=(await import("../../🧬️schema/📥️caller.json")).default,admits=ajv.compile(callerSchema as never),processTargets=Object.keys((JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/📋️project.json"),"utf8")) as {targets:Record<string,unknown>}).targets);
+ const environment={...process.env,SEMIO_BUILD_MODE:"prototype",SEMIO_WORKSPACE_ROOT:root} as NodeJS.ProcessEnv;delete environment.SEMIO_SCRIPT_CAPABILITIES;
+ for(const id of ["build-door","caching-suite-table","process-routing"]){
+  const route=routeTestFilesV1(root,[(corpus.routes as {id:string;file:string}[]).find(row=>row.id===id)!.file],tables,undefined,"darwin")[0]!,owner=policy.tables.find(row=>row.id===route.table)!,args=testFileEnvelopeArgumentsV1(owner.project,route.suite);
+  expect(args).toEqual(["run",owner.project+":test-"+route.suite]);
+  if(route.table==="process")expect(processTargets).toContain("test-"+route.suite);
+  const capabilities=await createBuildBootstrapCapabilitiesV1(root,args,environment) as unknown as {selection:string[];arguments:string[];launches:string[][]};
+  expect(capabilities.selection).toEqual(["repo",...args]);
+  expect(capabilities.arguments).toEqual(["repo",...args]);
+  expect(capabilities.launches[0]).toEqual(["repo",...args]);
+  expect(admits(capabilities),JSON.stringify(admits.errors?.slice(0,2))).toBe(true);
+ }
+},120000);
+
+test("a suite row's declared nested launches reach every file under both runners and admit exactly their own argument shape: the same fixture sees its launch admitted when the row declares it and refused when it does not, under the suite runner and under `repo test-file`, and no other shape is ever admitted",async()=>{
+ const {readProcessTestTableV1,processTestSuiteLaunchesV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts"),{runProcessTestSuiteV1}=await import("../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts"),{withProcessTestOutputV1}=await import("../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🏃️run/🟦️.ts"),{createScriptProcessEnvelope,withScriptProcessEnvelope}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{createBuildBootstrapCapabilitiesV1}=await import("../../📥️caller/📤️child/🟦️.ts"),{testFileNarrowedSuiteV1}=await import("../🟦️.ts");
+ const owner=policy.tables.find(row=>row.id==="build")!,tableRoot=join(root,owner.root),fixture="🔬️test-file/🧪️tests/🧫️fixtures/🚀️launches/🟦️.ts",manifest="🔬️test-file/🧪️tests/🧫️fixtures/🚀️launches/Cargo.toml";
+ const launch={command:"cargo" as const,arguments:["--store=shared","--configuration=release","--","check","--manifest-path"],paths:[manifest]},expected=["repo","cargo",...launch.arguments,join(tableRoot,manifest)];
+ const row=(launches:boolean)=>({id:"build-test-file",budgetMs:300000,typecheck:"none" as const,files:[fixture],...(launches?{launches:[launch]}:{})}),tableOf=(launches:boolean)=>readProcessTestTableV1({version:1,suites:[row(launches)],codeSuites:[],helpers:[]});
+ expect(processTestSuiteLaunchesV1(row(true),tableRoot)).toEqual([expected]);
+ expect(processTestSuiteLaunchesV1(row(false),tableRoot)).toEqual([]);
+ expect(processTestSuiteLaunchesV1(testFileNarrowedSuiteV1(tableOf(true).suites[0]!,fixture),tableRoot)).toEqual([expected]);
+ const suites=(await import("../../../../../../../🔨️modules/🏃️process/🧪️testing/🗂️suites/🧬️schema/🔣️.json")).default as any,accepts=ajv.compile({$schema:suites.$schema,definitions:suites.definitions,$ref:"#/definitions/Table"} as never),declaredTable=JSON.parse(readFileSync(join(root,"🧰️framework/🔨️modules/🏃️process/🧪️testing/🗂️suites/🔣️.json"),"utf8"));
+ expect(accepts(tableOf(true)),JSON.stringify(accepts.errors?.[0])).toBe(true);expect(accepts(declaredTable),JSON.stringify(accepts.errors?.[0])).toBe(true);
+ expect(declaredTable.suites.filter((suite:any)=>suite.launches).map((suite:any)=>suite.id).sort()).toEqual(["component-reclaim","native-artifacts","native-queued-cancellation"]);
+ for(const suite of declaredTable.suites)for(const entry of suite.launches??[])for(const path of entry.paths)expect(existsSync(join(root,"🧰️framework/🔨️modules/🏃️process",path)),path).toBe(true);
+ const bad=JSON.parse(JSON.stringify(tableOf(true)));
+ for(const mutate of [(value:any)=>{value.suites[0].launches[0].command="run";},(value:any)=>{value.suites[0].launches[0].extra=1;},(value:any)=>{value.suites[0].launches[0].paths=[1];},(value:any)=>{value.suites[0].launches=[];},(value:any)=>{delete value.suites[0].launches[0].arguments;}]){const copy=JSON.parse(JSON.stringify(bad));mutate(copy);expect(()=>readProcessTestTableV1(copy)).toThrow();}
+ const environment={...process.env,SEMIO_BUILD_MODE:"prototype",SEMIO_WORKSPACE_ROOT:root} as NodeJS.ProcessEnv;for(const name of policy.strip)delete environment[name];
+ const bySuite=async(launches:boolean)=>{
+  process.env.SEMIO_FIXTURE_LAUNCH=launches?"declared":"undeclared";
+  const table=tableOf(launches),capabilities=await createBuildBootstrapCapabilitiesV1(root,testFileEnvelopeArgumentsV1(owner.project,"build-test-file"),environment);let failure:unknown;
+  try{await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"law",maximumElapsedMilliseconds:400000},capabilities,Date.now()),invocation=>withProcessTestOutputV1(root,owner.route,output=>runProcessTestSuiteV1({invocation,root:tableRoot,checkout:root,table,suite:"build-test-file",owner:owner.owner,output,environment:{...environment,SEMIO_FIXTURE_LAUNCH:process.env.SEMIO_FIXTURE_LAUNCH}})));}catch(error){failure=error;}
+  return failure;
+ };
+ const byFile=async(launches:boolean)=>{
+  process.env.SEMIO_FIXTURE_LAUNCH=launches?"declared":"undeclared";
+  const tables=new Map([["build",tableOf(launches)],...[...readTestFileTablesV1(root)].filter(([id])=>id!=="build")]),routes=routeTestFilesV1(root,[owner.root+"/"+fixture],tables,undefined,"darwin");
+  const {runTestFileRoutesV1}=await import("../🏃️run/🟦️.ts");
+  return (await runTestFileRoutesV1(root,routes,{bail:false,json:true,language:"en"},{tables,notice:()=>{}})).files[0]!;
+ };
+ try{
+  expect(await bySuite(true)).toBeUndefined();
+  expect((await byFile(true)).status).toBe("passed");
+  expect(await bySuite(false)).toBeUndefined();
+  expect((await byFile(false)).status).toBe("passed");
+ }finally{delete process.env.SEMIO_FIXTURE_LAUNCH;}
+},900000);

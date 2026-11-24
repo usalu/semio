@@ -6,7 +6,7 @@ static site on a CDN and proctored by `proctor` (`🎓️teaching/🛂️proctor
 runs as a zero-touch Docker stack. Both hosts, the image and the port live in one place, `🚀️deploy/🔣️.json`; the Vite
 config, the operator verbs and the tests read them there.
 
-The overview starts with profile, quizzes, leaderboard, badges, and preferences cards. A shared introductory walkthrough overlays the overview on the first visit; the profile card opens explicit sign-in. Quizzes opens
+The overview starts with profile, quizzes, leaderboard, badges, and preferences cards. A shared introductory walkthrough overlays the overview on the first visit; the profile card opens explicit sign-in. The site speaks German (`site.language` of `🚀️deploy/🔣️.json`) until its learner chooses English with the language switch, whatever the browser asks for; the choice is kept on the device. Quizzes opens
 the topic grid: Energie, Parametrik, Grasshopper, Excel, Building Information Modelling, and Optimierung. Energie
 opens the existing physics, ventilation, heating, cooling, and demand quiz cards. Each other topic contains its authored subject quiz with terminology, classification and application exercises.
 The configured release schedule controls access to these quizzes. Every grid keeps the same glass backdrop, pointer pan, crisp hover or keyboard focus, and opening zoom.
@@ -15,7 +15,7 @@ Escape and Up return one level; Overview returns to the root. Topic and quiz IDs
 | Path | What |
 |---|---|
 | `🔣️.json` | the course: introduction, topics owning quiz IDs, quiz paths (relative to this file), badges |
-| `🟦️.ts`, `🌐️.html` | the site entry: `mountCourse(root, { proctor: <baked proctor origin or "">, tenant: "architecture", material, logo, legal: site.legal, pets: () => import("../🐾️pets/🟦️.ts")… })` — `logo` the emblem, `legal` the imprint and privacy links of `🚀️deploy/🔣️.json`, `pets` the menagerie loaded lazily (see [Pets](#pets)) |
+| `🟦️.ts`, `🌐️.html` | the site entry: `mountCourse(root, { proctor: <baked proctor origin or "">, tenant: "architecture", material, logo, legal: site.legal, pets: () => import("../🐾️pets/🟦️.ts")… })` — `logo` the emblem, `language` the site's own language and `legal` the imprint and privacy links of `🚀️deploy/🔣️.json`, `pets` the menagerie loaded lazily (see [Pets](#pets)) |
 | `📚️course/🟦️.ts` | the material the site hands the course app, as a lazy source: the course and the quizzes it names, imported on demand in course order — one chunk each, all fetched while the page already shows and hinted at low priority by the release document —, so the first paint weighs none of the solutions and the page goes on working [while the proctor is away](#while-the-proctor-is-away) from the moment they have arrived |
 | `🎨️.css` | the brand layer: the semio palette compiled to custom properties, its fonts shipped with the build |
 | `🏗️builder/🌐️vite/🟦️.ts` | Vite configuration: host HTML, `CNAME`, aliases; `build` bakes `VITE_PROCTOR_URL`, seals the document with its Content-Security-Policy and emits `robots.txt` and `manifest.webmanifest`; `serve` proxies the gateway routes to the dev proctor |
@@ -37,7 +37,7 @@ Die fünf weiteren zweisprachigen Quizze behandeln Parametrik, Grasshopper, Exce
 ## Challenges
 
 A learner plays every run at one of four challenges, chosen on the quiz's page (the device remembers the choice; `medium`
-at first). The course's introduction explains them to learners; the rules live in the course core (`CHALLENGE_RULES`), so
+at first). The course's introduction only names them, in one short paragraph that fits a phone screen; the rules live in the course core (`CHALLENGE_RULES`), so
 the proctor and the device decide alike, and the quiz files say nothing about them, so their revisions stay.
 
 | Challenge | The keys | While playing | Points per quiz at most |
@@ -215,13 +215,13 @@ expects fails after twenty seconds; a whole test may take ten minutes.
 
 | Spec | What a learner does |
 |---|---|
-| `🚀️site-boot` | the site loads and shows the introduction (runs first, so a cold dev server is warm for the others) |
+| `🚀️site-boot` | the site loads and shows the introduction in German and, once chosen, in English (runs first, so a cold dev server is warm for the others) |
 | `🪪️first-visit` | introduction, then anonymous, pseudonym or name; a known pseudonym recalls its progress on a fresh device; switching identity asks first |
 | `🥞️layered-home` | root, topic, and question grids; the live screen-sized pages behind glass, pointer pan, crisp hover and focus, opening zoom, populated scheduled topic previews, direct hashes, one-level Escape and Up, and navigation through the trail |
 | `🎯️quiz-runs` | every quiz to a perfect score and every badge; one mistake per task for partial credit (the classification mistake is dragged with the mouse) |
 | `⛰️challenge-levels` | physics at every challenge: easy with the keys on the ladder and, beside each value placed far off until it is fixed, a question asserted by its structure with items named by their short labels (extremes exchanged: the order question without a number, the larger first, against an item placed right; the two largest exchanged: "together only add up to" and "it takes", no long digit runs), exactly three on a sorting placed upside down, nothing general anywhere (100 points, no badge); easy on a matching (both exchanged cards asked for their order, on two quantities the one named, in German "in puncto Heizlast") and on spider profiles (above or below a standard placed right on the named axis, else the profile's value), in English and German; medium (200 points and the physics badges), hard with typed guesses (300 points; one guess far off costs score and shows as a miss), expert behind a clock per task driven past its deadline with Playwright's page clock (read-only, open tasks score nothing, points of 400) |
 | `🏆️live-leaderboard` | rows ordered by total, arriving on a watching device without a reload; the same learners on today's, this week's and this month's leaderboard and on the one of the quiz they played; a column heading clicked to sort |
-| `🗣️both-languages` | every screen, the document's language and title and the notice of what is stored in English and German, switched both ways; the language follows the browser and is asked for when the browser names neither |
+| `🗣️both-languages` | every screen, the document's language and title and the notice of what is stored in English and German, switched both ways; the site speaks its own language (`site.language`: German) whatever the browser lists and never asks for one, and an explicit choice is kept |
 | `🐕️pet-walk` | the pets: on the home screen within seconds, hidden from assistive technology and never a hit target of their own; a click says hello, then asks for a trick, then for a purr; picked up, a pet hangs and, let go high, opens its parachute and lands; circling a pet changes its state; no two pets overlap during a lively minute with drags; a control under a pet keeps its click; the settings' play group and the footer switch work by keyboard; the cast of a quiz on its page and in its run; `still` and `off`; reduced motion as the default only (still pets that answer no hand until the learner chooses, calm pets that walk afterwards) |
 | `📱️phone` | 375 × 812: home as the same grid swiped page by page along both axes, one quiz played |
 | `📐️adaptive-layout` | project `layout`: on a phone, a tablet, a desktop and a wide desktop (the devices of the shared vectors) every part of a quiz run is laid out for its room: what belongs together stands on one line where it fits and below where it does not, pools and value cards beside the drop targets on wide tasks, results as records on narrow cards, nothing wider than its card, and every observed layout matches the tier the shared vectors give for its width |
@@ -852,7 +852,7 @@ Two assignments belong to the Parametric topic and one to the Energy topic, each
 |---|---|---|---|
 | `parametrization` | `../📐️parametric/📝️assignment` | `build-parametrization-en`, `build-parametrization-de` | finger exercise: tables and graphs of sixteen Metabolism capsules; canonical SVG icons become bounded PNG resources in managed compiler storage |
 | `typology` | `../🏙️typology/📝️assignment` | `build-typology-en`, `build-typology-de` | Assignment 1: parametric design of a modular façade typology (parts A–D for dMA and NGS, grading, submission files); three authored example axonometries (`schema-*.png`) |
-| `heating-cooling` | `../⚡️energy/📝️assignment` | `build-heating-cooling-en`, `build-heating-cooling-de` | finger exercise: annual heating demand, heat-pump electricity costs, solar cooling load and supply-air duct diameter of a tiny home; shared model in `model.tex` |
+| `heating-cooling` | `../⚡️energy/📝️assignment` | `build-heating-cooling-en`, `build-heating-cooling-de` | finger exercise: annual heating demand, heating energy cost, solar cooling load and ventilation pipe diameter of a tiny home in Grasshopper; only geometry and CSV output are fixed, no energy values are prescribed; shared axonometry, coordinate table and CSV listing in `model.tex`, the axonometry is also the cover, handed-out template `Fingerübung_Heizen+Kühlen.csv`, upload on Stud.IP by Friday 10:00 |
 
 Run `repo run @teaching/architecture-course:build-parametrization-en`, `repo run @teaching/architecture-course:build-parametrization-de`, `repo run @teaching/architecture-course:build-typology-en`, `repo run @teaching/architecture-course:build-typology-de`, `repo run @teaching/architecture-course:build-heating-cooling-en` or `repo run @teaching/architecture-course:build-heating-cooling-de`. The normal `dev`, `dev-site` and `build` targets require all six publications; `publish` consumes the course build. The browser receives the PDFs at `assignments/architecture-<topic>-<assignment>-<language>.pdf` through the retained authenticated build transport. Run `repo run @teaching/architecture-course:test-assignment` for every assignment's semantics, resource provenance and PDF delivery contracts.
 

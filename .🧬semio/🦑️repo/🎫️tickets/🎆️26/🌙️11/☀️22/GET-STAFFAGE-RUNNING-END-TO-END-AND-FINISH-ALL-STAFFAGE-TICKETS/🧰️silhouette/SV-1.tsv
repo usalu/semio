@@ -1,0 +1,19 @@
+vegetation	agave	1:500 elevation: expected 0.9121383203952012 to be greater than or equal to 0.92
+vegetation	apple-tree	1:500 elevation Hausdorff: expected 0.1511673327805978 to be less than or equal to 0.15
+vegetation	bamboo-clump	1:100 elevation: expected 0.908022579269059 to be greater than or equal to 0.92
+vegetation	black-alder	1:500 axis 0: 7.855784957265996 m against 7.9611 m: expected 0.10531504273400394 to be less than or equal to 0.075
+vegetation	black-locust	1:500 axis 0: 12.891711866071311 m against 12.686 m: expected 0.20571186607131153 to be less than or equal to 0.075
+vegetation	common-ash	1:200 elevation Hausdorff: expected 0.9299999999999999 to be less than or equal to 0.06
+vegetation	crab-apple	1:200 elevation Hausdorff: expected 0.28272115237456147 to be less than or equal to 0.06
+vegetation	date-palm	1:500 elevation Hausdorff: expected 0.25155764746872633 to be less than or equal to 0.15
+vegetation	english-oak	1:500 axis 0: 19.3000863678492 m against 19.07 m: expected 0.2300863678492 to be less than or equal to 0.075
+vegetation	european-beech	1:200 axis 0: 21.262195578963926 m against 21.299 m: expected 0.03680442103607362 to be less than or equal to 0.03
+vegetation	field-maple	1:500 front Hausdorff: expected 0.26115728019720225 to be less than or equal to 0.15
+vegetation	fig-tree	1:200 elevation Hausdorff: expected 0.06408002808988147 to be less than or equal to 0.06
+vegetation	ginkgo	1:500 elevation Hausdorff: expected 0.37217687327398513 to be less than or equal to 0.15
+vegetation	hawthorn	1:200 plan Hausdorff: expected 0.3575699232318065 to be less than or equal to 0.06
+vegetation	honey-locust	1:500 elevation Hausdorff: expected 1.2420371371259395 to be less than or equal to 0.15
+vegetation	hornbeam-hedge	1:200 axis 0: 3.192573 m against 3.14 m: expected 0.05257299999999976 to be less than or equal to 0.03
+vegetation	horse-chestnut	1:200 axis 2: 18.03273337180938 m against 18.076 m: expected 0.043266628190622214 to be less than or equal to 0.03
+vegetation	hosta-clump	1:100 elevation: expected 0.9030535174794994 to be greater than or equal to 0.92
+vegetation	italian-cypress	1:200 axis 2: 2.5751999999999997 m against 2.622 m: expected 0.046800000000000175 to be less than or equal to 0.03

@@ -322,7 +322,7 @@ async fn sqlite_snapshot_pdf17_x_initial_retains_real_profile_typed_raw_and_both
         assert_eq!(object(2).dict_get("DestOutputProfile"),Some(&PdfObject::Ref(reference(3))));
         let PdfObject::Stream{dict,data,filters}=object(3) else {panic!("real profile stream")};
         assert_eq!(dict, &vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}]);
-        assert_eq!(data.as_slice(),(*ICC));assert!(filters.is_empty());
+        assert_eq!(data.to_vec_owner().as_slice(),(*ICC));assert!(filters.is_empty());
         assert_eq!(object(4).dict_get("Type"),Some(&PdfObject::Name("Pages".into())));
         assert_eq!(object(4).dict_get("Kids"),Some(&PdfObject::Array(Vec::new())));
         assert_eq!(object(4).dict_get("Count"),Some(&PdfObject::Int(0)));assert!(owner.pages.is_empty());
@@ -364,7 +364,7 @@ async fn sqlite_snapshot_pdf17_vt_initial_retains_real_profile_typed_raw_and_bot
         assert_eq!(object(2).dict_get("DestOutputProfile"),Some(&PdfObject::Ref(reference(3))));
         let PdfObject::Stream{dict,data,filters}=object(3) else {panic!("real profile stream")};
         assert_eq!(dict, &vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}]);
-        assert_eq!(data.as_slice(),(*ICC));assert!(filters.is_empty());
+        assert_eq!(data.to_vec_owner().as_slice(),(*ICC));assert!(filters.is_empty());
         assert_eq!(object(4).dict_get("Type"),Some(&PdfObject::Name("Pages".into())));
         assert_eq!(object(4).dict_get("Kids"),Some(&PdfObject::Array(vec![PdfObject::Ref(reference(5))])));
         assert_eq!(object(4).dict_get("Count"),Some(&PdfObject::Int(1)));assert_eq!(owner.pages.len(),1);
@@ -401,7 +401,7 @@ fn sqlite_snapshot_pdf17_vt_initial_graph_refuses_each_malformed_terminal_relati
     let dictionary=|entries:Vec<(&str,PdfObject)>|PdfObject::Dict(entries.into_iter().map(|(key,value)|PdfDictEntry{key:key.into(),value}).collect());
     let mut page=PdfPage::new(612.0,792.0);page.trim_box=Some(page.media_box);
     let profile=fixture_bytes!("../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
-    let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}],data:profile.clone(),filters:Vec::new()}).unwrap();
+    let profile_reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort::admit(&mut crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources::default(),"s.stdio.icc",PdfObject::Stream{dict:vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}],data:stream_bytes(&(profile.clone())),filters:Vec::new()}).unwrap();
     let owner=PdfSnapshot{
         pages:vec![page],output_intents:vec![PdfOutputIntent{subtype:"GTS_PDFX".into(),condition_identifier:"sRGB2014".into(),condition:None,registry_name:None,info:None,profile:Some(profile_reference)}],
         catalog_extra:vec![PdfDictEntry{key:"DPartRoot".into(),value:PdfObject::Ref(r(10))}],
@@ -409,7 +409,7 @@ fn sqlite_snapshot_pdf17_vt_initial_graph_refuses_each_malformed_terminal_relati
         objects:vec![
             PdfIndirectObject{id:r(1),value:dictionary(vec![("Type",PdfObject::name("Catalog")),("Pages",PdfObject::Ref(r(4))),("OutputIntents",PdfObject::Array(vec![PdfObject::Ref(r(2))])),("DPartRoot",PdfObject::Ref(r(10)))])},
             PdfIndirectObject{id:r(2),value:dictionary(vec![("Type",PdfObject::name("OutputIntent")),("S",PdfObject::name("GTS_PDFX")),("OutputConditionIdentifier",PdfObject::Str(b"sRGB2014".to_vec())),("DestOutputProfile",PdfObject::Ref(r(3)))])},
-            PdfIndirectObject{id:r(3),value:PdfObject::Stream{dict:vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}],data:profile,filters:Vec::new()}},
+            PdfIndirectObject{id:r(3),value:PdfObject::Stream{dict:vec![PdfDictEntry{key:"N".into(),value:PdfObject::Int(3)}],data:stream_bytes(&(profile)),filters:Vec::new()}},
             PdfIndirectObject{id:r(4),value:dictionary(vec![("Type",PdfObject::name("Pages")),("Kids",PdfObject::Array(vec![PdfObject::Ref(r(5))])),("Count",PdfObject::Int(1))])},
             PdfIndirectObject{id:r(5),value:dictionary(vec![("Type",PdfObject::name("Page")),("Parent",PdfObject::Ref(r(4))),("MediaBox",PdfObject::numbers(&[0.0,0.0,612.0,792.0])),("TrimBox",PdfObject::numbers(&[0.0,0.0,612.0,792.0]))])},
             PdfIndirectObject{id:r(10),value:dictionary(vec![("Type",PdfObject::name("DPartRoot")),("DPartRootNode",PdfObject::Ref(r(11)))])},

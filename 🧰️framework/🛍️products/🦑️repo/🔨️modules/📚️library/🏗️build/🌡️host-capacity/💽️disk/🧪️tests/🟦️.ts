@@ -20,7 +20,7 @@ import fixture from "../../🧹️disk-recovery/🖼️image-slack/🧪️tests/
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"disk-admit-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const MIB=1024*1024;
-const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
+const stub:CasCollectionV1={status:"collected",partial:false,dryRun:false,scanned:0,evicted:0,freedBytes:0,busy:0,skipped:0,totals:{totalBytes:0,protectedBytes:0,candidateBytes:0,plannedBytes:0,keptBytes:0,shortfallBytes:0,capShortfallBytes:0,partitionShortfallBytes:0,needBytes:0},byReason:{age:0,area:0,host:0}};
 const volume=(freeMiB:number,name="/volume"):CasPartitionV1=>({partition:name,totalBytes:1000*MIB,freeBytes:freeMiB*MIB});
 const real=(language:"en"|"de")=>{const root=fresh();return{SEMIO_CAS_ROOT:join(root,"cas"),HOME:root,SEMIO_LANGUAGE:language};};
 

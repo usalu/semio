@@ -1,0 +1,85 @@
+{
+  "title": "Shallow Graft Detaches Archivist History at Commit 749",
+  "emoji": "🪢",
+  "status": "closed",
+  "description": "Commit 749 (3d62b2ef22c) appears parentless on the archivist checkout: .git/shallow was written 2026-11-23 12:40 naming it, around onboarding of a sparse shallow fleet worker. The commit object still names 748 (3cde99d423d) as parent and all 767 commits are present. Find what wrote the shallow graft, remove it, and guard the tooling so a shallow boundary can never land in (or be committed on top of in) the archivist repository again.",
+  "summary": "Commit 749 was intact (object and GitHub both name 748 as parent, 767 commits present); a replicated .git/shallow from the shallow-clone worker grafted it as a root on every machine. .git/shallow is now machine-private in the replica (boundary, heal, adopt, attest), the daemon removes a shallow boundary whose history is fully present (repairGitShallowV1, kept under lost/) and reports a real one as git-broken-history-shallow, and repo commit / micro-commit refuse on a shallow repository. The daemon here already removed the graft; history reads 749 -\u003e 748 again. Report: 🪢️shallow-graft-report.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2797"
+  },
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "5daef276-ed59-4801-ae54-adcbf48a1b96"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-23 13:58:27",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Commit 749 (3d62b2ef22c) appears parentless on the archivist checkout: .git/shallow was written 2026-11-23 12:40 naming it, around onboarding of a sparse shallow fleet worker. The commit object still names 748 (3cde99d423d) as parent and all 767 commits are present. Find what wrote the shallow graft, remove it, and guard the tooling so a shallow boundary can never land in (or be committed on top of in) the archivist repository again.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 14:12:07",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Commit 749 was intact (object and GitHub both name 748 as parent, 767 commits present); a replicated .git/shallow from the shallow-clone worker grafted it as a root on every machine. .git/shallow is now machine-private in the replica (boundary, heal, adopt, attest), the daemon removes a shallow boundary whose history is fully present (repairGitShallowV1, kept under lost/) and reports a real one as git-broken-history-shallow, and repo commit / micro-commit refuse on a shallow repository. The daemon here already removed the graft; history reads 749 -\u003e 748 again. Report: 🪢️shallow-graft-report.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🌿️git💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧪️tests💻🩹️heal"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎛️commands🗃️📝️commit🗃️🌳️git💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎛️commands🗃️📝️commit🗃️📖️texts⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🌿️git🗃️🧪️tests💻🔧️config"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🔁️replica🗃️🧲️adopt💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🚧️boundary💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🚧️boundary🗃️🧪️tests💻🐍️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🚧️boundary🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🩺️attest💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🩺️attest🗃️🧪️tests💻🐍️agreement"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️🩺️attest🗃️🧪️tests🗃️🧫️fixtures⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎛️commands🗃️📝️commit🗃️🔀️runcommit💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🎛️commands🗃️📝️commit🗃️🪙️microcommit💻🟦️"
+        }
+      ]
+    }
+  ]
+}

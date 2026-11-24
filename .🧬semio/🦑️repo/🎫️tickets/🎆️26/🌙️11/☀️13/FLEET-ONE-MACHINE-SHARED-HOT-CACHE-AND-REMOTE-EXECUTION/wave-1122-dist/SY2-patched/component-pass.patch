@@ -1,0 +1,103 @@
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts
+@@ -4,6 +4,7 @@
+ import{withNativeBuildStageCapacityV1,readNativeBuildStageCapacityV1,type NativeBuildStageCapacityV1}from"./🎟️stage/🟦️.ts";
+ import{admitNativeBuildPipelineV1,admitNativeBuildPlanV1,type NativeBuildPackageV1,type NativeBuildPassV1,type NativeBuildJobV1,type NativeBuildPipelineJobV1,type NativeBuildPipelineV1,type NativeBuildPlanV1,type NativeBuildGenerationKindV1,type NativeBuildGenerationV1}from"./📋️contract/🟦️.ts";
+ import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
++import {createUnitReuseTallyV1} from "../🧮️phase-ledger/🟦️.ts";
+ import {admitWarmCargoRetryGraphV1,classifyCargoGraphObservationFailureV1,failedCompilerMessageFilesV1,failedDependencyDriftV1,failedPassConcurrentEditV1,retryableWarmComponentPassV1,runCargoPassAttemptsV1,watchWarmCargoAttemptV1} from "./🔁️failure-churn/🟦️.ts";
+ import failureChurn from "./🔁️failure-churn/🔣️.json" with {type:"json"};
+ import {readPhysicalFileV1} from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
+@@ -47,6 +48,7 @@
+ import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
+ import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoDepInfoChecksumV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
+ import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, appendUnitHistoryV1, admissionMemoryShareV1, admissionReserveBytesV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🎟️admission/🟦️.ts";
++import { nativeBuildPassOffloadableV1, runPassesInJobSlotsV1, type ComponentJobsDecisionV1, type PassJobSlotV1 } from "./🧵️job-slots/🟦️.ts";
+ import { createJobserverV1, defaultJobserverStyleV1, withoutJobserverEnvironmentV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
+ import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
+ import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
+@@ -332,6 +334,7 @@
+   tokens?: number;
+   fleetRunning?: () => number;
+   fleetJobs?: (facts: Readonly<{ local: number; unitMegabytes: number; signal: AbortSignal }>) => Promise<FleetJobsDecisionV1 | undefined>;
++  componentJobs?: (facts: Readonly<{ local: number; unitMegabytes: number; crates: readonly string[]; signal: AbortSignal }>) => Promise<ComponentJobsDecisionV1 | undefined>;
+   physicalBytes?: number;
+   storageReserveBytes?: number;
+   reclaimStorage?: (request: Readonly<{ needBytes: number }>) => Promise<void>;
+@@ -478,6 +481,7 @@
+   const passRecords: { id: string; manifest: string; profile: string; target: string; startMs: number; endMs: number; exit: number; failed: string[] }[] = [];
+   const failureLines: string[] = [], echoed = new Set<string>(), errorCaptures: { pass: string; capture: ErrorCaptureV1 }[] = [], stderrTails: { pass: string; lines: string[] }[] = [], components = plan.passes.flatMap((pass) => pass.packages.map((row) => row.name));
+   const jobWatches = new Map<string, NativeBuildJobWatchV1>();
++  const unitReuse = options.environment.SEMIO_UNIT_CACHE_ROOT ? createUnitReuseTallyV1(options.environment.SEMIO_UNIT_CACHE_ROOT, options.environment.SEMIO_UNIT_CACHE_LANE ?? "d") : undefined;
+   let reusedUnits = 0, stagesRunning = 0, stagesWaiting = 0, lastMessageMs = Date.now(), stallReason: string | null = null;
+   log(`[native-build] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
+   let primaryFailed=false,dispose:undefined|(()=>Promise<void>);
+@@ -508,6 +512,7 @@
+   const tokens = Math.min(options.tokens ?? capacity.parallelism, capacity.parallelism);
+   options = { ...options, environment: { ...options.environment, SEMIO_COMPILER_PARALLELISM: String(tokens) } };
+   const fleet = await options.fleetJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), signal }).catch(() => undefined), fleetRemote = fleet?.remote ?? 0;
++  const componentJobs = fleetRemote > 0 ? await options.componentJobs?.({ local: tokens, unitMegabytes: compileUnitMegabytesV1(await unitHistory()), crates: [...new Set(plan.passes.filter(pass => nativeBuildPassOffloadableV1(pass)).flatMap(pass => pass.packages.map(row => row.name.replaceAll("-", "_"))))], signal }).catch(() => undefined) : undefined, jobSlots = Math.max(1, Math.min(componentJobs?.jobs ?? 1, tokens + fleetRemote));
+   if (fleetRemote > 0) options = { ...options, environment: { ...options.environment, SEMIO_UNIT_CACHE_SLOTS: options.environment.SEMIO_UNIT_CACHE_SLOTS ?? String(tokens), SEMIO_UNIT_CACHE_LIGHT_SLOTS: String(fleetRemote) } };
+   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
+   const physicalControl = () => cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, remainingMs: () => {inputContinuations.check();planContinuations.check();return checkResourceLeaseControl(admission);}, scale: Math.max(1, components.length), onProgress: cargoProvenanceProgressSinkV1(() => inputContinuations.check()) });
+@@ -696,8 +701,8 @@
+   }, completion(`job:${job.id}`), job.workerProtocol==="jobserver"?"jobserver":job.workerProtocol==="exclusive"?"whole-host":"available");
+ 
+   const progress = setInterval(() => {
+-    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats();
+-    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits} reused, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
++    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats(), reuse = unitReuse?.read();
++    log(`[native-build] ${broker.units().length} unit(s) compiled, ${reusedUnits + (reuse ? reuse.local + reuse.fleet : 0)} reused${reuse && reuse.fleet > 0 ? ` (${reuse.local} local, ${reuse.fleet} fleet)` : ""}, ${stats.running} running${fleetRemote > 0 ? ` locally · ${options.fleetRunning?.() ?? 0} on the fleet` : ""} · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} local / ${cached.fleetHits} fleet hit(s) / ${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc RSS ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)} GiB · charged ${(stats.chargedRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
+   }, options.progressMs ?? policy.progressMs);
+   let stallWork:Promise<void>|undefined;
+   const watchdog = setInterval(() => {
+@@ -838,7 +843,7 @@
+     }, done);
+   };
+   const availableBytes = (): number => headroomBytes() - [...inflight.values()].reduce((sum, row) => sum + row.bytes, 0);
+-  const runPass = async (pass: NativeBuildPassV1): Promise<void> => {
++  const runPass = async (pass: NativeBuildPassV1, held: PassJobSlotV1 = "local"): Promise<void> => {
+     await options.storage.recheck();
+     const predicted = batches.find((row) => row.pass.id === pass.id)!;
+     while (availableBytes() < predicted.bytes + reserveBytes && (inflight.size || pendingReclaims.size)) { check(); await Promise.race([...[...inflight.values()].map((row) => row.settled), ...pendingReclaims]); }
+@@ -847,11 +852,11 @@
+     if (availableBytes() < predicted.bytes + reserveBytes) throw Error(`Native build storage refused: ${pass.id} needs a predicted ${(predicted.bytes / 1024 ** 2).toFixed(0)} MiB${predicted.measured ? "" : " (unmeasured units estimated by kind)"} plus the ${(reserveBytes / 1024 ** 2).toFixed(0)} MiB reserve, ${(availableBytes() / 1024 ** 2).toFixed(0)} MiB remain after every running batch settled and every unit no remaining pass needs was reclaimed`);
+     let release = (): void => undefined;
+     inflight.set(pass.id, { bytes: predicted.bytes, settled: new Promise<void>((accept) => { release = accept; }) });
+-    try { await runAdmittedPass(pass); }
++    try { await runAdmittedPass(pass, held); }
+     catch (error) { if (stopped) check(); throw error; }
+     finally { inflight.delete(pass.id); release(); }
+   };
+-  const runAdmittedPass = (pass: NativeBuildPassV1): Promise<void> => {
++  const runAdmittedPass = (pass: NativeBuildPassV1, held: PassJobSlotV1): Promise<void> => {
+     const retryWarm = retryWarmPlan && pass.id === plan.passes[0]?.id;
+     const withholdLink = retryWarm && pass.packages.length === 1;
+     const sourceCapture = sourceWitness;
+@@ -887,7 +892,7 @@
+         }
+       };
+     };
+-    const slot = await jobserver.acquire(signal);
++    const slot = held === "local" ? await jobserver.acquire(signal) : undefined;
+     try {
+       checkPass();
+       broker.registerPass({id:pass.id,profile:pass.profile,target:pass.target});
+@@ -1157,7 +1162,7 @@
+       measureOutputs(pass.id);
+       finishedPasses.add(pass.id);
+       reclaimPass(pass, units.map((row) => row.message));
+-    } finally { slot.release(); }
++    } finally { slot?.release(); }
+   },inputs.control.signal));
+   };
+   let executionFailure: { message: string } | undefined;
+@@ -1168,7 +1173,7 @@
+     for (const row of batches) if (row.pass.id !== row.parent) log(`[native-build] ${row.pass.id}: ${row.pass.packages.length} component(s), predicted ${(row.bytes / 1024 ** 2).toFixed(0)} MiB of ${((budget - reserveBytes) / 1024 ** 2).toFixed(0)} MiB free above the reserve${row.measured ? "" : " (unmeasured units estimated by kind)"}`);
+   const lanes = [...new Set([...passes.map((pass) => pass.profile), ...jobs.flatMap((job) => job.lane === undefined ? [] : [job.lane])])].map((profile) => ({ jobs: jobs.filter((job) => job.lane === profile), passes: passes.filter((pass) => pass.profile === profile) }));
+     await Promise.all(lanes.map(async (lane) => {
+-      for (const pass of lane.passes) { check(); await runPass(pass); }
++      await runPassesInJobSlotsV1(lane.passes, { jobs: jobSlots, check, run: runPass, ...jobSlots > 1 ? { fail: stop } : {} });
+     }));
+     let sealFailure: { error: unknown } | undefined;
+     if (!failures.length) {

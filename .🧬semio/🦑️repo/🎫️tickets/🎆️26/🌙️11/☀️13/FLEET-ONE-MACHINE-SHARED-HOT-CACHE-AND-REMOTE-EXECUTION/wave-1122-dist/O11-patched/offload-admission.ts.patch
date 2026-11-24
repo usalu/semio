@@ -1,0 +1,26 @@
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts	2026-11-23 18:06:03
++++ /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts	2026-11-23 18:47:11
+@@ -6,7 +6,7 @@
+ import {currentHostProbeV1,readHostSampleV1,type HostProbeV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts";
+ import {UNIT_CACHE_POLICY_V1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔏️key/🟦️.ts";
+ import {claimHeldV1,processAliveV1} from "../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts";
+-import {OFFLOAD_POLICY_V1,offloadLearnPeakMegabytesV1,offloadModeV1} from "../📐️policy/🟦️.ts";
++import {OFFLOAD_POLICY_V1,offloadFamilyCrateV1,offloadFamilyPeakMegabytesV1,offloadLearnPeakMegabytesV1,offloadModeV1} from "../📐️policy/🟦️.ts";
+ 
+ const limits=OFFLOAD_POLICY_V1.limits;
+ /** 🚦️ The machine's own answer to "may one more compiler unit start here now". */
+@@ -118,6 +118,14 @@
+ export function readUnitPeakV1(root:string,crate:string):number|undefined{
+  try{const value=Number(readFileSync(costPath(root,crate)+".peak","utf8"));return Number.isFinite(value)&&value>0?value:undefined;}catch{return undefined;}
+ }
++/** 👪️ The peak that a crate of the family is expected to need when none was measured for it: the quantile of the recorded peaks of every family crate in the cost folder of this root (a crate's own file `<crate>.peak`, one sample each, kills included), `undefined` while too few crates were measured. Reads only the names of the folder that end in the family suffix. */
++export function readFamilyPeakV1(root:string):number|undefined{
++ try{
++  const suffix=OFFLOAD_POLICY_V1.peak.family.crateSuffix+".peak",samples:number[]=[];
++  for(const name of readdirSync(join(root,"c")))if(name.endsWith(suffix)&&offloadFamilyCrateV1(name.slice(0,-5))){const value=readUnitPeakV1(root,name.slice(0,-5));if(value!==undefined)samples.push(value);}
++  return offloadFamilyPeakMegabytesV1(samples);
++ }catch{return undefined;}
++}
+ /** 🖊️ Records the peak of a local compile (`megabytes`) by the rule of `offloadLearnPeakMegabytesV1`, or a peak a worker's kill taught (`force`), which replaces the record. */
+ export function writeUnitPeakV1(root:string,crate:string,megabytes:number,force:boolean=false):void{
+  try{

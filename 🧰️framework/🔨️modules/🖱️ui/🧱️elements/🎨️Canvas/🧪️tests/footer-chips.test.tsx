@@ -3,6 +3,7 @@ import { Canvas, Layout } from "@semio-tech/ui-react";
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { chromeHostedOpenPanelPositionStyle } from "../../../🔨️modules/⚓️panel-anchor/🟦️.ts";
+import { chromePanelSafeArea, chromePanelSafeAreaStyle, publishShellChromePanelBox, useShellChromePanelBoxes } from "../../../🔨️modules/🛟️chrome-safe-area/🟦️.tsx";
 
 afterEach(cleanup);
 
@@ -68,5 +69,45 @@ describe("canvas bottom edge chips", () => {
     expect(bottom["--panel-header-height"]).toBe("var(--footer-band-height)");
     const top = chromeHostedOpenPanelPositionStyle("top-left") as Record<string, unknown>;
     expect(top.top).toBe("calc(-1 * var(--navbar-band-height))");
+  });
+
+  it("publishes every chip slot as an occupied chrome box and retracts it on unmount", () => {
+    const originalRect = Element.prototype.getBoundingClientRect;
+    Element.prototype.getBoundingClientRect = function stubbedRect(this: Element): DOMRect {
+      if (this.getAttribute("data-slot") !== "canvas-footer-start") return originalRect.call(this);
+      return { x: 0, y: 947, width: 208, height: 24, top: 947, right: 208, bottom: 971, left: 0, toJSON: () => ({}) } as DOMRect;
+    };
+    let seen: readonly { readonly anchor: string; readonly box: { readonly left: number; readonly top: number; readonly right: number; readonly bottom: number } }[] = [];
+    const Probe: React.FC = () => {
+      seen = useShellChromePanelBoxes();
+      return null;
+    };
+    try {
+      const { unmount } = render(
+        <>
+          <Probe />
+          <Canvas bottomChips={chips}>content</Canvas>
+        </>,
+      );
+      expect(seen.map((entry) => entry.anchor).sort()).toEqual(["bottom-left", "bottom-middle", "bottom-right"]);
+      expect(seen.find((entry) => entry.anchor === "bottom-left")?.box).toEqual({ left: 0, top: 947, right: 208, bottom: 971 });
+      unmount();
+      render(<Probe />);
+      expect(seen).toHaveLength(0);
+    } finally {
+      Element.prototype.getBoundingClientRect = originalRect;
+    }
+  });
+
+  it("lifts bottom-anchored window chrome above the chip row at any label width", () => {
+    const host = { left: 0, top: 0, right: 1600, bottom: 971 };
+    const chipRow = [{ left: 0, top: 947, right: 208, bottom: 971 }];
+    for (const width of [74, 87, 140]) {
+      const toggle = { left: 0, top: 947, right: width, bottom: 971 };
+      const reserve = chromePanelSafeArea(toggle, host, "bottom-left", chipRow, "either", -0.5);
+      expect(reserve).toEqual({ inlinePx: 0, blockPx: 24 });
+      expect(chromePanelSafeAreaStyle("bottom-left", reserve, { block: "0px", inline: "0px" })).toEqual({ bottom: "calc(0px + 24px)", left: "0px" });
+    }
+    expect(chromePanelSafeArea({ left: 400, top: 947, right: 480, bottom: 971 }, host, "bottom-left", chipRow, "either", -0.5)).toEqual({ inlinePx: 0, blockPx: 0 });
   });
 });

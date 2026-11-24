@@ -33,8 +33,8 @@ impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for RemovePage
 where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemovePage> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_page::InsertPage>,
 {
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_remove_page(self.index))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        diff::outcome_over(base, diff::diff_remove_page(self.index))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

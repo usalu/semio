@@ -14,3 +14,4 @@ export interface TakenMemoV1{
 }
 export function createPathRowMatcherV1(paths:readonly string[]):(row:{kind:string;path:string})=>boolean;
 export function createTakenMemoV1(ports:{holds:(rows:readonly unknown[])=>boolean;retain:(rows:readonly unknown[])=>void}):TakenMemoV1;
+export function keepTakenThenReleaseV1(input:{memo:TakenMemoV1|undefined;name:string;key:string|undefined;project:unknown;read:()=>readonly unknown[]|undefined;release?:()=>void}):void;

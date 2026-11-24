@@ -47,7 +47,6 @@
   place-items: center;
   inline-size: 1.5em;
   block-size: 1.5em;
-  border-radius: 50%;
   background: color-mix(in srgb, var(--color-warning) 35%, transparent);
   line-height: 1;
 }

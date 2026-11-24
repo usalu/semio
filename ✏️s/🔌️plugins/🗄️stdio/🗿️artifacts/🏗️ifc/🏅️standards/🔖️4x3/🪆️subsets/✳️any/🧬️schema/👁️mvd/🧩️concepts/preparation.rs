@@ -2,15 +2,15 @@
 use super::population::{IfcMvdPopulationLookup, IfcMvdPopulationPin, IfcMvdPopulationRequestPin, IfcMvdPopulationRequestView, IfcMvdPopulationStatus, IfcMvdPopulationView, IfcMvdPopulationWork};
 use super::source_index::{IfcSourceIds, IfcSourceIndex, IdMatch};
 use semio_framework_job::{OriginalSourceBinding, OriginalTurnFailure, StepContext};
-use super::lease::{Lease, funded_turn};
-use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, StagedSourceAdmission, retained_clone_grant_admits};
+use super::lease::{Lease, SourceStaging, funded_turn};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use std::{mem::size_of, sync::Arc};
 /// 🔐️ Metadata access stays immutable, bounded and allocation-free under the original row grant.
 pub(super) trait IfcMvdRequest: IfcSourceIds + RetireOwned + Sync { fn valid_row(&self, ordinal: usize) -> bool; }
 type RequestSource<R> = RetainedCloneSource<R, Lease<R>>;
-type RequestAdmission<R> = StagedSourceAdmission<R, Lease<R>>;
+type RequestAdmission<R> = SourceStaging<R, Lease<R>>;
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvalidValue, message) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct IfcMvdRequestIndexPin { request: IfcMvdPopulationRequestPin, rows: (usize, usize), population: Option<IfcMvdPopulationPin> }

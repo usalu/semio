@@ -517,7 +517,7 @@ export function IconShotFrame({
   return (
     <div className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", className)}>
       <div
-        className={cn("relative box-border overflow-hidden border-2 border-accent shadow-[0_0_0_1px_color-mix(in_srgb,var(--foreground)_20%,transparent)]", iconShotFrameClass(shape))}
+        className={cn("relative box-border overflow-hidden border-2 border-accent outline outline-1 outline-[color-mix(in_srgb,var(--foreground)_20%,transparent)]", iconShotFrameClass(shape))}
         data-icon-shot-frame
         data-icon-shot-shape={shape}
         style={{

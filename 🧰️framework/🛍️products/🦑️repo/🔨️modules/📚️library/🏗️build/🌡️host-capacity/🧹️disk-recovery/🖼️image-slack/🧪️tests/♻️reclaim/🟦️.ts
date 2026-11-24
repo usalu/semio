@@ -54,6 +54,24 @@ test("mounted APFS occupancy is independent of host-limited statfs availability"
  }
 });
 
+test("a mounted image that can return its blocks in place is reclaimed by the kick without any exclusive lease or detach",async()=>{
+ const source=readFileSync(new URL("../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",import.meta.url),"utf8");
+ const tree=ts.createSourceFile("reclaim.ts",source,ts.ScriptTarget.Latest,true);
+ const body=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="reclaimImageIfQuiescentV1")!.getText(tree).replace(/^export /u,"");
+ const code=ts.transpileModule(body,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,directory="/cache/r",stop=new AbortController();
+ let exclusive=0,detached=0,kicks=0;
+ const ports={
+  process:{platform:"darwin"},join,nativeImageReclaimMechanismV1,imageRecoverySkipReasonV1,ResourceLeaseTimeoutErrorV1,imageSlack:IMAGE_SLACK_V1,
+  requireIssuedResourceControlInvocationV1:()=>undefined,checkResourceLeaseControl:()=>stop.signal.throwIfAborted(),callerRepositoryRootV1:()=>"/repo",
+  repositoryCacheBudgetV1:()=>({partitions:{rust:{directory}}}),repositoryLeaseDirectoryV1:()=>"/leases",nativeRecomputableRetirementPendingV1:()=>false,
+  repositoryPartitionReclaimDueV1:()=>true,acquireResourceLease:async()=>{exclusive++;return{release(){}};},nativeImageRootV1:()=>directory+"/m",
+  existsSync:()=>true,createNativeImageReclaimPortV1:()=>{detached++;return{};},reclaimNativeImageV1:async()=>{detached++;return{beforeBytes:0,afterBytes:0,settled:false};},
+  kickRepositoryImageOnlineV1:async(given:{image:string;resource:string})=>{kicks++;expect(given).toMatchObject({image:directory+"/fixed.dmg",resource:"native-fixed-image:"+directory});return{beforeBytes:50*GIB,afterBytes:27*GIB,settled:true};},
+ };
+ const run=new Function(...Object.keys(ports),code+";return reclaimImageIfQuiescentV1;")(...Object.values(ports));
+ expect(readImageReclaimReceiptV1(await run({},{signal:stop.signal},"rust"),"rust")).toEqual({kind:"reclaimed"});
+ expect([kicks,exclusive,detached]).toEqual([1,0,0]);
+});
 test("the pressured planner and non-waiting executor agree on current mounted slack",async()=>{
  const source=readFileSync(new URL("../../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/🟦️.ts",import.meta.url),"utf8");
  const tree=ts.createSourceFile("reclaim.ts",source,ts.ScriptTarget.Latest,true);
@@ -88,7 +106,7 @@ test("the pressured planner and non-waiting executor agree on current mounted sl
    statfsSync:(name:string)=>name===root?{blocks:100,bfree:free,bsize:GIB}:{blocks:100,bavail:free,bsize:GIB},
    nativeImageVolumeUsedBytesSyncV1:(name:string,volume:{blocks:number;bfree:number;bsize:number})=>nativeImageVolumeUsedBytesSyncV1(name,volume,"darwin",()=>sample.occupancyUnavailable?undefined:
     `<plist version="1.0"><dict><key>MountPoint</key><string>${root}</string><key>FilesystemType</key><string>apfs</string><key>CapacityInUse</key><integer>${used*GIB}</integer></dict></plist>`),
-   existsSync:()=>true,createNativeImageReclaimPortV1:()=>({}),
+   existsSync:()=>true,createNativeImageReclaimPortV1:()=>({}),kickRepositoryImageOnlineV1:async()=>undefined,
    reclaimNativeImageV1:async()=>{
     expect(held).toBe(true);if(sample.cycleFailed)throw Error("cycle failed");effects++;if(!sample.releaseFailed)reported=24*GIB;
     return{beforeBytes:allocated*GIB,afterBytes:used*GIB,settled:true};

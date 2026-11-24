@@ -1,0 +1,34 @@
+{
+  "50": {
+    "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every drawing is the true orthographic view of the 1:50 model in the calm pose, drawn from its solids: the three stem segments, the root collar with its pencil roots, the boot with its petiole stubs and the two spear leaves by their outline; sixteen fronds, each of the two parts of a frond by the outline of its rachis and two vanes; two bunches by the outline of stalk and strands; the spiral of leaf bases, every leaflet and spine and the dates as strokes. A part that reaches deeper than 0.5 m along the viewing direction is drawn as several plates, one per 0.5 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:50 (1 m sind 20 mm) ist jede Zeichnung die wahre Parallelprojektion des 1:50-Modells in der ruhigen Pose, aus seinen Körpern gezeichnet: die drei Stammabschnitte, der Wurzelkragen mit seinen Stiftwurzeln, der Schopf mit seinen Blattstielstümpfen und die zwei Speerblätter als Umriss; sechzehn Wedel, jedes der zwei Teile eines Wedels als Umriss seiner Rhachis und seiner zwei Fahnen; zwei Fruchtstände als Umriss von Stiel und Strängen; die Spirale der Blattbasen, jedes Fiederblatt, jeder Dorn und die Datteln als Striche. Ein Teil, das in Blickrichtung tiefer als 0,5 m reicht, ist als mehrere Platten gezeichnet, eine je 0,5 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    },
+    "merged": {
+      "en": "The leaflets of each side of a frond are merged into one vane, drawn in the outline of that frond part; the fibre of the boot is merged into its outline.",
+      "de": "Die Fiederblätter jeder Seite eines Wedels sind zu einer Fahne zusammengefasst, gezeichnet im Umriss dieses Wedelteils; die Fasern des Schopfs sind in seinen Umriss aufgenommen."
+    }
+  },
+  "100": {
+    "silhouette": {
+      "en": "At 1:100 the drawings are the true views of the 1:100 model, drawn from its solids: stem, collar with eight roots, boot with stubs and one spear leaf by their outline; sixteen fronds, each of the two parts of a frond by the outline of its rachis and two vanes, with leaflets every 9 cm as strokes; bunches by the outline of stalk and seven strands; coarser leaf bases as strokes. A part that reaches deeper than 0.5 m along the viewing direction is drawn as several plates, one per 0.5 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:100 sind die Zeichnungen die wahren Ansichten des 1:100-Modells, aus seinen Körpern gezeichnet: Stamm, Kragen mit acht Wurzeln, Schopf mit Stümpfen und ein Speerblatt als Umriss; sechzehn Wedel, jedes der zwei Teile eines Wedels als Umriss seiner Rhachis und seiner zwei Fahnen, mit Fiederblättern alle 9 cm als Striche; Fruchtstände als Umriss von Stiel und sieben Strängen; gröbere Blattbasen als Striche. Ein Teil, das in Blickrichtung tiefer als 0,5 m reicht, ist als mehrere Platten gezeichnet, eine je 0,5 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  },
+  "200": {
+    "silhouette": {
+      "en": "At 1:200 the drawings are the true views of the 1:200 model, drawn from its solids: stem on a plain collar, boot with one whorl of stubs and one spear leaf by their outline; sixteen fronds, each of the two parts of a frond by the outline of its arched blade; each bunch by the outline of its stalk and cluster. A part that reaches deeper than 0.5 m along the viewing direction is drawn as several plates, one per 0.5 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:200 sind die Zeichnungen die wahren Ansichten des 1:200-Modells, aus seinen Körpern gezeichnet: Stamm auf schlichtem Kragen, Schopf mit einem Quirl von Stümpfen und ein Speerblatt als Umriss; sechzehn Wedel, jedes der zwei Teile eines Wedels als Umriss seiner gebogenen Spreite; jeder Fruchtstand als Umriss von Stiel und Traube. Ein Teil, das in Blickrichtung tiefer als 0,5 m reicht, ist als mehrere Platten gezeichnet, eine je 0,5 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  },
+  "500": {
+    "silhouette": {
+      "en": "At 1:500 the drawings are the true views of the 1:500 model, drawn from its solids: stem, collar and boot by their outline, sixteen frond blades, each of the two parts of a blade by its outline, and two bunches by the outline of stalk and mass. A part that reaches deeper than 0.5 m along the viewing direction is drawn as several plates, one per 0.5 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:500 sind die Zeichnungen die wahren Ansichten des 1:500-Modells, aus seinen Körpern gezeichnet: Stamm, Kragen und Schopf als Umriss, sechzehn Wedelspreiten, jedes der zwei Teile einer Spreite als Umriss, und zwei Fruchtstände als Umriss von Stiel und Masse. Ein Teil, das in Blickrichtung tiefer als 0,5 m reicht, ist als mehrere Platten gezeichnet, eine je 0,5 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    },
+    "merged": {
+      "en": "Merged: the leaflets and the rachis of a frond into its blade; the blades and the boot carry one thermal region each and read as one crown.",
+      "de": "Zusammengefasst: Fiederblätter und Rhachis eines Wedels in seine Spreite; die Spreiten und der Schopf tragen je eine thermische Region und lesen sich als eine Krone."
+    }
+  }
+}

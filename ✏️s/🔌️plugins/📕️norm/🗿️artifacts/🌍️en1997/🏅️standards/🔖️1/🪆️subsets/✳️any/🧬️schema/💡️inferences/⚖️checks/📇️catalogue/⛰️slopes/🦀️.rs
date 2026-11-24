@@ -137,8 +137,32 @@ pub fn centre_sweep(s: &Circle, tan_phi: f64, c: f64, n: usize, reach: f64, step
     (along_x, along_z)
 }
 
-/// 🔎️ Coarse deterministic search of the circle with the smallest Bishop factor of safety: centres on a grid above the slope, radii through and past the toe; `n` slices per circle.
+type CriticalKey = [u64; 10];
+
+thread_local! {
+    static CRITICAL: std::cell::RefCell<std::collections::HashMap<CriticalKey, Option<(Circle, f64)>>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+const CRITICAL_CACHE_ROWS: usize = 64;
+
+/// 🔎️ Coarse deterministic search of the circle with the smallest Bishop factor of safety: centres on a grid above the slope, radii through and past the toe; `n` slices per circle. The search is a pure function of the ground, the water, the strength and `n` (not of the proto centre and radius it replaces), and one projection asks it for the same slope from the checks, the scene, the grips and the diagrams, so each answer is memoised per thread.
 pub fn critical_circle(proto: &Circle, tan_phi: f64, c: f64, n: usize) -> Option<(Circle, f64)> {
+    let key: CriticalKey = [proto.h, proto.beta_deg, proto.gamma, proto.gamma_sat, proto.gwl_level, proto.ru, proto.q, tan_phi, c, n as f64].map(f64::to_bits);
+    if let Some(found) = CRITICAL.with(|cache| cache.borrow().get(&key).copied()) {
+        return found.map(|(circle, factor)| (Circle { xc: circle.xc, yc: circle.yc, r: circle.r, ..*proto }, factor));
+    }
+    let found = search_critical_circle(proto, tan_phi, c, n);
+    CRITICAL.with(|cache| {
+        let mut cache = cache.borrow_mut();
+        if cache.len() >= CRITICAL_CACHE_ROWS {
+            cache.clear();
+        }
+        cache.insert(key, found);
+    });
+    found
+}
+
+fn search_critical_circle(proto: &Circle, tan_phi: f64, c: f64, n: usize) -> Option<(Circle, f64)> {
     let run = proto.h / rad(proto.beta_deg).tan();
     let mut best: Option<(Circle, f64)> = None;
     for ix in 0..7 {

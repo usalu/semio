@@ -4,7 +4,7 @@
  */
 
 import type { ShellLocale } from "@semio-tech/framework-manifest/generated/ui-axes";
-import { type PluginDependency, type PluginRegistryEntry, type VersionPin } from "../🗂️plugin-registry/🟦️.ts";
+import { requiredDependencies, type PluginDependency, type PluginRegistryEntry, type VersionPin } from "../🗂️plugin-registry/🟦️.ts";
 
 // #region 🎠️Kernel
 //#region 🔖️PluginGraph
@@ -196,7 +196,7 @@ export class PluginGraph {
  * registry that hasn't adopted `dependsOn` yet round-trips through this function unchanged (array
  * order in, array order out). */
 export function orderPluginRegistryEntries(entries: readonly PluginRegistryEntry[]): { readonly order: readonly PluginRegistryEntry[]; readonly errors: readonly PluginGraphError[] } {
-  const nodes: PluginGraphNode[] = entries.map((entry) => ({ pluginId: entry.pluginId, dependencies: entry.dependencies }));
+  const nodes: PluginGraphNode[] = entries.map((entry) => ({ pluginId: entry.pluginId, dependencies: entry.dependencies === undefined ? undefined : requiredDependencies(entry) }));
   const { order, errors } = new PluginGraph(nodes).loadOrder();
   const byId = new Map(entries.map((entry) => [entry.pluginId, entry] as const));
   if (errors.length === 0) {

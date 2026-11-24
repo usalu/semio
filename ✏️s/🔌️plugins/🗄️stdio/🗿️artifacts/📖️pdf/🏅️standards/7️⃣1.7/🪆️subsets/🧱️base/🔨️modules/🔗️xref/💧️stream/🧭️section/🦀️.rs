@@ -2,7 +2,7 @@
 
 use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::filters::{decode_stream, PdfDecodedStreamCursor, StreamDataGrant, StreamDataStatus};
 use semio_s_artifact_stdio_pdf_lexer::{CosGrant, CosLimits, IndirectFrameCursor, IndirectFrameStatus, StreamSpan, StreamSpanCursor};
-use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfObject};
+use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, PdfDictEntry, PdfObject, PdfStreamBytes};
 use semio_framework_value::{ByteReadRange, ByteReadSource, ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::base::io::error::{malformed, PResult};
 use crate::{XrefEntry, XrefStreamRowCursor};
@@ -56,7 +56,7 @@ pub struct XrefStreamSectionCursor {
     phase: Phase,
     frame: IndirectFrameCursor,
     decoder: PdfDecodedStreamCursor,
-    decoded: Vec<u8>,
+    decoded: PdfStreamBytes,
     dict_position: usize,
     fields: [Option<usize>; 4],
     ranges_position: usize,
@@ -73,7 +73,7 @@ impl XrefStreamSectionCursor {
     pub fn new(offset: usize, limits: CosLimits, maximum_inflated: usize, maximum_output: usize) -> Self {
         Self {
             phase: Phase::Frame, frame: IndirectFrameCursor::new(offset, limits),
-            decoder: PdfDecodedStreamCursor::new(maximum_inflated, maximum_output), decoded: Vec::new(),
+            decoder: PdfDecodedStreamCursor::new(maximum_inflated, maximum_output), decoded: PdfStreamBytes::default(),
             dict_position: 0, fields: [None; 4], ranges_position: 0, object: 0, remaining: 0,
             body_position: 0, reader: None, decoder_closed: false, recoverable_span: None,
         }
@@ -200,8 +200,8 @@ impl XrefStreamSectionCursor {
                 self.phase = Phase::ReleaseBody;
                 return Ok(XrefStreamEvent::More);
             }
-            let byte = self.decoded.get(self.body_position).ok_or("truncated xref stream row")?;
-            let (used, row) = self.reader.as_mut().expect("xref row reader").advance(std::slice::from_ref(byte))?;
+            let byte = self.decoded.byte_at(self.body_position).ok_or("truncated xref stream row")?;
+            let (used, row) = self.reader.as_mut().expect("xref row reader").advance(std::slice::from_ref(&byte))?;
             self.body_position += used;
             if let Some([kind, first, second]) = row {
                 let entry = match kind {
@@ -234,7 +234,7 @@ impl XrefStreamSectionCursor {
         self.decoder_closed = true;
         let Ok(dict) = dictionary(&self.frame) else { return malformed("xref stream object is not a dictionary"); };
         let Some(raw) = source.get(span.start..span.end) else { return malformed("xref stream source changed"); };
-        self.decoded = decode_stream(dict, raw)?.0;
+        self.decoded = stream_bytes(&decode_stream(dict, raw)?.0);
         self.phase = Phase::Rows;
         Ok(true)
     }
@@ -279,12 +279,11 @@ impl XrefStreamSectionCursor {
         receipt
     }
     fn retire_body(&mut self, grant: CosGrant, receipt: &mut XrefStreamReceipt) -> Result<XrefStreamEvent, XrefStreamError> {
-        let bytes = self.decoded.capacity();
-        if bytes > 0 {
-            if bytes > grant.release_bytes { return Ok(XrefStreamEvent::NeedsRelease { bytes }); }
-            self.decoded = Vec::new();
-            receipt.work = 1;
-            receipt.released_bytes = bytes;
+        if !self.decoded.retained_bytes().terminal_is_empty() {
+            let step = self.decoded.cold_retire_page(grant.release_bytes).map_err(XrefStreamError::Decode)?;
+            if let Some(bytes) = step.needs_release { return Ok(XrefStreamEvent::NeedsRelease { bytes }); }
+            receipt.work = step.work.max(1);
+            receipt.released_bytes = step.released_bytes;
             return Ok(XrefStreamEvent::More);
         }
         if self.decoder_closed { return Ok(XrefStreamEvent::Closed); }

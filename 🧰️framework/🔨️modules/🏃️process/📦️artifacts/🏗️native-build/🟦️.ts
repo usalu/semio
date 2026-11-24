@@ -914,6 +914,7 @@ export class CargoProvenanceSessionV1 {
             let valid = true;
             const expected = new Map(checksums.map(row=>[resolve(base,row.path),row]));
             for (const source of sources) {
+              if (isAbsolute(source)) continue;
               const absolute=resolve(base,source), checksum=expected.get(absolute);
               if(checksum&&this.sourceWitness?.canTransfer(absolute,checksum))continue;
               if ((await observe.kind(absolute)) === null) {

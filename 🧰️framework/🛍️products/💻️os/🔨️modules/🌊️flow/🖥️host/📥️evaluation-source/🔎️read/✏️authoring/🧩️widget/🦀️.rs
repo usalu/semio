@@ -118,4 +118,4 @@ impl WidgetWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.value.is_none()&&self.entry.is_none()&&self.retirement.is_empty()&&self.fields.id.is_none()&&self.fields.text.is_none()&&self.fields.aux.is_none()&&self.fields.key.is_none()&&self.fields.word.is_none()&&self.fields.params.is_none()&&self.fields.value.is_none()&&self.fields.inputs.capacity()==0&&self.fields.outputs.capacity()==0&&self.fields.output.is_none()}
 }
-impl Drop for WidgetWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original authoring widget fields require explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for WidgetWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original authoring widget fields require explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

@@ -162,6 +162,13 @@ impl WindowConfigOwnerRegistry {
         let Some(owner)=self.owners.get_mut(window.window_kind_id.as_str())else{return Ok(true)};owner.ensure_partition(id,cx)
     }
 
+    /// 🪺️ Pumps the native partition birth of every mounted Window in the roster, so a Window nobody has addressed yet still owns the config authority its surface renders and mounted readers resolve.
+    pub fn ensure_for_roster(&mut self,view_state:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let Some(view)=view_state else{return Ok(true)};
+        for window in &view.window_instances{let Some(owner)=self.owners.get_mut(window.window_kind_id.as_str())else{continue};if !owner.ensure_partition(&window.id,cx)?{return Ok(false)}}
+        Ok(true)
+    }
+
     #[doc(hidden)]
     pub async fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowConfigAuthority>, Fault> {
         let Some(view_state) = view_state else { return Ok(None) };

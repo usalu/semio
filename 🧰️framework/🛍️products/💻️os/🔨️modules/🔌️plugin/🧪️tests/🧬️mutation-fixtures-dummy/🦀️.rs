@@ -10,7 +10,8 @@ crate::testing_laws_unit_1::mutation_fixture::wire::fixture_operation_text!(Dumm
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_plugin_testing_laws::artifact_app_laws::{assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
+use semio_plugin_testing_instance_laws::{assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip};
+use semio_plugin_testing_laws::artifact_app_laws::{close_registered_fixture_app, meta, new_app, new_registered_app};
 use semio_plugin_window_transient::built_text_to_component_tree;
 use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_decl_app::ArtifactApp;

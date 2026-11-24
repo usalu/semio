@@ -237,7 +237,9 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
     if (!plugin.loadAppDocumentArchive) throw new Error("document-backbone.archive-loader-unavailable");
     const load = plugin.loadAppDocumentArchive;
     const owned = [...openDocumentSessionsRef.current].find(([, entry]) => entry.plugin === plugin && entry.session.instanceId === instanceId);
-    return sourceIngestionRef.current.receive(
+    const releaseLoadGate = core.documentLoadGateRef.current.begin(plugin.pluginId, instanceId);
+    try {
+    return await sourceIngestionRef.current.receive(
       () => owned === undefined ? beginActorSourceWork(plugin, instanceId) : beginDocumentSourceWork(owned[0], owned[1]),
       async () => {
         if (!current()) return false;
@@ -261,7 +263,10 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
         });
       },
     );
-  }, [bindDocumentBackbone, documentAttachmentLane, beginActorSourceWork, beginDocumentSourceWork]);
+    } finally {
+      releaseLoadGate();
+    }
+  }, [bindDocumentBackbone, documentAttachmentLane, beginActorSourceWork, beginDocumentSourceWork, core.documentLoadGateRef]);
   const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean, task?: { readonly signal?: AbortSignal; readonly progress?: (status: DocumentArchiveLoadStatus) => void }): Promise<boolean> =>
     loadDocumentArchive(plugin, instanceId, { parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }, current, task), [loadDocumentArchive]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>

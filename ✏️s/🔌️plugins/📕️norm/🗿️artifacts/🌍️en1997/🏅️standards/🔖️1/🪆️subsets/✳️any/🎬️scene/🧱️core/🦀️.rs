@@ -155,6 +155,10 @@ impl SceneKit for En1997Kit {
     fn layout_stamps(doc: &KitDoc<'_, En1997Snapshot>) -> BTreeMap<String, String> {
         kit::layout_stamps(doc.snapshot, &Layout::of(doc.snapshot, doc.placements))
     }
+
+    fn site_stamps(doc: &KitDoc<'_, En1997Snapshot>) -> BTreeMap<String, String> {
+        kit::site_stamps(doc.snapshot, &Layout::of(doc.snapshot, doc.placements))
+    }
 }
 
 live_scene!(pub mod live = Kit<En1997Kit>);

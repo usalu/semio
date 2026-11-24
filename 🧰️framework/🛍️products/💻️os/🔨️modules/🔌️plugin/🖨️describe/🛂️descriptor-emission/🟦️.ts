@@ -103,7 +103,7 @@ export async function validateDescriptorEmissionInputV1(repoRoot:string,request:
 }
 export function emitSemanticDescriptorV1(repoRoot:string,request:DescriptorEmissionRequestV1,control:DescriptorEmissionControlV1):Promise<SemanticDescriptorEmissionV1>{
  requireIssuedResourceControlInvocationV1(control.compiler,control.invocation);return withDescriptorEmitterTaskV1(control.emitter,control.invocation,async tool=>{
-  const {artifactRoot,component,startedAt,budgetMs}=await validateDescriptorEmissionInputV1(repoRoot,request,control),phase=requestedCompilerAdmissionControlV1(tool.control,compilerAdmissionBudgetV1(control.compiler)),staging=mkdtempSync(join(artifactRoot,".🛂️descriptor-staging-"));let primaryFailed=false,primaryFailure:unknown,result:SemanticDescriptorEmissionV1|undefined;
+  const {artifactRoot,component,startedAt,budgetMs}=await validateDescriptorEmissionInputV1(repoRoot,request,control),phase=(compilerAdmissionBudgetV1(control.compiler),requestedCompilerAdmissionControlV1(tool.control,0)),staging=mkdtempSync(join(artifactRoot,".🛂️descriptor-staging-"));let primaryFailed=false,primaryFailure:unknown,result:SemanticDescriptorEmissionV1|undefined;
   try {
     emissionGuard(control, startedAt, budgetMs, "describe");
     const args = ["describe", component.path, "--out", staging, ...(control.prepareActor ? ["--prepare-actor"] : [])];

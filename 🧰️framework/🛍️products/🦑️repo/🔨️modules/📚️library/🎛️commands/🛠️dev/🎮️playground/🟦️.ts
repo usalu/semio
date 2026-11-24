@@ -282,8 +282,8 @@ export async function serveRootPlaygroundV1(workspace: string, invocation: Scrip
     if (!projection.playgrounds.some(row => row.variant === request.variant)) throw Error(`Selected playground requires current compiled descriptors: ${request.variant}`);
     const sessionRefreshed = await refreshPlaygroundSessionPublicationV1(projection, async () => {
       if (publicationMissing(sessionRoot, [".semio-artifact.json"])) return undefined;
-      const { withPlaygroundSessionV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts");
-      return withPlaygroundSessionV1(workspace, invocation, request.variant, async (_session, retained) => retained);
+      const { retainedPlaygroundSessionProjectionV1 } = await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts");
+      return retainedPlaygroundSessionProjectionV1(workspace, invocation, request.variant);
     }, async current => {
       const { session } = await stagePlaygroundSession(workspace, invocation, request.variant, current);
       console.log(`Playground session ${request.variant}: ${session.plugins.length} plugins staged`);

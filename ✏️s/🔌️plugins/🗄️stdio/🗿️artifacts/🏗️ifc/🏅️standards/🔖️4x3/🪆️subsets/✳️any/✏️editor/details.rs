@@ -11,7 +11,8 @@ pub use shared::IfcDetailsRenderWork;
 pub use shared::{IfcTypeInputSourceWork,IfcPreparedTypeInputSource};
 pub use shared::{IfcValueReceiveMode, IfcValueReceiver};
 pub use shared::{charged, closed_in, costed, idle_step, owned_step, receive_effect, retire_self, settled};
-pub use shared::source_loan::{advance_cursor, closed_cursor, funded_turn, take_cursor, SnapshotLease};
+pub use shared::source_staging::SourceStaging;
+pub use shared::source_loan::{advance_cursor, close_quote, closed_cursor, closed_in_source, funded_turn, take_cursor, SnapshotLease};
 pub use shared::{IfcCandidateRules,IfcCandidateRuleStep,IfcTypeCandidate};
 impl shared::IfcDetailsProfile for Ifc4x3DetailsProfile {
     type CandidateRules = crate::validation::local::NativeCandidateRules;

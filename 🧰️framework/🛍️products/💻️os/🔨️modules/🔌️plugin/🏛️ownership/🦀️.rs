@@ -63,8 +63,18 @@ impl semio_framework_value::RetirementReceipt for PluginLifecycleStep {
 pub fn original_component_birth<S>(backing:&[usize])->Result<RetirementDemand,ValueError>{let capacity_bytes=backing.iter().try_fold(0usize,|total,bytes|total.checked_add(*bytes)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original component backing extent overflow"))?;Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<S>(),capacity_bytes,depth:2,..Default::default()})}
 /// 📏️ Infers the actual registry row type from its defining component field without constructing either owner.
 pub fn original_registry_backing<S,T>(_:fn(&S)->&ArtifactFixedRegistry<T>,capacity:usize)->Result<usize,ValueError>{ArtifactFixedRegistry::<T>::birth_demands(capacity).map(|d|d.capacity_bytes)}
-/// 📏️ Infers the actual deque element type from its defining component field before source construction.
-pub fn original_deque_backing<S,T>(_:fn(&S)->&std::collections::VecDeque<T>,capacity:usize)->Result<usize,ValueError>{capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original deque backing extent overflow"))}
+/// 🌱️ Births the next slot of a deque backing on demand: the exact capacity doubles up to `limit`, the born bytes enter the birth ledger, and the answer says whether a slot is free.
+pub fn deque_birth_slot<T>(deque:&mut std::collections::VecDeque<T>,limit:usize)->bool{
+    if deque.len()>=limit{return false}
+    if deque.len()<deque.capacity(){return true}
+    let before=deque.capacity();
+    let target=before.saturating_mul(2).max(1).min(limit);
+    if deque.try_reserve_exact(target-deque.len()).is_err(){return false}
+    semio_framework_value::birth_ledger::record_original_birth((deque.capacity()-before)*size_of::<T>());
+    true
+}
+/// 🌱️ Pushes onto a deque whose backing is born by [`deque_birth_slot`] and never reserved ahead of use.
+pub fn deque_push_back_born<T>(deque:&mut std::collections::VecDeque<T>,value:T){deque_birth_slot(deque,usize::MAX);deque.push_back(value)}
 /// 📏️ Infers the actual queue element type from its defining component field without constructing backing.
 pub fn original_queue_backing<S,T>(_:fn(&S)->&ArtifactFixedQueue<T>,capacity:usize)->Result<usize,ValueError>{ArtifactFixedQueue::<T>::birth_demands(capacity).map(|d|d.capacity_bytes)}
 
@@ -111,26 +121,24 @@ pub struct ArtifactFixedQueue<T> {
 }
 
 impl<T> ArtifactFixedQueue<T> {
-    /// 📏️ Declares the exact empty queue backing before native component construction.
-    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{let bytes=capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixed queue backing extent overflow"))?;Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:bytes,depth:1,..Default::default()})}
+    /// 📏️ Declares the physical queue backing born with the owner: none, because slots are born on first use up to the authored capacity.
+    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixed queue backing extent overflow"))?;Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),depth:1,..Default::default()})}
 
-    /// 🌱️ Retains the authored queue capacity until its original caller admits the backing.
+    /// 🌱️ Retains the authored queue capacity until its original caller admits the queue.
     pub fn unallocated(capacity:usize)->Self{Self{items:std::collections::VecDeque::new(),capacity,allocation_admitted:false}}
 
-    /// 🎟️ Admits this same queue's original empty backing independently of any enclosing service frame.
-    pub fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}let d=Self::birth_demands(self.capacity)?;if !plugin_grant_funds(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}self.items.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original fixed queue backing refused"))?;self.allocation_admitted=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:self.items.capacity()*std::mem::size_of::<T>(),..Default::default()}))}
+    /// 🎟️ Admits this same queue independently of any enclosing service frame; its slots are born by [`Self::push`].
+    pub fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}let d=Self::birth_demands(self.capacity)?;if !plugin_grant_funds(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}self.allocation_admitted=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
 
     /// 📍️ Borrows the next unchanged physical quote without allocating any backing.
     pub fn backing_demands(&self)->Result<RetirementDemand,ValueError>{if self.allocation_admitted{Ok(Default::default())}else{Self::birth_demands(self.capacity)}}
 
     pub fn new(capacity: usize) -> Self {
-        let mut items = std::collections::VecDeque::new();
-        let allocation_admitted = items.try_reserve_exact(capacity).is_ok();
-        Self { items, capacity, allocation_admitted }
+        Self { items: std::collections::VecDeque::new(), capacity, allocation_admitted: true }
     }
 
     pub fn push(&mut self, value: T) -> Result<(), T> {
-        if !self.allocation_admitted || self.items.len() >= self.capacity {
+        if !self.allocation_admitted || !deque_birth_slot(&mut self.items, self.capacity) {
             return Err(value);
         }
         self.items.push_back(value);
@@ -305,6 +313,10 @@ pub const ARTIFACT_LIVE_OUTPUT_SLOTS: usize = 64;
 /// release its close owes, under every mounted caller grant and the guest's contiguous request ceiling.
 pub const DOCUMENT_ARCHIVE_LOAD_SLOTS: usize = 2;
 
+#[cfg(test)]
+#[path = "🧪️effect-fixture/🦀️.rs"]
+pub(crate) mod effect_fixture;
+
 #[path = "🧱️registry-backing/🦀️.rs"]
 mod registry_backing;
 use registry_backing::RegistryBacking;
@@ -332,7 +344,7 @@ impl<T> ArtifactFixedRegistry<T> {
     /// 📐️ Reserves exactly this divisor of the occupancy mask as direct-mapped slots.
     pub fn with_slots(capacity:usize)->Self{
         let mut registry=Self::unallocated(capacity);
-        if let Ok(backing)=RegistryBacking::allocate(capacity){registry.slots=backing;registry.allocation_admitted=true;}
+        if let Ok(backing)=RegistryBacking::allocate(capacity){registry.slots=backing;registry.allocation_admitted=true;semio_framework_value::birth_ledger::record_original_birth(RegistryBacking::<T>::birth_bytes(capacity).unwrap_or(0));}
         registry
     }
 
@@ -382,7 +394,7 @@ impl<T> ArtifactFixedRegistry<T> {
         if self.entry(index).is_some() {
             return Err(value);
         }
-        self.slots.get_mut(index).expect("admitted registry slot").write((id, value));
+        self.slots.get_or_birth_mut(index).expect("admitted registry slot").write((id, value));
         self.occupied |= 1u64 << index;
         Ok(())
     }
@@ -400,7 +412,7 @@ impl<T> ArtifactFixedRegistry<T> {
     pub fn insert_admitted(&mut self, id: u64, value: T) {
         let index = id as usize % self.capacity;
         assert!(self.can_insert(id), "fixed artifact registry admission changed before exact owner insertion");
-        self.slots.get_mut(index).expect("admitted registry slot").write((id, value));
+        self.slots.get_or_birth_mut(index).expect("admitted registry slot").write((id, value));
         self.occupied |= 1u64 << index;
     }
 
@@ -408,7 +420,7 @@ impl<T> ArtifactFixedRegistry<T> {
     pub fn partition_mut<'a>(&'a mut self, id: u64, mut other: impl FnMut(&'a T)) -> Option<&'a mut T> {
         let occupied = self.occupied;
         let mut selected = None;
-        for (index, slot) in self.slots.slices_mut().iter_mut().flat_map(|page| page.iter_mut()).enumerate() {
+        for (index, slot) in self.slots.resident_pages_mut().flat_map(|(base, page)| page.iter_mut().enumerate().map(move |(offset, slot)| (base + offset, slot))) {
             if occupied & (1u64 << index) == 0 { continue; }
             let (candidate, value) = unsafe { slot.assume_init_mut() };
             if *candidate == id { selected = Some(value); } else { other(value); }
@@ -557,5 +569,48 @@ mod typed_owner_work_tests {
         assert_eq!(original.as_ref().unwrap().as_ptr(), address);
         assert!(active.is_none());
         caller.retire(stock);
+    }
+}
+
+#[cfg(test)]
+mod lazy_backing_tests {
+    use super::*;
+    use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+
+    /// 🌱️ A fresh queue owns no physical slot and a push births slots by exact doubling up to its authored capacity.
+    #[test]
+    fn a_fresh_fixed_queue_holds_no_heap_and_births_slots_by_doubling_up_to_its_capacity() {
+        type Row = [u8; 4096];
+        let (mut queue, heap) = observe(|| ArtifactFixedQueue::<Row>::new(64));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert_eq!(ArtifactFixedQueue::<Row>::birth_demands(64).unwrap().capacity_bytes, 0);
+        let mut capacities = Vec::new();
+        for _ in 0..64 {
+            let (pushed, _) = observe(|| queue.push([1; 4096]));
+            assert!(pushed.is_ok());
+            if capacities.last() != Some(&queue.items.capacity()) { capacities.push(queue.items.capacity()); }
+        }
+        assert_eq!(capacities, [1, 2, 4, 8, 16, 32, 64]);
+        assert!(queue.push([1; 4096]).is_err(), "the authored capacity bounds the queue");
+        while queue.pop().is_some() {}
+        let bytes = queue.release_bytes().unwrap();
+        assert_eq!(bytes, 64 * size_of::<Row>());
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: bytes, maximum_depth: 1, ..Default::default() };
+        let (step, heap) = observe(|| queue.release(grant).unwrap());
+        assert_eq!(step.progress().released_bytes, bytes);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, bytes));
+        assert_eq!(queue.release_bytes(), Some(0));
+    }
+
+    /// 🌱️ A deque born empty pays for exactly the slots it uses and releases exactly its capacity.
+    #[test]
+    fn a_born_on_demand_deque_owns_only_the_slots_it_used() {
+        type Row = [u8; 2048];
+        let mut deque = std::collections::VecDeque::<Row>::new();
+        let (_, heap) = observe(|| deque_push_back_born(&mut deque, [7; 2048]));
+        assert_eq!(heap.requested_bytes, size_of::<Row>());
+        assert_eq!(deque.release_bytes(), None, "a deque holding a row owns no empty backing");
+        deque.pop_front();
+        assert_eq!(deque.release_bytes(), Some(size_of::<Row>()));
     }
 }

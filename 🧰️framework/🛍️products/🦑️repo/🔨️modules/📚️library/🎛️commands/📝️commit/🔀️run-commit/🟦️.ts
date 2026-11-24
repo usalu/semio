@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { branchValidationError, type Contributor, currentBranch, findContributor } from "../👤️contributor/🟦️.ts";
 import type { CommitBundleSection } from "../🧾️bundle-model/🟦️.ts";
 import type { MetricsRunner } from "../📊️metrics/🏷️types/🟦️.ts";
-import { git, gitDir, gitEmail, gitRepoRoot } from "../🌳️git/🟦️.ts";
+import { git, gitDir, gitEmail, gitShallow, gitRepoRoot } from "../🌳️git/🟦️.ts";
 import { assignChangedPathsToBundles, buildBundlePathPrefixSets } from "../🧭️path-prefixes/🟦️.ts";
 import { buildBundleDateDeltasMap, buildBundleDateSizeDeltasMap, formatBundleHeaderLine, formatGitDeltaSumBrief, partitionRangeDeltasByBundle, partitionRangeSizeDeltasByBundle, rangeGitDeltaTotal, sortCommitBundlesByEditTotal, validateBundleCommitAttribution } from "../📈️attribution/🟦️.ts";
 import { createDefaultMetricsRunner } from "../📊️metrics/💾️scan/🟦️.ts";
@@ -82,6 +82,10 @@ export function runCommit(root: string, segments: string[]): void {
   const branchError = branchValidationError("commit", currentBranch(root));
   if (branchError) {
     console.error(branchError);
+    process.exit(1);
+  }
+  if (gitShallow(root)) {
+    sayCommitV1("run.history-is-shallow",{},"error");
     process.exit(1);
   }
   const contributor = findContributor(root);

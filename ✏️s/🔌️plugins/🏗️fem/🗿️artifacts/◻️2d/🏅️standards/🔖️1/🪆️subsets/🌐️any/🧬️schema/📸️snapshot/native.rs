@@ -251,8 +251,8 @@ impl Fem2dReceiving {
         if !retained_clone_grant_admits(g, d) {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
-        if !(self.nodes_receiver.as_ref().is_some_and(|rx| rx.advance_pending()) || self.materials_receiver.as_ref().is_some_and(|rx| rx.advance_pending())) { if let Err(error) = control.checkpoint() { eprintln!("[DEBUG] top checkpoint refused phase={}", self.phase); Err(error)?; } }
-        macro_rules! effect { ($units:expr; $e:ident => $run:expr) => { match { let r = work.measured(control, |c| c.with_allocated_effect(d, $units, |_, $e| $run)); if r.is_err() { eprintln!("[DEBUG] effect refused phase={}", self.phase); } r? } { Some(turn) => turn, None => return Ok(RetainedCloneStep::Progress(Default::default())) } }; ($e:ident => $run:expr) => { effect!(ACTION_WORK; $e => $run) } }
+        if !(self.nodes_receiver.as_ref().is_some_and(|rx| rx.advance_pending()) || self.materials_receiver.as_ref().is_some_and(|rx| rx.advance_pending())) { control.checkpoint()?; }
+        macro_rules! effect { ($units:expr; $e:ident => $run:expr) => { match work.measured(control, |c| c.with_allocated_effect(d, $units, |_, $e| $run))? { Some(turn) => turn, None => return Ok(RetainedCloneStep::Progress(Default::default())) } }; ($e:ident => $run:expr) => { effect!(ACTION_WORK; $e => $run) } }
         macro_rules! child { ($rx:ident, $out:ident, $base:expr, $at:expr, $project:expr, $ty:ty) => {{
             match self.phase - $base {
                 0 => {
@@ -267,7 +267,6 @@ impl Fem2dReceiving {
                     let maximum = native_work_limit(control, rx.advance_work_demand(source, body)?)?;
                     let witness = control.source_witness()?;
                     let turn = retry(rx.advance(source, control, witness, body, maximum, g));
-                    if turn.result.is_err() { eprintln!("[DEBUG] rx.advance refused phase={} adv_after={} ctl={}", self.phase, rx.advance_pending(), rx.requires_original_control()); }
                     let p = work.take(RetainedWorkOutcome { result: turn.result.map_err(receiving_failure), work: turn.work })?.progress();
                     if rx.ready() {
                         self.phase += 1;
@@ -417,9 +416,7 @@ impl Fem2dReceiving {
     }
     /// ♻️ Closure demand remains usable after the work callback has cancelled.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        let quote = self.close_quote(body);
-        if quote.is_err() { if let Some(r) = self.nodes_receiver.as_ref() { eprintln!("{}", r.debug_state()); } }
-        Ok(quote?.0)
+        Ok(self.close_quote(body)?.0)
     }
     /// ⛽️ Quotes the actual work of the next closure action.
     pub fn close_work(&self, body: usize) -> Result<u64, ValueError> {
@@ -450,7 +447,7 @@ impl Fem2dReceiving {
         use RetainedWorkPoll::Complete;
         let g = effect.grant();
         let fail = |error: ValueError| -> OriginalRetirementPoll { Complete(RetainedWorkOutcome { result: Err(error.into()), work: 0 }) };
-        let d = match self.close_demands(body) { Ok(d) => d, Err(error) => { if let Some(r) = self.nodes_receiver.as_ref() { eprintln!("{}", r.debug_state()); } eprintln!("[DEBUG] close_demands refused phase={} nodes={:?} adv={:?} ctl={:?} birth={:?}", self.phase, self.nodes_receiver.is_some(), self.nodes_receiver.as_ref().map(|r| r.advance_pending()), self.nodes_receiver.as_ref().map(|r| r.requires_original_control()), self.nodes_receiver.as_ref().map(|r| r.requires_original_birth())); return fail(error) } };
+        let d = match self.close_demands(body) { Ok(d) => d, Err(error) => return fail(error) };
         if !retained_clone_grant_admits(g, d) {
             return Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 });
         }
@@ -472,10 +469,7 @@ impl Fem2dReceiving {
         }
         if let Some(rx) = self.nodes_receiver.as_mut() {
             if rx.terminal_is_empty() { release!(self.nodes_receiver) }
-            let (adv, ctl, birth) = (rx.advance_pending(), rx.requires_original_control(), rx.requires_original_birth());
-            let poll = settled(effect, |effect, reply| match original.as_deref_mut() { Some(loan) => rx.close_original_into(loan, body, effect, reply), None => rx.close_into(body, effect, reply) });
-            if let RetainedWorkPoll::Complete(turn) = &poll { if turn.result.is_err() { eprintln!("[DEBUG] nodes close refused adv={adv} ctl={ctl} birth={birth} loan={}", original.is_some()); } }
-            return poll.map(|step| RetainedCloneStep::Progress(step.progress()));
+            return settled(effect, |effect, reply| match original.as_deref_mut() { Some(loan) => rx.close_original_into(loan, body, effect, reply), None => rx.close_into(body, effect, reply) }).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(rx) = self.materials_receiver.as_mut() {
             if rx.terminal_is_empty() { release!(self.materials_receiver) }

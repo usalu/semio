@@ -42,6 +42,7 @@ fn english_heuristic_flags_sentences_and_allows_symbols_units_and_german() {
     assert!(!looks_english("Eingabe b und h fehlt"));
     assert!(!looks_english("N_Rd = 12.5 kN/m²"));
     assert!(!looks_english("γ_M0, f_yk, EN 1992-1-1 §6.2"));
+    assert!(!looks_english("Fundamentplatte case-equ-01") && looks_english("The case-equ-01 value must be finite"));
     assert!(!looks_english("Dicke erhöhen"));
 }
 

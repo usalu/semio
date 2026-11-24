@@ -46,8 +46,10 @@ fn worked_example() -> semio_s_artifact_norm_en1997_model::En1997Snapshot {
     doc
 }
 
+/// 🧷️ The value of `field` for `key` in the first blessed case of the fixture, the worked example.
 fn blessed(key: &str, field: &str) -> f64 {
-    let at = FIXTURE.rfind(&format!("\"{key}\": {{")).unwrap_or_else(|| panic!("no blessed value {key}"));
+    let worked = FIXTURE.find("\"expected\": {").unwrap_or_else(|| panic!("no blessed case"));
+    let at = worked + FIXTURE[worked..].find(&format!("\"{key}\": {{")).unwrap_or_else(|| panic!("no blessed value {key}"));
     let rest = &FIXTURE[at..];
     let from = rest.find(&format!("\"{field}\": ")).unwrap_or_else(|| panic!("no field {field} of {key}")) + field.len() + 4;
     rest[from..].split(|c| c == ',' || c == '\n').next().and_then(|t| t.trim().parse().ok()).unwrap_or_else(|| panic!("unreadable {field} of {key}"))

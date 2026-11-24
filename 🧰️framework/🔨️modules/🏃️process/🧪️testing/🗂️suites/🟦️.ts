@@ -8,8 +8,11 @@ import{refuseProcessV1}from"../../📖️texts/🟦️.ts";
 import{testToolsUsedByFilesV1}from"../🧰️toolchain/🟦️.ts";
 import{findToolV1}from"../../🧰️tools/📖️registry/🟦️.ts";
 
+/** 🚀️ One nested Repo launch a suite's tests may spawn: `repo <command> <arguments...>` followed by each path issued absolute beneath the table root.
+ * @see ./🧬️schema/🔣️.json */
+export type ProcessTestLaunchV1=Readonly<{command:"cargo";arguments:readonly string[];paths:readonly string[]}>;
 /** 🗂️ Names one suite of the process module's route table: the files and trees it runs, its budget, its typecheck, the capabilities its route authors for every child birth and where its scratch directory lives (a per-run sandbox outside the checkout, or one inside the checkout for tests that read checkout-relative sources), the hosts it can run on (any other host reports it skipped), the host-bound facts that keep a host out and the registered tools whose pinned binary its laws receive. */
-export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"none"|"strict"|"strict-indexed";files?:readonly string[];trees?:readonly string[];typecheckFiles?:readonly string[];function?:Readonly<{module:string;export:string}>;testNamePattern?:string;parallel?:number;capabilities?:Readonly<{artifacts?:true;command?:string}>;scratch?:ProcessTestScratchV1;fileLaunchers?:Readonly<Record<string,string>>;platforms?:readonly("darwin"|"linux"|"win32")[];platformCauses?:readonly ProcessPlatformCauseV1[];tools?:readonly string[]}>;
+export type ProcessTestSuiteV1=Readonly<{id:string;budgetMs:number;typecheck:"none"|"strict"|"strict-indexed";files?:readonly string[];trees?:readonly string[];typecheckFiles?:readonly string[];function?:Readonly<{module:string;export:string}>;testNamePattern?:string;parallel?:number;capabilities?:Readonly<{artifacts?:true;command?:string}>;launches?:readonly ProcessTestLaunchV1[];scratch?:ProcessTestScratchV1;fileLaunchers?:Readonly<Record<string,string>>;platforms?:readonly("darwin"|"linux"|"win32")[];platformCauses?:readonly ProcessPlatformCauseV1[];tools?:readonly string[]}>;
 /** 📋️ Carries the closed route table after schema admission. */
 export type ProcessTestTableV1=Readonly<{version:1;suites:readonly ProcessTestSuiteV1[];codeSuites:readonly string[];helpers:readonly string[]}>;
 const protocol=schema.definitions.Protocol.const,importers=protocol.importPatterns.map(pattern=>new RegExp(pattern,"u"));
@@ -19,6 +22,9 @@ export const processTestProtocolV1=protocol;
 export type ProcessTestScratchV1="sandbox"|"checkout"|"checkout-test";
 /** 📍️ The checkout directory below which the per-run sandbox of a scratch kind is created, none for the sandbox outside the checkout. */
 export function processTestScratchParentV1(checkout:string,scratch:ProcessTestScratchV1|undefined):string|undefined{return scratch==="checkout"?join(checkout,protocol.checkoutScratchDirectory):scratch==="checkout-test"?join(checkout,protocol.treeScratchDirectory):undefined;}
+
+/** 🚀️ Issues the nested Repo launches a suite declares as the exact argument vectors the Original's `launches` carry: the single source both the suite runner and `repo test-file` read, so a test can start these and nothing else. */
+export function processTestSuiteLaunchesV1(suite:Pick<ProcessTestSuiteV1,"launches">,root:string):readonly(readonly string[])[]{return Object.freeze((suite.launches??[]).map(launch=>Object.freeze(["repo",launch.command,...launch.arguments,...launch.paths.map(path=>resolve(root,path))])));}
 
 /** 📖️ Reads the route table, refusing documents that break the schema or repeat a suite identifier. */
 export function readProcessTestTableV1(value:unknown=table):ProcessTestTableV1{

@@ -351,7 +351,9 @@ def parts(s):
             body.append({"id": f"{hid}-bar", "kind": "capsule", "bone": door, "material": "chromed-steel", "role": "body", "tone": 0.3, "p0": [ua, v, wz(door, -0.285)], "p1": [ub, v, wz(door, -0.285)], "r0": 0.005, "r1": 0.005})
             th(f"{hid}-bar", f"{hid}-bar", "doors")
             for views in (ev, fv, pv):
-                views.append(shape(hid, door, erect(door, xc - 0.005, xc + 0.005, Y(0.920), Y(1.080)), "body", 5.0, True, 0.3, region="doors", material="chromed-steel", **sweep(-0.290, -0.266)))
+                views.append(shape(f"{hid}-bar", door, erect(door, xc - 0.005, xc + 0.005, Y(0.915), Y(1.085)), "body", 5.0, True, 0.3, region="doors", material="chromed-steel", **sweep(-0.290, -0.280)))
+                for tag, yc in (("post-a", 0.936), ("post-b", 1.064)):
+                    views.append(shape(f"{hid}-{tag}", door, erect(door, xc - 0.005, xc + 0.005, Y(yc - 0.005), Y(yc + 0.005)), "body", 5.0, True, 0.3, region="doors", material="chromed-steel", **sweep(-0.282, -0.266)))
     elif s in (100, 200):
         hw = {100: 0.0075, 200: 0.012}[s]
         hl = 0.080

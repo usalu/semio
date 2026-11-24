@@ -38,6 +38,10 @@ impl OriginalWorkFixture{
  pub const fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096}}
  pub fn new()->Self{Self::with_identity(OperationId(991),Generation(17))}
  pub fn with_identity(operation:OperationId,generation:Generation)->Self{Self::with_source(operation,generation,Self::stock(),||Some(1),u64::MAX,1<<20)}
+ /// 🌐️ Models the browser host: every turn is issued the host Interactive lane's fresh fuel, and all turns together draw on one initiating-event lifetime stock (`HostLifetimeStock`) instead of the finite whole-operation stock of [`Self::new`], so a large document is bounded by per-turn fuel and not by a one-time allowance; pass `HostLifetimeStock::FUEL` of the artifact laws as `lifetime_fuel`.
+ pub fn hosted(lifetime_fuel:u64)->Self{let mut fixture=Self::new();fixture.caller.renew_each_turn(super::OriginalFixtureCaller::turn_fuel(),lifetime_fuel);fixture}
+ /// 🧮️ The lifetime fuel a [`Self::hosted`] fixture has not yet spent.
+ pub fn lifetime_fuel_remaining(&self)->Option<u64>{self.caller.lifetime_fuel_remaining()}
  /// 🏛️ Admits actual finite caller roots from independently authored fixture policy before any job step.
  pub fn with_source(operation:OperationId,generation:Generation,source_stock:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,fuel:u64)->Self{Self{caller:OriginalJobFixtureCaller::admit(operation,generation,source_stock,clock,deadline,fuel),decoder:semio_framework_job::OriginalJobDecodeOwner::empty(),source_stock}}
  /// 🛑 Borrows the actual initiating cancellation root without creating an alias.

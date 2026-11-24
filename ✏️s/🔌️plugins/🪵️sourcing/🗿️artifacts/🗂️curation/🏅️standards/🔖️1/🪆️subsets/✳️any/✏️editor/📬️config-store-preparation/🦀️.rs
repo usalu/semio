@@ -153,7 +153,7 @@ impl SourcingCurationConfigPreparation {
             let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its exact base root"))?.get();
             sourcing_curation_config_bytes(base).map_err(refusal_of)?;
             let bytes = SOURCING_CURATION_CONFIG_GRANT_BYTES;
-            if grant.maximum_copy_bytes < bytes { eprintln!("[DEBUG] cfgprep C copy {grant:?}"); return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_copy_bytes < bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its mutation owner"))?;
             let (post, inverse) = prepare_sourcing_curation_config(base, mutation)?;
             let mutation = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its mutation owner"))?;
@@ -162,7 +162,7 @@ impl SourcingCurationConfigPreparation {
             self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
         }
-        if grant.maximum_copy_bytes < self.retained_bytes { eprintln!("[DEBUG] cfgprep D copy {grant:?}"); return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         self.last_work = 1;
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its Store authority"))?;
         let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its candidate"))?;
@@ -179,9 +179,9 @@ impl SourcingCurationConfigPreparation {
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparation {
     fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
         self.last_work = 0;
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { eprintln!("[DEBUG] cfgprep A permits={} cancelled={} closing={} grant={grant:?}",grant.permits_one(),self.cancelled,self.owners.is_closing()); return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() || self.owners.prepared.is_some() { return self.advance_step(grant).map_err(Into::into); }
-        if !receiving.prepare_work(1)? { eprintln!("[DEBUG] cfgprep B work"); return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if !receiving.prepare_work(1)? { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         let result = self.advance_step(grant);
         receiving.commit_work(u128::from(self.last_work))?;
         result.map_err(Into::into)

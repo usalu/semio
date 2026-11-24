@@ -19,7 +19,7 @@ import {publishedCargoArtifactDirectoryV1} from "../📤️published/🟦️.ts"
 import {withIssuedLawStorageV1,lawBuildOptionsV1,lawCompilerConfigurationV1,lawSourceBoundaryV1,type LawStorageV1} from "./🦀️cargo/🟦️.ts";
 import type {ScriptInvocation} from "../../../🧭️routing/🟦️.ts";
 import {CurrentPhysicalOwnerV1} from "@semio-tech/framework-filesystem/observation/current";
-import {decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
+import {cargoDepInfoResolvedSourcesV1,decodeCargoProvenanceV1} from "../🧾️receipt/🟦️.ts";
 import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{privateRepositoryWorkspaceV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
@@ -234,6 +234,13 @@ for(const vector of fixture.depInfoBases)test(`compiler dep-info physical owner 
  const unit=required(decodeCargoProvenanceV1(readFileSync(receipt,"utf8")).units[0]);expect(required(unit.depInfo[0]).sha256).toBe(createHash("sha256").update(readFileSync(depInfo)).digest("hex"));expect(required(unit.depInfo[0]).sources).toEqual(vector.source.split(" "));expect(required(unit.depInfo[0]).baseDirectory).toBe(vector.base===null?null:join(root,vector.base));
  for(const directory of vector.directories??[]){const input=required(unit.inputs.find(row=>row.path===join(root,directory.path)));expect(input.kind).toBe("directory");expect(input.sha256).toBe(Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(JSON.stringify(directory.entries)))).toString("hex"));}
  if(vector.base!==null){expect(required(unit.inputs.find(row=>row.path===join(root,vector.target))).sha256).toBe(createHash("sha256").update(readFileSync(join(root,vector.target))).digest("hex"));expect(fileURLToPath(new URL(vector.anchor??vector.source,pathToFileURL(join(root,vector.base)+"/")))).toBe(join(root,vector.target));}
+});
+
+test("compiler dep-info keeps its base when a restored unit names an absent absolute compiler capture",async()=>{
+ const root=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"a-")),manifest=join(root,"Cargo.toml"),artifact=join(root,"libunit.rmeta"),depInfo=join(root,"unit.d"),receipt=join(root,"receipt.json"),capture=join(root,"semio-compiler-resources","gone","observation.json");
+ writeFileSync(manifest,"[workspace]\n");writeFileSync(join(root,"lib.rs"),"observed source");writeFileSync(artifact,"observed artifact");writeFileSync(depInfo,`${artifact}: lib.rs ${capture}\n`);
+ await writeCompletedCargoInvocationProvenanceV1(receipt,{manifest,cwd:root,command:"check",args:[],buildDirectory:null,builtAtMs:Date.now(),status:0,cancelled:false,units:[{evidence:{version:1,kind:"discovery",paths:[],producer:null},message:{manifest_path:manifest,target:{src_path:join(root,"lib.rs")},filenames:[artifact]}}],buildScripts:[]},new Map(),root,()=>provenancePhysical(root));
+ const unit=required(decodeCargoProvenanceV1(readFileSync(receipt,"utf8")).units[0]),dep=required(unit.depInfo[0]);expect(dep.baseDirectory).toBe(root);expect(cargoDepInfoResolvedSourcesV1(dep)).toEqual([join(root,"lib.rs"),capture].sort());expect(required(unit.inputs.find(row=>row.path===capture)).kind).toBeNull();
 });
 
 for(const vector of fixture.compilerResourceCaptures)test(`compiler resource tracked capture: ${vector.id}`,async()=>{

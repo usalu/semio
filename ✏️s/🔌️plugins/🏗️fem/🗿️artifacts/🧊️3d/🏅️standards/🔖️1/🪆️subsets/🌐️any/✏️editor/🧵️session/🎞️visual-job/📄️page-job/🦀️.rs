@@ -733,12 +733,12 @@ impl Drop for Fem3dPageVisualJob {
             let _ = world3d_snapshot_recover_write(token);
         }
         if let Some(order) = self.region_order.take() {
-            assert!(recover_fem3d_backing(Fem3dRecoveredBacking::RegionOrder(order.slots)), "FEM3D region order recovery capacity");
+            assert!(std::thread::panicking()||(recover_fem3d_backing(Fem3dRecoveredBacking::RegionOrder(order.slots))), "FEM3D region order recovery capacity");
         }
         if let Some(order) = self.element_order.take() {
-            assert!(recover_fem3d_backing(Fem3dRecoveredBacking::ElementOrder(order.slots)), "FEM3D element order recovery capacity");
+            assert!(std::thread::panicking()||(recover_fem3d_backing(Fem3dRecoveredBacking::ElementOrder(order.slots))), "FEM3D element order recovery capacity");
         }
-        assert!(self.terminal_is_empty(), "FEM3D visual candidate recovery handback was not shallow and exact");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "FEM3D visual candidate recovery handback was not shallow and exact");
     }
 }
 //#endregion 📦️PageVisualJob

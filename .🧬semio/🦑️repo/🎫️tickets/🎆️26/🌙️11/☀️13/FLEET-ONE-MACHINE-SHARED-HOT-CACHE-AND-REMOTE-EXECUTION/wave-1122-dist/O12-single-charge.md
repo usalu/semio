@@ -1,0 +1,40 @@
+# O12: a running remote action is charged once; workers return the measured peak
+
+L = `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/`. Restarted nothing. Lock `lock.headroom` released.
+
+## 1. Scheduler single charge (landed first, minimal)
+- `L/🗓️scheduler/⚖️placement/🟦️.ts`: `placementChargeMegabytesV1(task, reportAtMs, rampMs)`: declared peak minus the task's measured memory when the worker reports it (`max(0, declared - measured)`: not started or not grown = all of it, at peak = 0); with no measurement the whole declared peak until a load report arrived `rampMs` after the start, then 0 (the machine's free memory already shows the task).
+- `L/🗓️scheduler/🟦️.ts` `committedMegabytes` uses it per running task; `heartbeat(worker, running, usage?)` keeps the per-task megabytes (bounded: only tasks the worker runs, max 512 rows); option `chargeRampSeconds` (default from policy).
+- Schema first: `Heartbeat.usage` (optional, closed rows `{task, megabytes}`, max 512) and `ServerPolicy.chargeRampSeconds` (required, `🔣️policy.json` = 120) in `🏃️execution/🧬️schema/🌐️remote-execution.json`; type `RemoteExecutionHeartbeatV1.usage?`; `🖥️server` passes `usage` on.
+- OLD workers (no `usage`): the scheduler alone already helps. It computes the single charge from what they report today (load report time + start time): first 120 s after a start the whole peak is reserved (as today), after that the machine's free memory is trusted. Cost of this heuristic: a task still growing after 120 s (a final reaches its peak late) is under-reserved; the old worker admits by the declared peak on its own side only if it runs H2's code. To get "as today" for old workers set `chargeRampSeconds` to 3600 (policy value, no code). With the new worker heartbeat the charge is exact at every moment.
+- Live (read only, 19:00): `/v1/fleet/idle` slots 68 @0, 4 @1024, 1 @2048, 0 from 3072 (before the fix; shows the double count still active on the running scheduler). Worker spare now 1.5 to 5.3 GB on the 16 GB Macs (m05 25 GB, server 9.7 GB), not 0 to 4.5.
+
+## 2. Worker returns the measured peak, requester learns it
+- Worker: new `L/👷️worker/📏️task-memory/🟦️.ts`: one `ps -A -o pgid= -o rss=` per second while a task runs (not on Windows: no value, scheduler falls back to the ramp rule), sums the resident MB of each task's process group (the spawn is already a process group leader; sandbox wrapper and rustc children are inside it); keeps current and peak per task. The worker's heartbeat sends `usage` (current MB per running task); the action result carries the peak in `execution_metadata.auxiliary_metadata` (REAPI standard field; Any type `type.semio.dev/peak-memory-megabytes`, value = decimal text; unknown entries are ignored by every other client). The generated wire schema is untouched; no scheduler/server change is needed for the peak (the result bytes pass through).
+- Requester: `readOffloadOutputsV1` returns `peakMegabytes`; `L/🚀️offload/🟦️.ts` calls `writeUnitPeakV1(root, crate, peak)` after a successful remote exit, exactly like a local compile (larger at once, smaller halfway). The family (`c/*_component.peak`, O11) therefore learns from remote-only finals. The exit-137 path is unchanged.
+- Safety against an old scheduler: it validates heartbeats with a closed shape, so a new worker's `usage` gets 400. The worker then stops sending `usage` (one log line) and keeps heartbeating. Order that avoids the noise: scheduler first, workers after.
+
+## 3. What occupies a worker's spare (live, H2's claim)
+`slice-memory.json` of the Macs shows the Ready stage's measured RSS 0.3 to 3.2 GB (m02 3.2, m07 2.5, m12 2.1, m10 1.9, m08 1.9, m13 1.4, m06 1.0, m03 0.9, m11 0.3); with 3 to 8 running units and the floor (2048 MB on 16 GB) the reported free MB (1.5 to 4.0 GB) matches measured use, not a claim. `ready-stage-claim.json` itself is not in the snapshot, so the 1.25 x claim hold is not verified directly, but no worker reports 0 now (before: m11 0). Remaining reservation is the floor itself and the scheduler's double count (fixed here). `repo fleet status --json` still has no per-machine memory (observability gap).
+
+## 4. Restart facts (for the coordinator)
+- Scheduler role = the `bun ... sidecar/🟦️.ts scheduler` child (now pid 53731, listens on 8980/8981; its launcher is pid 9430, ppid 1, started 21 h ago). SIGTERM the CHILD (53731): the launcher (`runRemoteExecutionSidecarLauncherV1`) starts a new child at once with the new code (a crash back-off 1 s doubling to 15 s; exit 75 = immediate). SIGTERM to the launcher 9430 stops the role for good: do not.
+- It also restarts itself: the sidecar watches its import closure and restarts after 300 s without a further edit, at least 30 min after its last start (`🛰️sidecar/🧬️schema/🔣️.json` Restart; the scheduler role has no serve deferral). The child is 27 min old, so my landing triggers the restart about 5 min after the last scheduler-closure edit unless you do it sooner. I will not touch the scheduler closure (root `🟦️.ts`, placement, scheduler, server, schema, policy) again.
+- In-flight actions are NOT failed back by the scheduler on restart (`close()` only releases the waiting workers; state is in memory). Clients: the stream breaks, the O8 client re-attaches by name and gets NOT_FOUND = "operation lost" (or no answer = "silent after attach") and compiles locally at once. Workers: poll answers `known:false`, the worker re-registers and lists its running tasks (`resumed`); the scheduler adopts them, and with no client attached cancels them after `lingerSeconds` (5 s). So running remote units are lost work, redone locally; nothing hangs. From code reading, not exercised live.
+- Workers (agents) restart themselves on code change after the quiet time and drain running tasks for up to 2 h (agent policy); no action by us.
+
+## 5. Requester side for the play snapshot (key-neutral patches `O12-patched/`)
+Apply `cd` not needed: `patch <snapshot file> < O12-patched/<name>.patch` (verified on scratch copies of the snapshot: all three apply; offload-client then equals main; the other two differ from main only by other lanes' landings the snapshot lacks).
+1. `remote-execution-root.patch` -> `L/🟦️.ts` (peak entry helpers; imported by the client). 
+2. `offload-client.patch` -> `L/🚀️offload/🔌️client/🟦️.ts` (reads the peak).
+3. `offload-wrapper.patch` -> `L/🚀️offload/🟦️.ts` (records it in the ledger).
+Copy in that order, each to a temp name then `mv`. All three are in the offload wrapper's sealed closure: read PER RUSTC CALL (the next call after the copy takes the new sealed generation), safe to copy live, no driver restart. Nothing else is needed on the requester; the scheduler, `🖥️server` and worker files are not part of the play snapshot's client. Without these patches nothing breaks: the requester ignores the extra metadata entry.
+
+## 6. Tests (`repo test-file`, one at a time)
+- NEW `L/🧪️tests/🧮️single-charge/🟦️.ts` 8/0 with Python oracle `🐍️.py`: charge over a task's life (32 vectors incl. not started, growing, at peak, beyond it) and 400 ramp cases; `ps` group sums on 60 random tables; the meter (current, peak, forget, no sampling when idle); peak entry encode/decode; remote peak -> `readOffloadOutputsV1` -> ledger of crate and family; real `ps` measures a spawned group; closed Heartbeat shape; scheduler end to end through `idleFor(requester, 2048)`: slots 2, 0 (placed), 0, 1, 2, 2, 2 as the task grows and ends; old worker 2,0,0,0,2 and from 120 s after the start 2 (110 s still 0).
+- placement 10/0, scheduler 22/0, worker 6/0, `🧪️tests/🟦️.ts` (server) 17/0, unit-admission 9/0, offload 41/0, offload failure 2/0, `🌐️fleet` 10/0 (37 s).
+
+## Open
+- Needs restart to take effect: scheduler (single charge; automatic within minutes, see 4) and workers (usage heartbeat + peak; self-restart). Requester: the three patches above.
+- Windows worker: no measurement (ramp rule applies).
+- 1 s sampling can miss a sub-second spike; the ledger's 1.25 margin and the exit-137 path cover it.

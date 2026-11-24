@@ -7,6 +7,7 @@ import {graphRefusalOfV1,type GraphRefusalV1} from "./🧯️refusal/🟦️.ts"
 export type {GraphFleetClientV1,GraphFleetSettingsV1,GraphLookupFaultV1,GraphPutV1,GraphPutTimeoutV1,GraphRefusalV1};
 export {graphRefusalOfV1};
 import {slotIdV1} from "../../🪢️slots/🟦️.ts";
+import {declareV1} from "../../🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {GRAPH_STATE_POLICY_V1 as policy,graphStateSlotParts,type GraphStateV1} from "../🟦️.ts";
 
@@ -20,6 +21,12 @@ function sleep(milliseconds:number,signal?:AbortSignal):Promise<void>{
   const timer=setTimeout(finish,milliseconds);
   signal?.addEventListener("abort",finish,{once:true});
  });
+}
+
+/** 🛡️ The retention manifest every entry of the graph exchange carries: it declares the entry to the cache server as kind `graph` (never stale, protected by the class budget, replaced only by a newer entry of its slot), and is no document of the entry. */
+export function graphRetentionManifestV1():Readonly<{bytes:Uint8Array;hash:string}>{
+ const bytes=Buffer.from(JSON.stringify({version:1,retention:declareV1({kind:"graph",toolchain:policy.domain,sources:[],externs:[]})}));
+ return{bytes,hash:sha256(bytes)};
 }
 
 /** 📄️ One document of an entry, in its neutral form: the bytes with the machine root replaced by the root token. */
@@ -103,7 +110,7 @@ function noteOf(bytes:Uint8Array):{note:GraphEntryNoteV1;entries:readonly {path:
  try{
   const result=decodeProtobufV1(REAPI_V1.actionResult,bytes),files=(result.output_files??[]) as {path:string;digest:{hash:string;size_bytes:number|string}}[],text=Buffer.from(result.stdout_raw as Uint8Array).toString("utf8"),note=JSON.parse(text) as GraphEntryNoteV1;
   if(validateJsonSchemaSubset({$ref:"#/definitions/Note"},note,schema).length)return undefined;
-  const entries=files.filter(file=>!file.path.startsWith("leaf/")).map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
+  const entries=files.filter(file=>!file.path.startsWith("leaf/")&&file.path!==policy.retentionManifest).map(file=>({path:file.path,hash:file.digest.hash,size:Number(file.digest.size_bytes)}));
   return {note,entries};
  }catch{return undefined;}
 }
@@ -271,6 +278,8 @@ export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFle
   let failure:GraphPutV1|undefined;
   await each(blobs,3,async blob=>{if(failure!==undefined)return;if(await client.hasBlob(blob.hash)===true)return;const put=await client.putBlob(blob.hash,blob.bytes);if(!put.stored)failure=put;});
   if(failure!==undefined)return failure;
+  const kept=graphRetentionManifestV1();
+  if(await client.hasBlob(kept.hash)!==true){const put=await client.putBlob(kept.hash,kept.bytes);if(!put.stored)return put;}
   const leaves=[...new Map((input.leaves??[]).map(leaf=>[leaf.hash,leaf] as const)).values()].sort((left,right)=>left.hash<right.hash?-1:1),known=storedLeaves.get(client.settings.endpoint+"\0"+client.settings.instance)??storedLeaves.set(client.settings.endpoint+"\0"+client.settings.instance,new Set<string>()).get(client.settings.endpoint+"\0"+client.settings.instance)!;
   let lost:GraphLeafSourceV1|undefined;
   await each(leaves,input.leafWidth??4,async leaf=>{
@@ -285,7 +294,7 @@ export async function publishGraphEntryOutcomeV1(input:Readonly<{client:GraphFle
   if(failure!==undefined)return failure;
   if(lost!==undefined)return refused("leaf-missing",`${lost.namespace}/${lost.hash}`);
   const note:GraphEntryNoteV1={version:1,kind:state.frame.kind,digest:state.digest,platform:state.frame.platform,producer:(input.producer??input.owner).slice(0,160),createdMs:(input.now??Date.now)(),documents:blobs.map(blob=>({name:blob.name,hash:blob.hash,size:blob.bytes.length})),...leaves.length===0?{}:{leaves:leaves.map(leaf=>({namespace:leaf.namespace,hash:leaf.hash,size:leaf.size}))}};
-  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...blobs.map(blob=>({path:blob.name,digest:{hash:blob.hash,size_bytes:blob.bytes.length}})),...leaves.map(leaf=>({path:graphLeafPathV1(leaf),digest:{hash:leaf.hash,size_bytes:leaf.size}}))],stdout_raw:Buffer.from(JSON.stringify(note))});
+  const result=encodeProtobufV1(REAPI_V1.actionResult,{output_files:[...blobs.map(blob=>({path:blob.name,digest:{hash:blob.hash,size_bytes:blob.bytes.length}})),{path:policy.retentionManifest,digest:{hash:kept.hash,size_bytes:kept.bytes.length}},...leaves.map(leaf=>({path:graphLeafPathV1(leaf),digest:{hash:leaf.hash,size_bytes:leaf.size}}))],stdout_raw:Buffer.from(JSON.stringify(note))});
   const key=graphEntryKeyV1(state),slot=graphEntrySlotV1(state);
   const stored=input.head===true&&input.expectedHead===undefined?await swapHeadV1(client,key,result,slot):await client.putResult(key,result,slot,input.expectedHead);
   if(stored.stored)say?.("published",{kind:state.frame.kind,digest:state.digest.slice(0,12),files:blobs.length,megabytes:Math.round(blobs.reduce((sum,blob)=>sum+blob.bytes.length,0)/1048576)});

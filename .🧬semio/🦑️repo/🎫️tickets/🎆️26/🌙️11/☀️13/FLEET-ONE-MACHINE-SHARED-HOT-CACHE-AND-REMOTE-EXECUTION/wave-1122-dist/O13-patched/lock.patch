@@ -1,0 +1,26 @@
+--- a/lock.ts
++++ b/lock.ts
+@@ -145,6 +145,23 @@
+  return held;
+ }
+ 
++/** 🥇️ Takes a compile slot at once when one is free and nobody waits for it, else answers `undefined` without joining the queue: the local-first placement of a unit (a unit that finds a free slot compiles here, only a unit that would wait may go to the fleet). The oldest live ticket keeps its turn, so a free slot never overtakes a waiter; the claim itself is atomic (`tryCreate`), so concurrent callers never share one slot. */
++export function tryAcquireSlotV1(root:string,count:number):ClaimV1|undefined{
++ if(!Number.isSafeInteger(count)||count<1)return undefined;
++ const slots=join(root,policy.layout.slots),tickets=join(root,policy.layout.tickets),now=Date.now();
++ try{
++  mkdirSync(slots,{recursive:true});
++  for(const entry of readdirSync(tickets)){const path=join(tickets,entry);if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);else return undefined;}
++ }catch{}
++ for(let index=0;index<count;index++){
++  const path=join(slots,String(index)+".lock");
++  if(stale(path,policy.slot.staleMilliseconds,now))removeStale(path,policy.slot.staleMilliseconds);
++  const claim=tryCreate(path,policy.slot.heartbeatMilliseconds);
++  if(claim)return Object.freeze({...claim,waitedMs:0});
++ }
++ return undefined;
++}
++
+ /** 🎰️ Host-wide compile slots. Waiters take a numbered ticket and only the oldest live ticket may claim a free slot, so grants are first-in-first-out and no waiter starves; tickets and slots of dead processes are reaped. */
+ export async function acquireSlotV1(root:string,count:number,options:Readonly<{signal?:AbortSignal;onWait?:(waitedMs:number)=>void}>={}):Promise<ClaimV1>{
+  if(!Number.isSafeInteger(count)||count<1)throw Error("Positive compile slot count required");

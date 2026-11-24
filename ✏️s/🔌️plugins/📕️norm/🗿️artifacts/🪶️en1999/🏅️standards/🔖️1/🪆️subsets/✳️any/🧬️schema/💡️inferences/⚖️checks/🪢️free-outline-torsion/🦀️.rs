@@ -70,21 +70,21 @@ pub fn free_shear_torsion_ltb(member: &AluminiumMember, _props: &PolyProps, k: &
     };
     let root3 = 3.0f64.sqrt();
     let (v_z_rd, v_y_rd) = (k.a_vz * fo / (root3 * g1), k.a_vy * fo / (root3 * g1));
-    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_z_ed.abs() / v_z_rd.max(1e-18), &label, "Reduce the shear force V_z", "Querkraft V_z senken", "vZK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_z_ed.abs() / v_z_rd.max(1e-18), &label, "Reduce the shear force V_z", "Querkraft V_z senken", &[("vZK", gov.v_z_ed)]);
     let text = format!("V_z,Ed = {:.1} kN, A_v,z = {:.1} mm², V_pl,Rd = {:.1} kN", gov.v_z_ed / 1e3, k.a_vz * 1e6, v_z_rd / 1e3);
     push("en1999.6.2.6.v", "6.2.6", ("Shear resistance V_z,Rd", "Querkraftwiderstand V_z,Rd"), q_force(gov.v_z_ed.abs()), q_force(v_z_rd), (text.clone(), text), path("vZK"), rem);
-    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_y_ed.abs() / v_y_rd.max(1e-18), &label, "Reduce the shear force V_y", "Querkraft V_y senken", "vYK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_y_ed.abs() / v_y_rd.max(1e-18), &label, "Reduce the shear force V_y", "Querkraft V_y senken", &[("vYK", gov.v_y_ed)]);
     let text = format!("V_y,Ed = {:.1} kN, A_v,y = {:.1} mm², V_pl,y,Rd = {:.1} kN", gov.v_y_ed / 1e3, k.a_vy * 1e6, v_y_rd / 1e3);
     push("en1999.6.2.6.vy", "6.2.6", ("Shear resistance V_y,Rd", "Querkraftwiderstand V_y,Rd"), q_force(gov.v_y_ed.abs()), q_force(v_y_rd), (text.clone(), text), path("vYK"), rem);
     let w_t = k.it / k.t_max.max(1e-12);
     let t_rd = w_t * fo / (root3 * g1);
     let tau_t = gov.t_ed.abs() / w_t.max(1e-300);
-    let rem = leaf_remedies("members", &member.id, &member.actions, gov.t_ed.abs() / t_rd.max(1e-18), &label, "Reduce the torque", "Torsionsmoment senken", "torsionK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, gov.t_ed.abs() / t_rd.max(1e-18), &label, "Reduce the torque", "Torsionsmoment senken", &[("torsionK", gov.t_ed)]);
     push("en1999.6.2.7.t", "6.2.7", ("Torsion resistance T_Rd", "Torsionswiderstand T_Rd"), q_moment(gov.t_ed.abs()), q_moment(floor_limit(gov.t_ed, t_rd)),
         (format!("T_Ed = {:.2} kNm, I_t = {:.4e} mm⁴, W_t = I_t/t_max = {:.0} mm³, τ_t,Ed = {:.1} MPa, T_Rd = {:.2} kNm (St. Venant torsion)", gov.t_ed / 1e3, k.it * 1e12, w_t * 1e9, tau_t / 1e6, t_rd / 1e3),
          format!("T_Ed = {:.2} kNm, I_t = {:.4e} mm⁴, W_t = I_t/t_max = {:.0} mm³, τ_t,Ed = {:.1} MPa, T_Rd = {:.2} kNm (St.-Venantsche Torsion)", gov.t_ed / 1e3, k.it * 1e12, w_t * 1e9, tau_t / 1e6, t_rd / 1e3)), path("torsionK"), rem);
     let v_rd_t = v_z_rd * (1.0 - tau_t * root3 * g1 / fo).max(0.0);
-    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_z_ed.abs() / v_rd_t.max(1e-18), &label, "Reduce the shear force or the torque", "Querkraft oder Torsionsmoment senken", "vZK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, gov.v_z_ed.abs() / v_rd_t.max(1e-18), &label, "Reduce the shear force or the torque", "Querkraft oder Torsionsmoment senken", &if v_rd_t > 0.0 { vec![("vZK", gov.v_z_ed), ("torsionK", gov.t_ed)] } else { vec![("torsionK", gov.t_ed)] });
     let text = format!("V_Rd,T = V_Rd·(1 − τ_t,Ed·√3·γ_M1/f_o) = {:.1} kN", v_rd_t / 1e3);
     push("en1999.6.2.7.vt", "6.2.7", ("Shear with torsion V_Rd,T", "Querkraft mit Torsion V_Rd,T"), q_force(gov.v_z_ed.abs()), q_force(floor_limit(gov.v_z_ed, v_rd_t)), (text.clone(), text), path("vZK"), rem);
     let l_lt = if member.ltb_length > 0.0 { member.ltb_length } else { member.length };
@@ -96,7 +96,7 @@ pub fn free_shear_torsion_ltb(member: &AluminiumMember, _props: &PolyProps, k: &
     let chi_lt = part_1_1::chi_from_lambda(lam_lt, alpha_lt, lambda_0_lt);
     let omega = if member.transverse_weld { part_1_1::omega_x(chi_lt, alloy.rho_o_haz, member.transverse_weld_offset, l_lt, 1.0) } else { 1.0 };
     let m_b_rd = omega * chi_lt * m_rd_y;
-    let rem = leaf_remedies("members", &member.id, &member.actions, gov.m_y_ed.abs() / m_b_rd.max(1e-18), &label, "Reduce the strong-axis moment (lateral-torsional buckling)", "Moment um die starke Achse senken (Biegedrillknicken)", "mYK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, gov.m_y_ed.abs() / m_b_rd.max(1e-18), &label, "Reduce the strong-axis moment (lateral-torsional buckling)", "Moment um die starke Achse senken (Biegedrillknicken)", &[("mYK", gov.m_y_ed)]);
     let text = format!("M_cr = {:.2} kNm for compression on the {} side (other side {:.2} kNm; I_z = {:.4e} mm⁴, I_t = {:.4e} mm⁴, I_w = {:.4e} mm⁶, z_j = {:.2} mm, C2 = C3 = load at the shear centre), λ̄_LT = {lam_lt:.4}, χ_LT = {chi_lt:.4}, M_b,Rd = {:.2} kNm", m_cr.min(1.0e12) / 1e3, if up { "+z" } else { "−z" }, m_cr_at(!up).min(1.0e12) / 1e3, k.frames.strong.i_z * 1e12, k.it * 1e12, k.iw * 1e18, z_j(&k.frames.strong, up) * 1e3, m_b_rd / 1e3);
     push("en1999.6.3.2.ltb", "6.3.2", ("Lateral-torsional buckling M_b,Rd", "Biegedrillknicken M_b,Rd"), q_moment(gov.m_y_ed.abs()), q_moment(m_b_rd), (text.clone(), text), format!("members[id={}].ltbLength", member.id), rem);
     (out, LtbOut { m_b_rd, omega_lt: omega })

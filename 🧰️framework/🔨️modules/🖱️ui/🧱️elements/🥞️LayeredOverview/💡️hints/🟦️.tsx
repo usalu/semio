@@ -58,6 +58,7 @@ const LayeredNeighbourHint = /* @__PURE__ */ React.memo(function LayeredNeighbou
       ref={frame}
       type="button"
       data-shared-border-frame=""
+      data-glass-chip=""
       data-layered-neighbour={neighbour.direction}
       data-pane={neighbour.pane.id}
       data-level="dialog"

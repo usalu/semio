@@ -31,3 +31,15 @@ Repo: `/Users/ueli/Documents/semio` — ONE shared live worktree replicated to 5
 
 ## Binding addendum 00:45 (play moved to a pinned clone)
 - The play release now runs from the pinned clone `/Users/ueli/.sinc/play`; its gate file is `/Users/ueli/Documents/semio/.🧬semio/🌐hub/play-cdn-1122/pinned/supervisor.out` (same markers). All earlier "site-build active" rules now refer to this file.
+
+## Binding addendum 18:10 (replaces the `taskpolicy -b` rule of 22:20)
+- Do NOT use `taskpolicy -b`: it throttles disk I/O so hard that a 1.8 s read takes >120 s (measured by lane GR4), starving tests and measurements. Keep the other half of the rule: at most ONE heavy local run (test file / cargo / measurement) per lane at a time.
+
+## Binding addendum 21:55 (disk fell to 27 GiB free; a scratch build was the grower)
+- While the play release build runs: NO scratch builds, target dirs or unit-cache roots on the coordinator (nothing that writes more than ~200 MB). Proof builds wait or run where they don't share the coordinator's disk.
+
+## Binding addendum 23:30 (play session allows ONE bounded proof build)
+- Exception to the 21:55 rule for lane P3 only: one scratch build on the coordinator with its target dir + cache root kept under 6 GiB, aborted at once if `df -h /` shows less than 28 GiB free (check before every heavy step and at least every 2 minutes while building), and deleted (scratch dir AND its host-CAS holder file under `~/.cache/semio/cas/v1/h/`) as soon as the numbers are recorded.
+
+## Binding addendum 02:15 on 2026-11-24 (disk freed with the user's approval)
+- The coordinator has ~175 GiB free (80.8 %). The 21:55 rule is relaxed: ONE scratch build at a time may run on the coordinator, scratch under 15 GiB, abort if `df -h /` shows less than 100 GiB free, delete the scratch and its host-CAS holder file when done. Still: never write inside `/Users/ueli/.sinc/play`, never touch the play build's processes, restart nothing.

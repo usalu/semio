@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/process/component-jobs/v1",
+  "title": "Component jobs: concurrent component passes sized to the fleet",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "offloadableTargetPrefixes": [
+          "wasm32-"
+        ],
+        "componentJobsMaximum": 24,
+        "componentJobResidueMegabytes": 256,
+        "reserveMegabytes": 2048,
+        "pressureWarnDivisor": 2
+      }
+    },
+    "Pressure": {
+      "enum": [
+        "normal",
+        "warn",
+        "critical"
+      ]
+    },
+    "ComponentJobsReason": {
+      "enum": [
+        "jobs-local-only",
+        "jobs-all",
+        "jobs-cap",
+        "jobs-memory",
+        "jobs-pressure"
+      ]
+    },
+    "ComponentJobsHost": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local",
+        "fleetSlots",
+        "availableMegabytes",
+        "pressure",
+        "unitMegabytes"
+      ],
+      "properties": {
+        "local": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "fleetSlots": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "availableMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "pressure": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Pressure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        }
+      }
+    },
+    "ComponentJobsDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jobs",
+        "local",
+        "remote",
+        "reason"
+      ],
+      "properties": {
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "local": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "remote": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "reason": {
+          "$ref": "#/definitions/ComponentJobsReason"
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "en": {
+          "jobs": "[component-jobs] {operation}: {jobs} component jobs at once = {local} local + {remote} on the fleet ({slots} worker slots fit one {peak} MB final; {reason})",
+          "reasons": {
+            "jobs-local-only": "no worker can take a wasm final right now, so only the local grant runs jobs",
+            "jobs-all": "every worker slot that fits a wasm final takes one job",
+            "jobs-cap": "the authored job cap bounds the fleet share",
+            "jobs-memory": "the free memory here carries fewer remote jobs",
+            "jobs-pressure": "memory pressure is raised, so fewer remote jobs wait here"
+          },
+          "errors": {
+            "definitionRequired": "Closed compile units value required: {detail}"
+          }
+        },
+        "de": {
+          "jobs": "[component-jobs] {operation}: {jobs} Komponenten-Jobs gleichzeitig = {local} lokal + {remote} auf der Flotte ({slots} Worker-Plätze tragen ein {peak}-MB-Endstück; {reason})",
+          "reasons": {
+            "jobs-local-only": "kein Worker kann gerade ein Wasm-Endstück übernehmen, daher laufen Jobs nur nach lokaler Zuteilung",
+            "jobs-all": "jeder Worker-Platz, der ein Wasm-Endstück trägt, übernimmt einen Job",
+            "jobs-cap": "die festgelegte Job-Obergrenze begrenzt den Flottenanteil",
+            "jobs-memory": "der freie Speicher hier trägt weniger entfernte Jobs",
+            "jobs-pressure": "der Speicherdruck ist erhöht, daher warten weniger entfernte Jobs hier"
+          },
+          "errors": {
+            "definitionRequired": "Geschlossener Compile-Einheiten-Wert erforderlich: {detail}"
+          }
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@
 // #region 🔌️Adapters
 import type { ShellCoreAfterDirectoryAndRoute } from "../🛂️directory-route/🟦️.ts";
 import { usePluginInstallCallbacks, usePluginLifecycleState } from "./🧱️lifecycle-state-and-install/🟦️.ts";
+import { useOnDemandActivation } from "./⏳️on-demand-activation/🟦️.ts";
 import { useExtensionCallbacks, usePluginReloadCallbacks } from "./🔄️reload-and-extension-callbacks/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -14,12 +15,13 @@ export function usePluginLifecycle(core: ShellCoreAfterDirectoryAndRoute) {
   const { pluginOpInFlightRef, loadedPluginsRef, hubPluginSource, registry, pluginSource, dispatch, pluginInstallAbortsRef, notePluginInstallProgress, pluginModuleUrlByIdRef, recordPluginArtifactRebuiltAt, primaryPluginId, sessionRef, establishPrimaryWithShardRetry, appId, pluginStatusById, pluginInstallProgressById, extensionRegistry, directoryHomeOwnerRef, backboneWorkerRef, retireDirectoryHomeOwner, contributorInstancesRef, hostMode, establishPrimarySession, pluginArtifactRebuiltAtRef, catalog, uiLocaleRef, uiTerminologyRef, extraWindowInstancesRef, extensionStoreUrl, extensionFetchAbortRef, extensionRoute, shellPluginCanvasStatus } = usePluginLifecycleState({ core });
   const { installPlugin, installingPluginIds, pluginInstallProgress, cancelPluginInstalls, commandStalls, commandStallClockMs, installHubDocumentProgram } = usePluginInstallCallbacks({ pluginOpInFlightRef, loadedPluginsRef, hubPluginSource, registry, pluginSource, dispatch, pluginInstallAbortsRef, notePluginInstallProgress, pluginModuleUrlByIdRef, recordPluginArtifactRebuiltAt, primaryPluginId, sessionRef, establishPrimaryWithShardRetry, appId, pluginStatusById, pluginInstallProgressById, extensionRegistry });
   const { extensionTargetById, setExtensionLedger, dispatchSpaceExtensionOp, reloadPlugin, uninstallPlugin, extensionLedger, extensionLedgerRef, extensionIdSet } = usePluginReloadCallbacks({ pluginOpInFlightRef, loadedPluginsRef, installPlugin, dispatch, pluginSource, sessionRef, directoryHomeOwnerRef, backboneWorkerRef, retireDirectoryHomeOwner, core, contributorInstancesRef, hostMode, pluginModuleUrlByIdRef, recordPluginArtifactRebuiltAt, establishPrimarySession, primaryPluginId, pluginArtifactRebuiltAtRef, catalog, uiLocaleRef, uiTerminologyRef, extraWindowInstancesRef });
+  const { activateOnDemand, cancelOnDemand } = useOnDemandActivation({ core, installPlugin });
   const { installExtension, installExtensionFromFile, uninstallExtension, setExtensionEnabled } = useExtensionCallbacks({ extensionStoreUrl, extensionFetchAbortRef, pluginSource, pluginOpInFlightRef, dispatch, pluginModuleUrlByIdRef, extensionTargetById, setExtensionLedger, dispatchSpaceExtensionOp, extensionRoute, loadedPluginsRef, contributorInstancesRef, pluginArtifactRebuiltAtRef });
   return {
     primaryPluginId, shellPluginCanvasStatus, hubPluginSource, extensionRegistry, pluginSource,
     establishPrimaryWithShardRetry, installPlugin, installingPluginIds, pluginInstallProgress, cancelPluginInstalls,
     commandStalls, commandStallClockMs, installHubDocumentProgram, reloadPlugin, uninstallPlugin, extensionLedger,
     extensionLedgerRef, extensionIdSet, installExtension, installExtensionFromFile, uninstallExtension,
-    setExtensionEnabled
+    setExtensionEnabled, activateOnDemand, cancelOnDemand
   };
 }

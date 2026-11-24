@@ -11,7 +11,7 @@
     { "id": "ply", "labelEn": "PLY Mesh", "labelDe": "PLY-Netz", "kindId": "s.stdio.ply.standard.1-0.representation.document", "extension": ".ply", "mime": "model/ply", "binary": false, "filename": "generation3d.ply", "geometry": true },
     { "id": "gltf", "labelEn": "glTF Mesh", "labelDe": "glTF-Netz", "kindId": "s.stdio.gltf.standard.2-0.representation.document", "extension": ".gltf", "mime": "model/gltf+json", "binary": false, "filename": "generation3d.gltf", "geometry": true },
     { "id": "las", "labelEn": "LAS Point Cloud", "labelDe": "LAS-Punktwolke", "kindId": "s.stdio.las.standard.1-0.representation.document", "extension": ".las", "mime": "application/vnd.las", "binary": true, "filename": "generation3d.las", "geometry": true },
-    { "id": "dwg", "labelEn": "DWG Drawing", "labelDe": "DWG-Zeichnung", "kindId": "s.stdio.dwg.standard.ac1018.representation.document", "extension": ".dwg", "mime": "image/vnd.dwg", "binary": true, "filename": "generation3d.dwg", "geometry": true },
+    { "id": "dwg", "labelEn": "DWG Drawing", "labelDe": "DWG-Zeichnung", "kindId": "s.stdio.dwg.standard.ac1024.representation.document", "extension": ".dwg", "mime": "image/vnd.dwg", "binary": true, "filename": "generation3d.dwg", "geometry": true },
     { "id": "txt", "labelEn": "Semio Text (whole artifact)", "labelDe": "Semio-Text (ganzes Artefakt)", "kindId": "s.stdio.txt.standard.utf-8.representation.document", "extension": ".txt", "mime": "text/plain", "binary": false, "filename": "generation3d.txt", "geometry": false }
   ],
   "importFormats": [

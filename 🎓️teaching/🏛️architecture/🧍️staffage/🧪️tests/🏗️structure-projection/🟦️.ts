@@ -375,6 +375,21 @@ describe("one load case, three views", () => {
     expect(Math.max(...jib)).toBeGreaterThan(0);
   });
 
+  it("reads one bending moment and one shear force per member in the three views: the invariant peak of the member, whatever part of it lies in the plane of a view", () => {
+    const kinds = [["moment", "moments", (s: { momentNm: number; momentLateralNm: number }) => Math.hypot(s.momentNm, s.momentLateralNm)], ["shear", "forces", (s: { shearN: number; shearZN: number }) => Math.hypot(s.shearN, s.shearZN)]] as const;
+    for (const [kind, view, totalOf] of kinds) {
+      const { result, by } = scenes(balcony, view);
+      const invariant = Math.max(...result.members["slab"]!.stations.map((s) => totalOf(s)));
+      expect(invariant).toBeGreaterThan(0);
+      const drawnIn = VIEWPOINTS.filter((viewpoint) => {
+        const read = itemsOf(by[viewpoint]).flatMap((i) => (i.kind === "path" && i.value !== undefined && (i.id.startsWith(`diagram:${kind}:slab:`) || i.id === `diagram:${kind}:slab:out`) ? [i.value.value] : []));
+        for (const value of read) expect(near(value, invariant, 1e-12, 1e-12), `${kind} of the slab in ${viewpoint}: ${value} vs ${invariant}`).toBe(true);
+        return read.length > 0;
+      });
+      expect(drawnIn.length, `${kind} diagram views`).toBeGreaterThanOrEqual(2);
+    }
+  });
+
   it("draws a leaning person's contact reactions in all three views", () => {
     const person = evaluate(assetOf("leaning-person"), { kind: "pose", pose: "leaning-shoulder-wall", timeS: 0 }, select);
     const { result, by } = scenes(person, "forces");

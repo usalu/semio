@@ -113,6 +113,7 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot>> PdfGraphSaveJob<A> {
         if self.program_ready {
             let program = self.program.as_mut().expect("settled PDF program");
             self.complete = self.producer.advance(original, program.as_mut(), cx)?;
+            if self.complete { program.commit(); }
             let bytes = original.output_chunks.bytes();
             if !self.complete && bytes.saturating_sub(self.last_checkpoint) >= CHECKPOINT_BYTES {
                 self.checkpoint = Some(bytes);
@@ -129,6 +130,7 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot>> PdfGraphSaveJob<A> {
             return Ok(());
         }
         let maximum = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES - FORMAT.len();
+        let document = original.parent_document_id.clone();
         let bytes = size_of::<ClassicPdfSaveProgram>();
         if !funded(cx, RetirementDemand { capacity_bytes: bytes, ..copy(bytes) }) {
             return Err(invalid("PDF Save program exceeds the admitted body frame").into());
@@ -137,7 +139,7 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot>> PdfGraphSaveJob<A> {
             let pointer = allocate::<ClassicPdfSaveProgram>()?;
             let graph = self.candidate.take().expect("funded PDF graph receiver");
             let program = unsafe {
-                pointer.as_ptr().write(ClassicPdfSaveProgram::new(graph, maximum));
+                pointer.as_ptr().write(ClassicPdfSaveProgram::new(graph, maximum).with_document(document));
                 Box::from_raw(pointer.as_ptr())
             };
             Ok((program, admitted(bytes)))

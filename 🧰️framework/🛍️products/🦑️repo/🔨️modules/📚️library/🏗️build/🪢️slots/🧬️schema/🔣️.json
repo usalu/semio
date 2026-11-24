@@ -82,13 +82,13 @@
       }
     },
     "Declaration": {
-      "description": "What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (every `--extern` file of a unit whatever its kind: rlib, rmeta, proc-macro library, host unit; input blobs of a stage), its own name `self` (the local key of the entry) and the names `units` of the entries it consumed whose bytes a digest cannot name (the producer of each extern file as the sidecar beside the file records it, the build script executable and the build script run whose OUT_DIR a unit reads): an entry is stale when an entry it names or whose file it consumed is stale, and an entry without workspace sources (registry, host, build script) is live while a live entry reaches it through either kind of edge. It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
+      "description": "An entry of kind `graph` (a head or a record of the graph exchange) is never judged stale: the server keeps it in its own protected budget and supersedes it only by a newer entry of its slot. What a published entry was built from, so retention can decide against the coordinator's synchronized tree whether it is still current: the toolchain identity (SHA-256 of the compiler identity text the key carries), the workspace sources it read (portable path below the workspace root with forward slashes, and the SHA-256 of the file) and the SHA-256 digests of the files of other entries it consumed (every `--extern` file of a unit whatever its kind: rlib, rmeta, proc-macro library, host unit; input blobs of a stage), its own name `self` (the local key of the entry) and the names `units` of the entries it consumed whose bytes a digest cannot name (the producer of each extern file as the sidecar beside the file records it, the build script executable and the build script run whose OUT_DIR a unit reads): an entry is stale when an entry it names or whose file it consumed is stale, and an entry without workspace sources (registry, host, build script) is live while a live entry reaches it through either kind of edge. It is a field `retention` of the entry manifest, so it travels with the entry and the server reads it when the entry arrives.",
       "type": "object",
       "additionalProperties": false,
       "required": ["version", "kind", "toolchain", "sources", "externs"],
       "properties": {
         "version": { "const": 2 },
-        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output"] },
+        "kind": { "enum": ["rust-unit", "build-script-run", "stage-output", "graph"] },
         "self": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "toolchain": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "sources": {

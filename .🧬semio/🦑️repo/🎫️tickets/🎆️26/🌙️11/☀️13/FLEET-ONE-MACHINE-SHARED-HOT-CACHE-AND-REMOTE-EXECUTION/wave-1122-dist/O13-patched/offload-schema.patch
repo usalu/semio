@@ -1,0 +1,58 @@
+--- a/offload-schema.json
++++ b/offload-schema.json
+@@ -31,6 +31,8 @@
+         "crate-type",
+         "source-kind",
+         "cheap",
++        "local-slot",
++        "unmeasured",
+         "pin-failed",
+         "cancelled"
+       ]
+@@ -86,6 +88,7 @@
+             "queueThresholdMilliseconds",
+             "fanOutJobs",
+             "roundTripMilliseconds",
++            "unmeasuredWaitMilliseconds",
+             "maximumInputFiles",
+             "maximumInputBytes",
+             "maximumUploadBytes",
+@@ -104,6 +107,10 @@
+           ],
+           "properties": {
+             "roundTripMilliseconds": {
++              "type": "integer",
++              "minimum": 0
++            },
++            "unmeasuredWaitMilliseconds": {
+               "type": "integer",
+               "minimum": 0
+             },
+@@ -769,7 +776,8 @@
+     },
+     "limits": {
+       "fanOutJobs": 12,
+-      "roundTripMilliseconds": 2500,
++      "roundTripMilliseconds": 8000,
++      "unmeasuredWaitMilliseconds": 15000,
+       "queueThresholdMilliseconds": 1500,
+       "maximumInputFiles": 8192,
+       "maximumInputBytes": 4294967296,
+@@ -1055,6 +1063,8 @@
+       "reason.crate-type": "its crate type is linked here",
+       "reason.source-kind": "its source is not a Rust file",
+       "reason.cheap": "it compiles faster than a round trip",
++      "reason.local-slot": "a compile slot of this machine is free",
++      "reason.unmeasured": "its local cost is not measured yet, so it compiles here first",
+       "reason.pin-failed": "the pinned machine could not take or finish it"
+     },
+     "de": {
+@@ -1081,6 +1091,8 @@
+       "reason.crate-type": "sein Crate-Typ wird hier gelinkt",
+       "reason.source-kind": "seine Quelle ist keine Rust-Datei",
+       "reason.cheap": "sie ist schneller kompiliert als ein Hin und Zurück",
++      "reason.local-slot": "ein Kompilierplatz dieser Maschine ist frei",
++      "reason.unmeasured": "ihre lokalen Kosten sind noch nicht gemessen, daher wird sie zuerst hier kompiliert",
+       "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
+     }
+   }

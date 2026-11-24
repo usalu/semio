@@ -241,16 +241,23 @@ fn mesh_json(id: &str, spec: &MeshDataSpec) -> semio_framework_value::DslValue {
 /// [`kind_mesh_json`] for a free-form `Mesh`. A scene therefore carries geometry once, however much
 /// stock it lays out.
 pub fn kind_instances_json(kind: &ObjectKind, origin: [f64; 3], scale: f64, selected: bool) -> Vec<semio_framework_value::DslValue> {
+    kind_copy_instances_json(kind, 0, origin, scale, selected)
+}
+
+/// 🔢️ [`kind_instances_json`] for the `copy`-th copy of one kind in a scene: copy `0` keeps the kind id, every later
+/// copy suffixes `~{copy}`, so each scene instance id stays unique however many units a row curates.
+pub fn kind_copy_instances_json(kind: &ObjectKind, copy: usize, origin: [f64; 3], scale: f64, selected: bool) -> Vec<semio_framework_value::DslValue> {
+    let stem = if copy == 0 { kind.id.clone() } else { format!("{}~{copy}", kind.id) };
     let Some(parts) = box_parts(&kind.geometry) else {
         let mesh_id = kind_world_mesh_id(kind);
-        return vec![instance_json(&kind.id, &mesh_id, &kind.name, origin, [scale; 3], selected)];
+        return vec![instance_json(&stem, &mesh_id, &kind.name, origin, [scale; 3], selected)];
     };
     let single = parts.len() == 1;
     parts
         .iter()
         .enumerate()
         .map(|(index, (center, size))| {
-            let id = if single { kind.id.clone() } else { format!("{}#{index}", kind.id) };
+            let id = if single { stem.clone() } else { format!("{stem}#{index}") };
             let position = [origin[0] + center[0] * scale, origin[1] + center[1] * scale, origin[2] + center[2] * scale];
             instance_json(&id, SOURCING_UNIT_BOX_MESH_ID, &kind.name, position, [size[0] * scale, size[1] * scale, size[2] * scale], selected)
         })

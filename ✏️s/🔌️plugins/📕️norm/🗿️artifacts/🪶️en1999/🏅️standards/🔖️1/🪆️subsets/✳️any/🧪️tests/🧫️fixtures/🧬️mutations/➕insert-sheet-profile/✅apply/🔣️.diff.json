@@ -13,12 +13,7 @@
   "outlineVertices": null,
   "fatigueCategories": null,
   "patchLoads": null,
-  "ringStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "ringStiffeners": null,
   "sheetProfiles": {
     "removed": [],
     "inserted": [

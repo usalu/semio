@@ -39,14 +39,13 @@ impl OrdinaryRows {
 pub struct OrdinaryGraft {
     root: Option<ObjRef>,
     next_page: usize,
-    seen: [bool; 256],
     rows: OrdinaryRows,
     ready: bool,
 }
 
 impl Default for OrdinaryGraft {
     fn default() -> Self {
-        Self { root: None, next_page: 0, seen: [false; 256], rows: OrdinaryRows::default(), ready: false }
+        Self { root: None, next_page: 0, rows: OrdinaryRows::default(), ready: false }
     }
 }
 
@@ -58,13 +57,12 @@ impl OrdinaryGraft {
         if self.ready { return Ok(GraftTurn { ready: true, ..Default::default() }); }
         if grant.work < GRAFT_WORK { return Ok(Default::default()); }
         if self.root.is_none() {
-            if loan.objects.len() > self.seen.len() || loan.objects.first().is_none_or(|row| row.id.num == 0)
-                || loan.objects.windows(2).any(|pair| pair[0].id.num >= pair[1].id.num) { return Err(GraftRefusal::Source); }
+            if loan.base(0).is_none_or(|row| row.id.num == 0) { return Err(GraftRefusal::Source); }
             let catalog = dictionary(loan, loan.trailer.root).ok_or(GraftRefusal::Catalog)?;
             let root = dict_get(catalog, "Pages").and_then(reference).ok_or(GraftRefusal::Catalog)?;
             let pages = dictionary(loan, root).ok_or(GraftRefusal::Pages)?;
             let Some(PdfObject::Array(kids)) = dict_get(pages, "Kids") else { return Err(GraftRefusal::Pages); };
-            if !name_is(pages, "Type", "Pages") || loan.objects.len() > self.seen.len() || kids.len() != snapshot.pages.len()
+            if !name_is(pages, "Type", "Pages") || kids.len() != snapshot.pages.len()
                 || dict_get(pages, "Count") != Some(&PdfObject::Int(kids.len() as i64))
             { return Err(GraftRefusal::Pages); }
             self.root = Some(root);
@@ -76,8 +74,7 @@ impl OrdinaryGraft {
             let pages = dictionary(loan, root).ok_or(GraftRefusal::Pages)?;
             let Some(PdfObject::Array(kids)) = dict_get(pages, "Kids") else { return Err(GraftRefusal::Pages); };
             let owner = kids.get(self.next_page).and_then(reference).ok_or(GraftRefusal::Pages)?;
-            let index = loan.objects.binary_search_by_key(&owner.num, |row| row.id.num).map_err(|_| GraftRefusal::Pages)?;
-            if self.seen[index] { return Err(GraftRefusal::Pages); }
+            loan.base_index(owner.num).ok_or(GraftRefusal::Pages)?;
             let original = dictionary(loan, owner).ok_or(GraftRefusal::Pages)?;
             if !name_is(original, "Type", "Page") || dict_get(original, "Parent").and_then(reference) != Some(root) {
                 return Err(GraftRefusal::Pages);
@@ -114,7 +111,6 @@ impl OrdinaryGraft {
                 allocated = dict_capacity(&entries, entries.capacity());
                 self.rows.page = Some(PdfIndirectObject { id: owner, value: PdfObject::Dict(entries) });
             }
-            self.seen[index] = true;
             self.next_page += 1;
             return Ok(work(allocated, false));
         }
@@ -155,7 +151,7 @@ impl OrdinaryGraft {
         if !changed { return Ok(work(0, true)); }
         if fields.iter().all(|(_, text)| text.is_none()) {
             if let Some(info) = loan.trailer.info {
-                let index = loan.objects.binary_search_by_key(&info.num, |row| row.id.num).map_err(|_| GraftRefusal::Info)?;
+                let index = loan.base_index(info.num).ok_or(GraftRefusal::Info)?;
                 self.rows.remove = Some(index);
                 self.rows.info_ref = None;
             }
@@ -165,7 +161,7 @@ impl OrdinaryGraft {
         if let Some(refusal) = missing_grant(extent, grant, maximum_copy) { return Ok(refusal); }
         let reference = match loan.trailer.info {
             Some(info) => info,
-            None => ObjRef { num: loan.objects.last().ok_or(GraftRefusal::Info)?.id.num.checked_add(1).ok_or(GraftRefusal::Extent)?, gen: 0 },
+            None => ObjRef { num: loan.base_len().checked_sub(1).and_then(|last| loan.base(last)).ok_or(GraftRefusal::Info)?.id.num.checked_add(1).ok_or(GraftRefusal::Extent)?, gen: 0 },
         };
         let dict = lower_info_with(info, |text| text.as_bytes().to_vec());
         let allocated = dict_capacity(&dict, dict.capacity());

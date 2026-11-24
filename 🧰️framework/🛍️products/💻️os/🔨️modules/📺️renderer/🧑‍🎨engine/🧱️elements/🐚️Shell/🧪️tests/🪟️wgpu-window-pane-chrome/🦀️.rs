@@ -60,7 +60,7 @@ fn chip_of(name: &str) -> WindowPaneChip {
 /// 📐️ The two pane bodies this frame's dock plans at the React reference viewport.
 fn planned_panes(shell: &mut ShellState, theme: &Theme, atlas: &mut FontAtlas, width: f32, height: f32) -> Vec<(String, Rect)> {
     shell.chrome.screen_w = width;
-    ChromeViewCtx::of(&mut shell).plan_dock_windows(Rect::new(0.0, theme.navbar_height, width, height - theme.navbar_height - theme.footer_height).inset(theme.panel_inset), theme, atlas);
+    ChromeViewCtx::of(shell).plan_dock_windows(Rect::new(0.0, theme.navbar_height, width, height - theme.navbar_height - theme.footer_height).inset(theme.panel_inset), theme, atlas);
     shell.dock.dock_window_plan.clone()
 }
 
@@ -144,9 +144,9 @@ fn pane_chip_rects_band_a_two_pane_split_at_reacts_anchor_insets() {
 #[test]
 fn pane_chips_mount_exactly_where_react_mounts_them() {
     let fixture = pane_fixture();
-    let shell = split_pane_shell();
+    let mut shell = split_pane_shell();
     let mounted = SessionCtx::of(&mut shell).window_pane_chips("pane-top");
-    let engaged = engaged_pane_shell();
+    let mut engaged = engaged_pane_shell();
     let engaged_chips = SessionCtx::of(&mut engaged).window_pane_chips("pane-top");
     for declared in fixture["paneChips"].as_array().expect("fixture pane chips") {
         let chip = chip_of(declared["chip"].as_str().expect("chip name"));
@@ -198,7 +198,7 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
         let icons = IconAtlas::default();
         let mut cursor = ShellChromeChildCursor::default();
         for _ in 0..4096 {
-            if OverlaysViewCtx::of(&mut shell).paint_window_pane_chips_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
+            if OverlaysViewCtx::of(shell).paint_window_pane_chips_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, "pane-top", window) {
                 break;
             }
         }
@@ -237,7 +237,7 @@ fn each_pane_chip_dispatches_its_own_window_state() {
     let mut shell = split_pane_shell();
     let press = |shell: &mut ShellState, control_id: String| {
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims its own pane chip");
+        assert!(semio_framework_async::block_on(PointerCtx::of(shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims its own pane chip");
     };
     assert!(shell.windows.window_actions_folded("pane-top") && shell.windows.window_search_folded("pane-top") && shell.windows.utility_bar_folded("pane-top") && shell.windows.measures_rail_folded("pane-top"), "🪟️ every pane rail starts folded, as React's `useState(true)` does");
     press(&mut shell, WindowPaneChip::Actions.control_id("pane-top", true));
@@ -303,7 +303,7 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     for _ in 0..4096 {
-        caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut frame,&mut draw,&mut overlay,&mut atlas,&icons,&mut input,&theme,&mut world_resources,cx)).expect("original fixture chrome caller");
+        caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut frame,&mut draw,&mut overlay,&mut atlas,&icons,&mut input,&theme,&mut world_resources,cx)).expect("original fixture chrome caller");
         if !matches!(frame.phase, ShellChromeFramePhase::PaneOverlayHits) {
             break;
         }
@@ -526,7 +526,7 @@ fn an_unfolded_pane_utility_rail_paints_inside_its_own_pane() {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut cursor = ShellChromeChildCursor::default();
         for _ in 0..4096 {
-            if ChromeViewCtx::of(&mut shell).paint_window_utilities_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
+            if ChromeViewCtx::of(shell).paint_window_utilities_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
                 break;
             }
         }
@@ -558,6 +558,7 @@ fn an_unfolded_pane_utility_rail_paints_inside_its_own_pane() {
 /// (`🗑️generated/parity-run-{1..12}/steps.json`, `📓️w12d-pane-chip-ids-and-projection-toggle.md` §5).
 #[test]
 fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let shared: Vec<WindowPaneChip> = fixture["paneFolds"]["sharedFold"].as_array().expect("fixture shared fold").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
     let independent: Vec<WindowPaneChip> = fixture["paneFolds"]["independentFolds"].as_array().expect("fixture independent folds").iter().map(|name| chip_of(name.as_str().expect("chip name"))).collect();
@@ -576,7 +577,7 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
             },
         );
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some(control_id), kind: HitKind::Toggle, drag_axis: None, drag_data: None };
-        assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
+        assert!(semio_framework_async::block_on(PointerCtx::of(shell).handle_shell_hit(&hit, &InputState::<ActionDescriptor>::default())).expect("a pane chip press never errors"), "🎯️ the shell claims {chip:?}");
     };
     for chip in WindowPaneChip::ALL {
         let mut shell = split_pane_shell();
@@ -590,6 +591,7 @@ fn one_pane_chip_press_flips_one_fold_and_moves_no_surface() {
         assert_eq!(folds(&shell, "pane-perspective"), (true, true, true, true, true), "🎛️ and never the sibling pane's");
         assert_eq!(shell.input.chrome_surface_census(&shell.chrome, &shell.dock), surfaces_before, "🎛️ {chip:?} opens and closes no surface");
         assert!(!shell.commands.search_open && matches!(shell.input.overlay_state, OverlayState::None), "🎛️ and raises no shell overlay");
+        semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     }
     assert!(shared.is_empty(), "🎛️ the mounted React panes share no fold");
     for chip in &independent {
@@ -621,13 +623,13 @@ fn unfolding_the_utilities_chip_publishes_reacts_own_rail_census() {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut chips = ShellChromeChildCursor::default();
         for _ in 0..4096 {
-            if OverlaysViewCtx::of(&mut shell).paint_window_pane_chips_step(&mut chips, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
+            if OverlaysViewCtx::of(shell).paint_window_pane_chips_step(&mut chips, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
                 break;
             }
         }
         let mut rail = ShellChromeChildCursor::default();
         for _ in 0..4096 {
-            if ChromeViewCtx::of(&mut shell).paint_window_utilities_step(&mut rail, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
+            if ChromeViewCtx::of(shell).paint_window_utilities_step(&mut rail, &mut draw, &mut atlas, &icons, &mut input, &theme, &window_id, body) {
                 break;
             }
         }

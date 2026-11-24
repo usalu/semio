@@ -123,25 +123,22 @@ fn differential_witness(cases: &Value, fast: bool) -> Vec<String> {
     assert!(place.terminal_is_empty());
     let count = 20_000;
     let slice = RetainedCloneGrant { maximum_items: count, ..quantum() };
-    let duration = caller.refreshed_turn(slice, |parent_cx| {
+    caller.refreshed_turn(slice, |parent_cx| {
         let returned = child.with_context(parent_cx.original_source_parent()?, parent_cx, slice, |cx| {
             let progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             let before = cx.original_return_budget().unwrap().get().snapshot();
             assert_eq!(before.claims, 0);
-            let started = std::time::Instant::now();
             for _ in 0..count {
                 assert!(charge(cx, progress, false)?);
             }
-            let elapsed = started.elapsed();
             let after = cx.original_return_budget().unwrap().get().snapshot();
             assert_eq!(after.spent.copied_items - before.spent.copied_items, count);
             assert_eq!(after.work - before.work, count as u128);
             assert!(after.conserved());
-            Ok(elapsed)
+            Ok(())
         })?;
         returned.into_original().map_err(|_| ValueError::invariant("borrowed charge benchmark receipt refused"))?
     }).unwrap();
-    eprintln!("[DEBUG] {count} borrowed Source item and fuel debits in {duration:?} (combined: {fast})");
     for _ in 0..64 {
         if child.terminal_is_empty() { break; }
         caller.turn(quantum(), |cx| child.close_step(cx.original_source_parent()?, cx)).unwrap();

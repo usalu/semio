@@ -16,7 +16,7 @@ test("a first visit introduces the course overview and lets a learner sign in wi
   for (const kind of ["anonymous", "pseudonym", "name"]) await expect(form.locator(`input[type="radio"][value="${kind}"]`)).toBeVisible();
   await expect(form.locator('input[type="radio"][value="anonymous"]')).toBeChecked();
   await expect(form.locator('input[type="text"]')).toHaveCount(0);
-  await form.locator('input[type="radio"][value="pseudonym"]').check();
+  await form.locator('input[type="radio"][value="pseudonym"]').locator("xpath=ancestor::label[1]").click();
   await expect(form.locator('input[type="text"]')).toBeVisible();
   await expect(visitor.page.locator('input[type="password"]')).toHaveCount(0);
   await primary(form).click();

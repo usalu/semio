@@ -25,6 +25,23 @@ mod native_file_open;
 #[path = "🌐️open.rs"]
 mod browser_file_open;
 
+/// 🪪️ One live view state owned for the span of one dispatch, which retires the ordered maps the host restamps onto it on every exit.
+struct LiveViewState(ViewModel);
+
+impl core::ops::Deref for LiveViewState {
+    type Target = ViewModel;
+    fn deref(&self) -> &ViewModel {
+        &self.0
+    }
+}
+
+impl Drop for LiveViewState {
+    fn drop(&mut self) {
+        core::mem::take(&mut self.0.active_utility_by_window_id).retire_cold();
+        core::mem::take(&mut self.0.tool_run_trace_cursor_by_window_id).retire_cold();
+    }
+}
+
 //#region ShellActions
 impl<'ctx> ActionsCtx<'ctx> {
     /** 🪪️ One action a live ENGINE SURFACE derived from raw pointer/wheel input — the world pane's
@@ -379,7 +396,7 @@ impl<'ctx> ActionsCtx<'ctx> {
                 return Err("action has no mounted app owner".into());
             };
             self.docs.bind_workspace_paste(&mut action);
-            let live_view_state = self.as_session().live_view_state(&session);
+            let live_view_state = LiveViewState(self.as_session().live_view_state(&session));
             let program = self.plugins.plugins.iter().find(|p| p.plugin_id == session.plugin_id).ok_or("action program missing")?;
             let invocation = self.prefs.session_action_invocation(&session, &action, &live_view_state)?;
             let action_json = semio_framework_pack_json::to_json_string(&invocation);
@@ -402,6 +419,13 @@ impl<'ctx> ActionsCtx<'ctx> {
                     }
                     semio_framework::kernel::Effect::ReplayShellCommand { action_id, args } => {
                         self.handle_replay_shell_command(&action_id, args.as_ref()).await;
+                    }
+                    #[cfg(target_arch = "wasm32")]
+                    semio_framework::kernel::Effect::PublishEvent { topic, payload } if topic == "os.on-demand.request" => {
+                        let requested = String::from_utf8(payload).map_err(|error| error.to_string()).and_then(|request| semio_renderer_wgpu_program_bridge::request_on_demand_activation(&request));
+                        if let Err(error) = requested {
+                            debug_log(&format!("[TRACE] wgpu shell on-demand activation request failed: {error}"));
+                        }
                     }
                     other => queued.push(other),
                 }

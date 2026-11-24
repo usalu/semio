@@ -659,7 +659,7 @@ impl DeflateRetainedCursor {
 #[cfg(feature = "deflate")]
 impl Drop for DeflateRetainedCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained deflate cursor reached Drop before terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained deflate cursor reached Drop before terminal-empty close");
     }
 }
 

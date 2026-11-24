@@ -1,0 +1,3 @@
+[
+{"op":"shape","scale":"50","view":"front","id":"hood-handle","shape":{"id":"hood-handle","bone":"hood","role":"body","z":-0.255,"tone":0.3,"region":"hood","material":"abs-brown","filled":true,"kind":"poly","points":[[-0.08,1.112],[-0.0619,1.112],[-0.0619,1.132],[0.0619,1.132],[0.0619,1.112],[0.08,1.112],[0.08,1.1439],[-0.08,1.1439]],"closed":true}}
+]

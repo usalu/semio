@@ -576,6 +576,30 @@
 \newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
 %endregion LongTableHeader
 
+% 🤝️ A long table that opens on a pending frame starts on that frame's bottom edge:
+% no space before it, and the shared edge keeps the neighbour's accent colour.
+\newcommand{\semio@table@long@top@color}{semio-chrome-border-normal}
+\newcommand{\semio@table@long@junction@prepare}{%
+  \ifsemio@frame@interlocked
+    \setlength{\LTpre}{0pt}%
+    \xdef\semio@table@long@top@color{\semio@frame@top@color}%
+  \else
+    \setlength{\LTpre}{\semio@spacing@table@outer}%
+    \xdef\semio@table@long@top@color{\semio@frame@edge@neutral}%
+  \fi
+  \global\semio@frame@interlockedfalse
+}
+\newcommand{\semio@table@long@shared@edge}{%
+  \ifx\semio@table@long@top@color\semio@frame@edge@neutral\else
+    \hbox to \linewidth{%
+      \smash{\raisebox{\dimexpr\ht\LT@head+\dp\LT@head-\semio@stroke@hairline\relax}{%
+        \textcolor{\semio@table@long@top@color}{\rule{\linewidth}{\semio@stroke@hairline}}}}%
+      \hss
+    }%
+    \xdef\semio@table@long@top@color{\semio@frame@edge@neutral}%
+  \fi
+}
+
 \newcommand{\semio@table@long@render}[5]{%
   \global\semio@table@long@mode=1\relax
   \global\semio@table@long@part=0\relax
@@ -592,8 +616,8 @@
   \semio@table@long@title@chrome@prepare
   \ifvmode\nointerlineskip\fi
   \raggedright
-  \setlength{\LTpre}{\semio@spacing@table@outer}%
-  \setlength{\LTpost}{\semio@spacing@table@outer}%
+  \semio@table@long@junction@prepare
+  \setlength{\LTpost}{0pt}%
   \setlength{\LTleft}{0pt}%
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
@@ -609,10 +633,11 @@
   \semio@table@long@title@chrome@row@pageparts{#5}%
   #3%
   \endhead
-  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
+  \noalign{\vskip\z@\semio@table@long@shared@edge}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   #4%
   \end{longtable}%
   \semio@table@long@parts@record
+  \semio@frame@close{\semio@spacing@table@outer}{\semio@frame@edge@neutral}%
   \endgroup
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
@@ -1325,8 +1350,9 @@
   \global\semio@table@headerfilltrue
   \gdef\semio@table@long@column@count{8}%
   \semio@table@long@rules@gset@project
-  \par\addvspace{\semio@spacing@table@outer}%
+  \semio@frame@open{0pt}{\semio@frame@edge@neutral}%
   \begingroup
+  \ifsemio@frame@interlocked\parskip\z@\else\addvspace{\semio@spacing@table@outer}\fi
   \SemioSans
   \semio@table@fontsize@apply
   \semio@table@setup@long
@@ -1344,8 +1370,9 @@
   \noalign{\vskip\z@}%
   #3%
   \end{tabular}%
+  \par
+  \semio@frame@close{\semio@spacing@table@outer}{\semio@frame@edge@neutral}%
   \endgroup
-  \par\addvspace{\semio@spacing@table@outer}%
   \global\semio@table@long@mode=0\relax
   \global\semio@table@row@startedfalse
   \global\semio@table@headerfillfalse

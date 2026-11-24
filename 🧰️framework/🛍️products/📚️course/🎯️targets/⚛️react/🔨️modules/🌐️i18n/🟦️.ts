@@ -2,9 +2,10 @@
  * language a chunk of its own that {@link loadCourseLocales} fetches, the chosen language alone or, while none is chosen, all.
  *
  * Learner content (titles, prompts, labels, explanations) is data and arrives as `{ en, de }` {@link Text}; only the
- * client's own chrome lives here. There is no default language: the locale is the learner's explicit, persisted choice,
- * else the first language of the browser's list the client speaks — a preselection the language switch shows and
- * changes — else none, and the client asks in every language at once ({@link COURSE_LOCALES} order: English, then German).
+ * client's own chrome lives here. The client itself has no default language: the locale is the learner's explicit, persisted choice,
+ * else the language the site names as its own, else the first language of the browser's list the client speaks — each a
+ * preselection the language switch shows and changes — else none, and the client asks in every language at once
+ * ({@link COURSE_LOCALES} order: English, then German).
  * Counts are written as "Label: n", so no sentence needs a plural form.
  *
  * @see ../../../../../../🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx — `UiI18nPort`, `UiLabelValue`
@@ -35,6 +36,12 @@ export function preferredLocale(languages: readonly string[]): CourseLocale | un
     if (isCourseLocale(primary)) return primary;
   }
   return undefined;
+}
+
+/** 🏠️ The language a client speaks before its learner chose one: the `site`'s own language (a BCP 47 tag) when the site
+ * names one the client speaks, else what the browser's `languages` preselect, else none. */
+export function initialLocale(site: string | undefined, languages: readonly string[]): CourseLocale | undefined {
+  return preferredLocale(site === undefined ? languages : [site, ...languages]);
 }
 
 /** 🌍️ The learner-visible text of `text` in `locale`. */

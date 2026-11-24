@@ -5,7 +5,7 @@
 /// anchor lands there, and a default tab the skeleton never mentions is appended at its default home.
 #[test]
 fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let default_dock = SessionCtx::of(&mut shell).default_dock();
     let mut skeleton = dock_skeleton_of(&default_dock);
     skeleton.anchors.insert("top-left".to_string(), Vec::new());
@@ -20,7 +20,7 @@ fn apply_dock_skeleton_moves_mentioned_tabs_and_appends_unmentioned_defaults() {
 /// dropped rather than resurrected.
 #[test]
 fn apply_dock_skeleton_is_identity_for_none_and_drops_unknown_ids() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let default_dock = SessionCtx::of(&mut shell).default_dock();
     assert_eq!(apply_dock_skeleton(&default_dock, None), default_dock);
     let mut stale = DockSkeleton::default();
@@ -34,7 +34,7 @@ fn apply_dock_skeleton_is_identity_for_none_and_drops_unknown_ids() {
 /// into itself is refused.
 #[test]
 fn move_tab_in_dock_reanchors_a_tab_and_refuses_self_drops() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let mut dock = SessionCtx::of(&mut shell).default_dock();
     let target = DockTabMoveTarget { anchor: PanelAnchor::RightMiddle, parent_path: Vec::new(), index: 0 };
     assert!(move_tab_in_dock(&mut dock, "fixture.workbench", &target));
@@ -144,6 +144,7 @@ fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
 /// "custom.")` gate on the same button, `ui/js/react/index.tsx:9489`).
 #[test]
 fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut state = fresh_state();
     state.chrome.chrome_build.preferences.theme_id = "semio".to_string();
     let builtin = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.input.build_settings_theme_ui(&state.chrome, &state.prefs)).expect("built-in theme editor projection");

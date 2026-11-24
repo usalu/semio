@@ -1,0 +1,81 @@
+# 🧊️ Silhouette Fixer R3-M: Third Round on Six Assets
+
+Report of 2026-11-23 for `📋️silhouette-brief.md`, batch `🧰️silhouette/R3-M.tsv`. Paths as in the brief (`R`, `S`, `U`). The ops and scripts of `🧰️silhouette/SAM`, `SC`, `SF` and `R2-M` stay in force; everything here is applied after them.
+
+## Result in short
+
+- **Not all green. 5 of 6 pass the real `🧊️catalog-silhouette` test, each run to the end in this session** (`used-insulated-copper-coils`, `concrete-mixer-truck`, `excavator`, `sectional-garage-door`, `used-bentwood-dining-chairs`; 0 of 6 before). **`tower-crane` stays red**: 14 failing checks, 16 before.
+- Failing checks (bounding-box axis, IoU or largest boundary distance per scale and view), all measured anew: 16 over the five green assets before (1, 4, 5, 4, 2), 0 after; `tower-crane` 16 before, 14 after.
+- The work ran in two sessions. In the first a usage limit and an outage of the host (below) stopped it before the chairs were proven and before the crane had an attempt; the second (2026-11-24, after the coordinator's message) checked all six catalog files (`validateAsset` 0 issues and check CLI `✓` for each, the three ops files apply with "file unchanged"), proved the chairs, and worked on the crane.
+- The crane did not get a repair of every check. What was done: every scale measured again, the cause of the side-elevation failures at 1:200 and 1:500 found and repaired in the body (pendants), one further repair measured and rejected (all lattice tubes as capsules). Not attempted: the front elevation at any scale, the 60 mm places of 1:50 and 1:100, the lattice IoU at 1:500.
+- No declared dimension and no power changed: `🧰️silhouette/R3-M/manifest-changes.json` is `{}`.
+- No test, rule, threshold, engine, schema, validator, fixture or README was edited. Four sections went to `U/requests.md` (`## silhouette R3-M — …`).
+- What the two earlier rounds called undecidable was in every case a drawn part that differs from the body, or a body that was wrong or badly read: the garage door (four checks "decided by the hole and slit rules") passes at 1.9 to 15.0 mm once four parts are drawn as the body has them.
+
+## The outage
+
+From 22:21 on 2026-11-23 the dependency image `.cache/b/d/fixed.dmg` was not mounted: `bun x vitest` ended with `Cannot find package 'polygon-clipping'` and the sheet tool `r3-2d.ts` hung. `repo doctor` reported `dependencies.unpublished`; `repo dependencies ensure` failed three times with `diskutil image attach … exited with status 1` (reference 7b8a33aa). I changed nothing beyond those three calls (they moved entries out of the empty mount point into `.cache/b/d/m-stranded-*`, which the tool does by itself). The image was mounted again when checked at 02:10 on 2026-11-24, not by me. Everything this report states as proven ran with the image mounted.
+
+## How it was measured and repaired
+
+- Measured with the test's own `measureAsset` (`measure.ts`), located with `where.ts` and looked at as rasters of the two masks (`png.ts`, several at once with `pngs.sh` and `grid.ts`); `probe.ts` (new) names the drawn shapes and the solids that cover a point; `strokes.ts` (from R2-O) prints what a slender solid is compared as; `dump.py` (new) prints shapes and solids by a pattern. `drawable.ts` now names the view the print profile refuses.
+- Repairs: the two assets with a generator are repaired in the generator and the catalog file is its output (byte-identical, `cmp`). The three others are idempotent ops `🧰️silhouette/R3-M/ops/<id>.json`, authored by `author/<id>.py` (reasons in the docstring) through `author/<id>.sh` against the file as it stood before this round, applied with `apply.ts <id>` (a second run leaves the file unchanged, checked).
+- Proof per asset by `prove.sh`: real `🧊️catalog-silhouette` test with the name filter, `validateAsset`, the product check CLI, then `🧊️three-views`, `🌡️catalog-physics`, `🫁️breathing-catalog`, `✅️asset-validation`, `⚡️asset-power` with the name filter; plus `drawable.ts` (every authored scale drawable in three views under the print profile).
+
+Notation: IoU / largest boundary distance; limits IoU 0.92 and 15, 30, 60, 150 mm at 1:50, 1:100, 1:200, 1:500.
+
+## Per asset
+
+| Asset | Failing checks before | After (owned measure, worst per scale) | Real `🧊️catalog-silhouette` | `validateAsset`, check CLI, drawable | `🧊️three-views`, `🌡️catalog-physics` |
+|---|---|---|---|---|---|
+| `used-insulated-copper-coils` | 1:100 elevation 33.9 mm (1) | none; 1:100 elevation 11.9 mm | ✓ `exit 0 … Tests 1 passed \| 384 skipped (385)` | 0 issues, ✓ (1/1), drawable | 2 passed; 2 passed |
+| `concrete-mixer-truck` | 1:50 elevation 30.2 mm, front 48.8 mm, plan 75.0 mm; 1:100 front 153.8 mm (4) | none; 1:50 11.3 / 11.3 / 11.3 mm; 1:100 front 24.0 mm | ✓ `exit 0 … Tests 1 passed \| 384 skipped (385)` | 0 issues, ✓ (1/1), drawable | 2 passed; 2 passed |
+| `excavator` | 1:50 elevation 197.1 mm, front 71.3 mm, plan 65.6 mm; 1:100 front 78.8 mm, plan 67.9 mm (5) | none; 1:50 11.3 / 13.1 / 11.3 mm; 1:100 21.2 / 11.9 / 7.5 mm | ✓ `exit 0 … Tests 1 passed \| 384 skipped (385)` | 0 issues, ✓ (1/1), drawable; `checkVolumes` 1:50: 0 | 2 passed; 2 passed |
+| `sectional-garage-door` | 1:50 elevation 16.9 mm, front 18.8 mm, plan 30.2 mm; 1:100 front 41.2 mm (4) | none; 1:50 1.9 / 9.4 / 9.4 mm; 1:100 front 15.0 mm | ✓ `exit 0 … Tests 1 passed \| 384 skipped (385)` | 0 issues, ✓ (1/1), drawable | 2 passed; 2 passed |
+| `used-bentwood-dining-chairs` | 1:200 elevation IoU 0.908, front IoU 0.918 (2) | none; 1:200 0.991 / 14.8 mm, 0.984 / 14.3 mm, 1.000 / 5.6 mm | ✓ `exit 0 … Tests 1 passed \| 384 skipped (385)` | 0 issues, ✓ (1/1), drawable; `checkVolumes` of all four scales: 0 | 2 passed; 2 passed |
+| `tower-crane` | 1:50 elevation 60.0 mm, front 108.2 mm, plan 61.9 mm; 1:100 elevation 60.0 mm, front IoU 0.904 and 141.8 mm, plan 60.0 mm; 1:200 elevation 135.0 mm, front IoU 0.909 and 158.2 mm; 1:500 elevation IoU 0.794 and 169.8 mm, front IoU 0.906 and 419.3 mm, plan IoU 0.833 and 168.7 mm (16) | 1:50 and 1:100 unchanged (7); 1:200 elevation 0.979 / 60.0 mm (passes), front IoU 0.905 and 158.2 mm; 1:500 elevation IoU 0.835 (112.5 mm passes), front IoU 0.906 and 419.3 mm, plan IoU 0.833 and 187.5 mm (14) | ✗ `tower-crane 1:500 elevation: expected 0.8351696506823588 to be greater than or equal to 0.92` (before: `0.8301492241827315`) | 0 issues, ✓ (1/1), drawable; `checkVolumes` 1:200: 0, 1:500: 2 `volumes-silhouette` findings (the two it had: elevation IoU 0.835 from 0.794, plan 0.833) | 2 passed; 2 passed (as before the change, run before and after) |
+
+`🫁️breathing-catalog`, `✅️asset-validation` and `⚡️asset-power` have no test named after these assets (all skipped, exit 0), as before.
+
+### What was changed
+
+- **`used-insulated-copper-coils`** (generator `USED-HVAC-COMPONENTS-STAFFAGE-COLLECTION/assets/used-insulated-copper-coils/author-coils.py`, `TOUCHES`, `touch_strip`). Side elevation 1:100: at three knees by the hook the next turn lies 3 to 4 mm away (0.03 mm on paper, about one raster cell). The body mask closed these pinches and the drawn mask did not, so the crescents between them were openings in one and not in the other. The foam of the two turns is drawn touching there (three strips of 8 mm from the knee centre to 1 mm inside the other turn); the `merged` decision says so (en, de). Tie heads as at 1:50 were tried first and taken back (38.4 mm and not printable, 0.19 mm).
+- **`concrete-mixer-truck`** (`author/concrete-mixer-truck.sh`, 42 ops). Front 1:50 and 1:100: the weld seam of the barrel was a `detail` stroke on its outline, half of it outside the body; at 1:50 it is a `texture` mark like its seam solids, at 1:100 its ellipse is 7 mm smaller. The barrel shell (30 flats in the kernel) is turned a quarter tessellation step about its own axis; at 1:50 the front outline of the barrel is traced from shell, track ring, mouth rim and flights. Front and plan 1:50: the tyres as their bodies project (shoulders, grooves) in place of rectangles, which uncovered the two door handles in plan (now drawn). Side elevation 1:50: drive housing with the step to the drum flange, rear mud flap where its solid hangs (20 mm off), lift barrel with neck and eye, lift hanger as its two plates, grille overlaps the cab. Plan 1:50: hinge blocks and hinge pin of the folding chute; intake elbow, platform stay and hopper stay overlap their neighbours (seams of one cell).
+- **`excavator`** (`author/excavator.sh`, 136 ops). Volume 1:50: the house box reached 120 mm into the counterweight (the other scales and the drawing end at its face); it ends at the face and its folded edges have 20 mm radius (40 mm before). 1:50 and 1:100: the two grab rails of the cab (bar and two stand-offs each), the bucket ears as two 45 mm plates in place of one block of 430 mm, the pin of the bucket link. 1:50: the "eye" and "foot" blocks of 200 to 350 mm are the lugs, bosses and pins the body has (stick rod, stick cylinder, bucket cylinder, boom cylinder rods, stick pin); barrels of the five cylinders start 60 mm behind their eye; boom pipes on the centre line of their solids (they were 4 mm high); boom cylinder glands as bodies of revolution; sprocket as its 0.3 m disc and 23 teeth; right mirror arm as three pieces of its tube; square cab floor corner, toolbox corner radius, track frame tongue at yoke height. 1:100: tip bosses of the boom in plan, idler link pin in front.
+- **`sectional-garage-door`** (`author/sectional-garage-door.sh`, 28 ops; the asset has no single generator, `apply.ts sectional-garage-door` is the repair). Side elevation 1:50: the end stiles of the four panels are drawn (they close the finger-guard groove of every joint in the side view). Front 1:50: ceiling feet as the 2.5 mm angles of the body (they were blocks). Front and plan 1:50: each cable drum as hub, two flanges and barrel (it was one cylinder). Front 1:100: the vertical tracks reach the end stiles (7.5 mm clearance, 0.075 mm on paper, bridged in the body by brackets and roller stems).
+- **`used-bentwood-dining-chairs`** (generator `USED-HOUSEHOLD-OBJECTS-STAFFAGE-COLLECTION/assets/used-bentwood-dining-chairs/author-bentwood.ts`, `partsOf` for 1:200 and the decision texts, en and de). The cause was measured: a bent `slender` loft is compared as a zigzag of squares along a centre line taken from its mesh (98 squares of 26 mm for one inner loop). At 1:200 the frame bows, inner loops and leg rings are typified to one smallest feature (30 mm round rod, 30 x 30 mm hoop), not declared slender, and drawn by their outline, as the front legs of this asset already were. Tried first and not shipped: the rods cut into straight pieces (0.974 / 0.988, but 80 `volumes-slender` and 3 `volumes-monotonic` findings). The declared masses and areas come from the 1:50 primitives and are unchanged.
+
+- **`tower-crane`** (`author/tower-crane.py`, 12 ops, body only). Volume 1:200 and 1:500: the three pendants (50 mm round bar, 18 to 41 m) and the three runs of the hoist rope are capsules between the same end points instead of open tubes of revolution. Measured cause (`strokes.ts`, `verts.ts`): the guard's centre line of such a tube lies 0.16 degrees askew, so the 50 mm pendants were compared as bands of 104 and 168 mm, which closed the acute wedges against the jib chord and at the tower head. The finer scales keep the tubes: the same change measured no gain at 1:100 and a loss at 1:50 (front 108.2 to 118.2 mm). One check gets worse within a view that fails anyway: 1:500 plan 168.7 to 187.5 mm.
+
+### Sheets looked at
+
+Product sheets (side, front, plan; line and solid view), opened after the repair: `used-insulated-copper-coils` 1:100; `concrete-mixer-truck` 1:50 and 1:100; `excavator` 1:50 and 1:100; `sectional-garage-door` 1:50; `used-bentwood-dining-chairs` 1:200. Nothing uglier or wrong in the first four. The chairs at 1:200 were heavier in the line view with the first version of the repair (every 0.15 mm band with a 0.25 mm outline, the front view nearly black); the bands now have 0.13 mm outlines and read as lines of about 0.3 mm, close to the strokes they replace. **Gaps against the brief:** the 1:500 sheets of mixer truck, excavator, garage door and chairs and the 1:50 sheets of coils and chairs were rendered and not opened (those scales are unchanged; the coils have no 1:500); the 1:100 sheet of the garage door was rendered and not opened; the crane sheets of 1:200 and 1:500 were rendered and not opened (its drawing is untouched, only six solids changed kind).
+
+## What stays red
+
+| Asset | Failing checks now | What was done, and why it stays |
+|---|---|---|
+| `tower-crane` | 14: 1:50 elevation 60.0 mm, front 108.2 mm, plan 61.9 mm; 1:100 elevation 60.0 mm, front IoU 0.904 and 141.8 mm, plan 60.0 mm; 1:200 front IoU 0.905 and 158.2 mm; 1:500 elevation IoU 0.835, front IoU 0.906 and 419.3 mm, plan IoU 0.833 and 187.5 mm | Repaired: the pendants (see above). Measured and rejected: all slender lattice tubes as capsules (1:500 IoU 0.856 / 0.896 / 0.857, 1:200 plan 0.968 and 104.2 mm, the crane 38 mm longer than declared). Located and not repaired: the front elevation of 1:200 has parts that differ (winch house ends and floor at -0.08, 45.15 m; jib heel posts at -0.56, 43.80 m; tower head diagonal 20 at 0.12, 47.54 m; jib tip axle at -0.17, 44.37 m); the 60.0 mm of 1:50 and 1:100 are capped values at the counter-jib ends (-16.56, 43.71 m and 45.06 m) and its heel (-0.73, 45.08 m), not looked at closer. Not attempted: the IoU of the lattice at 1:500 (the open request on lattice bars; the README's typification with `envelope` solids would be a re-authoring of about 200 solids and 500 shapes). One measurement of 1:50 takes about ten minutes. |
+
+## Files
+
+Updated, catalog assets (repo-relative under `🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/`): `🧱️components/used-insulated-copper-coils/🔣️.json`, `🏗️machinery/concrete-mixer-truck/🔣️.json`, `🏗️machinery/excavator/🔣️.json`, `🧱️components/sectional-garage-door/🔣️.json`, `🛋️furniture/used-bentwood-dining-chairs/🔣️.json`, `🏗️machinery/tower-crane/🔣️.json`.
+
+Updated, generators and their output (under `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/`): `USED-HVAC-COMPONENTS-STAFFAGE-COLLECTION/assets/used-insulated-copper-coils/author-coils.py` and `🔣️.json`; `USED-HOUSEHOLD-OBJECTS-STAFFAGE-COLLECTION/assets/used-bentwood-dining-chairs/author-bentwood.ts` and `🔣️.json` (each output identical to the catalog file).
+
+Updated: `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/requests.md` (four sections appended).
+
+Created under `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/`:
+
+- `silhouette-R3-M.md` (this report)
+- `🧰️silhouette/R3-M/manifest-changes.json` (`{}`)
+- `🧰️silhouette/R3-M/ops/`: `concrete-mixer-truck.json`, `excavator.json`, `sectional-garage-door.json`
+- `🧰️silhouette/R3-M/author/`: `oplib.py`, `concrete-mixer-truck.py`, `concrete-mixer-truck.sh`, `excavator.py`, `excavator.sh`, `sectional-garage-door.py`, `sectional-garage-door.sh`, `tower-crane.py`
+- `🧰️silhouette/R3-M/`: new `probe.ts`, `probe-ops.sh`, `pngs.sh`, `grid.ts`, `tile.py`, `verts.ts`, `dump.py`; `strokes.ts` (from R2-O); copies of the R2-M tools with the paths of this batch: `env.sh`, `files.ts`, `ops.ts`, `apply.ts`, `measure.ts`, `where.ts`, `diff.ts`, `boxes.ts`, `clusters.ts`, `png.ts`, `trace.ts`, `patch.ts`, `printable.ts`, `drawable.ts` (now names the refused view), `validate.ts`, `shapes.py`, `join.py`, `extrusions.py`, `retrace.py`, `look.sh`, `sheets.sh`, `montage.ts`, `vt.sh`, `prove.sh`, `suites.sh`
+
+Removed: `🗑️generated/silhouette/R3-M` (backups, logs, rasters, sheets) at the end.
+
+## For the coordinator
+
+- The authoring scripts read the catalog file as it stood before this round from `🗑️generated/silhouette/R3-M/before`, which is deleted with the tool output: `ops/<id>.json` with `apply.ts` is the reproducible repair (same result on the file before or after; checked for all four on 2026-11-24: "file unchanged").
+- `excavator`, 1:50: the body radius of the house edges was changed from 40 to 20 mm so that the square drawn edges agree; say so if 40 mm was meant, then the front shapes need rounded top edges instead.

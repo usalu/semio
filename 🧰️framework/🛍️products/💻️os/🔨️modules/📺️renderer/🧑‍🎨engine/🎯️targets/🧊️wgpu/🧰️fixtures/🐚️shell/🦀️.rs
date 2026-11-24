@@ -255,6 +255,12 @@ pub fn pointer_interaction(shell: ShellState, input: InputState<ActionDescriptor
 }
 
 pub fn retained_world_sequence_probe(scenario: &str) {
+    retained_world_sequence_probe_closing(scenario, std::convert::identity);
+}
+
+/// 🌍️ [`retained_world_sequence_probe`] whose close lane hands the shell to `close_world` after every close turn, the host lane that serves the component close requests of the mounted worlds.
+pub fn retained_world_sequence_probe_closing(scenario: &str, close_world: fn(ShellState) -> ShellState) {
+    let _arena = fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️scene-pointer-owner/🔣️.json")).unwrap();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
@@ -274,7 +280,8 @@ pub fn retained_world_sequence_probe(scenario: &str) {
     }
     shell.dock.dock_window_plan = row_sources.iter().map(|(window, _, bounds)| (window.clone(), *bounds)).collect();
     let paint_rows: Vec<_> = row_sources.iter().zip(active_documents.iter()).map(|((window, _, bounds), document)| (window.as_str(), document, *bounds)).collect();
-    let input = paint_tree_pointer_documents(&mut shell, &paint_rows);
+    let mut turns = PointerFixtureTurns::serving_world_closes(close_world);
+    let input = paint_tree_pointer_documents_in(&mut turns, &mut shell, &paint_rows);
     let mut rows = Vec::new();
     for (window, surface, bounds) in row_sources {
         let host_id = shell.surfaces.world3d_states.iter().find_map(|(host_id, state)| (state.session.surface_id == surface).then(|| host_id.clone())).expect("painted world admits one exact runtime host");
@@ -314,7 +321,7 @@ pub fn retained_world_sequence_probe(scenario: &str) {
             "modal" => {
                 interaction.shell.input.context_menu = Some(ContextMenuState::default());
                 let paint_rows: Vec<_> = rows.iter().zip(active_documents.iter()).map(|((window, _, _, bounds, _), document)| (window.as_str(), document, *bounds)).collect();
-                interaction.input = paint_tree_pointer_documents(&mut interaction.shell, &paint_rows);
+                interaction.input = paint_tree_pointer_documents_in(&mut turns, &mut interaction.shell, &paint_rows);
             }
             "cancel" => interaction.handle_pointer_cancel(mouse_pointer(77)),
             "foreignPress" | "foreignRelease" => {
@@ -329,7 +336,7 @@ pub fn retained_world_sequence_probe(scenario: &str) {
                 let document = interaction.shell.windows.publish_surface_records(&window, vec![world3d_pointer_record(1, key, &refreshed)]).unwrap();
                 retired_documents.push(std::mem::replace(active_documents.last_mut().expect("the refreshed row owns a document"), document));
                 let paint_rows: Vec<_> = rows.iter().zip(active_documents.iter()).map(|((window, _, _, bounds, _), document)| (window.as_str(), document, *bounds)).collect();
-                interaction.input = paint_tree_pointer_documents(&mut interaction.shell, &paint_rows);
+                interaction.input = paint_tree_pointer_documents_in(&mut turns, &mut interaction.shell, &paint_rows);
             }
             _ => unreachable!(),
         }
@@ -345,17 +352,14 @@ pub fn retained_world_sequence_probe(scenario: &str) {
     let fault = interaction.input.take_action_step().err();
     interaction.shell.dock.dock_window_plan.clear();
     SessionCtx::of(&mut interaction.shell).sync_engine_surface_states();
-    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
-        if interaction.shell.surfaces.retired_world3d_states.is_empty() {
-            break;
-        }
-        interaction.shell.surfaces.advance_world3d_retirement_step();
-    }
+    turns.retire_shell_worlds(&mut interaction.shell);
     for mut document in retired_documents.into_iter().chain(active_documents) {
         while !document.close_step() {}
     }
-    let mounted: Vec<_> = rows.iter().map(|row| row.0.as_str()).collect();
-    retire_pointer_surfaces(&mounted);
+    turns.finish_with(&mut || {
+        let placeholder = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+        interaction.shell = close_world(std::mem::replace(&mut interaction.shell, placeholder));
+    });
     assert!(fault.is_none(), "pointer admission fault: {fault:?}");
     for (surface, count) in observed {
         let expected = if Some(surface.as_str()) == fixture["expectedOwner"].as_str() { case["events"].as_array().unwrap().len() as u64 } else { 0 };
@@ -394,33 +398,83 @@ pub fn tree_pointer_record(id: u64, key: &str, component: ui_contract::Component
     }
 }
 
+/// 🧹️ Hands every retained UI document a shell published back to the arena, so a law that rendered or refreshed a shell closes its arena scope with no document left borrowed.
+pub fn retire_shell_documents(shell: &mut ShellState) {
+    shell.docs.retire_documents_outside(&[], true, &mut shell.chrome).expect("window documents retire");
+    shell.docs.retire_documents_outside(&[], false, &mut shell.chrome).expect("panel documents retire");
+    let auxiliary = std::mem::take(&mut shell.docs.window_actions_documents).into_values().chain(std::mem::take(&mut shell.docs.window_search_documents).into_values()).chain(std::mem::take(&mut shell.docs.window_projection_documents).into_values()).chain(std::mem::take(&mut shell.docs.window_measures_documents).into_values()).chain(shell.docs.spawned_ui.take()).collect::<Vec<_>>();
+    for document in auxiliary {
+        shell.docs.retire_one_surface_document(Some(document)).expect("auxiliary document retires");
+    }
+    shell.docs.drain_retained_document_arenas();
+}
+
 /// 🎟️ The fuel one pointer-document paint turn is quoted: a layout or paint phase posts one unit per node it settles, which a one-unit default turn cannot hold.
 const POINTER_DOCUMENT_TURN_WORK: u64 = 1 << 20;
 
-/// 🧹️ Retires the engine surfaces the pointer paint fixtures mounted, once the caller has closed every document lease it published, because a surface cannot retire while its document is held.
-pub fn retire_pointer_surfaces(surfaces: &[&str]) {
-    let mut closer = fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 7);
-    for surface in surfaces {
-        closer.own_surface(surface);
-    }
-    closer.finish();
-}
+/// 🎟️ The one original caller of a pointer-paint scenario, as in the native frame loop where every frame turn is a single caller whatever ingress generation its documents carry; it stays alive across repaints so that every mounted surface is closed by the caller that mounted it, once the test has retired its documents and worlds.
+#[derive(Default)]
+pub struct PointerFixtureTurns(Option<fixture_original_turn::FixtureTurnV1>, Option<fn(ShellState) -> ShellState>);
 
-/// 🎟️ The fixture turn whose generation is the one `document` carries, issued a grant wide enough for layout and session admission to copy their parameter records; a turn of another generation is retired first, because the engine admits a document only from a turn of its own ingress generation.
-fn fixture_turn_for_document<'a>(slot: &'a mut Option<(u64, fixture_original_turn::FixtureTurnV1)>, document: &UiDocumentLease, world: &mut infinite_world::world::World3dBuildContext) -> &'a mut fixture_original_turn::FixtureTurnV1 {
-    let generation = document.header().expect("the pointer document header").generation;
-    if slot.as_ref().is_some_and(|(live, _)| *live != generation) {
-        let (_, mut stale) = slot.take().expect("live fixture turn");
-        stale.retire_world(world);
-        stale.finish();
+impl PointerFixtureTurns {
+    /// 🌍️ Scenarios whose repaints replace mounted worlds serve the component close requests of the replaced worlds through `close_world`.
+    pub fn serving_world_closes(close_world: fn(ShellState) -> ShellState) -> Self {
+        Self(None, Some(close_world))
     }
-    &mut slot.get_or_insert_with(|| (generation, {
-        fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, generation)
-    })).1
+
+    /// 🎟️ The scenario's caller, born on first use with a grant wide enough for layout, paint and surface retirement to copy their parameter records.
+    pub fn turn(&mut self) -> &mut fixture_original_turn::FixtureTurnV1 {
+        self.0.get_or_insert_with(|| fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1))
+    }
+
+    fn paint_turn(&mut self, surface: &str) -> &mut fixture_original_turn::FixtureTurnV1 {
+        let turn = self.turn();
+        turn.own_surface(surface);
+        turn
+    }
+
+    fn retire_worlds(&mut self, world: &mut infinite_world::world::World3dBuildContext) {
+        self.turn().retire_world(world);
+    }
+
+    /// 🪦 Drives the shell's retired World3d owners to terminal empty on the scenario's caller, whose original a superseded scene bridge needs to close.
+    pub fn retire_shell_worlds(&mut self, shell: &mut ShellState) {
+        let turn = self.turn();
+        for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+            if shell.surfaces.retired_world3d_states.is_empty() {
+                break;
+            }
+            turn.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| shell.surfaces.advance_world3d_retirement_step_in(cx));
+        }
+    }
+
+    /// 🧯️ One document-close opportunity; answers whether it advanced a bounded unit.
+    pub fn pump_document_close_one(&mut self) -> bool {
+        self.turn().turn_funded(POINTER_DOCUMENT_TURN_WORK, semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture caller turn")
+    }
+
+    /// 🧹️ Closes every mounted surface and the caller, serving the component close requests of retired CPU-only scenes; the documents of the scenario must be retired before.
+    pub fn finish(self) {
+        self.finish_with(&mut semio_renderer_wgpu_ui_engine_tests::surface_fixtures::serve_cpu_only_component_close);
+    }
+
+    /// 🧹️ [`Self::finish`] that runs `host` after every close turn, to serve the component close requests of the mounted worlds.
+    pub fn finish_with(mut self, host: &mut dyn FnMut()) {
+        if let Some(turn) = self.0.take() {
+            turn.finish_with(host);
+        }
+    }
 }
 
 pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller: Option<(u64, fixture_original_turn::FixtureTurnV1)> = None;
+    let mut turns = PointerFixtureTurns::default();
+    let input = paint_tree_pointer_documents_in(&mut turns, shell, documents);
+    turns.finish();
+    input
+}
+
+/// 🖍️ Paints on the caller's own `turns`, which keep every mounted surface open until the caller finishes them.
+pub fn paint_tree_pointer_documents_in(turns: &mut PointerFixtureTurns, shell: &mut ShellState, documents: &[(&str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -431,10 +485,10 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (surface, document, body) in documents {
-        let caller = fixture_turn_for_document(&mut caller, document, &mut world_resources);
-        caller.own_surface(surface);
         let mut cursor = UiDocumentFrameCursor::default();
-        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
+        let mut complete = false;
+        for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+            let caller = turns.paint_turn(surface);
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
             let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts {
                 chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(),
@@ -444,19 +498,23 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
             };
             let done = caller.turn_funded(POINTER_DOCUMENT_TURN_WORK, |cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
-            done
-        });
+            if done {
+                complete = true;
+                break;
+            }
+            if let Some(close_world) = turns.1 {
+                shell.surfaces.world3d_states = std::mem::take(&mut world3d_states);
+                let placeholder = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+                *shell = close_world(std::mem::replace(shell, placeholder));
+                world3d_states = std::mem::take(&mut shell.surfaces.world3d_states);
+            }
+        }
         assert!(complete, "the tree pointer document painted within its opportunity ceiling");
         shell.input.register_retained_body_hits(surface, *body, &mut input);
     }
     shell.surfaces.world3d_states = world3d_states;
     PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
-    if let Some((_, caller)) = caller.as_mut() {
-        caller.retire_world(&mut world_resources);
-    }
-    if let Some((_, caller)) = caller {
-        caller.finish();
-    }
+    turns.retire_worlds(&mut world_resources);
     input
 }
 
@@ -466,7 +524,14 @@ pub fn world3d_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_world3d
 }
 
 pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&str, &str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
-    let mut caller: Option<(u64, fixture_original_turn::FixtureTurnV1)> = None;
+    let mut turns = PointerFixtureTurns::default();
+    let input = paint_component_pointer_documents_in(&mut turns, shell, documents);
+    turns.finish();
+    input
+}
+
+/// 🖍️ Paints on the caller's own `turns`, which keep every mounted surface open until the caller finishes them.
+pub fn paint_component_pointer_documents_in(turns: &mut PointerFixtureTurns, shell: &mut ShellState, documents: &[(&str, &str, &UiDocumentLease, Rect)]) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -477,10 +542,9 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     for (window_id, controller_id, document, body) in documents {
-        let caller = fixture_turn_for_document(&mut caller, document, &mut world_resources);
-        caller.own_surface(window_id);
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
+            let caller = turns.paint_turn(window_id);
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
             let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts {
                 chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(),
@@ -496,12 +560,7 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
         shell.input.register_retained_body_hits(window_id, *body, &mut input);
     }
     PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
-    if let Some((_, caller)) = caller.as_mut() {
-        caller.retire_world(&mut world_resources);
-    }
-    if let Some((_, caller)) = caller {
-        caller.finish();
-    }
+    turns.retire_worlds(&mut world_resources);
     input
 }
 

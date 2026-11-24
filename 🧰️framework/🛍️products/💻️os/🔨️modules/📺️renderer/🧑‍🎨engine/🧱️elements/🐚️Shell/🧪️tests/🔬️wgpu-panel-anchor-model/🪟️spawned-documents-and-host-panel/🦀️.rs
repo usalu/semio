@@ -44,7 +44,8 @@ fn spawned_documents_and_actions_keep_their_exact_owning_session() {
                 expected.as_mut().unwrap()[field] = fixture["host"][field].clone();
             }
         }
-        let owner = shell.docs.action_session(&action, &shell.plugins);
+        let owned = shell.docs.action_session(&action, &shell.plugins).cloned();
+        let owner = owned.as_ref();
         assert_eq!(owner.map(|s| (s.plugin_id.as_str(), s.instance_id, s.app.id.as_str())), expected.as_ref().map(|v| (v["pluginId"].as_str().unwrap(), v["instanceId"].as_u64().unwrap() as u32, v["appId"].as_str().unwrap())), "{}", law["id"]);
         if let Some(surface) = law["surface"].as_str().filter(|id| *id == "main" || *id == "spawned") {
             if expected.is_some() {

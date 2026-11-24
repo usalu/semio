@@ -10,7 +10,9 @@ import {requireTestToolV1} from "../../../../../../../../../../🔨️modules/�
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import cacheSchema from "../../../🧬️schema/🔣️.json";
 import {casObjectPathV1} from "../../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
-import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,lookupUnitV1,publishBuildRunV1,pruneEntriesV1,publishUnitV1,restoreBuildRunV1,restoreUnitV1,treeDigestV1,type BuildEntryV1,type UnitEntryV1} from "../../🟦️.ts";
+import {putCasObjectSyncV1} from "../../../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
+import {casHolderIdV1} from "../../../../../../🏗️build/🗄️cas/🫂️holders/🟦️.ts";
+import {digestFileV1,emitUnitEventV1,lookupBuildRunV1,keepHostObjectsV1,lookupUnitV1,publishBuildRunV1,pruneEntriesV1,publishUnitV1,restoreBuildRunV1,restoreUnitV1,treeDigestV1,type BuildEntryV1,type UnitEntryV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 import corpusSchema from "./🧬️schema/🔣️.json";
 
@@ -180,4 +182,17 @@ test("every decision is appended as one validated event line and an unwritable c
  expect(lines.map(line=>line.kind)).toEqual(["hit","miss"]);
  const blocked=join(base,"blocked");writeFileSync(blocked,"x");
  expect(()=>emitUnitEventV1(blocked,{lane:"l1",kind:"hit",crate:"x",key:null,milliseconds:1,waitedMs:0})).not.toThrow();
+});
+
+test("the objects an entry names get a keeper link in the host store that survives a collector unaware of holders",()=>{
+ const host=join(base,"keeper-host"),root=join(base,"keeper-root");mkdirSync(root,{recursive:true});process.env.SEMIO_CAS_ROOT=host;
+ const output=putCasObjectSyncV1(host,"output"),stream=putCasObjectSyncV1(host,"stream");
+ keepHostObjectsV1(root,{outputs:[{sha256:output}],stdout:stream,stderr:null});
+ const holder=casHolderIdV1("unit-cache",root);
+ for(const digest of [output,stream]){
+  const object=casObjectPathV1(host,digest),keeper=join(host,"v1","k",holder,digest.slice(0,2),digest.slice(2));
+  expect(statSync(object).nlink).toBe(2);expect(statSync(keeper).ino).toBe(statSync(object).ino);
+ }
+ keepHostObjectsV1(root,{outputs:[{sha256:output}],stdout:stream,stderr:null});
+ expect(statSync(casObjectPathV1(host,output)).nlink).toBe(2);
 });

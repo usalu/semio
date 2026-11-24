@@ -17,7 +17,7 @@
           "boltsMaterial": null,
           "boltsDiameter": null,
           "boltsRows": 3,
-          "boltsBoltsPerRow": null,
+          "boltsBoltsPerRow": 2,
           "boltsEdgeDistance": null,
           "boltsPitch": null,
           "boltsGauge": null,
@@ -29,7 +29,8 @@
           "weldsHazExtent": null,
           "actions": null,
           "loadEccentricity": null,
-          "holeStagger": null
+          "holeStagger": null,
+          "forceMethod": null
         }
       }
     ]
@@ -47,5 +48,5 @@
   "sheetProfiles": null,
   "fireInsulations": null,
   "transverseStiffeners": null,
-  "reliabilityClass": "RC2"
+  "reliabilityClass": null
 }

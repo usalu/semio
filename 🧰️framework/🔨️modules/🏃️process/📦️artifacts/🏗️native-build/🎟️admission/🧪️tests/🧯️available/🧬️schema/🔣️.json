@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/AvailableAdmissionCorpusV1",
+  "title": "Available-memory admission corpus: one law input and its expected verdict per case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "input", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "input": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["predictedBytes", "availableBytes", "totalBytes", "runningUnrealizedBytes", "runningUnits", "waitedMilliseconds", "wardenLevel", "cancelled"],
+            "properties": {
+              "predictedBytes": { "type": "integer", "minimum": 0 },
+              "availableBytes": { "type": ["integer", "null"], "minimum": 0 },
+              "totalBytes": { "type": "integer", "minimum": 1 },
+              "runningUnrealizedBytes": { "type": "integer", "minimum": 0 },
+              "runningUnits": { "type": "integer", "minimum": 0 },
+              "waitedMilliseconds": { "type": "integer", "minimum": 0 },
+              "wardenLevel": { "enum": ["calm", "guard", "danger", null] },
+              "cancelled": { "type": "boolean" }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["admit", "reason"],
+            "properties": {
+              "admit": { "type": "boolean" },
+              "reason": { "enum": ["fits", "available", "warden", "waited-out", "unknown"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

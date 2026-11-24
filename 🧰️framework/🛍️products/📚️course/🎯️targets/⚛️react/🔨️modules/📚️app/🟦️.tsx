@@ -20,7 +20,7 @@ import {
   useElementsSurfaceChrome,
   useMediaQuery,
   type NavbarItem, sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
-import { COURSE_LOCALES, applyLocale, courseLocaleLoaded, loadCourseLocales, localized, preferredLocale, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
+import { COURSE_LOCALES, applyLocale, courseLocaleLoaded, initialLocale, loadCourseLocales, localized, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "../💾️persistence/🟦️.ts";
 import { ProctorClient, proctorTransport, type ProctorConnect, type RetryTiming } from "../🛂️proctor/🟦️.ts";
 import { Deputy, type CourseMaterial, type CourseMaterialSource } from "../🫡️deputy/🟦️.ts";
@@ -54,7 +54,8 @@ import "../../🎨️.css";
  * while the proctor is away; handed in as a {@link CourseMaterialSource} it is fetched while the client already shows,
  * and the device decides by itself from the moment it has arrived), the site's logo URL for the navbar, the site's legal pages for the footer
  * and the site's pets (where its menagerie comes from; fetched only for a learner who wants pets) and the site's posters (the
- * built URL of the poster file each learning clip names). The optional seams
+ * built URL of the poster file each learning clip names) and the site's own language (a BCP 47 tag: what the client speaks
+ * until its learner chooses another; without one the browser's list preselects). The optional seams
  * replace the network, the presence sockets, the storage, the browser's language list and the retry timing. */
 export interface CourseOptions {
   readonly proctor: string;
@@ -64,6 +65,7 @@ export interface CourseOptions {
   readonly legal?: CourseLegal;
   readonly pets?: CoursePetsSource;
   readonly posters?: ClipPosters;
+  readonly language?: string;
   readonly transport?: ProctorConnect;
   readonly presence?: PresenceConnect;
   readonly storage?: StorageArea;
@@ -137,8 +139,8 @@ function Waiting(props: { readonly connection: CourseConnection; readonly notice
             {waiting.message}
           </p>
         </CardSection>
-        {waiting.retry ? <BodyButton row onClick={onRetry}>{text("course.app.retry")}</BodyButton> : null}
-        {waiting.reload ? <BodyButton row onClick={reloadPage}>{text("course.app.reload")}</BodyButton> : null}
+        {waiting.retry ? <BodyButton icon="rotate-cw" row onClick={onRetry}>{text("course.app.retry")}</BodyButton> : null}
+        {waiting.reload ? <BodyButton icon="rotate-cw" row onClick={reloadPage}>{text("course.app.reload")}</BodyButton> : null}
       </CourseCard>
     </div>
   );
@@ -166,8 +168,8 @@ export class ScreenBoundary extends Component<{ readonly text: CourseText; reado
     return (
       <Page>
         <ProblemNote problem={{ message: text("course.app.crashed"), detail: error.message }} text={text} id="course-crashed">
-          <BodyButton onClick={() => this.setState({ error: undefined })}>{text("course.app.retry")}</BodyButton>
-          <BodyButton cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
+          <BodyButton icon="rotate-cw" onClick={() => this.setState({ error: undefined })}>{text("course.app.retry")}</BodyButton>
+          <BodyButton icon="rotate-cw" cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
         </ProblemNote>
       </Page>
     );
@@ -196,12 +198,25 @@ export function documentTitle(state: CourseState, locale: CourseLocale | undefin
   return site === undefined || site === screen ? screen : `${screen} · ${site}`;
 }
 
-/** 🖼️ A screen other than home: it scrolls on its own, centred at a comfortable reading width — a `wide` one (a run,
- * its results) takes the room of a large screen for its panes side by side. */
-function Page(props: { readonly wide?: boolean; readonly children: ReactNode }): ReactElement {
+let bandObserver: ResizeObserver | null = null;
+
+/** 📏️ Ref of the client's root: publishes the heights of its navbar and its footer as `--course-band-top` and `--course-band-bottom` and keeps them current, so the main area runs beneath both glass bands and its scrollers keep their content clear of them at rest. */
+function publishBandHeights(root: HTMLDivElement | null): void {
+  bandObserver?.disconnect();
+  bandObserver = null;
+  if (root === null || typeof ResizeObserver === "undefined") return;
+  const bands = [["--course-band-top", root.querySelector<HTMLElement>(":scope > header")], ["--course-band-bottom", root.querySelector<HTMLElement>(":scope > footer")]] as const;
+  const publish = (): void => { for (const [name, band] of bands) root.style.setProperty(name, `${band?.getBoundingClientRect().height ?? 0}px`); };
+  bandObserver = new ResizeObserver(publish);
+  for (const [, band] of bands) if (band) bandObserver.observe(band);
+  publish();
+}
+
+/** 🖼️ A screen other than home: it scrolls on its own and its cards are as wide as the client, so their edges are the client's; running text keeps its reading width inside its card. */
+function Page(props: { readonly children: ReactNode }): ReactElement {
   return (
-    <div className="course-page-scroll relative min-h-0 flex-1 overflow-auto">
-      <CardStack className="course-page" maxWidth={props.wide ? "100rem" : "72rem"}>
+    <div className="course-page-scroll ui-scrollbar-hidden relative min-h-0 flex-1 overflow-auto">
+      <CardStack className="course-page">
         {props.children}
       </CardStack>
     </div>
@@ -267,7 +282,7 @@ function Screen(props: {
     const homeState = step.screen === "home" ? state : { ...state, step: step.screen === "identity" ? state.trail.back.findLast(previous => previous.screen === "home") ?? { screen: "home" as const } : { screen: "home" as const } };
     return (
       <>
-        <screens.HomeScreen session={session} state={homeState} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} introductionPage={introductionPage} />
+        <screens.HomeScreen session={session} state={homeState} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} introductionPage={introductionPage} identifying={step.screen === "identity"} />
         {step.screen === "identity" ? <IdentityScreen session={session} text={text} observed={props.readOnly} onDismiss={() => session.open(homeState.step, true)} /> : !props.readOnly && ((!state.introduced && homeState.step.screen === "home" && homeState.step.page === undefined) || step.screen === "introduction") ? <CourseIntroduction course={state.course} locale={locale} onDismiss={() => session.readIntroduction()} onPageChange={setIntroductionPage} /> : null}
       </>
     );
@@ -277,7 +292,7 @@ function Screen(props: {
       return state.runs[step.run] === undefined || screens.RunScreen === undefined ? (
         waiting
       ) : (
-        <Page wide>
+        <Page>
           <screens.RunScreen key={step.run} session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} readOnly={props.readOnly} />
         </Page>
       );
@@ -285,7 +300,7 @@ function Screen(props: {
       return state.runs[step.run] === undefined || screens.ResultsScreen === undefined ? (
         waiting
       ) : (
-        <Page wide>
+        <Page>
           <AccessGate course={state.course} page={state.runs[step.run]!.quiz} at={at} locale={locale} text={text}>
           <screens.ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
           </AccessGate>
@@ -431,7 +446,7 @@ function Client(props: ClientProps): ReactElement {
   );
   const items: NavbarItem[] = [
     { key: "ways", content: <NavigationControls session={session} state={state} locale={locale} text={text} /> },
-    { key: "introduction", content: <CardAction aria-label={text("course.introduction.replay")} title={text("course.introduction.replay")} onClick={() => session.open({ screen: "introduction" })}><CardIcon icon="info" /><span className="hidden md:inline">{text("course.introduction.replay")}</span></CardAction> },
+    { key: "introduction", content: <CardAction icon="info" aria-label={text("course.introduction.replay")} title={text("course.introduction.replay")} onClick={() => session.open({ screen: "introduction" })}><span className="hidden md:inline">{text("course.introduction.replay")}</span></CardAction> },
     navbarFillItem("fill"),
     { key: "connection", className: "min-w-0 shrink", content: <ConnectionStatus connection={connection} text={text} /> },
     { key: "language", content: <span data-element-alias={COURSE_LANGUAGE_ANCHOR} className="flex"><LanguageSwitch compact locale={locale} text={text} onChange={(chosen) => onPreferences({ ...preferences, locale: chosen })} /></span> },
@@ -439,7 +454,7 @@ function Client(props: ClientProps): ReactElement {
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
+      <div ref={publishBandHeights} className="course-app relative flex min-h-0 flex-col overflow-x-hidden overflow-y-auto bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={icons ? "on" : "off"} onPointerDownCapture={(event) => {
         if (remote !== undefined && event.target instanceof Element && event.target.closest("[data-presence-footer]") === null) { event.preventDefault(); event.stopPropagation(); follow.stop("interaction"); return; }
         playTappedIcons(event.target, event.pointerType);
       }} onKeyDownCapture={(event) => {
@@ -463,18 +478,18 @@ function Client(props: ClientProps): ReactElement {
         <main id="course-main" ref={main} tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
           {connection.contract === "newer" ? (
             <ProblemNote problem={{ message: text("course.app.outdated") }} text={text} band id="course-outdated">
-              <BodyButton cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
+              <BodyButton icon="rotate-cw" cell onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
             </ProblemNote>
           ) : null}
           {unavailable === undefined ? null : (
             <ProblemNote problem={{ message: text("course.app.languageUnavailable", { language: text(LOCALE_NAMES[unavailable]), current: text(LOCALE_NAMES[locale]) }) }} text={text} band id="course-language-unavailable">
-              <BodyButton cell onClick={onRetryLocale}>{text("course.app.retry")}</BodyButton>
-              <BodyButton cell onClick={onDismissLocale}>{text("course.app.dismiss")}</BodyButton>
+              <BodyButton icon="rotate-cw" cell onClick={onRetryLocale}>{text("course.app.retry")}</BodyButton>
+              <BodyButton icon="x" cell onClick={onDismissLocale}>{text("course.app.dismiss")}</BodyButton>
             </ProblemNote>
           )}
           {state.notice === undefined ? null : (
             <ProblemNote problem={noticeProblem(state.notice, text)} text={text} band>
-              <BodyButton cell onClick={() => session.dismissNotice()}>{text("course.app.dismiss")}</BodyButton>
+              <BodyButton icon="x" cell onClick={() => session.dismissNotice()}>{text("course.app.dismiss")}</BodyButton>
             </ProblemNote>
           )}
           <div inert={remote !== undefined} hidden={remote !== undefined} className={remote === undefined ? "contents" : "hidden"}>
@@ -541,8 +556,8 @@ function useLoadedLocale(wanted: CourseLocale, fallback: CourseLocale, timing: R
   return arrived ? wanted : fallback;
 }
 
-/** ❓️ The whole course client for one proctor tenant. It speaks the language the learner stored, else the one the
- * browser's list preselects among the offered ones; while neither exists it shows only the language chooser. */
+/** ❓️ The whole course client for one proctor tenant. It speaks the language the learner stored, else the site's own,
+ * else the one the browser's list preselects among the offered ones; while none exists it shows only the language chooser. */
 export function CourseApp(options: CourseOptions): ReactElement {
   const { session, store, presence, arriving } = useSetup(options);
   useLayoutEffect(() => {
@@ -566,7 +581,7 @@ export function CourseApp(options: CourseOptions): ReactElement {
   const shownPreferences = followedPreferences(preferences, observedPreferences);
   const [requested, setRequested] = useState<CourseLocale | undefined>();
   const [unavailable, setUnavailable] = useState<CourseLocale | undefined>();
-  const wanted = requested ?? preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const wanted = requested ?? preferences.locale ?? initialLocale(options.language, options.languages ?? browserLanguages());
   const { ready, locale, failed: localeFailed, retry: retryLocale } = useCourseLocale(wanted, options.timing);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
@@ -633,7 +648,7 @@ export function CourseApp(options: CourseOptions): ReactElement {
 export function mountCourse(root: HTMLElement, options: CourseOptions): () => void {
   const preferences = readPreferences(localStore(options.storage ?? browserStorageArea(), options.tenant));
   bootstrapElementsSurfaceChromeDocument(preferences.theme);
-  const wanted = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const wanted = preferences.locale ?? initialLocale(options.language, options.languages ?? browserLanguages());
   void applyLocale(wanted);
   let reactRoot: Root | undefined;
   let live = true;

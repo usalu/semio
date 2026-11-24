@@ -36,6 +36,13 @@ export function followedPathsV1(root:string,error:unknown):string[]{
   return edit!==undefined&&isAbsolute(edit.path)&&insideRootV1(root,edit.path)?[edit.path]:[];
 }
 
+/** 🙈️ The followed paths of a failure that the inventory still follows: the ones that are neither tolerated (root-relative with forward slashes) nor below a tolerated directory. An owner whose failure names only tolerated paths is not waiting for the inventory any more, so it fails with its own named failure instead of being thrown back to a follow-up round that cannot change it.
+ * @see ./🧪️tests/🧲️membership-follow */
+export function untoleratedFollowedPathsV1(root:string,error:unknown,volatile:ReadonlySet<string>):string[]{
+  const tolerated=(path:string)=>{const name=relative(root,path).split(sep).join("/");for(let at=name.length;at>0;at=name.lastIndexOf("/",at-1))if(volatile.has(name.slice(0,at)))return true;return false;};
+  return followedPathsV1(root,error).filter(path=>!tolerated(path));
+}
+
 /** 🗣️ The bilingual line of one membership follow-up round.
  * @see ./🧪️tests/🧲️membership-follow */
 export function graphRetryTextV1(round:number,path:string,paths:number,evicted:number,outcomes:OutcomesV1,elapsedMilliseconds:number):TextV1{

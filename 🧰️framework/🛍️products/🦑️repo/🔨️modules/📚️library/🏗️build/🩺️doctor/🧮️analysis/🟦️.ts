@@ -103,7 +103,7 @@ export function analyzeDoctorV1(facts:DoctorFactsV1,options:DoctorAnalysisOption
    if(part.image==="damaged")add("storage.image-damaged","error",part.id,{partition:part.id});
    if(part.image==="ok"&&part.state==="absent"&&part.backing==="missing")add("storage.backing-missing","error",part.id,{partition:part.id});
    if(part.state==="misplaced")add("storage.image-misplaced","error",part.id,{partition:part.id,attachedAt:part.attachedAt??"-",device:part.device??"-",directory:directoryOf(part.id)});
-   if(part.state==="detached")storage.loaderBlocked===true?add("storage.image-detached-blocking","warn",part.id,{partition:part.id,directory:directoryOf(part.id)}):add("storage.image-detached","info",part.id,{partition:part.id});
+   if(part.state==="detached")storage.loaderBlocked===true?add("storage.image-detached-blocking","error",part.id,{partition:part.id,directory:directoryOf(part.id)}):add("storage.image-detached","error",part.id,{partition:part.id,directory:directoryOf(part.id)});
    if(part.publication!=="none"){
     const age=part.publicationAgeSeconds??0;
     add("storage.publication-pending",age>=policy.storage.publicationErrorSeconds?"error":"info",part.id,{partition:part.id,which:part.publication,ageSeconds:age});

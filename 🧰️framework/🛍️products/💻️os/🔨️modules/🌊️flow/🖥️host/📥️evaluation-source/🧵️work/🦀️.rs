@@ -73,7 +73,7 @@ impl FlowEvaluationWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.sources.is_none()&&self.retirement.is_none()}
 }
-impl Drop for FlowEvaluationWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original evaluation Work must reach explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.sources)}}}}
+impl Drop for FlowEvaluationWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original evaluation Work must reach explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.sources)}}}}
 /// 🧹️ Owns a closing evaluation Work as its retirement cursor.
 pub struct WorkRetirement(FlowEvaluationWork);
 impl RetirementCursor for WorkRetirement{

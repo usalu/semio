@@ -504,11 +504,11 @@ where
     }
 
     fn seed_history(&mut self, cx: &mut StepContext<'_>, edit: usize, lane: u8, index: usize) -> Turn {
-        let runtime=self.runtime.as_mut().expect("original causal runtime");let dag=runtime.dag.as_mut().expect("original causal owner");let demand=dag.backing_admission_demands();
+        let runtime=self.runtime.as_mut().expect("original causal runtime");let dag=runtime.dag.as_mut().expect("original causal owner");let backing=dag.backing_admission_demands();let demand=if backing.capacity_bytes!=0{backing}else{dag.original_seed_page_demands()};
         if self.unit_out.is_some() || demand.capacity_bytes != 0 {
             let grant = cx.retained_grant();
             let construction = semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: demand.release_bytes, depth: demand.depth };
-            match built(cx, &mut self.construction, &mut self.construction_failure, &mut self.unit_out, construction, || Ok(((), dag.admit_backing_step(grant)))) {
+            match built(cx, &mut self.construction, &mut self.construction_failure, &mut self.unit_out, construction, || Ok(((), if backing.capacity_bytes != 0 { dag.admit_backing_step(grant) } else { dag.admit_original_seed_page_step(grant) }))) {
                 Ok(true) => { self.unit_out.take(); }
                 Ok(false) => {}
                 Err(error) => { self.original_failure = Some(error); self.phase = Phase::RetireFault; }

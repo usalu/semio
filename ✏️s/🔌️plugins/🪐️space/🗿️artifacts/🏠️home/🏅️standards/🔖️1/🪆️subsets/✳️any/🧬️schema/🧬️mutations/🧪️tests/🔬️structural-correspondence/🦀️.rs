@@ -35,10 +35,10 @@ fn direct_owner_descriptor_surfaces_and_catalog_correspond() {
         assert!(owner.join("🛰️.proto").is_file());
     }
     {
-        assert!(owner.join("📝️text/🦀️.rs").is_file());
+        assert!(mutation_root.join("../../🚪️io/📝️text/🧬️mutations/🦀️.rs").is_file());
     }
     {
-        assert!(owner.join("💾️binary/🦀️.rs").is_file());
+        assert!(mutation_root.join("../../🚪️io/💾️binary/🧬️mutations/🦀️.rs").is_file());
     }
     assert!(mutation_catalog["vectors"].as_array().expect("catalog vectors").iter().any(|vector| vector["mutationId"] == "change-catalog-generation" && vector["mutationDirectoryName"] == "🔢️change-catalog-generation"));
 }

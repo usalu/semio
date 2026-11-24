@@ -122,11 +122,12 @@ describe("keyboard focus belongs to the compositor", () => {
     } finally { h.done(); }
   });
 
-  it("class 6: a native checkbox that sits beside another cell of a group row is a box and is hovered closed", () => {
+  it("class 6: a native checkbox that sits beside another cell of a group row is a box whose hover emphasises the sides it draws at rest and adds none", () => {
     const h = harness('<div class="semio-scope"><div id="row" data-shared-border-group data-shared-border-cells data-shared-border-cell><input id="check" type="checkbox" data-shared-border-frame data-shared-border-edges="" /><div id="text" data-shared-border-cell>Check</div></div></div>', { row: rect(0, 0, 100, 20), check: rect(0, 2, 16, 16), text: rect(16, 0, 84, 20) });
     try {
       h.root.querySelector("#check")!.dispatchEvent(new (h.root.ownerDocument.defaultView as unknown as typeof globalThis).MouseEvent("pointerover", { bubbles: true }));
-      expect(h.painted("hover")).toEqual(closed(1, 16, 3, 17));
+      expect(h.painted("hover")).toEqual(closed(1, 16, 3, 17).filter(d => d !== "M 1 3 L 1 17"));
+      expect(h.painted("normal")).not.toContain("M 1 3 L 1 17");
     } finally { h.done(); }
   });
 

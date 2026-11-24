@@ -261,9 +261,10 @@ const GERMAN_MARKERS: &[&str] = &[
     "der", "die", "das", "und", "oder", "nicht", "mit", "für", "von", "ist", "sind", "muss", "fehlt", "zu", "bei", "auf", "dem", "den", "ein", "eine", "unbekannte", "unbekannter", "unbekanntes", "erforderlich", "zulässig", "kein", "keine", "über", "unter", "zwischen", "als", "nach", "aus", "im", "wird", "werden", "erhöhen", "verringern", "dicke", "länge", "breite", "höhe", "last", "nachweis", "bauteil", "wert", "eingabe",
 ];
 
-/// 🔎️ Whether `text` reads as an English sentence: ASCII-only words of three or more letters (symbols, units, ids and numbers are not words), at least one English marker word and no German marker word. Used by the German-rendering tests; symbols and units are the allowlist.
+/// 🔎️ Whether `text` reads as an English sentence: ASCII-only words of three or more letters (symbols, units, numbers and ids such as `case-equ-01` or `a:b` are not words), at least one English marker word and no German marker word. Used by the German-rendering tests; symbols and units are the allowlist.
 pub fn looks_english(text: &str) -> bool {
-    let words: Vec<String> = text.split(|c: char| !c.is_alphabetic() && c != '\'').filter(|word| word.chars().count() >= 3).map(str::to_lowercase).collect();
+    let is_id = |token: &str| token.chars().any(|c| c.is_ascii_digit() || matches!(c, '-' | '_' | ':' | '/' | '#' | '[' | '='));
+    let words: Vec<String> = text.split_whitespace().map(|token| token.trim_matches(|c: char| matches!(c, '.' | ',' | ';' | ':' | '!' | '?' | '(' | ')' | '"'))).filter(|token| !is_id(token)).flat_map(|token| token.split(|c: char| !c.is_alphabetic() && c != '\'')).filter(|word| word.chars().count() >= 3).map(str::to_lowercase).collect();
     if words.len() < 2 || text.chars().any(|c| c.is_alphabetic() && !c.is_ascii()) {
         return false;
     }

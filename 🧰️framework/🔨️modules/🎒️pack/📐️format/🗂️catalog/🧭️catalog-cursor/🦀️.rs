@@ -667,6 +667,6 @@ impl RetainedPackCatalogCursor {
 
 impl Drop for RetainedPackCatalogCursor {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "retained pack catalog reached Drop before handback or terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "retained pack catalog reached Drop before handback or terminal-empty close");
     }
 }

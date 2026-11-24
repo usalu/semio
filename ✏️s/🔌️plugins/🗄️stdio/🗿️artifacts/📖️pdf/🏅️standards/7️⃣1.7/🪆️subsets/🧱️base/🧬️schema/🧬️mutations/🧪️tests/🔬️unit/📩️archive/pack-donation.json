@@ -1,0 +1,37 @@
+{
+  "image": {
+    "id": "ArchiveRgb",
+    "width": 64,
+    "height": 64,
+    "components": 3,
+    "stride": 5
+  },
+  "alpha": {
+    "id": "ArchiveAlpha",
+    "width": 64,
+    "height": 64,
+    "components": 1,
+    "stride": 13
+  },
+  "objects": {
+    "forward": "{\"mutation\":\"insertObject\",\"id\":{\"num\":5,\"gen\":0},\"value\":{\"kind\":\"null\"},\"admittedStreamRoles\":{\"removed\":[0],\"modified\":[],\"added\":[]}}",
+    "inverse": "{\"mutation\":\"removeObject\",\"id\":{\"num\":5,\"gen\":0},\"admittedStreamRoles\":{\"added\":[{\"index\":0,\"value\":{\"identity\":{\"owner\":{\"num\":2,\"gen\":0},\"path\":[]},\"dependencies\":[],\"value\":{\"kind\":\"metadataText\",\"text\":\"Neutral restored role.\"}}}]}}"
+  },
+  "ordinaryLeaves": [
+    {
+      "mutation": "setPageRotation",
+      "forward": "{\"mutation\":\"setPageRotation\",\"index\":0,\"rotation\":90}",
+      "inverse": "{\"mutation\":\"setPageRotation\",\"index\":0,\"rotation\":0}"
+    },
+    {
+      "mutation": "setInfo",
+      "forward": "{\"mutation\":\"setInfo\",\"info\":{\"title\":\"a replaced title\",\"author\":\"pdf-1-7-base-lopdf-engine\"}}",
+      "inverse": "{\"mutation\":\"setInfo\",\"info\":{\"title\":\"pdf-1-7-base fixture seed\",\"author\":\"pdf-1-7-base-lopdf-engine\"}}"
+    },
+    {
+      "mutation": "setLanguage",
+      "forward": "{\"mutation\":\"setLanguage\",\"language\":\"de-CH\"}",
+      "inverse": "{\"mutation\":\"setLanguage\",\"language\":null}"
+    }
+  ]
+}

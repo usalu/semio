@@ -186,6 +186,7 @@ pub trait ErasedWindowTransientPublication: Send {
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
+    fn abandon(&mut self, cause: ValueError);
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
@@ -231,6 +232,10 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
 
     fn begin_close(&mut self) {
         self.publication.begin_close();
+    }
+
+    fn abandon(&mut self, cause: ValueError) {
+        self.publication.abandon(cause);
     }
 
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{

@@ -6,7 +6,7 @@
 /// own unit resolution instead of dropping every leaf's units.
 #[test]
 fn a_persisted_skeleton_carries_each_leafs_tree_unit() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let skeleton = dock_skeleton_of(&SessionCtx::of(&mut shell).default_dock());
     fn walk(entries: &[DockTabSkeleton]) {
         for entry in entries {
@@ -33,7 +33,7 @@ fn a_persisted_skeleton_carries_each_leafs_tree_unit() {
 #[test]
 fn default_dock_display_branch_carries_the_framework_display_leaves() {
     let fixture = default_dock_fixture();
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     let bottom_left = dock.tabs(PanelAnchor::BottomLeft);
     let branch = bottom_left.first().expect("bottom-left opens with the framework Display branch");
@@ -43,7 +43,7 @@ fn default_dock_display_branch_carries_the_framework_display_leaves() {
     assert_eq!(branch.children.iter().map(|child| child.id.as_str()).collect::<Vec<_>>(), expected);
     assert!(bottom_left.iter().any(|tab| tab.id == "fixture.display"), "🧭️ an app's display-group tab is a SIBLING of the branch, not one of its children");
     assert!(!branch.children.iter().any(|child| child.id == "fixture.display"));
-    let empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
+    let mut empty_app_shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     assert!(SessionCtx::of(&mut empty_app_shell).default_dock().tabs(PanelAnchor::BottomLeft).is_empty(), "🧭️ no session means no dock at all");
 }
 
@@ -63,7 +63,7 @@ fn banded_dock_shell() -> ShellState {
 #[test]
 fn navbar_bands_match_the_react_chrome_band_fixture() {
     let fixture = default_dock_fixture();
-    let shell = banded_dock_shell();
+    let mut shell = banded_dock_shell();
     let bands = &fixture["chromeBands"]["navbar"];
     let leading: Vec<&str> = bands["leading"].as_array().expect("navbar leading band").iter().map(|anchor| anchor.as_str().expect("anchor id")).collect();
     let trailing: Vec<&str> = bands["trailing"].as_array().expect("navbar trailing band").iter().map(|anchor| anchor.as_str().expect("anchor id")).collect();
@@ -100,7 +100,7 @@ fn navbar_bands_match_the_react_chrome_band_fixture() {
 #[test]
 fn footer_bands_match_the_react_chrome_band_fixture() {
     let fixture = default_dock_fixture();
-    let shell = banded_dock_shell();
+    let mut shell = banded_dock_shell();
     let theme = Theme::light();
     let mut atlas = FontAtlas::builtin();
     let (width, btn_h) = (1440.0_f32, theme.control_height);

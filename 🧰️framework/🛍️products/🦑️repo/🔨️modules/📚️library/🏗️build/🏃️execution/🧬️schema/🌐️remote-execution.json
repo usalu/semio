@@ -130,7 +130,8 @@
         "refusalCooldownSeconds",
         "keepAliveSeconds",
         "cancelGraceSeconds",
-        "stuckSeconds"
+        "stuckSeconds",
+        "chargeRampSeconds"
       ],
       "properties": {
         "host": {
@@ -242,6 +243,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 86400
+        },
+        "chargeRampSeconds": {
+          "description": "How long after the start of an action the scheduler keeps reserving its whole declared peak on its machine when the worker does not report the memory of its actions; a load report that arrives later already shows what the action holds, so the declared peak is no longer charged a second time.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600
         }
       }
     },
@@ -263,9 +270,40 @@
         "network",
         "confinement",
         "actions",
-        "disk"
+        "disk",
+        "codegen"
       ],
       "properties": {
+        "codegen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumThreads",
+            "reserveCores",
+            "extraMegabytesPerThread"
+          ],
+          "description": "How many LLVM code generation and ThinLTO threads the worker grants to one linked `cdylib` unit it runs: the cores no other running action holds and the machine does not use itself (the larger of the cores granted to its other actions and its load), less the reserve, at most the maximum, and only as many as the spare memory above the unit's declared peak holds (each thread beyond the first keeps one more module in flight). A grant of one runs the unit with `-Z no-parallel-backend`; more runs it with a job-token pool of that size. The granted thread count is returned in the action result.",
+          "properties": {
+            "maximumThreads": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256,
+              "description": "The most code generation threads one unit gets, however idle the machine is."
+            },
+            "reserveCores": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 64,
+              "description": "Cores left to the machine's own work (the agent, the store, the owner's session) before any thread is granted."
+            },
+            "extraMegabytesPerThread": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536,
+              "description": "The memory one more code generation thread adds to the unit's peak (one module in flight beside the front end that the declared peak already covers)."
+            }
+          }
+        },
         "disk": {
           "type": "object",
           "additionalProperties": false,
@@ -597,6 +635,11 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 10
+        },
+        "peakMegabytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The peak megabytes the requester declared for the action (`semio-peak-mb`); absent when it declared none. The worker admits the action by this size."
         }
       }
     },
@@ -715,6 +758,31 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 64
+          },
+          "maxItems": 512
+        },
+        "usage": {
+          "description": "The memory each running task holds right now (resident megabytes of its whole process tree); absent from a worker that does not measure it. The scheduler charges a task only the part of its declared peak that it has not grown into.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "task",
+              "megabytes"
+            ],
+            "properties": {
+              "task": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "megabytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4194304
+              }
+            }
           },
           "maxItems": 512
         }
@@ -1704,7 +1772,8 @@
         },
         "freeMegabytes": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "What one more unit may still take on this machine: the memory above its floor that the host admission leaves after its own work (a readiness stage reserves its measured use plus a margin, nothing while it waits). The scheduler places a unit when its declared peak fits into this less what it already placed there."
         },
         "load": {
           "oneOf": [
@@ -1795,7 +1864,8 @@
         },
         "freeMegabytes": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "description": "What one more unit may still take on this machine: the memory above its floor that the host admission leaves after its own work (a readiness stage reserves its measured use plus a margin, nothing while it waits). The scheduler places a unit when its declared peak fits into this less what it already placed there."
         },
         "load": {
           "oneOf": [
@@ -1963,7 +2033,8 @@
         "slots",
         "disk",
         "not-ready",
-        "draining"
+        "draining",
+        "warden-cancelled"
       ],
       "description": "Why a worker's own admission refused an action."
     }

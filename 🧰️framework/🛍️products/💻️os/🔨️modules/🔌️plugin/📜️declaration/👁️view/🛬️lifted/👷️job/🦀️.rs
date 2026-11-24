@@ -420,7 +420,7 @@ impl ArtifactInstanceOperationOwnerAliasRetirement {
 
 impl Drop for ArtifactInstanceOperationOwnerAliasRetirement{
     fn drop(&mut self){
-        assert!(self.terminal_is_empty(),"original instance alias abandoned inferred owner custody");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()),"original instance alias abandoned inferred owner custody");
         unsafe{ManuallyDrop::drop(&mut self.inference);ManuallyDrop::drop(&mut self.inference_owned);}
     }
 }

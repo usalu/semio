@@ -21,13 +21,28 @@
     "Policy": {
       "const": {
         "version": 1,
-        "capBytes": 34359738368,
-        "capHostSharePercent": 3,
+        "capBytes": 103079215104,
         "minimumCapBytes": 1073741824,
+        "sizing": {
+          "transientBytes": 4294967296,
+          "releaseBytes": 17179869184,
+          "serverBytes": 25769803776,
+          "roleTtlMs": 604800000,
+          "defaultRole": "builder",
+          "roles": [
+            {"id": "worker", "sharePercent": 3, "releases": 0, "server": false},
+            {"id": "builder", "sharePercent": 6, "releases": 1, "server": false},
+            {"id": "cache-host", "sharePercent": 6, "releases": 2, "server": true}
+          ]
+        },
         "enforceTickMilliseconds": 30000,
         "incrementBytes": 2147483648,
         "transientLeaseMs": 1800000,
-        "admissionBudgetMs": 8000,
+        "holderTtlMs": 86400000,
+        "holderRenewMs": 900000,
+        "holderCacheMs": 30000,
+        "holderProtectedShare": 0.4,
+        "admissionBudgetMs": 30000,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
         "partition": {
@@ -35,12 +50,13 @@
           "lowUsedFraction": 0.8,
           "criticalUsedFraction": 0.97
         },
-        "minAgeMs": 600000,
+        "minAgeMs": 180000,
         "leaseMaxMs": 3600000,
         "touchGranularityMs": 60000,
         "temporaryMaxAgeMs": 3600000,
         "ledgerQuietMs": 3600000,
-        "lockStaleMs": 7200000,
+        "lockStaleMs": 300000,
+        "lockWaitMs": 120000,
         "progressMs": 250,
         "checkEvery": 256,
         "fanOutHexLength": 2,
@@ -60,6 +76,31 @@
         "largestNeedBytes": 6442450944,
         "cushionDivisor": 4,
         "minimumTotalFactor": 2
+      }
+    },
+    "Holder": {
+      "$comment": "A registered reference holder of the host store: a cache root outside the store (a unit cache of any checkout, a proof or test root) whose entry files name store objects. The collector protects the objects its live entries reference and, only when the cap still needs bytes after every unreferenced object is gone, evicts the least recently used entries together with the objects nothing else references. A holder that is not renewed for holderTtlMs, or whose root vanished, ages out.",
+      "type": "object",
+      "required": ["version", "holder", "kind", "root", "renewedAtMs", "expiresAtMs", "indexes", "evictionLog"],
+      "properties": {
+        "version": {"const": 1},
+        "holder": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,96}$"},
+        "kind": {"type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$"},
+        "root": {"type": "string", "minLength": 1},
+        "renewedAtMs": {"type": "integer", "minimum": 0},
+        "expiresAtMs": {"type": "integer", "minimum": 0},
+        "indexes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["directory", "references"],
+            "properties": {
+              "directory": {"type": "string", "minLength": 1},
+              "references": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[A-Za-z0-9_]+(\\.(\\*|[A-Za-z0-9_]+))*$"}}
+            }
+          }
+        },
+        "evictionLog": {"type": "string", "minLength": 1}
       }
     },
     "Digest": {
@@ -162,8 +203,8 @@
           "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
         },
         "statusCap": {
-          "en": "Cap in force {effectiveGib} GiB (declared {capGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
-          "de": "Wirksame Grenze {effectiveGib} GiB (deklariert {capGib} GiB): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
+          "en": "Cap in force {effectiveGib} GiB for role {role} (declared ceiling {capGib} GiB): collection from {highGib} GiB in steps of {incrementGib} GiB down to {lowGib} GiB, writes refused above the cap; transient inputs: {transient} leased or expired blobs, lease {leaseMinutes} min.",
+          "de": "Wirksame Grenze {effectiveGib} GiB für Rolle {role} (deklarierte Obergrenze {capGib} GiB): Bereinigung ab {highGib} GiB in Schritten von {incrementGib} GiB bis auf {lowGib} GiB, Schreiben über der Grenze abgelehnt; flüchtige Eingaben: {transient} geleaste oder abgelaufene Blobs, Lease {leaseMinutes} Min."
         },
         "statusCollection": {
           "en": "Last collection {age} min ago left {gib} GiB.",
@@ -172,6 +213,34 @@
         "statusNoCollection": {
           "en": "No finished collection recorded.",
           "de": "Keine abgeschlossene Sammlung verzeichnet."
+        },
+        "statusHolders": {
+          "en": "Held by: {holders} (server pins, unit-cache roots, transient inputs); {referenced} GiB referenced in all, {unreferenced} GiB by nobody.",
+          "de": "Gehalten von: {holders} (Server-Pins, Unit-Cache-Wurzeln, flüchtige Eingaben); {referenced} GiB insgesamt referenziert, {unreferenced} GiB von niemandem."
+        },
+        "statusHolder": {
+          "en": "  {kind} {label}: {entries} entries, {digests} objects, {gib} GiB{note}",
+          "de": "  {kind} {label}: {entries} Einträge, {digests} Objekte, {gib} GiB{note}"
+        },
+        "holderEvicted": {
+          "en": "Capacity eviction: {entries} least recently used entries of {holders} holders removed with {blobs} objects, {mib} MiB freed.",
+          "de": "Kapazitätsverdrängung: {entries} am längsten ungenutzte Einträge von {holders} Haltern samt {blobs} Objekten entfernt, {mib} MiB freigegeben."
+        },
+        "partitionNotStore": {
+          "en": "The partition is {usedPercent}% used but the store holds only {storeGib} GiB of it ({sharePercent}%); the remaining {overGib} GiB of pressure is not the store's, so no held entry was evicted.",
+          "de": "Die Partition ist zu {usedPercent} % belegt, der Speicher hält davon aber nur {storeGib} GiB ({sharePercent} %); die verbleibenden {overGib} GiB Druck stammen nicht vom Speicher, daher wurde kein gehaltener Eintrag verdrängt."
+        },
+        "holderProtected": {
+          "en": "{entries} entries of live holders stayed protected (floor {floorGib} GiB per holder).",
+          "de": "{entries} Einträge lebender Halter blieben geschützt (Untergrenze {floorGib} GiB je Halter)."
+        },
+        "previewUnreferenced": {
+          "en": "Unreferenced collection would remove {objects} objects and free {gib} GiB; held entries evicted: 0; {kept} objects are kept (referenced, pinned, leased, linked or younger than {graceSeconds} s).",
+          "de": "Die Sammlung unreferenzierter Objekte würde {objects} Objekte entfernen und {gib} GiB freigeben; verdrängte gehaltene Einträge: 0; {kept} Objekte bleiben (referenziert, gepinnt, geleast, verlinkt oder jünger als {graceSeconds} s)."
+        },
+        "doneUnreferenced": {
+          "en": "Unreferenced collection removed {objects} objects and freed {gib} GiB; held entries evicted: 0; {kept} objects kept{partial}.",
+          "de": "Die Sammlung unreferenzierter Objekte entfernte {objects} Objekte und gab {gib} GiB frei; verdrängte gehaltene Einträge: 0; {kept} Objekte blieben{partial}."
         },
         "capRefused": {
           "en": "The cache store is over its cap ({usedGib} GiB of {capGib} GiB) and the collection freed too little in time; this write is refused and the caller carries on without the cache.",

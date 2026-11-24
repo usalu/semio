@@ -12,9 +12,13 @@ use semio_framework_value::{RetirementDemand,ValueRefusalKind,retirement::Retire
 /// 🧵️ The exact original typed sealer crosses only this bounded owning interface.
 pub trait ArtifactStoreBatchDigest<M>:ErasedSnapshotRetirement{
  fn next_digest_demand(&self)->Result<RetirementDemand,ValueError>;
- fn next_digest_work_demand(&self)->Result<u64,ValueError>;
- fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
+ /// 🪟️ The seal work window a turn granted `grant` may chain; [`Self::digest_window`] of an empty grant is the narrow window.
+ fn digest_window(&self,grant:RetainedCloneGrant)->usize;
+ fn next_digest_work_demand(&self,window:usize)->Result<u64,ValueError>;
+ fn advance_digest(&mut self,window:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>;
  fn ready(&self)->bool;
+ /// 🔭️ Names the stalled step of this digest: state bits, work quote and next copy demand.
+ fn witness(&self)->[u64;3];
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>;
  fn begin_close(&mut self);
 }
@@ -50,17 +54,18 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
   if self.source.is_some(){return nested(ArtifactCanonicalEditSealCursor::<M>::source_constructor_demand());}
   nested(header::<M>())
  }
- fn next_digest_work_demand(&self)->Result<u64,ValueError>{
-  if let Some(original)=self.original.as_ref(){return original.next_work_demand();}
+ fn digest_window(&self,grant:RetainedCloneGrant)->usize{ArtifactCanonicalEditSealCursor::<M>::work_window(grant)}
+ fn next_digest_work_demand(&self,window:usize)->Result<u64,ValueError>{
+  if let Some(original)=self.original.as_ref(){return original.next_work_demand_within(window).map(|work|work.max(u64::from(!original.is_ready())));}
   if let Some(admission)=self.admission.as_ref(){
-   return match admission.phase(){"ready"=>Ok(admission.take_output_work_demand()),"projectionStart"=>Ok(1),_=>admission.advance_work_demand()};
+   return match admission.phase(){"ready"=>Ok(admission.take_output_work_demand().max(1)),"projectionStart"=>Ok(1),_=>admission.advance_work_demand().map(|work|work.max(1))};
   }
   Ok(1)
  }
- fn advance_digest(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+ fn advance_digest(&mut self,window:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();
   if !admitted(self.next_digest_demand()?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(original)=self.original.as_mut(){return Ok(RetainedCloneStep::Progress(polled(original.advance(&mut effect.nested(child(grant))))?));}
+  if let Some(original)=self.original.as_mut(){return Ok(RetainedCloneStep::Progress(polled(original.advance_within(window,&mut effect.nested(child(grant))))?));}
   if let Some(admission)=self.admission.as_mut(){
    if admission.phase()=="projectionStart"{return admission.project_owned(&mut effect.nested(child(grant))).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
    if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,&mut effect.nested(child(grant))).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
@@ -75,6 +80,12 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ArtifactStoreBat
   paid_progress(effect,step)
  }
  fn ready(&self)->bool{self.original.as_ref().is_some_and(ArtifactCanonicalEditSealCursor::is_ready)}
+ fn witness(&self)->[u64;3]{
+  if let Some(original)=self.original.as_ref(){return original.witness();}
+  let flags=[self.edit.is_some(),self.admission.is_some(),self.source.is_some(),self.edit_close.is_some()];
+  let bits=flags.iter().enumerate().fold(1u64<<32,|bits,(index,flag)|bits|u64::from(*flag)<<index);
+  [bits,self.next_digest_work_demand(self.digest_window(RetainedCloneGrant::default())).unwrap_or(u64::MAX),self.next_digest_demand().map_or(u64::MAX,|demand|demand.copy_bytes as u64)]
+ }
  fn take_edit(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,[u8;32],RetainedCloneProgress)>,ValueError>{if !admitted(self.next_digest_demand()?,grant){return Ok(None);}let Some(original)=self.original.as_mut() else{return Ok(None)};let taken=original.take_edit(child(grant))?;if original.terminal_is_empty(){self.original=None;}Ok(taken)}
  fn begin_close(&mut self){if let Some(original)=self.original.as_mut(){original.begin_close();}}
 }

@@ -2,7 +2,7 @@ import {afterAll,expect,setDefaultTimeout,test} from "bun:test";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {gitBrokenV1,normaliseGitConfigV1,repairGitConfigV1} from "../🟦️.ts";
+import {gitBrokenV1,normaliseGitConfigV1,repairGitConfigV1,repairGitShallowV1} from "../🟦️.ts";
 
 setDefaultTimeout(120_000);
 const scratch:string[]=[];
@@ -49,4 +49,36 @@ posix("machine-local ignore rules in .git/info/exclude are emptied, kept once un
  expect(readFileSync(join(root,".cache","f","lost",kept[0]!),"utf8")).toBe("# comment\nscratch/\n*.sample\n");
  expect(await normaliseGitConfigV1(root)).not.toContain("info/exclude");
  expect(readdirSync(join(root,".cache","f","lost")).filter(name=>name.endsWith("-info-exclude"))).toHaveLength(1);
+});
+
+posix("a shallow boundary over a history that is fully present is removed and kept in lost, and git reads every commit again",async()=>{
+ const root=repository(),shallow=join(root,".git","shallow");
+ for(const name of ["b","c"]){writeFileSync(join(root,`${name}.txt`),`${name}\n`);run(root,"add","-A");run(root,"commit","-q","-m",name);}
+ const tip=run(root,"rev-parse","HEAD").trim(),parent=run(root,"rev-parse","HEAD~1").trim();
+ writeFileSync(shallow,`${tip}\n`);
+ expect(run(root,"rev-parse","--is-shallow-repository").trim()).toBe("true");
+ expect(run(root,"rev-list","--count","HEAD").trim()).toBe("1");
+ expect(run(root,"log","-1","--format=%P","HEAD").trim()).toBe("");
+ expect(await repairGitShallowV1(root,1_700_000_000_456)).toBe(true);
+ expect(existsSync(shallow)).toBe(false);
+ expect(readFileSync(join(root,".cache","f","lost","1700000000456-git-shallow","shallow"),"utf8")).toBe(`${tip}\n`);
+ expect(run(root,"rev-parse","--is-shallow-repository").trim()).toBe("false");
+ expect(run(root,"rev-list","--count","HEAD").trim()).toBe("3");
+ expect(run(root,"log","-1","--format=%P","HEAD").trim()).toBe(parent);
+ expect(await repairGitShallowV1(root,2)).toBe(false);
+});
+
+posix("a shallow boundary whose history is absent, and one that names no commit of the repository, are left alone",async()=>{
+ const source=repository();
+ writeFileSync(join(source,"b.txt"),"b\n");run(source,"add","-A");run(source,"commit","-q","-m","b");
+ const clone=mkdtempSync(join(tmpdir(),"git-shallow-"));scratch.push(clone);
+ run(clone,"clone","-q","--depth","1",`file://${source}`,"work");
+ const root=join(clone,"work"),shallow=join(root,".git","shallow"),before=readFileSync(shallow,"utf8");
+ expect(run(root,"rev-parse","--is-shallow-repository").trim()).toBe("true");
+ expect(await repairGitShallowV1(root,3)).toBe(false);
+ expect(readFileSync(shallow,"utf8")).toBe(before);
+ writeFileSync(join(source,".git","shallow"),`${"0".repeat(40)}\n`);
+ expect(await repairGitShallowV1(source,4)).toBe(false);
+ expect(existsSync(join(source,".git","shallow"))).toBe(true);
+ expect(existsSync(join(root,".cache","f","lost"))).toBe(false);
 });

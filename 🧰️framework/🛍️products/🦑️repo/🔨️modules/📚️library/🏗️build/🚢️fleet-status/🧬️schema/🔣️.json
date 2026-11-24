@@ -22,7 +22,8 @@
     "readers": {
      "timeoutMilliseconds": 5000,
      "maximumLeaseStats": 20000,
-     "maximumBuildOwners": 64
+     "maximumBuildOwners": 64,
+     "maximumMemoryRecordBytes": 262144
     },
     "graph": {
      "builderResources": [
@@ -44,7 +45,10 @@
      "sampleStaleSeconds": 30,
      "leaseWaitSeconds": 900,
      "imageFullBasisPoints": 9000,
-     "imageShownBasisPoints": 8000
+     "imageShownBasisPoints": 8000,
+     "workerMemoryStaleSeconds": 60,
+     "workerSwapWarnBasisPoints": 2500,
+     "wardenOverheadBasisPoints": 500
     },
     "digestCharacters": 12
    }
@@ -132,9 +136,14 @@
      "required": [
       "maximumBuildOwners",
       "maximumLeaseStats",
+      "maximumMemoryRecordBytes",
       "timeoutMilliseconds"
      ],
      "properties": {
+      "maximumMemoryRecordBytes": {
+       "type": "integer",
+       "minimum": 1
+      },
       "timeoutMilliseconds": {
        "type": "integer",
        "minimum": 0
@@ -189,9 +198,24 @@
       "maximum",
       "maximumKeyDiffsShown",
       "sampleStaleSeconds",
-      "underReservedBasisPoints"
+      "underReservedBasisPoints",
+      "wardenOverheadBasisPoints",
+      "workerMemoryStaleSeconds",
+      "workerSwapWarnBasisPoints"
      ],
      "properties": {
+      "workerMemoryStaleSeconds": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "workerSwapWarnBasisPoints": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "wardenOverheadBasisPoints": {
+       "type": "integer",
+       "minimum": 0
+      },
       "maximum": {
        "type": "integer",
        "minimum": 0
@@ -609,8 +633,8 @@
      "de": "Worker: {ready} bereit, {working} arbeiten, {idle} untätig, {silent} still, {offline} offline, {absent} ohne Eintrag"
     },
     "workers.row": {
-     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}{refusal}",
-     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}{refusal}"
+     "en": "  {origin} {platform}: {state}, stage {stage} ({index}/{count}), attempt {attempts}, record {record}, machine {machine}; memory {memory}{refusal}",
+     "de": "  {origin} {platform}: {state}, Stufe {stage} ({index}/{count}), Versuch {attempts}, Eintrag {record}, Maschine {machine}; Speicher {memory}{refusal}"
     },
     "workers.refusal": {
      "en": ", {reason}",
@@ -651,6 +675,78 @@
     "finding.worker-absent": {
      "en": "worker {origin} is enrolled but showed no sign of life and never wrote a readiness record",
      "de": "Worker {origin} ist eingetragen, zeigte aber kein Lebenszeichen und schrieb nie einen Bereitschaftseintrag"
+    },
+    "workers.memory": {
+     "en": "free {available} MB, swap {swap} MB, compressed {compressed} MB, {level} ({mode}), interventions s/r/c {suspended}/{resumed}/{cancelled}",
+     "de": "frei {available} MB, Swap {swap} MB, komprimiert {compressed} MB, {level} ({mode}), Eingriffe a/f/b {suspended}/{resumed}/{cancelled}"
+    },
+    "workers.memory.none": {
+     "en": "-",
+     "de": "-"
+    },
+    "workers.memory.nowarden": {
+     "en": "no warden record",
+     "de": "kein Wächter-Eintrag"
+    },
+    "workers.level.calm": {
+     "en": "calm",
+     "de": "ruhig"
+    },
+    "workers.level.guard": {
+     "en": "guard",
+     "de": "Wache"
+    },
+    "workers.level.danger": {
+     "en": "danger",
+     "de": "Gefahr"
+    },
+    "workers.mode.observe": {
+     "en": "observe",
+     "de": "beobachtend"
+    },
+    "workers.mode.enforce": {
+     "en": "enforce",
+     "de": "eingreifend"
+    },
+    "workers.warden.missing": {
+     "en": "no memory record",
+     "de": "kein Speichereintrag"
+    },
+    "workers.warden.absent": {
+     "en": "its warden writes no state",
+     "de": "sein Wächter schreibt keinen Zustand"
+    },
+    "workers.warden.stale": {
+     "en": "last record {age} old",
+     "de": "letzter Eintrag {age} alt"
+    },
+    "memory.warden": {
+     "en": "Warden {origin}: {level} ({mode}), free {available} MB, swap {swap} MB (out {swapOut} MB/s), compressed {compressed} MB, pressure {pressure}, interventions s/r/c {suspended}/{resumed}/{cancelled}",
+     "de": "Wächter {origin}: {level} ({mode}), frei {available} MB, Swap {swap} MB (aus {swapOut} MB/s), komprimiert {compressed} MB, Druck {pressure}, Eingriffe a/f/b {suspended}/{resumed}/{cancelled}"
+    },
+    "finding.worker-memory-tight": {
+     "en": "worker {origin} is at memory level {level}: {available} MB available (guard {guard} MB, danger {danger} MB), swap {swap} MB, pressure {pressure}",
+     "de": "Worker {origin} ist auf Speicherstufe {level}: {available} MB verfügbar (Wache {guard} MB, Gefahr {danger} MB), Swap {swap} MB, Druck {pressure}"
+    },
+    "finding.worker-warden-intervened": {
+     "en": "worker {origin}: its warden intervened ({suspended} suspended, {resumed} resumed, {cancelled} cancelled); last: {alarm}",
+     "de": "Worker {origin}: sein Wächter hat eingegriffen ({suspended} angehalten, {resumed} fortgesetzt, {cancelled} abgebrochen); zuletzt: {alarm}"
+    },
+    "finding.worker-warden-absent": {
+     "en": "worker {origin} lives but its warden is not visible: {reason}",
+     "de": "Worker {origin} lebt, aber sein Wächter ist nicht sichtbar: {reason}"
+    },
+    "finding.worker-warden-observing": {
+     "en": "worker {origin}: its warden only observes (level {level}); it decides but does not act",
+     "de": "Worker {origin}: sein Wächter beobachtet nur (Stufe {level}); er entscheidet, handelt aber nicht"
+    },
+    "finding.worker-swap-high": {
+     "en": "worker {origin} uses {swap} MB of swap, {percent}% of its {total} MB memory",
+     "de": "Worker {origin} nutzt {swap} MB Swap, {percent} % seiner {total} MB Speicher"
+    },
+    "finding.worker-warden-overhead": {
+     "en": "worker {origin}: its warden takes {percent}% of one core (tick p95 {tick} ms, {resident} MB resident)",
+     "de": "Worker {origin}: sein Wächter braucht {percent} % eines Kerns (Takt p95 {tick} ms, {resident} MB resident)"
     },
     "error.syntax": {
      "en": "Usage: repo fleet status [--json] [--limit=<n>]",
@@ -1043,6 +1139,7 @@
       "scheduler",
       "fleet",
       "workers",
+      "memory",
       "cas",
       "offload"
      ]
@@ -1682,6 +1779,9 @@
     "workers": {
      "$ref": "#/definitions/WorkersFact"
     },
+    "memory": {
+     "$ref": "#/definitions/MemoryFact"
+    },
     "cas": {
      "$ref": "#/definitions/CasFact"
     },
@@ -2240,6 +2340,12 @@
       "waiters": {
        "type": "integer",
        "minimum": 0
+      },
+      "warden": {
+       "anyOf": [
+        {"type": "null"},
+        {"$ref": "#/definitions/WorkerMemory"}
+       ]
       }
      }
     },
@@ -3354,6 +3460,63 @@
     "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]}
    }
   },
+  "WorkerMemory": {
+   "description": "What one worker's host warden published to the group store as memory.json, read without the scheduler: the host numbers, the level and mode, the interventions so far and the last alarm with its own EN and DE text. An absent record (the warden writes no fresh state) has every number null.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["origin", "ageSeconds", "absent", "mode", "level", "hold", "guardMegabytes", "dangerMegabytes", "availableMegabytes", "totalMegabytes", "swapUsedMegabytes", "swapOutMegabytesPerSecond", "compressedMegabytes", "pressure", "subjects", "subjectMegabytes", "suspended", "counters", "lastAlarm", "overhead"],
+   "properties": {
+    "origin": {"type": "string"},
+    "ageSeconds": {"type": "integer", "minimum": 0},
+    "absent": {"type": "boolean"},
+    "mode": {"enum": ["observe", "enforce", null]},
+    "level": {"enum": ["calm", "guard", "danger", null]},
+    "hold": {"type": ["boolean", "null"]},
+    "guardMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "dangerMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "availableMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "totalMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "swapUsedMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "swapOutMegabytesPerSecond": {"type": ["number", "null"], "minimum": 0},
+    "compressedMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "pressure": {"enum": ["normal", "warn", "critical", null]},
+    "subjects": {"type": ["integer", "null"], "minimum": 0},
+    "subjectMegabytes": {"type": ["integer", "null"], "minimum": 0},
+    "suspended": {"type": ["integer", "null"], "minimum": 0},
+    "counters": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["suspended", "resumed", "cancelled"], "properties": {"suspended": {"type": "integer", "minimum": 0}, "resumed": {"type": "integer", "minimum": 0}, "cancelled": {"type": "integer", "minimum": 0}}}]},
+    "lastAlarm": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["atMs", "action", "kind", "pid", "owner", "megabytes", "text"], "properties": {"atMs": {"type": "integer", "minimum": 0}, "action": {"enum": ["suspend", "resume", "cancel"]}, "kind": {"type": "string"}, "pid": {"type": "integer", "minimum": 1}, "owner": {"type": "string"}, "megabytes": {"type": "integer", "minimum": 0}, "text": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string"}, "de": {"type": "string"}}}}}]},
+    "overhead": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["tickMillisecondsP95", "cpuBasisPoints", "residentMegabytes"], "properties": {"tickMillisecondsP95": {"type": "number", "minimum": 0}, "cpuBasisPoints": {"type": "number", "minimum": 0}, "residentMegabytes": {"type": "number", "minimum": 0}}}]}
+   }
+  },
+  "MemoryFact": {
+   "description": "The memory records of the workers by origin (null: no readable record) and the one of the local warden, none of them read from the scheduler.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["local", "origins"],
+   "properties": {
+    "local": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]},
+    "origins": {"type": "object", "additionalProperties": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]}}
+   }
+  },
+  "WorkerReportRow": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["origin", "platform", "liveness", "recorded", "stage", "stageIndex", "stageCount", "attempts", "recordAgeSeconds", "heartbeatAgeSeconds", "refusal", "memory"],
+   "properties": {
+    "origin": {"type": "string"},
+    "platform": {"type": ["string", "null"]},
+    "liveness": {"enum": ["absent", "offline", "silent", "working", "ready", "idle"]},
+    "recorded": {"type": ["string", "null"]},
+    "stage": {"type": ["string", "null"]},
+    "stageIndex": {"type": "integer", "minimum": 0},
+    "stageCount": {"type": "integer", "minimum": 0},
+    "attempts": {"type": "integer", "minimum": 0},
+    "recordAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
+    "heartbeatAgeSeconds": {"type": ["integer", "null"], "minimum": 0},
+    "refusal": {"anyOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["code", "en", "de"], "properties": {"code": {"type": "string"}, "en": {"type": "string"}, "de": {"type": "string"}}}]},
+    "memory": {"anyOf": [{"type": "null"}, {"$ref": "#/definitions/WorkerMemory"}]}
+   }
+  },
   "WorkersFact": {
    "description": "The workers of the fleet as their readiness records and the heartbeats of their machines say, judged by the age rule of the readiness schema: a record alone never proves a worker lives.",
    "type": "object",
@@ -3371,7 +3534,7 @@
    "properties": {
     "offlineSeconds": {"type": "integer", "minimum": 0},
     "counts": {"type": "object", "additionalProperties": false, "required": ["ready", "working", "idle", "silent", "offline", "absent"], "properties": {"ready": {"type": "integer", "minimum": 0}, "working": {"type": "integer", "minimum": 0}, "idle": {"type": "integer", "minimum": 0}, "silent": {"type": "integer", "minimum": 0}, "offline": {"type": "integer", "minimum": 0}, "absent": {"type": "integer", "minimum": 0}}},
-    "rows": {"type": "array", "items": {"$ref": "#/definitions/WorkerRow"}}
+    "rows": {"type": "array", "items": {"$ref": "#/definitions/WorkerReportRow"}}
    }
   },
   "CasFact": {

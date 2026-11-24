@@ -94,6 +94,8 @@ use event_dispatch::*;
 #[path = "⌨️command-ingress-turn/🦀️.rs"]
 mod command_ingress_turn;
 use command_ingress_turn::*;
+#[doc(hidden)]
+pub use command_ingress_turn::{command_idle_turn_limit, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
 
 #[path = "🎨️dirty-surface-render/🦀️.rs"]
 mod dirty_surface_render;

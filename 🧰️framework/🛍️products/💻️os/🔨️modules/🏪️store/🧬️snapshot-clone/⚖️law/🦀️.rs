@@ -74,7 +74,7 @@ where
     let prepared = loop {
         turns += 1;
         let mut out=None;let mut advanced=None;
-        caller.turn_with_decoder(receiving_turn(grant.retained_grant()),&mut decoder,|cx|{let ran=cx.with_native_receiving(&mut out,|control,_|{advanced=Some(owner.advance(body,grant,control));Ok(())})?;eprintln!("[DEBUG] law receiving ran={ran:?} turn={turns}");Ok(())}).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error:?}"));
+        caller.turn_with_decoder(receiving_turn(grant.retained_grant()),&mut decoder,|cx|{cx.with_native_receiving(&mut out,|control,_|{advanced=Some(owner.advance(body,grant,control));Ok(())})?;Ok(())}).unwrap_or_else(|error| panic!("law preparation failed at turn {turns}: {error:?}"));
         let step=match advanced{Some(Ok(step))=>step,Some(Err(_))=>panic!("law preparation refused at turn {turns}"),None=>ArtifactStoreOneItemPreparationStep::Blocked};
         match step {
             ArtifactStoreOneItemPreparationStep::Prepared(_, progress) => {
@@ -105,7 +105,14 @@ where
     for close_turns in 0..100_000 {
         if owner.terminal_is_empty() {
             assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
-            drop(decoder);drop(caller);
+            let retirement = receiving_turn(Default::default());
+            for _ in 0..4096 {
+                if decoder.terminal_is_empty() { break }
+                caller.turn(retirement, |cx| cx.with_original_retirement(|cx| { decoder.close_on_source(cx)?; Ok(()) })).unwrap_or_else(|error| panic!("law decoder retirement failed: {error:?}"));
+            }
+            assert!(decoder.terminal_is_empty(), "law decoder did not return its Source alias");
+            drop(decoder);
+            caller.retire(retirement);
             report.close_turns = close_turns;
             return report;
         }
@@ -125,7 +132,9 @@ where
             closed.expect("law close step")
         });
         assert!(step.progress().fits(quote.retained_grant()), "law close receipt {:?} exceeds its quote {quote:?}", step.progress());
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes), "law close accounting disagrees with its receipt");
+        let turn = caller.receipt();
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (turn.retained_capacity_bytes, turn.released_bytes), "law close accounting disagrees with the receipt of its whole turn");
+        assert!(turn.retained_capacity_bytes >= step.progress().retained_capacity_bytes && turn.released_bytes >= step.progress().released_bytes, "law close turn receipt {turn:?} omits its step {:?}", step.progress());
     }
     panic!("law preparation did not close under its quoted grants");
 }

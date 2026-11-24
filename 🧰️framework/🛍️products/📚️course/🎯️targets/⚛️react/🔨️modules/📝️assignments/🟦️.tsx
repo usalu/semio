@@ -19,7 +19,7 @@ export function assignmentUrl(assignment: Assignment, locale: CourseLocale): str
 }
 
 /** 🃏️ The card of an assignment on the assignments page: its emoji, title and description, a direct download and the way to its page (`#<assignment>`). */
-export function AssignmentCardView(props: { readonly assignment: Assignment; readonly locale: CourseLocale; readonly text: CourseText; readonly revealed?: boolean; readonly onOpen?: () => void }): ReactElement {
+export function AssignmentCardView(props: { readonly assignment: Assignment; readonly locale: CourseLocale; readonly text: CourseText; readonly revealed?: boolean; readonly onOpen?: () => void; readonly locked?: boolean }): ReactElement {
   const { assignment, locale, text, revealed, onOpen } = props;
   const id = useId();
   const file = assignment.documents[locale].file;
@@ -33,8 +33,8 @@ export function AssignmentCardView(props: { readonly assignment: Assignment; rea
       revealed={revealed}
       icon={<Glyph emoji={assignment.emoji} className="text-sm" />}
       title={localized(assignment.title, locale)}
-      footerLeft={<CardLink href={assignmentUrl(assignment, locale)} download={file}>{text("course.assignments.download")}</CardLink>}
-      footerRight={onOpen === undefined ? undefined : <CardAction primary onClick={onOpen}>{text("course.assignments.open")}</CardAction>}
+      footerLeft={<CardLink icon="download" href={assignmentUrl(assignment, locale)} download={file}>{text("course.assignments.download")}</CardLink>}
+      footerRight={onOpen === undefined && !props.locked ? undefined : <CardAction icon="external-link" primary disabled={onOpen === undefined} onClick={onOpen}>{text("course.assignments.open")}</CardAction>}
     >
       <p className="m-0 text-xs leading-normal text-foreground">{localized(assignment.description, locale)}</p>
     </CourseCard>
@@ -49,22 +49,19 @@ export function AssignmentPage(props: { readonly assignment: Assignment; readonl
   const title = localized(assignment.title, locale);
   const url = assignmentUrl(assignment, locale);
   return (
-    <PageFrame page={`assignment:${assignment.id}`} wide>
+    <PageFrame page={`assignment:${assignment.id}`}>
       <CourseCard flush id={id} card="assignment" anchor={PRESENCE_ANCHORS.home(assignment.id)} icon={<Glyph emoji={assignment.emoji} className="text-sm" />} title={title}>
         <CardSection>
           <p className="m-0 text-sm leading-normal">{localized(assignment.description, locale)}</p>
         </CardSection>
         <div role="group" aria-label={text("course.assignments.viewerTitle", { title })} {...GROUP} {...CELL} className="flex flex-col">
-          <BodyButton row onClick={() => session.open({ screen: "home", page: HOME_PAGES.assignments })}>
-            <CardIcon icon="arrow-left" />
+          <BodyButton icon="arrow-left" row onClick={() => session.open({ screen: "home", page: HOME_PAGES.assignments })}>
             {text("course.assignments.back")}
           </BodyButton>
-          <RowLink primary={!openSeparately} href={url} download={assignment.documents[locale].file}>
-            <CardIcon icon="download" />
+          <RowLink icon="download" primary={!openSeparately} href={url} download={assignment.documents[locale].file}>
             {text("course.assignments.download")}
           </RowLink>
-          <RowLink primary={openSeparately} href={url} external>
-            <CardIcon icon="external-link" />
+          <RowLink icon="external-link" primary={openSeparately} href={url} external>
             {text("course.assignments.newTab")}
           </RowLink>
         </div>

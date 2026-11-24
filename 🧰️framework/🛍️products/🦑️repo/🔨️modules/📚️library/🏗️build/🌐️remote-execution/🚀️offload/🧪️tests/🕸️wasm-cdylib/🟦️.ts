@@ -9,7 +9,7 @@ import type {RemoteExecutionDigestV1} from "../../../🟦️.ts";
 import {expandRemoteExecutionRootV1,validateRemoteExecutionRustcActionV1} from "../../../🧱️actions/🟦️.ts";
 import {linkRootArgumentsV1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧭️remap/🟦️.ts";
 import {PATH_NEUTRAL_FLAGS_V1} from "../../../../../⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts";
-import {buildOffloadActionV1,offloadRustcCommandV1,offloadPlatformV1,offloadSerialArgumentsV1} from "../../📜️action/🟦️.ts";
+import {buildOffloadActionV1,offloadRustcCommandV1,offloadPlatformV1,offloadFrontEndArgumentsV1} from "../../📜️action/🟦️.ts";
 import {planOffloadV1,type OffloadPlanV1} from "../../🗺️paths/🟦️.ts";
 import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadCrateTypeRefusalV1,offloadPeakMegabytesV1} from "../../📐️policy/🟦️.ts";
 import {testRustEnvironmentV1} from "../🧰️workspace/🟦️.ts";
@@ -48,12 +48,12 @@ test("the worker accepts exactly the linked wasm actions and link arguments of t
  expect(validateRemoteExecutionRustcActionV1(view(argumentsOf({crateType:"cdylib",target:"wasm32-wasip2",linkArguments:[],flags:[]}).filter(value=>value!=="--target"&&value!=="wasm32-wasip2")))).toBeUndefined();
 });
 
-test("a cdylib final runs on one front-end thread and a serial back end on the worker, as the build scheduler runs it here; every other unit is unchanged",()=>{
+test("a cdylib final is sent with one front-end thread and no back-end flag (the worker sizes the back end); every other unit is unchanged",()=>{
  const final=["--crate-type","cdylib","-Z","threads=0","a.rs","-Zthreads=8"];
- expect(offloadSerialArgumentsV1(final)).toEqual(["--crate-type","cdylib","-Z","threads=1","a.rs","-Zthreads=1","-Z","no-parallel-backend"]);
- expect(offloadSerialArgumentsV1(["--crate-type=cdylib","-Z","threads=0"])).toEqual(["--crate-type=cdylib","-Z","threads=1","-Z","no-parallel-backend"]);
+ expect(offloadFrontEndArgumentsV1(final)).toEqual(["--crate-type","cdylib","-Z","threads=1","a.rs","-Zthreads=1"]);
+ expect(offloadFrontEndArgumentsV1(["--crate-type=cdylib","-Z","threads=0"])).toEqual(["--crate-type=cdylib","-Z","threads=1"]);
  const library=["--crate-type","lib","-Z","threads=0","a.rs"];
- expect(offloadSerialArgumentsV1(library)).toBe(library);
+ expect(offloadFrontEndArgumentsV1(library)).toBe(library);
 });
 
 test("the object prefix of the macOS linker is never sent for a WebAssembly target",()=>{
@@ -101,7 +101,7 @@ function local(root:string,target:string):string{
 function runAction(plan:OffloadPlanV1,root:string):string{
  const built=offloadRustcCommandV1(plan,HOST),refusal=validateRemoteExecutionRustcActionV1({arguments:[...built.arguments],environment_variables:built.environment.map(([name,value])=>({name,value})),output_paths:[policy.virtual.out,policy.virtual.root],working_directory:""});
  if(refusal!==undefined)throw Error("the worker policy refuses what the requester sends: "+refusal);
- expect(built.arguments.some(value=>value==="no-parallel-backend"),"serial back end").toBe(true);
+ expect(built.arguments.some(value=>value==="no-parallel-backend"),"the back end is the worker's to size").toBe(false);
  expect(built.arguments.some(value=>/^-?Z?threads=0$/u.test(value)),"bounded front end").toBe(false);
  mkdirSync(join(root,".tmp"),{recursive:true});for(const directory of policy.root.directories)mkdirSync(join(root,directory),{recursive:true});
  for(const [path,real] of plan.files){const target=join(root,path);mkdirSync(dirname(target),{recursive:true});copyFileSync(real,target);}

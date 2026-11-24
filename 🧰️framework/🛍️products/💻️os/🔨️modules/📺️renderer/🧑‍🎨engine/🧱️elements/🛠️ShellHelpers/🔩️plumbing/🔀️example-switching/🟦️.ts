@@ -8,6 +8,9 @@ export function historyRefreshNeededV1(actionId: string, patch: Readonly<{ upser
   return actionId === SET_ACTIVE_EXAMPLE_ACTION_ID && (patch?.upserts?.length ?? 0) === 0;
 }
 
+/** ∅ The canonical id of the empty document every app's picker offers first-class: the wire id the guests' `EMPTY_EXAMPLE_ID` constants and the picker's "No example" row share. */
+export const EMPTY_EXAMPLE_ID = "";
+
 /** 🎨️ The program action the navbar example picker dispatches. */
 export const SET_ACTIVE_EXAMPLE_ACTION_ID = "setActiveExample";
 
@@ -35,19 +38,21 @@ export function frameworkOwnsExampleSwitch(role: string | undefined, action: str
 }
 
 /** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
- * `onAction` funnel. The settled outcome drives the picker label, and an empty selection asks
- * the program to load its default document
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+ * `onAction` funnel. The settled outcome drives the picker label; {@link EMPTY_EXAMPLE_ID} asks the program to load its empty document. */
 export function buildActiveExampleAction(controllerId: string, exampleId: string): ActionDescriptor {
-  return { controllerId, action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: exampleId || "" } };
+  return { controllerId, action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId } };
 }
 
-/** 🎨️ Keeps the explicit example from an applied action so a redone history row can recover its label.
- * Loading the default document preserves the previous explicit example. */
-export function rememberedExampleIdFromDispatchV1(action: { readonly action: string; readonly args?: unknown }, remembered: string): string {
-  if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID) return remembered;
+/** 🎨️ The example id a `setActiveExample` dispatch requested, the empty document included; `undefined` for any other action or a missing id. */
+export function requestedExampleIdV1(action: { readonly action: string; readonly args?: unknown }): string | undefined {
+  if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID) return undefined;
   const requested = typeof action.args === "object" && action.args !== null ? (action.args as { exampleId?: unknown }).exampleId : undefined;
-  return typeof requested === "string" && requested ? requested : remembered;
+  return typeof requested === "string" ? requested : undefined;
+}
+
+/** 🎨️ Keeps the explicit example from an applied action, the empty document included, so a redone history row can recover its label. */
+export function rememberedExampleIdFromDispatchV1(action: { readonly action: string; readonly args?: unknown }, remembered: string | undefined): string | undefined {
+  return requestedExampleIdV1(action) ?? remembered;
 }
 
 export type CommittedExampleV1 = Readonly<{ exampleId: string; inputSeq: number }>;
@@ -61,23 +66,23 @@ export function exampleSelectionAfterInputV1(
   focused: boolean,
 ): { readonly memory: CommittedExampleV1; readonly visibleExampleId?: string } | undefined {
   if (action.action !== SET_ACTIVE_EXAMPLE_ACTION_ID || outcome.kind !== "applied" || (previous && previous.inputSeq >= outcome.inputSeq)) return;
-  const requested = rememberedExampleIdFromDispatchV1(action, "");
-  const memory = { exampleId: requested || previous?.exampleId || "", inputSeq: outcome.inputSeq };
-  return focused ? { memory, visibleExampleId: requested || bootExampleId } : { memory };
+  const requested = requestedExampleIdV1(action);
+  const memory = { exampleId: requested ?? previous?.exampleId ?? bootExampleId, inputSeq: outcome.inputSeq };
+  return focused ? { memory, visibleExampleId: requested ?? bootExampleId } : { memory };
 }
 
 /** 🎨️ Restores the picker from the applied state of example edits. Whole-document load commands
  * record a history row without an edit, so their settled input supplies the example label. */
 export function navbarExampleIdFromHistoryUpserts(
   upserts: readonly Pick<HistoryEntry, "actionId" | "applied" | "editId" | "transitionId" | "transaction" | "opCount">[] | undefined,
-  rememberedExampleId: string,
+  rememberedExampleId: string | undefined,
   bootExampleId: string,
 ): string | undefined {
   const rows = (upserts ?? []).filter((entry) => entry.actionId === SET_ACTIVE_EXAMPLE_ACTION_ID
     && entry.applied !== undefined
     && (entry.editId !== undefined || entry.transitionId !== undefined || entry.transaction !== undefined || (entry.opCount ?? 0) > 0));
   if (rows.length === 0) return undefined;
-  if (rows.some((entry) => entry.applied)) return rememberedExampleId || undefined;
+  if (rows.some((entry) => entry.applied)) return rememberedExampleId;
   return bootExampleId;
 }
 //#endregion ShellHelpers

@@ -21,6 +21,12 @@ pub mod exact_graph_proof;
 #[path = "🪡️graft.rs"]
 pub mod ordinary_graft;
 
+#[path = "📎️original-tail.rs"]
+pub mod original_tail;
+
+#[path = "🧷️increment.rs"]
+pub mod increment;
+
 #[path = "🧮️graph-quote.rs"]
 pub mod classic_graph_quote;
 

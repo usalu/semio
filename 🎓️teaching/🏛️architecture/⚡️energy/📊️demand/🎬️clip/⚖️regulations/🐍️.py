@@ -28,6 +28,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 window_card = _manim_module.window_card
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -146,29 +147,6 @@ def _degree_days(reach: float, shift: float = 0.0) -> float:
     xs = np.linspace(0.0, reach, max(3, int(reach * 40) + 1))
     deficit = np.array([THETA_I - t if (t := _catmull(THETA_E, x) + shift) < THETA_HG else 0.0 for x in xs])
     return float(np.sum(0.5 * (deficit[1:] + deficit[:-1]) * np.diff(xs)) * DAYS_PER_MONTH)
-#endregion
-
-
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
 #endregion
 
 
@@ -542,8 +520,8 @@ class Beat1_GEGundNormen(Scene):
          r"Everything we just balanced is not a private calculation — in Germany it is prescribed by law.",
          r"Alles, was wir gerade bilanziert haben, ist keine private Rechnung — in Deutschland ist sie gesetzlich vorgeschrieben."),
         ("geg",
-         r"The Gebäudeenergiegesetz — continued since July 2026 as the Gebäudemodernisierungsgesetz — sets the target.",
-         r"Das Gebäudeenergiegesetz — seit Juli 2026 als Gebäudemodernisierungsgesetz fortgeführt — setzt das Ziel."),
+         r"The Building Modernisation Act — successor since July 2026 to the former Building Energy Act — sets the target.",
+         r"Das Gebäudemodernisierungsgesetz — seit Juli 2026 Nachfolger des früheren Gebäudeenergiegesetzes — setzt das Ziel."),
         ("grenze",
          r"It caps a building's primary energy demand $Q_P$.",
          r"Es begrenzt den Primärenergiebedarf $Q_P$ eines Gebäudes."),
@@ -597,7 +575,7 @@ class Beat1_GEGundNormen(Scene):
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("From law to calculation method", "Vom Gesetz zur Rechenmethode"))
-        din = _din_ref(_references.cite(("gmodg", "p15-20")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p15-20")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -730,7 +708,7 @@ class Beat2_Monatsbilanz(Scene):
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("Why the balance is done month by month", "Warum Monat für Monat bilanziert wird"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "heizperiode"), ("din-ts-18599-2", "nutzenergie")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "heizperiode"), ("din-ts-18599-2", "nutzenergie")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -935,8 +913,8 @@ class Beat3_Klimadaten(Scene):
          r"That is twelve synthetic but representative months.",
          r"Das sind zwölf synthetische, aber repräsentative Monate."),
         ("geg",
-         r"For certain proofs under the building energy law a standardised reference climate is fixed.",
-         r"Für bestimmte Nachweise nach dem Gebäudeenergiegesetz ist ein standardisiertes Referenzklima festgelegt."),
+         r"For certain proofs under the Building Modernisation Act a standardised reference climate is fixed.",
+         r"Für bestimmte Nachweise nach dem Gebäudemodernisierungsgesetz ist ein standardisiertes Referenzklima festgelegt."),
         ("potsdam",
          r"The Potsdam reference climate zone plays the central role in it.",
          r"Die Referenzklimazone Potsdam spielt dabei die zentrale Rolle."),
@@ -964,7 +942,7 @@ class Beat3_Klimadaten(Scene):
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("Climate data: the test reference year", "Klimadaten: das Testreferenzjahr"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "klima"), "dwd-try-2017"), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "klima"), "dwd-try-2017"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1151,7 +1129,7 @@ class Beat4_Gradtagszahl(Scene):
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("Heating limit & degree days", "Heizgrenze & Gradtagszahl"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "heizperiode")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "heizperiode")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

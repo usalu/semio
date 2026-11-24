@@ -35,8 +35,16 @@ fn dense_actions_shell() -> ShellState {
     shell
 }
 
-fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) -> DrawList {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+fn pane_turns() -> semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1 {
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    for window in ["pane-top", "pane-perspective"] {
+        caller.own_surface(&window_actions_surface_id(window));
+        caller.own_surface(&window_search_surface_id(window));
+    }
+    caller
+}
+
+fn publish_dense_actions_chrome(caller: &mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1, shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) -> DrawList {
     while input.retire_hit_step() {}
     shell.chrome.screen_w = 1440.0;
     shell.chrome.screen_h = 640.0;
@@ -48,10 +56,9 @@ fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<A
     let theme = Theme::light();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..262_144 {
-        if caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
-            PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
+        if caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
+            PanelsViewCtx::of(shell).publish_retained_hit_registry(input);
             caller.retire_world(&mut world_resources);
-            caller.finish();
             return draw;
         }
     }
@@ -60,6 +67,7 @@ fn publish_dense_actions_chrome(shell: &mut ShellState, input: &mut InputState<A
 
 #[test]
 fn actions_and_search_publish_vertical_scroll_roots() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = actions_shell();
     shell.windows.window_engagements.insert(
         "pane-top".into(),
@@ -81,6 +89,8 @@ fn actions_and_search_publish_vertical_scroll_roots() {
 
 #[test]
 fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_to_it() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut caller = pane_turns();
     let fixture = tree_density_fixture();
     let row_height = fixture["rowHeightPx"].as_f64().expect("row height") as f32;
     let first = fixture["firstRows"].as_array().expect("first rows");
@@ -100,7 +110,7 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let row = |id: &str, input: &InputState<ActionDescriptor>| {
         input.hits().iter().find(|hit| hit.kind == HitKind::TreeItem && hit.control_id.as_deref().is_some_and(|control| control.ends_with(id))).unwrap_or_else(|| panic!("mounted Actions row '{id}' missing from the published viewport")).clone()
     };
-    let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+    let _ = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
     let clear = row(first_id, &input);
     let select = row(second_id, &input);
     assert!((clear.rect.h - row_height).abs() < 0.01 && (select.rect.h - row_height).abs() < 0.01, "fixed row heights: {:?} {:?}", clear.rect, select.rect);
@@ -109,7 +119,7 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
 
     let pointer = (clear.rect.x + clear.rect.w * 0.5, clear.rect.y + clear.rect.h * 0.5);
     assert!(shell.input.handle_pointer_wheel(pointer.0, pointer.1, 0.0, scroll_delta, &mut input), "the retained Actions viewport owns wheel input");
-    let draw = publish_dense_actions_chrome(&mut shell, &mut input);
+    let draw = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
     assert!(input.hits().iter().any(|hit| hit.kind == HitKind::TreeItem && hit.control_id.as_deref().is_some_and(|control| control.ends_with(terminal_id))), "the retained viewport publication reveals the terminal Actions row");
     let abort = row(terminal_id, &input);
     assert!((abort.rect.h - row_height).abs() < 0.01, "the scrolled terminal row keeps its authored height: {:?}", abort.rect);
@@ -127,27 +137,29 @@ fn the_mounted_actions_tree_keeps_fixed_rows_clips_the_terminal_row_and_scrolls_
     let owner = capture.press(pointer_id, shell.input.pointer_owner_at(pointer.0, pointer.1, &input, &Theme::light()), pointer.0, pointer.1).expect("capture admitted");
     assert_eq!(owner, PointerHitOwner::Chrome, "the retained Actions row owns PointerDown above the scene under its pane");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(pointer.0, pointer.1, true, 0, &mut input, &Theme::light())).expect("scrolled Abort row press");
-    let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+    let _ = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
     assert_eq!(capture.release(pointer_id), PointerHitOwner::Chrome, "the retained Actions row keeps the captured release across its repaint");
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(pointer.0, pointer.1, false, 0, &mut input, &Theme::light())).expect("scrolled Abort row release");
     let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec![terminal_id.strip_prefix("action.").expect("terminal action id")], "the painted scrolled row dispatches its own action exactly once");
     assert!(shell.input.handle_pointer_wheel(pointer.0, pointer.1, 0.0, -scroll_delta, &mut input), "reverse wheel remains owned by the retained viewport");
-    let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+    let _ = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
     assert!((row(first_id, &input).rect.h - row_height).abs() < 0.01, "reverse wheel restores the initial fixed row");
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|control| control.ends_with(terminal_id))), "reverse wheel clips the terminal row again");
 
     let mut faults = Vec::new();
     WindowActionsCtx::of(&mut shell).refresh_window_action_panes(&[], &mut faults).expect("dense pane owners retire");
+    shell.docs.drain_retained_document_arenas();
+    caller.finish();
 }
 
 /// 🧾️ Every record key the pane's published document carries, in publication order — the tail of each
 /// is React's own control id, because [`panel_ui_records`] qualifies a shell-owned key with its
 /// surface (two panes of one kind publish the same React ids, which is React's own duplicate-id
 /// defect; a global owner map cannot carry it, so this renderer qualifies).
-fn published_keys(shell: &ShellState, window_id: &str, search: bool) -> Vec<String> {
+fn published_keys(shell: &mut ShellState, window_id: &str, search: bool) -> Vec<String> {
     let surface = if search { window_search_surface_id(window_id) } else { window_actions_surface_id(window_id) };
-    let node = if search { shell.commands.build_window_search_ui(window_id, &shell.prefs, &shell.windows) } else { WindowActionsCtx::of(&mut shell).build_window_actions_ui(window_id) }.expect("the pane publishes a body");
+    let node = if search { shell.commands.build_window_search_ui(window_id, &shell.prefs, &shell.windows) } else { WindowActionsCtx::of(shell).build_window_actions_ui(window_id) }.expect("the pane publishes a body");
     panel_ui_records(&surface, &node).expect("the pane body projects").into_iter().map(|record| record.key.as_str().to_string()).collect()
 }
 
@@ -156,9 +168,10 @@ fn published_keys(shell: &ShellState, window_id: &str, search: bool) -> Vec<Stri
 /// action the app hides from the palette is in neither renderer's pane.
 #[test]
 fn the_actions_pane_publishes_reacts_own_category_and_row_census() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
-    let shell = actions_shell();
-    let keys = published_keys(&shell, "pane-top", false);
+    let mut shell = actions_shell();
+    let keys = published_keys(&mut shell, "pane-top", false);
     let category_row = fixture["actionsPane"]["categoryRowId"].as_str().expect("fixture category row id");
     let action_row = fixture["actionsPane"]["actionRowId"].as_str().expect("fixture action row id");
     let rows: Vec<&String> = keys.iter().filter(|key| key.contains("/action.")).collect();
@@ -184,7 +197,7 @@ fn the_actions_pane_publishes_reacts_own_category_and_row_census() {
 /// puzzle3d's pane journal `addObjectKind` exactly as React's does.
 #[test]
 fn the_first_row_of_the_actions_pane_dispatches_the_apps_own_verb() {
-    let shell = actions_shell();
+    let mut shell = actions_shell();
     let node = WindowActionsCtx::of(&mut shell).build_window_actions_ui("pane-top").expect("the pane publishes a body");
     let UiNode::Stack(stack) = &node else { panic!("🎬️ the pane body is a stack") };
     let tree = stack.children.iter().find_map(|child| if let UiNode::Tree(tree) = child { Some(tree) } else { None }).expect("the pane body carries React's own Tree");
@@ -212,6 +225,7 @@ fn the_first_row_of_the_actions_pane_dispatches_the_apps_own_verb() {
 /// no action row here, so the pair follows the form as its own band of the pane stack.
 #[test]
 fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_resolves() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let form = &fixture["actionsPane"]["form"];
     let mut shell = actions_shell();
@@ -224,7 +238,7 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
     assert_eq!((dispatch.controller_id.as_str(), dispatch.action.as_str()), ("framework", "setActionExpanded"), "📝️ an arg-carrying row opens the form and fires nothing (P3)");
 
     shell.windows.action_panel_expanded.insert("pane-top".into(), "openAddObjectDialog".into());
-    let keys = published_keys(&shell, "pane-top", false);
+    let keys = published_keys(&mut shell, "pane-top", false);
     let segment = semio_framework::element_id_segment("pane-top");
     for expected in [
         form["sectionId"].as_str().expect("form section").replace("{category}", "create"),
@@ -238,15 +252,15 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
     let list_rows: Vec<&String> = keys.iter().filter(|key| key.ends_with("action.openAddObjectDialog")).collect();
     assert_eq!(list_rows.len(), 1, "📝️ the expanded action keeps exactly its one list row — it is the trigger that folds the form again, got {keys:?}");
 
-    let execute = |shell: &ShellState| -> bool {
-        let node = WindowActionsCtx::of(&mut shell).build_window_actions_ui("pane-top").expect("a body");
+    let execute = |shell: &mut ShellState| -> bool {
+        let node = WindowActionsCtx::of(shell).build_window_actions_ui("pane-top").expect("a body");
         let UiNode::Stack(stack) = &node else { panic!("stack") };
         let button = stack.children.iter().find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None }).expect("the Execute button");
         matches!(button.presence.state, semio_ui_layout::layout::UiState::Disabled)
     };
-    assert!(execute(&shell), "📝️ Execute is refused while a required argument is unstaged — React's `missing.length > 0`");
+    assert!(execute(&mut shell), "📝️ Execute is refused while a required argument is unstaged — React's `missing.length > 0`");
     shell.commands.stage_arg("pane-top", "openAddObjectDialog", "kind", Value::String("slab".into()));
-    assert!(!execute(&shell), "📝️ and admitted the moment every required argument resolves");
+    assert!(!execute(&mut shell), "📝️ and admitted the moment every required argument resolves");
 }
 
 /// 🚦️ **The armed-utility pin.** A utility that declares `allowsActionsWhileActive: false` disables
@@ -277,6 +291,7 @@ fn an_armed_gating_utility_disables_every_app_row_but_not_the_frameworks_own() {
 /// publishes no body at all — React's `if (!hasInput) return null`.
 #[test]
 fn the_search_pane_publishes_reacts_input_and_suggestion_ids() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let mut shell = actions_shell();
     assert!(shell.commands.build_window_search_ui("pane-top", &shell.prefs, &shell.windows).is_none(), "🔎️ an engagement with no input publishes no search body");
@@ -313,28 +328,29 @@ fn the_search_pane_publishes_reacts_input_and_suggestion_ids() {
             possible_engagements: Some(possibles),
         },
     );
-    let keys = published_keys(&shell, "pane-top", false);
+    let keys = published_keys(&mut shell, "pane-top", false);
     assert!(keys.iter().all(|key| !key.ends_with("pane-engagement")), "🔎️ the typed line belongs to the SEARCH pane, never the Actions pane");
-    let keys = published_keys(&shell, "pane-top", true);
+    let keys = published_keys(&mut shell, "pane-top", true);
     assert!(keys.iter().any(|key| key.ends_with("pane-engagement")), "🔎️ the line carries the engagement's own id — got {keys:?}");
     let suggestions = fixture["searchPane"]["suggestionsId"].as_str().expect("fixture suggestions id");
     assert!(keys.iter().any(|key| key.ends_with(suggestions)), "🔎️ the possibles chevron carries React's id");
     assert!(!keys.iter().any(|key| key.ends_with("p.box")), "🔎️ a collapsed chevron publishes no suggestion row, React's own Popover");
 
     shell.commands.search_possibles_open.insert("pane-top".into(), true);
-    let keys = published_keys(&shell, "pane-top", true);
+    let keys = published_keys(&mut shell, "pane-top", true);
     for id in ["p.other", "p.circle", "p.boxSelect", "p.box"] {
         assert!(keys.iter().any(|key| key.ends_with(id)), "🔎️ an open chevron publishes the '{id}' row");
     }
 
     let unnamed = shell.windows.window_engagements.get_mut("pane-top").expect("the engagement");
     unnamed.input.as_mut().expect("the input").id = None;
-    let keys = published_keys(&shell, "pane-top", true);
+    let keys = published_keys(&mut shell, "pane-top", true);
     assert!(keys.iter().any(|key| key.ends_with(fixture["searchPane"]["fallbackInputId"].as_str().expect("fixture fallback id"))), "🔎️ an unnamed line falls back to React's own `ui.windowSearch.action`");
 }
 
 #[test]
 fn canonical_engagements_publication_drives_search_presence_body_and_retirement() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = engagements_fixture();
     let document = engagements_section_document(&fixture["section"], 41);
     let mut shell = actions_shell();
@@ -368,7 +384,7 @@ fn malformed_engagements_retire_the_transport_lease_and_preserve_the_last_valid_
     shell.windows.install_window_engagements_section(engagements_section_document(&serde_json::json!(["invalid"]), 43), &mut faults, &mut shell.docs).expect("malformed source ownership still retires");
     assert_eq!(shell.windows.window_engagements, expected, "a malformed refresh preserves the last valid snapshot");
     assert_eq!(faults.len(), 1, "the producer fault is explicit");
-    assert!(faults[0].2.starts_with("window engagements section parse"), "the decode fault identifies the canonical section: {:?}", faults[0]);
+    assert!(faults[0].2.text.starts_with("window engagements section parse"), "the decode fault identifies the canonical section: {:?}", faults[0]);
     assert!(shell.docs.closing_documents.terminal_is_empty(), "the malformed source lease reaches terminal release");
 }
 
@@ -401,6 +417,7 @@ fn the_search_possibles_rank_the_way_reacts_own_scorer_does() {
 /// dropped without retirement is the store-drop fault the framework refuses.
 #[test]
 fn the_pane_bodies_move_no_shell_surface() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = actions_shell();
     let before = shell.input.chrome_surface_census(&shell.chrome, &shell.dock);
     let mut faults = Vec::new();
@@ -446,6 +463,7 @@ fn pane_body_census(input: &InputState<ActionDescriptor>) -> (bool, bool) {
 /// pane's retained body. The sibling stays folded until its own chip receives a physical press.
 #[test]
 fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     assert_eq!(fixture["foldOwnership"]["default"], serde_json::json!({ "actions": "folded", "search": "folded" }));
     for step in fixture["foldOwnership"]["physicalPress"].as_array().expect("physical fold cases") {
@@ -455,14 +473,15 @@ fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
             other => panic!("unknown pane chip {other}"),
         };
         let mut shell = paired_pane_shell();
+        let mut caller = pane_turns();
         let mut input = InputState::<ActionDescriptor>::default();
-        let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+        let _ = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
         assert_eq!(pane_body_census(&input), (false, false), "both retained bodies start folded");
         let control = chip.control_id("pane-top", true);
         let hit = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(control.as_str())).unwrap_or_else(|| panic!("{control} physical chip hit"));
         let point = (hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5);
         semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(point.0, point.1, true, 0, &mut input, &Theme::light())).expect("physical pane chip press routes");
-        let _ = publish_dense_actions_chrome(&mut shell, &mut input);
+        let _ = publish_dense_actions_chrome(&mut caller, &mut shell, &mut input);
         let expected = match step["visibleBody"].as_str().expect("visible body") {
             "actions" => (true, false),
             "search" => (false, true),
@@ -471,6 +490,8 @@ fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
         assert_eq!(pane_body_census(&input), expected, "{} opens only its own retained pane body", step["chip"]);
         let mut faults = Vec::new();
         WindowActionsCtx::of(&mut shell).refresh_window_action_panes(&[], &mut faults).expect("paired pane documents retire");
+        shell.docs.drain_retained_document_arenas();
+        caller.finish();
     }
 }
 
@@ -491,6 +512,7 @@ fn physical_actions_and_search_chips_publish_only_their_own_retained_body() {
 /// empty container.
 #[test]
 fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let controls = &fixture["engagementControls"];
     let mut shell = actions_shell();
@@ -548,7 +570,7 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
             possible_engagements: None,
         },
     );
-    let keys = published_keys(&shell, "pane-top", false);
+    let keys = published_keys(&mut shell, "pane-top", false);
     let fallbacks = &controls["fallbackControlIds"];
     for expected in [
         fallbacks["slider"].as_str().expect("slider fallback id").to_string(),
@@ -590,7 +612,7 @@ fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
 
     shell.windows.window_engagements.get_mut("pane-top").expect("the engagement").controls =
         Some(vec![semio_ui_layout::layout::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
-    let keys = published_keys(&shell, "pane-top", false);
+    let keys = published_keys(&mut shell, "pane-top", false);
     assert!(!keys.iter().any(|key| key.ends_with("/empty")), "🕳️ an option-less toggle group publishes nothing at all");
 }
 
@@ -668,6 +690,7 @@ fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
 /// ⚡️ React's section `actions` keep their own ids beside the form.
 #[test]
 fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let form = &fixture["actionsPane"]["form"];
     let mut shell = actions_shell();
@@ -702,6 +725,7 @@ fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
 /// folded list it started from.
 #[test]
 fn a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = pane_fixture();
     let form = &fixture["actionsPane"]["form"];
     let mut shell = paired_pane_shell();
@@ -714,7 +738,7 @@ fn a_press_on_an_arg_carrying_row_republishes_the_pane_with_its_staged_form() {
     let opened = published(&shell);
     assert_ne!(opened, closed, "the press republished the pane with no refresh pass");
     let execute = form["executeId"].as_str().expect("execute").replace("{windowSegment}", &semio_framework::element_id_segment("pane-top")).replace("{actionId}", "openAddObjectDialog");
-    assert!(published_keys(&shell, "pane-top", false).iter().any(|key| key.ends_with(&execute)), "and the body it published carries the staged form");
+    assert!(published_keys(&mut shell, "pane-top", false).iter().any(|key| key.ends_with(&execute)), "and the body it published carries the staged form");
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog", "arg": "kind", "value": "beam" }) })).expect("a staged argument");
     assert_ne!(published(&shell), opened, "a staged argument republishes the form");
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).dispatch_action(ActionDescriptor { controller_id: "framework".into(), action: "resetActionArgs".into(), args: semio_renderer_wgpu_host_base::action_args_json!({ "window": "pane-top", "action": "openAddObjectDialog" }) })).expect("a reset");

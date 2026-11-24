@@ -652,6 +652,16 @@ async function registerTests4(vitest: Vitest, dependencies: Pick<typeof import("
       expect(ids.has("flow")).toBe(true);
       expect(ids.has("unrelated")).toBe(false);
     });
+    it("leaves a contributor with activation events and an on-demand edge out of the boot closure", () => {
+      const plugins = [
+        { pluginId: "host-plugin", moduleUrl: "a", consumes: ["ext.tag"], dependencies: [{ pluginId: "core" }, { pluginId: "lazy-edge", activation: "on-demand" as const }] },
+        { pluginId: "core", moduleUrl: "b" },
+        { pluginId: "eager", moduleUrl: "c", contributes: ["ext.tag"] },
+        { pluginId: "lazy", moduleUrl: "d", contributes: ["ext.tag"], activationEvents: ["on-node-kind:lazy"] },
+        { pluginId: "lazy-edge", moduleUrl: "e", activationEvents: ["on-node-kind:edge"] },
+      ] as const;
+      expect(expandPluginRegistry(plugins, "host-plugin", false).map((entry) => entry.pluginId).sort()).toEqual(["core", "eager", "host-plugin"]);
+    });
   });
 
 }

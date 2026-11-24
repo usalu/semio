@@ -18,7 +18,7 @@ fn report() -> CheckReport {
 #[test]
 fn diagram_has_one_marker_and_table_row_per_check_of_the_case() {
     let diagram = case_diagram("c1", &LocalizedCopy::new("Tie", "Zugstab"), &report(), None).expect("diagram");
-    assert_eq!(diagram.id, "case-c1");
+    assert_eq!(diagram.id, "case:c1");
     assert_eq!(diagram.markers.len(), 2);
     assert_eq!(diagram.table_twin.rows(), 2);
     assert_eq!(diagram.markers[0].bound_check.as_deref(), Some("a"));

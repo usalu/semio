@@ -1,0 +1,57 @@
+{
+  "title": "Complete Consolidated Border and In-Content Chips in LaTeX Templates",
+  "emoji": "🖋️",
+  "status": "open",
+  "description": "The semio design system was changed to consolidated border with in-content chips from the out-content chips with separate elements. The latex templates are not correctly reflecting this. Complete the design system also on latex.",
+  "summary": "LaTeX packages now follow the shared-border splitting logic: neighbouring frames (headings, windows, tables, registers, lists, row tiles) share one hairline, the text column is a closed frame between the navbar and footer rules with inset prose, heading chips are in-content with no rule below the chip row, and lists are split into one bordered cell per point. Verified on junction fixtures (edges coincide within 0.01 pt), report, thesis, flyer and the energy assignment; paper, phd and Zukunft Bau produce no PDF in the local harness (also with unmodified packages for paper) and were not checked. See summary.md.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "1c919c59-2b6c-42fe-a221-dbc869d331e0",
+    "8e26a1ac-92d8-492f-9289-bff2b91c1119"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 03:00:31",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The semio design system was changed to consolidated border with in-content chips from the out-content chips with separate elements. The latex templates are not correctly reflecting this. Complete the design system also on latex.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 06:27:37",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "LaTeX packages now follow the shared-border splitting logic: neighbouring frames (headings, windows, tables, registers, lists, row tiles) share one hairline, the text column is a closed frame between the navbar and footer rules with inset prose, heading chips are in-content with no rule below the chip row, and lists are split into one bordered cell per point. Verified on junction fixtures (edges coincide within 0.01 pt), report, thesis, flyer and the energy assignment; paper, phd and Zukunft Bau produce no PDF in the local harness (also with unmodified packages for paper) and were not checked. See summary.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🎮️commands🗃️🧪️printpipelineverification🗃️🧪️tests🗃️🖨️pipeline🗃️⚡️quickpipelineverification💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semioassignment"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📓️print🗃️🖋️latex💾semiocore"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 06:28:10",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Verify the remaining templates (paper, phd, Zukunft Bau, parametrization and typology assignments, dark theme) and close the known rough edges of the shared-border design in LaTeX.",
+      "llm": "fable-5-2"
+    }
+  ]
+}

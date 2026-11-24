@@ -157,6 +157,7 @@ def summarize(facts,language):
     grants=cap["grants"] if cap else [];obs=[g for g in grants if g["observedMegabytes"] is not None]
     host=facts.get("host")
     memory={"totalMegabytes":host["totalMegabytes"] if host else 0,"availableMegabytes":host["availableMegabytes"] if host else 0,"floorMegabytes":cap["floorMegabytes"] if cap else 0,"spareMegabytes":cap["headroomMegabytes"] if cap else 0,"pressure":host["pressure"] if host else "normal","swapUsedMegabytes":host["swapUsedMegabytes"] if host else None,"load":host["load"] if host else None,"sampleAgeSeconds":host["ageSeconds"] if host else None,"cores":host["cores"] if host else None,"admittedMegabytes":sum(g["reservedMegabytes"] for g in grants),"observedMegabytes":sum(g["observedMegabytes"] for g in obs),"unobservedGrants":len(grants)-len(obs),"overReservedMegabytes":sum(max(0,g["reservedMegabytes"]-g["observedMegabytes"]) for g in obs),"underReservedMegabytes":sum(max(0,g["observedMegabytes"]-g["reservedMegabytes"]) for g in obs),"grants":len(grants),"waiters":len(cap["waiters"]) if cap else 0}
+    if facts.get("memory") is not None: memory["warden"]=facts["memory"]["local"]
     by={}
     for w in (leases["waiters"] if leases else []): by.setdefault(w["resource"],[]).append(w)
     queues=[]
@@ -253,6 +254,30 @@ def summarize(facts,language):
         if w["liveness"]=="offline": say("worker-offline","warn",w["origin"],values)
         elif w["liveness"]=="silent": say("worker-silent","warn",w["origin"],dict(values,age=duration(language,w["recordAgeSeconds"] or 0)))
         elif w["liveness"]=="absent" and (w["heartbeatAgeSeconds"] is None or w["heartbeatAgeSeconds"]>=facts["workers"]["offlineSeconds"]): say("worker-absent","info",w["origin"],{"origin":w["origin"]})
+    wardens={};stale=POLICY["findings"]["workerMemoryStaleSeconds"];mem=facts.get("memory");local=mem["local"] if mem else None
+    for o,r in ((mem or {}).get("origins") or {}).items():
+        if r is not None: wardens[o]=r
+    if local is not None and local["origin"] not in wardens: wardens[local["origin"]]=local
+    for o in sorted(wardens,key=lambda x:[ord(c) for c in x]):
+        r=wardens[o]
+        if r["absent"] or r["ageSeconds"]>stale: continue
+        level=text(language,"workers.level."+r["level"])
+        if r["level"] in ("guard","danger"): say("worker-memory-tight","alert" if r["level"]=="danger" else "warn",o,{"origin":o,"level":level,"available":r["availableMegabytes"],"guard":r["guardMegabytes"],"danger":r["dangerMegabytes"],"swap":"?" if r["swapUsedMegabytes"] is None else r["swapUsedMegabytes"],"pressure":r["pressure"]})
+        c=r["counters"]
+        if c["suspended"]+c["cancelled"]>0: say("worker-warden-intervened","alert" if c["cancelled"]>0 else "warn",o,{"origin":o,"suspended":c["suspended"],"resumed":c["resumed"],"cancelled":c["cancelled"],"alarm":"-" if r["lastAlarm"] is None else r["lastAlarm"]["text"][language]})
+        if r["mode"]=="observe": say("worker-warden-observing","info",o,{"origin":o,"level":level})
+        if r["swapUsedMegabytes"] is not None and r["totalMegabytes"] is not None and r["swapUsedMegabytes"]*10000>r["totalMegabytes"]*POLICY["findings"]["workerSwapWarnBasisPoints"]: say("worker-swap-high","warn",o,{"origin":o,"swap":r["swapUsedMegabytes"],"percent":r["swapUsedMegabytes"]*100//r["totalMegabytes"],"total":r["totalMegabytes"]})
+        h=r["overhead"]
+        if h is not None and h["cpuBasisPoints"]>POLICY["findings"]["wardenOverheadBasisPoints"]: say("worker-warden-overhead","warn",o,{"origin":o,"percent":int(h["cpuBasisPoints"]//100),"tick":int(h["tickMillisecondsP95"]+0.5),"resident":int(h["residentMegabytes"]+0.5)})
+    if mem is not None:
+        for w in (facts.get("workers") or {}).get("rows",[]):
+            if w["liveness"] not in ("working","ready","idle"): continue
+            r=wardens.get(w["origin"])
+            if r is None: reason=text(language,"workers.warden.missing")
+            elif r["absent"]: reason=text(language,"workers.warden.absent")
+            elif r["ageSeconds"]>stale: reason=text(language,"workers.warden.stale",{"age":duration(language,r["ageSeconds"])})
+            else: continue
+            say("worker-warden-absent","warn",w["origin"],{"origin":w["origin"],"reason":reason})
     for s in facts["sources"]:
         if not s["ok"]: say("source-failed","warn",s["id"],{"section":s["id"],"reason":s.get("error","?")})
     sev={"alert":0,"warn":1,"info":2}
@@ -280,7 +305,8 @@ def fleet_section(facts):
 def workers_section(facts):
     f=facts.get("workers")
     if not f: return {}
-    rows=sorted(f["rows"],key=lambda r:r["origin"]);count=lambda state:len([r for r in rows if r["liveness"]==state])
+    mo=(facts.get("memory") or {}).get("origins") or {}
+    rows=[dict(r,memory=mo.get(r["origin"])) for r in sorted(f["rows"],key=lambda r:r["origin"])];count=lambda state:len([r for r in rows if r["liveness"]==state])
     return {"workers":{"offlineSeconds":f["offlineSeconds"],"counts":{k:count(k) for k in ("ready","working","idle","silent","offline","absent")},"rows":rows}}
 
 def cas_section(facts):
@@ -391,6 +417,24 @@ def generate(seed,count):
                 none=live=="absent"
                 return {"origin":origin,"platform":None if none and wr.random()<0.5 else wr.choice(["linux","macos","windows"]),"liveness":live,"recorded":None if none else wr.choice(["running","waiting","backoff","ready","observing"]),"stage":None if none else wr.choice(["tools","workspace","dependencies",None]),"stageIndex":0 if none else wr.randint(0,5),"stageCount":0 if none else 5,"attempts":0 if none else wr.randint(0,60),"recordAgeSeconds":None if none else wr.choice([0,5,95,599,600,7200,86400]),"heartbeatAgeSeconds":wr.choice([None,0,3,700,86400]),"refusal":wr.choice([None,{"code":"stage-timeout","en":"timed out","de":"Zeit überschritten"}])}
             facts["workers"]={"offlineSeconds":600,"rows":[worker(n) for n in wr.sample(["g1-m01","g1-m04","g1-m09","g1-m12","g1-server"],wr.randint(1,5))]}
+        mr=random.Random(seed*32452843+index)
+        if mr.random()<0.75:
+            def memrec(origin):
+                kind=mr.choice(["calm","calm","guard","danger","observe","absent","stale","swap","busy","calm"])
+                base={"origin":origin,"ageSeconds":0,"absent":True,"mode":None,"level":None,"hold":None,"guardMegabytes":None,"dangerMegabytes":None,"availableMegabytes":None,"totalMegabytes":None,"swapUsedMegabytes":None,"swapOutMegabytesPerSecond":None,"compressedMegabytes":None,"pressure":None,"subjects":None,"subjectMegabytes":None,"suspended":None,"counters":None,"lastAlarm":None,"overhead":None}
+                if kind=="absent": return dict(base,ageSeconds=mr.choice([0,5,300]))
+                level="guard" if kind=="guard" else "danger" if kind=="danger" else "calm"
+                cancelled=mr.randint(1,3) if kind=="danger" else 0
+                suspended=mr.randint(1,4) if level!="calm" else mr.choice([0,0,2])
+                resumed=mr.randint(0,suspended)
+                alarm=None
+                if mr.random()<0.7 or suspended+cancelled>0:
+                    action=mr.choice(["suspend","resume","cancel"] if cancelled else ["suspend","resume"])
+                    alarm={"atMs":at-mr.randint(0,10**6),"action":action,"kind":mr.choice(["cargo","rustc","bun"]),"pid":mr.randint(100,9999),"owner":mr.choice(["agent-1","","grant:build"]),"megabytes":mr.randint(100,4000),"text":{"en":"%s pid %d (agent) at %d MB"%(action,mr.randint(1,9),mr.randint(1,9)),"de":"%s PID %d (Agent) bei %d MB"%(action,mr.randint(1,9),mr.randint(1,9))}}
+                return dict(base,absent=False,ageSeconds=mr.randint(70,4000) if kind=="stale" else mr.choice([0,3,59,60]),mode="observe" if kind=="observe" else "enforce",level=level,hold=mr.random()<0.3,guardMegabytes=2048,dangerMegabytes=1024,availableMegabytes={"guard":1500,"danger":600}.get(level,mr.randint(3000,9000)),totalMegabytes=16384,swapUsedMegabytes=6000 if kind=="swap" else mr.choice([None,0,1500,4096]),swapOutMegabytesPerSecond=mr.choice([None,0,12.5]),compressedMegabytes=mr.choice([None,0,2200]),pressure={"guard":"warn","danger":"critical"}.get(level,"normal"),subjects=mr.randint(0,9),subjectMegabytes=mr.randint(0,8000),suspended=suspended,counters={"suspended":suspended,"resumed":resumed,"cancelled":cancelled},lastAlarm=alarm,overhead={"tickMillisecondsP95":mr.choice([3.4,12.0,40.5]),"cpuBasisPoints":800.5 if kind=="busy" else mr.choice([10.0,120.25,500.0,501.0]),"residentMegabytes":mr.choice([38.0,60.6])})
+            pool=["g1-m01","g1-m04","g1-m09","g1-m12","g1-server","g1-m20"]
+            origins={o:mr.choice([None,memrec(o),memrec(o),memrec(o)]) for o in mr.sample(pool,mr.randint(0,6)) if mr.random()<0.8}
+            facts["memory"]={"local":mr.choice([None,memrec("g1-coordinator")]),"origins":origins}
         xr=random.Random(seed*15485863+index)
         if xr.random()<0.6:
             gb=2**30;cap=xr.choice([8,30,33,50])*gb;cb=lambda:xr.choice([None,xr.randint(0,5*gb)])

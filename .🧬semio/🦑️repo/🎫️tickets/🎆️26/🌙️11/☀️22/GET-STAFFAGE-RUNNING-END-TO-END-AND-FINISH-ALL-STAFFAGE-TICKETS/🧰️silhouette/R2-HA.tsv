@@ -1,0 +1,7 @@
+humans	person-taking-selfie	1:50 elevation Hausdorff: expected 0.016978847134007657 to be less than or equal to 0.015
+humans	person-with-guide-dog	1:50 elevation Hausdorff: expected 0.020194368026754388 to be less than or equal to 0.015
+humans	person-with-rollator	1:200 elevation Hausdorff: expected 0.10058359424384966 to be less than or equal to 0.06
+humans	person-with-umbrella	1:100 elevation Hausdorff: expected 0.04562071897723664 to be less than or equal to 0.03
+humans	person-with-white-cane	1:500 front Hausdorff: expected 0.16700614079724987 to be less than or equal to 0.15
+humans	pregnant-person	1:100 elevation Hausdorff: expected 0.035575623676894264 to be less than or equal to 0.03
+humans	runner-with-blade-prosthesis	1:200 plan: expected 0.9185431643990256 to be greater than or equal to 0.92

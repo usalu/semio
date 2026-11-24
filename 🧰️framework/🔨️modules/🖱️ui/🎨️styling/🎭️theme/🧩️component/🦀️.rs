@@ -74,6 +74,17 @@ impl Level {
             Level::Menu => 5,
         }
     }
+
+    /// 🪜️ The level one elevation above, which a chip takes over content of this level; the topmost level stays.
+    pub const fn above(self) -> Self {
+        match self {
+            Level::Base => Level::Window,
+            Level::Window => Level::Pane,
+            Level::Pane => Level::Panel,
+            Level::Panel => Level::Dialog,
+            Level::Dialog | Level::Menu => Level::Menu,
+        }
+    }
 }
 //#endregion 🔖️Level
 
@@ -439,6 +450,17 @@ impl Theme {
     pub fn glass(&self, level: Level) -> GlassStyle {
         let k = level.index() as f32;
         GlassStyle { tint: self.level_bg[level.index()], alpha: 1.0 - k * levels::GLASS_ALPHA_STEP as f32, blur_px: k * levels::GLASS_BLUR_STEP_PX as f32, saturate: self.glass_saturate }
+    }
+
+    /// 🪟️ Glass of a chip that lies above content of `content` level — the wgpu counterpart of `ui-glass` on a `[data-window-frame-chip]`. React paints the glass of the next level
+    /// and over it a veil of the foreground at `levels::CHIP_TINT_PERCENT` (`--chip-tint`); both layers are folded here into the one tint and alpha that composite to the same colour,
+    /// so a chip never has the background of the surface it sits on.
+    pub fn chip_glass(&self, content: Level) -> GlassStyle {
+        let glass = self.glass(content.above());
+        let veil = (levels::CHIP_TINT_PERCENT / 100.0) as f32;
+        let alpha = 1.0 - (1.0 - glass.alpha) * (1.0 - veil);
+        let fold = |tint: f32, text: f32| (veil * text + (1.0 - veil) * glass.alpha * tint) / alpha;
+        GlassStyle { tint: Rgba::new(fold(glass.tint.r, self.text.r), fold(glass.tint.g, self.text.g), fold(glass.tint.b, self.text.b), glass.tint.a), alpha, ..glass }
     }
 
     /// 🌫️ Fullscreen modal scrim for `level` — `ui-veil`'s wgpu counterpart. React paints

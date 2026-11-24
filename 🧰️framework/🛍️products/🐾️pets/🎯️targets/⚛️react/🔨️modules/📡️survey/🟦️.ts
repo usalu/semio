@@ -85,6 +85,8 @@ export interface SurveyOptions {
   readonly surfaces?: string;
   readonly keepouts?: string;
   readonly walls?: string;
+  /** 🪟️ The surfaces that are frames around open room (a card whose border is a line and whose inside is where pets roam): their top edge carries pets and their sides are walls, but their box is never a solid, whatever acts on a press inside it and whatever it stands on. */
+  readonly open?: string;
   readonly props?: string;
   readonly controls?: string;
   readonly pointer?: Point | null;
@@ -306,7 +308,7 @@ function* surveying(root: Document | Element, options: SurveyOptions): Generator
   const carriers = new Set<Element>();
   const clips = new Map<Element, Edges | null>();
   const surfaces: Surface[] = [];
-  const parts: { readonly region: Edges; readonly edge: boolean; readonly acting: boolean }[] = [];
+  const parts: { readonly region: Edges; readonly edge: boolean; readonly acting: boolean; readonly open: boolean }[] = [];
   const walls: Wall[] = [];
   const sides = (element: Element, box: DOMRect, region: Edges): void => {
     const y0 = region.top - stage.y;
@@ -322,11 +324,12 @@ function* surveying(root: Document | Element, options: SurveyOptions): Generator
     if (region === null || staged(region, stage) === null) continue;
     sides(element, box, region);
     const edge = region.top <= box.top && region.right - region.left >= SURFACE_WIDTH;
-    parts.push({ region, edge, acting: options.controls !== undefined && element.closest(options.controls) !== null });
+    parts.push({ region, edge, acting: options.controls !== undefined && element.closest(options.controls) !== null, open: options.open !== undefined && element.matches(options.open) });
     if (edge) surfaces.push({ id: surfaceId(element), x0: region.left - stage.x, x1: region.right - stage.x, y: region.top - stage.y });
   }
   const solids: Rect[] = [];
-  for (const { region, acting } of parts) {
+  for (const { region, acting, open } of parts) {
+    if (open) continue;
     const standing = acting || Math.abs(region.bottom - stage.y - stage.height) <= EDGE_SLACK || parts.some((other) => other.edge && other.region !== region && Math.abs(other.region.top - region.bottom) <= EDGE_SLACK && region.left >= other.region.left - EDGE_SLACK && region.right <= other.region.right + EDGE_SLACK);
     if (standing) solids.push({ x: region.left - stage.x - KEEPOUT_MARGIN, y: region.top - stage.y, width: region.right - region.left + 2 * KEEPOUT_MARGIN, height: region.bottom - region.top });
   }

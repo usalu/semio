@@ -156,9 +156,6 @@ impl Ui {
         if cx.should_yield() {
             return Err((UiDocumentIngressFault::Deadline, header));
         }
-        if cx.generation().0 != header.generation {
-            return Err((UiDocumentIngressFault::StaleGeneration, header));
-        }
         let Some(window) = self.window_mut(window_id) else { return Err((UiDocumentIngressFault::StaleGeneration, header)) };
         if let Some(baseline) = window.candidate_baseline.as_mut() {
             if !baseline.close_step() {
@@ -201,7 +198,7 @@ impl Ui {
         let Some(ingress) = window.document_ingress.as_mut() else {
             return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
         };
-        if cx.is_cancelled() || cx.should_yield() || cx.generation().0 != ingress.document.generation() {
+        if cx.is_cancelled() || cx.should_yield() {
             return Err(UiDocumentPageRejection { fault: UiDocumentTreeFault::Generation, generation: page.generation(), revision: page.revision(), index: page.index(), record: page.into_record() });
         }
         ingress.document.try_push_page(page, ingress.next_page)?;
@@ -217,9 +214,6 @@ impl Ui {
         }
         if cx.should_yield() {
             return Err(UiDocumentIngressFault::Deadline);
-        }
-        if cx.generation().0 != generation {
-            return Err(UiDocumentIngressFault::StaleGeneration);
         }
         let Some(window) = self.window_mut(window_id) else { return Err(UiDocumentIngressFault::StaleGeneration) };
         let Some(ingress) = window.document_ingress.as_mut() else { return Err(UiDocumentIngressFault::StaleGeneration) };

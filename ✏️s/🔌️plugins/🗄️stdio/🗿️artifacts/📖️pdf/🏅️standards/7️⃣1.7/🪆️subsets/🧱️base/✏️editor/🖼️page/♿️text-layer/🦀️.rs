@@ -59,7 +59,7 @@ fn text_layer_rows(snapshot: &PdfSnapshot, locale: Locale) -> Vec<(String, Strin
     lines.push(("tagged".to_string(), format!("{}: {}", pick(locale, "Tagged PDF", "Getaggtes PDF"), if tagged { pick(locale, "yes", "ja") } else { pick(locale, "no", "nein") }), None));
     let mut all = objects(snapshot).into_iter().peekable();
     for page in 0..snapshot.pages.len() {
-        lines.push((format!("page-{page}"), format!("{} {} / {}", pick(locale, "Page", "Seite"), page + 1, snapshot.pages.len()), Some(format!("p{page}:paper"))));
+        lines.push((format!("page-{page}"), format!("{} {} / {}", pick(locale, "Page", "Seite"), page_number(page), snapshot.pages.len()), Some(format!("p{page}:paper"))));
         while all.peek().is_some_and(|object| object.page == page) {
             let Some(object) = all.next() else { break };
             let kind = match (object.kind, locale) {

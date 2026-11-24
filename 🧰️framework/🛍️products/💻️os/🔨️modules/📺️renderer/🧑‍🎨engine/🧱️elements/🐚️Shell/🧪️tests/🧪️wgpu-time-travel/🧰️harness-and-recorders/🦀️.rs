@@ -109,10 +109,22 @@ fn dispatched() -> Vec<String> {
     DISPATCHED.with(|log| log.borrow().clone())
 }
 
+thread_local! {
+    static TURNS: std::cell::RefCell<Option<semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 🎟️ Runs `work` on the law's one original caller, born wide on first use: every retained body of a law is mounted by it, as every native frame turn is one caller, so it can close what it mounted.
+fn with_turns<R>(work: impl FnOnce(&mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1) -> R) -> R {
+    TURNS.with(|cell| work(cell.borrow_mut().get_or_insert_with(|| semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1))))
+}
+
 /// 🎨️ Paints `document` in `surface` to completion with the stepped paint every retained body uses, then registers and
 /// publishes its hits, so the surface's accessibility projection is the one the mirror reads; answers the staged input.
-fn paint_retained_body(mut shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
+    with_turns(|caller| paint_retained_body_on(caller, shell, surface, document, body))
+}
+
+fn paint_retained_body_on(caller: &mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1, mut shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
     let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
     let mut input = InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
@@ -123,7 +135,7 @@ fn paint_retained_body(mut shell: &mut ShellState, surface: &str, document: &UiD
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
+        caller.turn_funded(1 << 20, |cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {
@@ -133,16 +145,15 @@ fn paint_retained_body(mut shell: &mut ShellState, surface: &str, document: &UiD
     shell.surfaces.world3d_states = world3d_states;
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
     caller.retire_world(&mut world_resources);
-    caller.finish();
     input
 }
 
 /// 🧹️ Closes a law's retained surface and retires every document it published there.
 fn close_retained_body(surface: &str, documents: Vec<UiDocumentLease>) {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller = TURNS.with(|cell| cell.borrow_mut().take()).unwrap_or_else(|| semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1));
     if semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface) {
         while semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface) {
-            assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances");
+            assert!(caller.turn_funded(1 << 20, semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture caller turn"), "each admitted close opportunity advances");
         }
     }
     for mut document in documents {

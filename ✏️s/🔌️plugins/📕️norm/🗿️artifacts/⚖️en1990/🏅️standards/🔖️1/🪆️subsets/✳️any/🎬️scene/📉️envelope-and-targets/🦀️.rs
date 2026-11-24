@@ -39,7 +39,7 @@ pub(super) fn envelope(report: &CheckReport, columns: &[Column], active: Option<
         });
         let worst = worst_of_column(report, columns, column);
         markers.push(Marker {
-            id: format!("envelope-{}", column.id),
+            id: checked_marker_id(&format!("envelope-{}", column.id), &worst.map(|w| w.id.clone())),
             at: p(x + 0.5, totals[i]),
             shape: if is_governing { MarkerShape::Diamond } else { MarkerShape::Square },
             tone: if is_governing { Tone::Error } else { worst.map_or(Tone::Neutral, |w| utilisation_tone(w.utilization)) },
@@ -126,7 +126,7 @@ pub(super) fn governing_per_member(document: &En1990Snapshot, report: &CheckRepo
     for (c, col) in columns.iter().enumerate() {
         let worst = worst_of_column(report, columns, col);
         markers.push(Marker {
-            id: format!("sweep-{}", col.id),
+            id: checked_marker_id(&format!("sweep-{}", col.id), &worst.map(|w| w.id.clone())),
             at: p(c as f64 + 0.5, rows as f64 + 0.5),
             shape: MarkerShape::Square,
             tone: if active.is_some_and(|a| a.id == col.id) { Tone::Error } else { worst.map_or(Tone::Neutral, |w| utilisation_tone(w.utilization)) },
@@ -227,6 +227,9 @@ pub(super) fn beta_targets(document: &En1990Snapshot, report: &CheckReport) -> D
 pub(super) fn traffic_groups(document: &En1990Snapshot, report: &CheckReport) -> Option<Diagram2d> {
     let check = report.checks.iter().find(|c| c.id == "en1990.a2.traffic-groups" && c.utilization.is_finite())?;
     let traffic: Vec<_> = document.variables.iter().filter_map(|variable| traffic_group(&variable.category).map(|group| (variable, group))).collect();
+    if traffic.is_empty() {
+        return None;
+    }
     let mut order: Vec<&str> = Vec::new();
     for (_, group) in &traffic {
         if !order.contains(group) {

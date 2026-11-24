@@ -250,24 +250,27 @@
     "area": "storage",
     "owner": "storage",
     "severities": [
-      "info"
+      "error"
     ],
     "data": [
-      "partition"
+      "partition",
+      "directory"
     ],
     "title": {
       "en": "Image {partition} is not attached",
       "de": "Image {partition} ist nicht eingehängt"
     },
     "detail": {
-      "en": "The image file exists but is not mounted, as after a reboot. The next repo command that needs it attaches it.",
-      "de": "Die Image-Datei existiert, ist aber nicht eingehängt, wie nach einem Neustart. Der nächste repo-Befehl, der es braucht, hängt es ein."
+      "en": "The image file exists but is not mounted. Every path below its mount point then resolves to the plain host disk, so writers must fail or wait instead of filling it, and the work of the image (compiler store, units, graph facts) is invisible. A reboot, a killed reclaim cycle or a sibling volume left behind by a killed in-place kick leaves it so; repo doctor attaches it again and deletes such a sibling volume first.",
+      "de": "Die Image-Datei existiert, ist aber nicht eingehängt. Jeder Pfad unter ihrem Einhängepunkt zeigt dann auf die gewöhnliche Host-Platte, daher müssen Schreiber scheitern oder warten statt sie zu füllen, und die Arbeit des Images (Compiler-Speicher, Einheiten, Graphfakten) ist unsichtbar. Ein Neustart, ein beendeter Reclaim-Zyklus oder ein von einem beendeten direkten Anstoß zurückgelassenes Geschwister-Volume lassen es so zurück; repo doctor hängt es wieder ein und löscht ein solches Geschwister-Volume zuvor."
     },
     "fix": {
-      "kind": "wait",
+      "kind": "automatic",
+      "command": "repo doctor --fix --only=storage",
+      "repair": "storage-images",
       "note": {
-        "en": "Nothing to do; any repo command attaches it.",
-        "de": "Nichts zu tun; jeder repo-Befehl hängt es ein."
+        "en": "Attaches the image at its mount point {directory}/m under its exclusive lease, after deleting a leftover sibling volume semio-trim that makes the attach fail; no data of the image is touched.",
+        "de": "Hängt das Image unter seiner exklusiven Lease an seinem Einhängepunkt {directory}/m ein, nachdem es ein zurückgebliebenes Geschwister-Volume semio-trim löscht, das den Einhängevorgang scheitern lässt; Daten des Images werden nicht angetastet."
       }
     }
   },
@@ -305,7 +308,7 @@
     "area": "storage",
     "owner": "storage",
     "severities": [
-      "warn"
+      "error"
     ],
     "data": [
       "partition",

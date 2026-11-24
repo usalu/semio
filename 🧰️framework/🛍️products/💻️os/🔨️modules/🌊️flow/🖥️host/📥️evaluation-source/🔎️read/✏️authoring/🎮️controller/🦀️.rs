@@ -91,4 +91,4 @@ impl FlowAuthoringWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.child.is_none()&&self.result.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.binding.is_none()&&self.origin.is_none()}
 }
-impl Drop for FlowAuthoringWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"Flow authoring must close its original source and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.result);ManuallyDrop::drop(&mut self.output)}}}}
+impl Drop for FlowAuthoringWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"Flow authoring must close its original source and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.result);ManuallyDrop::drop(&mut self.output)}}}}

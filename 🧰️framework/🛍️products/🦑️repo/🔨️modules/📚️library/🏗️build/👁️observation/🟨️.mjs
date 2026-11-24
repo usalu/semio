@@ -22,6 +22,7 @@ import { createHash } from "node:crypto";
 import { createRowRebaserV1, rebaseRowV1, rebaseRowsV1 } from "./🏚️relocation/🟨️.mjs";
 import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
 import { hollowDirectoryV1, machineLocalRowV1, sourceTreeFilterV1 } from "./📂️source-names/🟨️.mjs";
+import { createDirectoryFactMemoV1, directoryStampV1 } from "./📂️directory-stamps/🟨️.mjs";
 
 /** 🔢️ A hex SHA-256 digest, compiled once. */
 const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
@@ -620,7 +621,7 @@ function sourceAnalysisFailureV1(path,fact){
 
 /** 🔁️ What one validation round has read of the tree: typed listings (or the error they failed with) and hollow verdicts by path. A round is one consistent snapshot, so a directory is read once however many facts walk below it (the top level of a slice lists thousands of directories, each fact of each owner walked below every one of them); outside a round every read is fresh. The seal verifies outside any round. */
 const roundTreeReadsV1=new WeakMap();
-function roundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return undefined;let reads=roundTreeReadsV1.get(round);if(reads===undefined){reads={listings:new Map(),hollow:new Map(),answers:new Map()};roundTreeReadsV1.set(round,reads);}return reads;}
+function roundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return undefined;let reads=roundTreeReadsV1.get(round);if(reads===undefined){reads={stamps:new Map(),listings:new Map(),hollow:new Map(),answers:new Map()};roundTreeReadsV1.set(round,reads);}return reads;}
 /** 🗂️ Answers one pure filesystem question (existence, type, module resolution) once per round: every owner of a round asks the same few thousand questions, and a stale answer is caught by the verification of the round's rows, which re-probes the disk without this cache. */
 function roundAnswerV1(key,run){
  const reads=roundReadsV1();if(reads===undefined)return run();
@@ -630,9 +631,31 @@ function roundAnswerV1(key,run){
 /** 🧽️ Forgets what the current round remembers of the disk, so a retried observation reads it anew. */
 export function forgetRoundReadsV1(){const round=inferenceValidationScopes.getStore();if(round===undefined)return;roundTreeReadsV1.delete(round);roundDirectories.delete(round);}
 function typedListingV1(path){
- const reads=roundReadsV1();if(reads===undefined)return world.readdirSync(path,{withFileTypes:true});
- let known=reads.listings.get(path);if(known===undefined){try{known={entries:world.readdirSync(path,{withFileTypes:true})};}catch(error){known={error};}reads.listings.set(path,known);}
+ const reads=roundReadsV1(),capture=listingCaptureV1;
+ if(reads===undefined&&capture===undefined)return world.readdirSync(path,{withFileTypes:true});
+ let known=reads?.listings.get(path);
+ if(known===undefined){
+  let stamp;if(observedWorlds.getStore()===undefined)try{stamp=directoryStampV1(fs.statSync(path));}catch{}
+  try{known={entries:world.readdirSync(path,{withFileTypes:true}),stamp};}catch(error){known={error};}
+  reads?.listings.set(path,known);
+ }
+ capture?.push(known.stamp===undefined?null:[path,known.stamp]);
  if(known.error!==undefined)throw known.error;return known.entries;
+}
+/** 🏷️ The listings the directory fact being computed read, each with the stamp of its directory taken before the read (`null` for a listing that has no stamp), or undefined while no fact is computed. */
+let listingCaptureV1;
+/** 📂️ The facts of directory listings remembered by the stamps of the directories they were computed from: a verification of an unchanged directory costs one stat per directory it listed instead of a listing and a digest, in every round and every pass of the process.
+ * @see ./📂️directory-stamps/🟨️.mjs */
+const directoryFactsV1=createDirectoryFactMemoV1({calmMilliseconds:OBSERVATION_LIMITS_V1.racyMilliseconds});
+/** 📊️ How often the memo of directory facts answered by stamps (`hits`), had to list again (`misses`), remembered a fact (`recorded`) or refused one (`refused`), and how many facts it holds. */
+export function observationDirectoryFactCountsV1(){return directoryFactsV1.counts();}
+/** 🏷️ The stamp of a directory now, taken once per validation round (a round is one consistent snapshot, like its listings), or undefined when it cannot be read. */
+function currentDirectoryStampV1(path){
+ const reads=roundReadsV1(),listed=reads?.listings.get(path)?.stamp;
+ if(listed!==undefined)return listed.text;
+ let known=reads?.stamps.get(path);
+ if(known===undefined){try{known=directoryStampV1(fs.statSync(path)).text;}catch{known=null;}reads?.stamps.set(path,known);}
+ return known===null?undefined:known;
 }
 const LISTED_INDEX_ENTRIES_V1=64,listedIndexesV1=new WeakMap();
 /** 📇️ Whether the round's listing of the parent directory already proves one recorded fact about a child (its type, its existence, or its absence), so the child is not probed once more: a directory whose listing is verified in the same call (`listed`, the paths of its `readdir` rows) is read once and answers every `lstat`, `exists`, `fileExists` and `directoryExists` row of its entries. Only a confirmation counts: a missing name that differs from a listed one by letter case, a link, any other node type, or a disagreement is left to the real probe, which stays the single authority. */
@@ -653,7 +676,13 @@ function listedChildHoldsV1(kind,path,fact,listed){
 }
 function roundHollowV1(path){
  const reads=roundReadsV1();if(reads===undefined)return hollowDirectoryV1(path,typedListingV1,join);
- let verdict=reads.hollow.get(path);if(verdict===undefined){verdict=hollowDirectoryV1(path,typedListingV1,join);reads.hollow.set(path,verdict);}return verdict;
+ const outer=listingCaptureV1;let known=reads.hollow.get(path);
+ if(known===undefined){
+  const inner=[];listingCaptureV1=inner;
+  try{known={verdict:hollowDirectoryV1(path,typedListingV1,join),listings:inner};}finally{listingCaptureV1=outer;}
+  reads.hollow.set(path,known);
+ }
+ if(outer!==undefined)for(const row of known.listings)outer.push(row);return known.verdict;
 }
 
 /** 🆔️ Fingerprints the names or typed entries of a directory read that belong to the source tree as the build sees it (`📂️source-names`): machine-local output and operating-system noise are not part of the fact, so a record made on one machine holds on every other and after a build. A name of the generated-directory list leaves only where the entry is a directory or a link (`directory` is where the untyped names were listed; none means every name is a directory). */
@@ -690,7 +719,7 @@ export async function projectRowsHoldV1(rows,value,holdsRest,closureFailed){
  if(closure.length===0)return true;
  if(closureFailed===undefined)return await verify.call(provider,closure,value);
  let failure;
- const holds=await verify.call(provider,closure,value,(row,why)=>{if(row===undefined||closure.includes(row))failure??={row,why};});
+ const holds=await verify.call(provider,closure,value,(row,why)=>{if(row===undefined||row.kind!=="closure"||closure.includes(row))failure??={row,why};});
  if(!holds)closureFailed(failure?.row,failure?.why,closure.length);
  return holds;
 }
@@ -754,7 +783,7 @@ export function recordClosureFactV1(path,answer){record("closure",path,answer);}
 /** 🧮️ The collections this module holds across owners, for the slice memory report: its module maps, the verdict maps of the live validation rounds and the scopes the rows of every owner are retained into, each with its entries and a sample to estimate bytes from. */
 export function observationCollectionsV1(){
  const out=[],add=(name,value)=>out.push(describeCollectionV1("observation:"+name,value));
- add("inferenceStamps",inferenceStamps);add("recordStores",recordStores);add("recordStoreHandles",recordStoreHandles);add("usedInference",usedInference);add("originalInferencePublications",originalInferencePublications);add("loadObservations",loadObservations);add("projectComputations",projectComputations);add("projectImages",projectImages);add("sourceAnalyses",sourceAnalyses);add("sourceAnalysisImages",sourceAnalysisImages);add("retainedProjectImages",retainedProjectImages);add("fieldDigests",fieldDigests);add("settledReads",settledReads);add("fileRecordImages",fileRecordImages);add("inferenceRowCounts",inferenceRowCountsV1);add("verifiedBlocks",verifiedBlocks);
+ add("inferenceStamps",inferenceStamps);add("recordStores",recordStores);add("recordStoreHandles",recordStoreHandles);add("usedInference",usedInference);add("originalInferencePublications",originalInferencePublications);add("loadObservations",loadObservations);add("projectComputations",projectComputations);add("projectImages",projectImages);add("sourceAnalyses",sourceAnalyses);add("sourceAnalysisImages",sourceAnalysisImages);add("retainedProjectImages",retainedProjectImages);add("fieldDigests",fieldDigests);add("settledReads",settledReads);add("fileRecordImages",fileRecordImages);add("inferenceRowCounts",inferenceRowCountsV1);add("verifiedBlocks",verifiedBlocks);add("directoryFacts",directoryFactsV1.entries());
  const table=rowTableV1.stats();out.push({name:"observation:rowTable",entries:table.rows,bytes:table.bytes});out.push({name:"observation:rowPool",entries:rowPoolV1.size(),bytes:rowPoolV1.size()*160});
  for(const kind of Object.keys(trackedV1)){
   let largest,count=0,total=0;
@@ -776,7 +805,7 @@ export function releaseProjectInferenceRetentionV1(cachePath){
  retainedProjectImages.delete(cachePath);projectImages.delete(cachePath);
 }
 export function releaseInferenceMemoryV1(){
- rowTableV1.clear();verifiedBlocks.clear();verifiedBlockRows=0;blocksByIdentity.clear();blocksRefused.clear();
+ rowTableV1.clear();directoryFactsV1.clear();verifiedBlocks.clear();verifiedBlockRows=0;blocksByIdentity.clear();blocksRefused.clear();
  settledReads.clear();settledReadBytes=0;fileRecordImages.clear();fileRecordImageBytes=0;sourceAnalysisImages.clear();sourceAnalysisBytes=0;
  projectImages.clear();retainedProjectImages.clear();retainedProjectImageBytes=0;usedInference.clear();originalInferencePublications.clear();registryOwnersV1.clear();
 }
@@ -914,7 +943,14 @@ const facts = {
   exists: (path) => world.existsSync(path),
   stat: (path) => { try { return nodeType(world.statSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
   lstat: (path) => { try { return nodeType(world.lstatSync(path)); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
-  readdir: (path) => { probeCountsV1.readdir++; try { return directoryFactV1(typedListingV1(path),true,path); } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } },
+  readdir: (path) => {
+    const live = observedWorlds.getStore() === undefined;
+    if (live) { const known = directoryFactsV1.lookup(path, currentDirectoryStampV1); if (known !== undefined) return known; }
+    probeCountsV1.readdir++;
+    const outer = listingCaptureV1, capture = live ? [] : undefined;
+    listingCaptureV1 = capture;
+    try { const fact = directoryFactV1(typedListingV1(path),true,path); if (capture !== undefined) directoryFactsV1.record(path, capture, fact); return fact; } catch (error) { return `!${error.code ?? "EUNKNOWN"}`; } finally { listingCaptureV1 = outer; }
+  },
   readdirNames: (path) => {probeCountsV1.readdir++;try{return directoryFactV1(world.readdirSync(path),false,path);}catch(error){return `!${error.code??"EUNKNOWN"}`;}},
   fileExists: (path) => {try{return world.statSync(path).isFile();}catch{return false;}},
   directoryExists: (path) => {try{return world.statSync(path).isDirectory();}catch{return false;}},

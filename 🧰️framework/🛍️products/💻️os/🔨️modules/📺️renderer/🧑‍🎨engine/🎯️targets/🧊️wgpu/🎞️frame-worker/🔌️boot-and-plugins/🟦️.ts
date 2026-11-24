@@ -1,8 +1,8 @@
-import { fetchPackageDescriptor, PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
+import { fetchPackageDescriptor, onDemandStatusLabel, openExampleAfterActivation, PlaygroundBootPlanner, pluginGraphErrorMessage } from "@semio-tech/framework";
 import { loadPluginModule } from "../../🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts";
 import { pluginHandleForBridge } from "../../🐚️plugin-bridge/🟦️.ts";
 import { declaredStep, driveChunks, macrotask, monitoredSuspension, ownedStep, post, progress } from "../⏱️steps-and-reporting/🟦️.ts";
-import { bindings, bootAbort, closed, closing, consumedTopics, diagnosticsStamp, explicitPluginModules, frameTurns, frameTurnTasks, lifecycle, originalFrameSource, runtime, scope, setBindings, setBootDeclarationsOpen, setExplicitPluginModules, setFrameInput, setFrameTurns, setFrameTurnTasks, setInteractiveJobs, setLifecycle, setOriginalFrameSource, setRuntime, setWorkerCatalog, suspensionLedger, typedMediaPlugins, workerCatalog } from "../🧵️state/🟦️.ts";
+import { bindings, bootAbort, closed, closing, consumedTopics, diagnosticsStamp, explicitPluginModules, frameTurns, frameTurnTasks, lifecycle, onDemandActivator, onDemandModules, originalFrameSource, runtime, scope, setBindings, setOnDemandActivator, setBootDeclarationsOpen, setExplicitPluginModules, setFrameInput, setFrameTurns, setFrameTurnTasks, setInteractiveJobs, setLifecycle, setOriginalFrameSource, setRuntime, setWorkerCatalog, suspensionLedger, typedMediaPlugins, workerCatalog } from "../🧵️state/🟦️.ts";
 import type { BrowserRendererBootStep, RendererBindings } from "../🧬️bindings-types/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🗄️wasm-module-cache/🟦️.ts";
 import type { BrowserFrameUiMessage } from "../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
@@ -10,7 +10,7 @@ import { fault } from "../🧯️close-and-fault/🟦️.ts";
 import { emptyNativeCatalogV1, readNativeCatalogV1 } from "@semio-tech/plugin-registry/runtime";
 import { installRuntimeAssets } from "../../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../../🔌️plugin/📇️registry/🟦️.ts";
-import { admitWgpuPluginModules, assertWgpuPluginPlan, prepareWgpuPluginModules } from "../../🧩️plugin-modules/🟦️.ts";
+import { admitWgpuPluginModules, assertWgpuPluginPlan, createWgpuOnDemandActivator, prepareWgpuPluginModules } from "../../🧩️plugin-modules/🟦️.ts";
 import { componentPackageReceiptSource } from "@semio-tech/framework-plugin/receipt";
 import { admitWgpuPluginRegistrySelection } from "../../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { frameOriginalWorkOwner } from "../../🐚️plugin-bridge/🧵️shard-and-actor-calls/🟦️.ts";
@@ -164,6 +164,15 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
       readDescriptor: (id, url, source, signal, heartbeat) => monitoredSuspension(`plugin-descriptor:${id}`, () => fetchPackageDescriptor(id, url, source, signal, heartbeat), suspensionLedger),
       progress: (id, index, count) => progress(`plugin-descriptor:${id}`, 0.25 + 0.025 * index / Math.max(1, count)),
     });
+    setOnDemandActivator(createWgpuOnDemandActivator(prepared, componentPackageReceiptSource, {
+      mount: async (pluginId, moduleUrl, descriptor) => {
+        if (closed || closing) throw new Error("plugin-install.closing: the frame Worker is closing");
+        const module = await monitoredSuspension(`on-demand:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl, bootAbort.signal, descriptor, consumedTopics(pluginId)), suspensionLedger);
+        typedMediaPlugins.set(pluginId, module);
+        onDemandModules.set(pluginId, module);
+      },
+      onStatus: (status) => { if (diagnosticsStamp === true) console.debug(`[TRACE] wgpu on-demand ${onDemandStatusLabel(status, message.locale)}`); },
+    }));
     const planner = new PlaygroundBootPlanner(prepared.catalog, message.descriptor.pluginVariant, undefined, selection);
     await driveChunks(planner, 0.25, 0.05);
     const bootPlan = ownedStep("plugin-graph:finish", () => planner.finish());
@@ -173,6 +182,13 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
     for (const error of bootPlan.dependencyErrors) progress(pluginGraphErrorMessage(error, message.locale), 0.3);
     const plugins = await mountPluginHandles(bootPlan.plugins, prepared.packages);
     if (plugins.length === 0 && (selection !== "all" || explicitPluginModules!.length !== 0)) throw new Error(`no wasm plugin modules found for variant ${message.descriptor.pluginVariant}`);
+    const bootExample = await openExampleAfterActivation({
+      examples: plugins.flatMap((mount) => mount.typedHandle.manifest.examples ?? []), exampleId: message.descriptor.appExample, activator: onDemandActivator ?? { request: async () => ({ requested: [], active: [], unavailable: [], cancelled: [] }) },
+      locale: message.locale, signal: bootAbort.signal, handoff: ({ report }) => report,
+      progress: (completed, total, label) => progress(`example-activation: ${label}`, 0.6 + 0.05 * completed / Math.max(1, total)),
+      notify: (notice) => progress(`example-activation-${notice.announcement.role}: ${notice.text}`, 0.64),
+    });
+    if (bootExample.state === "cancelled") throw new Error("example-activation.cancelled: the boot was closed while the example's extensions loaded");
     progress("renderer-runtime", 0.65);
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => frameTurns?.requestRuntimeWake()), suspensionLedger);
     while (true) {

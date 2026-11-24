@@ -8,7 +8,7 @@ use std::hash::Hash;
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
 pub fn world_instances_geometry_json(scene_snapshot: &Puzzle3dSceneSnapshot) -> String {
     let mut residency = Puzzle3dInstanceResidency::default();
-    residency.refresh(scene_snapshot, &std::collections::BTreeSet::new(), &[]);
+    residency.refresh(scene_snapshot, None, &[]);
     residency.instances_json().to_string()
 }
 
@@ -140,18 +140,18 @@ pub struct Puzzle3dInstanceResidency {
 
 impl Puzzle3dInstanceResidency {
     /// 🔄️ Reconciles the residency against one scene_snapshot, the running tool's provisional entities
-    /// (`ArtifactView::tool_run().provisional_entities`, keyed by `fill_run_entity(object.id)`) and the object ids the open
+    /// (`ArtifactView::original_tool_run().provisional_entities`, keyed by `fill_run_entity(object.id)`) and the object ids the open
     /// time-travel draft references (`InteractionView::draft_references`), so opening or closing a history edit republishes
     /// exactly the referenced records through the delta. Answers whether the published text changed — `false` means every
     /// record and the order are bit-identical and no consumer owes any work.
-    pub fn refresh(&mut self, scene_snapshot: &Puzzle3dSceneSnapshot, provisional: &std::collections::BTreeSet<u64>, referenced: &[String]) -> bool {
+    pub fn refresh(&mut self, scene_snapshot: &Puzzle3dSceneSnapshot, tool_run: Option<semio_plugin::OriginalToolRunView<'_>>, referenced: &[String]) -> bool {
         let kind_meshes = Puzzle3dKindMeshIndex::of(&scene_snapshot.meta);
         let mut order = Vec::with_capacity(scene_snapshot.objects.len());
         let mut changed = Vec::new();
         let mut rebuilt = 0_u32;
         for object in &scene_snapshot.objects {
             let mesh_id = kind_meshes.resolve(object).map_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into(), world3d_mesh_id_from_url);
-            let placed = !provisional.is_empty() && provisional.contains(&semio_s_artifact_puzzle_3d_precompute_fill::fill_run_entity(&object.id));
+            let placed = tool_run.is_some_and(|run| !run.provisional_entities.is_empty() && run.provisional_entities.contains_key(&semio_s_artifact_puzzle_3d_precompute_fill::fill_run_entity(&object.id)));
             let highlighted = referenced.iter().any(|id| id == &object.id);
             let fingerprint = instance_record_fingerprint(object, &mesh_id, placed, highlighted);
             if self.entries.get(&object.id).is_none_or(|(cached, _)| *cached != fingerprint) {

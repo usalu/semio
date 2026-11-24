@@ -10,6 +10,19 @@ use super::*;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch};
 
 //#region 🧰️Harness
+const FOLDER_TEST_SCHEMA: &str = "s.test";
+
+/// 🧹️ Hands every retained UI document of a retired shell back to the arena before the arena fixture closes.
+fn retire_shell_documents(shell: &mut ShellState) {
+    shell.docs.retire_documents_outside(&[], true, &mut shell.chrome).expect("window documents retire");
+    shell.docs.retire_documents_outside(&[], false, &mut shell.chrome).expect("panel documents retire");
+    let auxiliary = std::mem::take(&mut shell.docs.window_actions_documents).into_values().chain(std::mem::take(&mut shell.docs.window_search_documents).into_values()).chain(std::mem::take(&mut shell.docs.window_measures_documents).into_values()).collect::<Vec<_>>();
+    for document in auxiliary {
+        shell.docs.retire_one_surface_document(Some(document)).expect("auxiliary document retires");
+    }
+    shell.docs.drain_retained_document_arenas();
+}
+
 fn corpus() -> Value {
     serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📎️local-folder-bindings/🔣️.json")).expect("the shared local-folder corpus parses")
 }
@@ -29,6 +42,7 @@ fn mutation_of(value: &Value) -> LocalFoldersConfigMutation {
 /// 🧪️ A fresh shell on the host fixture app, as a process boot would make it, sharing the law's preference slot.
 fn booted_shell(document_id: Option<&str>) -> ShellState {
     let mut shell = host_test_shell();
+    shell.docs.session.as_mut().expect("the host fixture holds a session").app.io.artifact_schema = FOLDER_TEST_SCHEMA.into();
     if let Some(document_id) = document_id {
         let session = shell.docs.session.clone().expect("the host fixture holds a session");
         let key = (session.plugin_id.clone(), session.instance_id);
@@ -108,7 +122,7 @@ fn the_shared_local_folder_corpus_holds_on_wgpu() {
             app_id: identity["appId"].as_str().expect("appId").into(),
         });
         let expected = (!offer["offer"].is_null()).then(|| binding_of(&offer["offer"]));
-        assert_eq!(local_folder_reconnect_offer(&bindings, identity.as_ref(), offer["attached"].as_str()), expected, "{}", offer["name"]);
+        assert_eq!(local_folder_reconnect_offer(&bindings, identity.as_ref(), offer["attached"].as_str().as_slice()), expected, "{}", offer["name"]);
     }
     for pair in corpus["names"].as_array().expect("names") {
         assert_eq!(local_folder_name(pair[0].as_str().expect("path")), pair[1].as_str().expect("name"));
@@ -118,6 +132,26 @@ fn the_shared_local_folder_corpus_holds_on_wgpu() {
         for (text, key) in [(LocalFolderText::Label, "label"), (LocalFolderText::Message, "message"), (LocalFolderText::Attach, "attach"), (LocalFolderText::Forget, "forget")] {
             assert_eq!(local_folder_text(text, folder, locale), corpus["texts"][tongue][key].as_str().expect("text"), "{tongue}.{key}");
         }
+    }
+}
+
+/// ⚖️ LAW (React's `reconnect-offer.test.ts`, shared corpus `🔁️fresh-identity`): a program minting a fresh document identity
+/// on every boot is offered its newest remembered folder, an exact identity wins, an attached document is never offered,
+/// and a reconnect addresses the remembered document.
+#[test]
+fn the_fresh_identity_corpus_holds_on_wgpu() {
+    let corpus: Value = serde_json::from_str(include_str!("../../../🏛️ShellHost/📎️local-folders/🧪️tests/🔁️fresh-identity/🔣️.json")).expect("the fresh-identity corpus parses");
+    let bindings = LocalFolderBindings { bindings: bindings_of(&corpus["bindings"]) };
+    let identity_of = |program: &Value, document_id: &str| LocalFolderIdentity { document_id: document_id.into(), plugin_id: program["pluginId"].as_str().expect("pluginId").into(), app_id: program["appId"].as_str().expect("appId").into() };
+    for row in corpus["offers"].as_array().expect("offers") {
+        let program = if row["program"].is_null() { &corpus["program"] } else { &row["program"] };
+        let attached: Vec<&str> = row["attached"].as_array().expect("attached").iter().map(|id| id.as_str().expect("id")).collect();
+        let offer = local_folder_reconnect_offer(&bindings, Some(&identity_of(program, row["identity"].as_str().expect("identity"))), &attached);
+        assert_eq!(offer.as_ref().map(|binding| binding.document_id.as_str()), row["offer"].as_str(), "{}", row["name"]);
+    }
+    assert_eq!(local_folder_reconnect_offer(&bindings, None, &[]), None, "no identity is offered nothing");
+    for row in corpus["attachTargets"].as_array().expect("attachTargets") {
+        assert_eq!(sync_attach_document_id(row["target"]["documentId"].as_str(), row["identity"].as_str()).as_deref(), row["documentId"].as_str(), "{}", row["name"]);
     }
 }
 
@@ -143,6 +177,7 @@ fn the_config_payload_fixtures_read_as_their_mutations() {
 /// has no binding and offers nothing. A program holding no document is told so and nothing is remembered.
 #[test]
 fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     TEST_LOCAL_FOLDERS_LOG.with(|slot| *slot.borrow_mut() = None);
     LOADED.with(|loaded| loaded.borrow_mut().clear());
     let folder = scratch_folder("lifecycle");
@@ -160,7 +195,7 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
     first.history.remember_local_folder(binding.clone());
     let archive = protocol::DocumentArchivePack { parent_pack: vec![1, 2, 3], parent_spr: vec![4, 5], members: Vec::new() };
     let bytes = protocol::encode_document_archive_bytes(&archive).expect("an archive");
-    semio_framework_async::block_on(store_sync::sync::FolderEventLogStorage::new(folder.clone()).write_archive("doc-7", "s.test", &bytes)).expect("the edit persists in the folder");
+    semio_framework_async::block_on(store_sync::sync::FolderEventLogStorage::new(folder.clone()).write_archive("doc-7", FOLDER_TEST_SCHEMA, &bytes)).expect("the edit persists in the folder");
     drop(first);
 
     let mut restarted = booted_shell(Some("doc-7"));
@@ -179,6 +214,7 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
     assert_eq!(semio_framework_async::block_on(WindowActionsCtx::of(&mut restarted).restore_folder_archive(&path, "doc-other")), Ok(false), "a folder holding no archive for the document restores nothing");
 
     restarted.history.forget_local_folder("doc-7");
+    retire_shell_documents(&mut restarted);
     drop(restarted);
     let after_detach = booted_shell(Some("doc-7"));
     assert!(after_detach.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "a detach leaves no binding");
@@ -302,6 +338,7 @@ fn door_requests() -> Vec<(String, Option<String>)> {
 /// person's gesture), and reconnecting restores the folder's archive with its rows and head.
 #[test]
 fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_after_a_restart() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     TEST_LOCAL_FOLDERS_LOG.with(|slot| *slot.borrow_mut() = None);
     TEST_BACKBONE_FOLDER_HOST.with(|host| *host.borrow_mut() = Default::default());
     LOADED.with(|loaded| loaded.borrow_mut().clear());
@@ -333,6 +370,7 @@ fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_afte
     assert!(shell.sync.sync_backbone_uri.is_none() && shell.history.local_folder_bindings.clone().unwrap_or_default().bindings.is_empty(), "unbound and forgotten");
 
     shell.history.remember_local_folder(binding.clone());
+    retire_shell_documents(&mut shell);
     drop(shell);
     let mut restarted = booted_shell(Some("doc-7"));
     restarted.history.local_folder_direct_reattach = false;
@@ -343,6 +381,7 @@ fn a_browser_folder_keeps_its_archive_through_the_host_route_and_comes_back_afte
     assert_eq!(history_rows_oldest_first(&restarted.history.history_entries).into_iter().map(|entry| entry.key()).collect::<Vec<_>>(), ["edit:e-1", "edit:e-2"], "the rows are the archive's");
     assert_eq!(restarted.history.history_current_checkpoint_id.as_deref(), Some("cp-2"), "the head is the archive's");
     assert_eq!(restarted.docs.folder_reconnect_band_offer(&restarted.history, &restarted.sync), None, "reconnected, the band is gone");
+    retire_shell_documents(&mut restarted);
 }
 
 /// ⚖️ LAW (`📓️api-stepped-document-load.md` §4): a whole-document load of a `(pack, spr)` pair — a hub checkpoint seed, a

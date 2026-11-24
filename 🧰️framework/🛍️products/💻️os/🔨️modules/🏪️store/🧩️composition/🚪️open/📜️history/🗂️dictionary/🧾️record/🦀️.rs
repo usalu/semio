@@ -228,7 +228,7 @@ impl RetainedDictionaryDelta {
 
 impl Drop for RetainedDictionaryDelta {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "dictionary payload scratch requires bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "dictionary payload scratch requires bounded retirement");
     }
 }
 

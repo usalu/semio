@@ -123,6 +123,9 @@ function json<T>(path: string): T {
 /** 📚️ The course the site offers, as authored. */
 export const COURSE = json<{ readonly id: string; readonly title: Text; readonly introduction: { readonly title: Text; readonly paragraphs: readonly Text[] }; readonly quizzes: readonly string[]; readonly topics: readonly { readonly id: string; readonly emoji: string; readonly title: Text; readonly quizzes: readonly string[] }[]; readonly badges: readonly SourceBadge[] }>(resolve(site, "🔣️.json"));
 
+/** 🏠️ The language the site speaks until its learner chooses another, as the deployment names it. */
+export const SITE_LOCALE = json<{ readonly site: { readonly language: Locale } }>(resolve(site, "🚀️deploy/🔣️.json")).site.language;
+
 /** 🎓️ The quizzes of the course in course order, with their solutions. */
 export const QUIZZES: readonly SourceQuiz[] = COURSE.quizzes.map((path) => json<SourceQuiz>(resolve(site, path)));
 
@@ -242,7 +245,8 @@ async function openDevice(browser: Browser, options: Parameters<Browser["newCont
 }
 
 /** 🧪️ The test of the gate: `device(locale)` opens a fresh device (empty storage) in the window of the running project,
- * whose browser asks for `language` (by default the British or German of `locale`, the language the site then speaks);
+ * whose browser asks for `language` (by default the British or German of `locale`, the language its learner reads and
+ * {@link arrive} chooses where the site's own is another);
  * when the test ends every device is closed and the test fails if any of them saw a console error, a page error or a
  * failed request outside an announced shortage. */
 export const test = base.extend<{ device: (locale?: Locale, language?: string) => Promise<Device> }>({
@@ -371,10 +375,17 @@ export function handle(prefix: string): string {
 export type Identity = { readonly kind: "anonymous" } | { readonly kind: "pseudonym" | "name"; readonly handle: string };
 
 /** 🚪️ Opens the site on a device that has never been there: the introduction shows (within `timeout`, which a cold dev
- * server needs more of). */
-export async function arrive(device: Pick<Device, "page">, timeout?: number): Promise<void> {
+ * server needs more of) in the site's own language, and a device whose learner reads the other one chooses it with the
+ * language switch the introduction keeps in reach. */
+export async function arrive(device: Pick<Device, "page"> & Partial<Pick<Device, "locale">>, timeout?: number): Promise<void> {
   await device.page.goto("/");
   await expect(screen(device.page, "introduction")).toBeVisible({ timeout });
+  await expect(device.page.locator(".course-app")).toHaveAttribute("lang", SITE_LOCALE);
+  if (device.locale === undefined || device.locale === SITE_LOCALE) return;
+  const choice = device.page.locator(`header button[lang="${device.locale}"]`);
+  await choice.click();
+  await expect(choice).toHaveAttribute("aria-pressed", "true");
+  await expect(device.page.locator(".course-app")).toHaveAttribute("lang", device.locale);
 }
 
 /** 👋️ Dismisses the overview's walkthrough and explicitly opens its sign-in dialog. A click that a page busy booting under a crowd's load swallows is made again until the walkthrough is gone. */
@@ -394,7 +405,7 @@ export async function readIntroduction(device: Pick<Device, "page">): Promise<vo
 export async function identify(device: Device, identity: Identity, atRest = false): Promise<void> {
   const form = screen(device.page, "identity");
   const kind = form.locator(`input[type="radio"][value="${identity.kind}"]`);
-  await kind.check();
+  await kind.locator("xpath=ancestor::label[1]").click();
   if (identity.kind !== "anonymous") await form.locator('input[type="text"]').fill(identity.handle);
   if (atRest) {
     await device.page.mouse.move(1, 1);
@@ -440,7 +451,7 @@ export async function chooseChallenge(device: Device, quiz: string, challenge: C
   const page = pane(device.page, quiz);
   await expect(page).toHaveAttribute("data-opened", "");
   const choice = page.locator(`input[type="radio"][value="${challenge}"]`);
-  await choice.check();
+  await choice.locator("xpath=ancestor::label[1]").click();
   await expect(choice).toBeChecked();
   await expect.poll(() => rememberedChallenge(device, quiz)).toBe(challenge);
 }
@@ -456,7 +467,7 @@ export async function playQuiz(device: Device, quiz: string, challenge: Challeng
   }
   else {
     await chooseChallenge(device, quiz, challenge);
-    await primary(pane(device.page, quiz).locator('[data-card="quiz"]')).click();
+    await primary(pane(device.page, quiz).locator('[data-card="quiz-challenge"]')).click();
     const discard = device.page.getByRole("alertdialog");
     await expect(screen(device.page, "run").or(discard)).toBeVisible();
     if (await discard.isVisible()) await primary(discard).click();

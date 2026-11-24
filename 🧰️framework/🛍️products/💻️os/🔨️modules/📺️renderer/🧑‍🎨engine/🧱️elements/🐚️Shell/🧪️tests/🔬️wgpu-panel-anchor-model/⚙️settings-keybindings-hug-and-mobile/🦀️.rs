@@ -9,7 +9,7 @@
 #[test]
 fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
     let fixture = default_dock_fixture();
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     let roots: Vec<&str> = dock.tabs(PanelAnchor::BottomRight).iter().map(|tab| tab.id.as_str()).collect();
     assert_eq!(roots, vec![FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_MARKETPLACE_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID], "⚙️ bottom-right carries Settings, Marketplace, Task Manager, then History");
@@ -29,11 +29,12 @@ fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
 /// nothing (which is exactly what the Settings branch's children were before this packet) fails here.
 #[test]
 fn every_shell_owned_leaf_projects_into_retained_records() {
-    let shell = fixture_dock_shell();
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     for tab_id in shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs) {
-        if tab_id == semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID {
-            assert!(dock.locate(&tab_id).is_none(), "🧾️ Hub is the route-owned overlay React opens from its footer/command, never a dock substitute");
+        if [semio_renderer_wgpu_hub_workspace::hub_connection::FRAMEWORK_HUB_PANEL_ID, semio_renderer_wgpu_shell_doc_open::ROUTE_NOT_FOUND_PANEL_ID, semio_renderer_wgpu_shell_doc_open::PLUGIN_RECOVERY_PANEL_ID].contains(&tab_id.as_str()) {
+            assert!(dock.locate(&tab_id).is_none(), "🧾️ {tab_id} is a route-owned overlay React opens from its route, footer or fault, never a dock substitute");
         } else {
             assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
         }
@@ -77,11 +78,12 @@ fn a_keybinding_override_remaps_a_shell_chord_and_frees_its_default() {
     let mut overrides = HashMap::new();
     overrides.insert("ui.search.toggle".to_string(), "ctrl+j".to_string());
     let table = shell_shortcut_table(&overrides);
-    let accelerator = PointerModifiers { ctrl: true, ..PointerModifiers::default() };
+    let explicit = PointerModifiers { ctrl: true, ..PointerModifiers::default() };
+    let accelerator = if semio_renderer_wgpu_host_base::host_platform_uses_meta() { PointerModifiers { meta: true, ..PointerModifiers::default() } } else { explicit.clone() };
     let remapped = semio_ui_wgpu_input::KeyAction::Char("j".into());
     let default = semio_ui_wgpu_input::KeyAction::Char("p".into());
-    assert_eq!(shell_shortcut_for_in(&table, &remapped, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the override's chord opens the palette");
-    assert!(is_reserved_shell_chord_in(&table, &remapped, &accelerator), "⌨️ and is reserved at its new spelling");
+    assert_eq!(shell_shortcut_for_in(&table, &remapped, &explicit), Some(ShellShortcut::ToggleSearch), "⌨️ the override's chord opens the palette");
+    assert!(is_reserved_shell_chord_in(&table, &remapped, &explicit), "⌨️ and is reserved at its new spelling");
     assert_eq!(shell_shortcut_for_in(&table, &default, &accelerator), None, "⌨️ `mod+p` is no longer the shell's");
     assert!(!is_reserved_shell_chord_in(&table, &default, &accelerator), "⌨️ so an app may claim it");
     assert_eq!(shell_shortcut_for(&default, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the DEFAULT table is untouched");
@@ -197,7 +199,7 @@ fn the_mobile_panel_flattens_every_anchor_in_anchor_order() {
 /// first leaf, so selecting the Settings branch on mobile lands on a real body.
 #[test]
 fn the_mobile_panel_path_drills_a_branch_to_its_first_leaf() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let tabs = SessionCtx::of(&mut shell).mobile_panel_tabs();
     let path = mobile_panel_reconcile_path(&tabs, &[FRAMEWORK_SETTINGS_PANEL_ID.to_string()]);
     assert_eq!(path.first().map(String::as_str), Some(FRAMEWORK_SETTINGS_PANEL_ID));

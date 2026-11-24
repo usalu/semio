@@ -120,6 +120,7 @@ pub struct StepContext<'a> {
     original_clock_binding: Option<u64>,
     original_total_fuel: u64,
     issued_ceiling:(RetainedCloneGrant,u64),
+    issued_start:RetainedCloneProgress,
     original_total_work_start: u128,
     original_absolute_deadline: u64,
     original_total_retained: RetainedCloneGrant,
@@ -226,7 +227,7 @@ impl<'a> StepContext<'a> {
     /// ♻️ Loans retirement-only authority after cancellation while retaining the original deadline, fuel and physical credits.
     pub fn with_native_retirement<T>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<T,ValueError>)->Result<T,ValueError>{
         if self.fuel_remaining==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original retirement turn has no fuel"));}
-        let grant=self.retained_grant();let mut observed=0;let Self{original_decoder,deadline_us,now_us,original_retirement,fuel_remaining,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native retirement requires the original Job decoder issuer"))?;let retirement=&*original_retirement;let original_deadline=&*deadline_us;let now=*now_us;let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|*retirement||now().is_some_and(|value|value<*original_deadline);let mut deadline=||*retirement||now().is_some_and(|value|value<*original_deadline);let mut ready=||*retirement||now().is_some_and(|value|value<*original_deadline);let mut work=OriginalJobWorkRecipient::new(fuel_remaining,&mut ready);semio_framework_job_receiving::native_call_result(owner.retire(grant,&mut callback,&mut deadline,&mut work,&mut observed,operation))
+        let grant=self.retained_grant();let mut observed=0;let source=self.original_source_turn_identity();let Self{original_decoder,deadline_us,now_us,original_retirement,fuel_remaining,..}=self;let owner=original_decoder.as_deref_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native retirement requires the original Job decoder issuer"))?;let retirement=&*original_retirement;let original_deadline=&*deadline_us;let now=*now_us;let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|*retirement||now().is_some_and(|value|value<*original_deadline);let mut deadline=||*retirement||now().is_some_and(|value|value<*original_deadline);let mut ready=||*retirement||now().is_some_and(|value|value<*original_deadline);let mut work=OriginalJobWorkRecipient::new(fuel_remaining,&mut ready).with_source(source);semio_framework_job_receiving::native_call_result(owner.retire(grant,&mut callback,&mut deadline,&mut work,&mut observed,operation))
     }
     /// 🌉️ Runs one non-suspending unit step and retains every original receiving refusal.
     pub fn with_native_receiving_ready(&mut self,out:&mut Option<OriginalNativeReceivingOutcome>,step:impl AsyncFnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,RetainedCloneGrant)->Result<(),ValueError>)->Result<bool,OriginalTurnFailure>{
@@ -243,7 +244,7 @@ impl<'a> StepContext<'a> {
     fn assemble(operation: OperationId, generation: Generation, budget: StepBudget, clock: ClockStride, cancel: StepCancelReference<'a>, payload_ledger: JobPayloadLedgerReference<'a>, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64, retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
         let turn_retained_start=*retained_progress;
-        StepContext { original_decoder:None,receiving:Default::default(),retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,issued_ceiling:(budget.retained,budget.fuel),original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
+        StepContext { original_decoder:None,receiving:Default::default(),retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,issued_ceiling:(budget.retained,budget.fuel),issued_start:RetainedCloneProgress::default(),original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
             work_units_spent:0, loan_deadline_us:None, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel, stage: "initial", preview_sequence, payload_ledger, source_parent:None,source_turn:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,birth_work:0,reserved_observer:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:turn_retained_start,original_total_retained_bound:false,retained_policy:None,original_physical_recipient:None,replacement_current:None, payload_page_granted: false }
     }
 
@@ -293,6 +294,16 @@ impl<'a> StepContext<'a> {
     pub fn consume_retained(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{
         let admitted=self.retained_recipient_is_admitted()&&progress.fits(self.retained_grant());
         self.post_retained(progress,admitted)
+    }
+    /// ⚖️ Settles the release a retirement step declared against the births this thread recorded, so a free is charged to the ledger that recorded its birth; the settled bytes leave this receipt and its Source ledger and are returned for the step's own receipt.
+    pub fn settle_original_birth(&mut self,declared:usize,before:RetainedCloneProgress)->Result<usize,ValueError>{
+        let settled=semio_framework_value::birth_ledger::settle_original_birth(declared);
+        let refund=settled.min(self.retained_progress.released_bytes.saturating_sub(before.released_bytes));
+        if refund!=0{
+            self.retained_progress.released_bytes-=refund;
+            if let Some(budget)=self.return_budget.as_mut(){budget.get_mut().refund_released(refund)?;}
+        }
+        Ok(settled)
     }
     /// 💳️ Admits and posts one retained item and one unit of work using the live Source grant and the ordinary deadline.
     pub fn charge_retained_item(&mut self,copy:usize,capacity:usize,release:usize)->Result<bool,ValueError>{
@@ -410,7 +421,7 @@ impl<'a> StepContext<'a> {
 
     pub fn original_absolute_deadline_us(&self)->u64{self.original_absolute_deadline}
 
-    pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));let turn=retained_min(remaining,retained_remaining(self.issued_ceiling.0,current));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(turn,|budget|retained_min(turn,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
+    pub fn original_total_retained_grant(&self)->RetainedCloneGrant{let current=retained_delta(*self.retained_progress,self.reserved_return_progress);let remaining=retained_remaining(self.original_total_retained,retained_delta(current,self.original_total_retained_start));let turn=retained_min(remaining,retained_remaining(self.issued_ceiling.0,retained_delta(current,self.issued_start)));self.return_budget.as_ref().filter(|budget|budget.get().is_bound()).map_or(turn,|budget|retained_min(turn,budget.get().remaining().map_or(RetainedCloneGrant::default(),|remaining|remaining.0)))}
     /// 🏛️ The Source's own remaining total, independent of this turn's issued ceiling, so a narrow turn is never mistaken for a permanent misfit.
     pub fn original_source_total_grant(&self)->RetainedCloneGrant{
         let current=retained_delta(*self.retained_progress,self.reserved_return_progress);
@@ -655,6 +666,19 @@ pub mod testkit {
         }
         Ok(())
     }
+    thread_local!{static ISSUED_EVENT_STOCKS:std::cell::RefCell<Vec<(u64,RetainedCloneGrant)>>=const{std::cell::RefCell::new(Vec::new())};}
+    /// 🎫️ Issues the context one fresh initiating-event stock the way the host births one per native event: the previous event must have stayed within its own issued stock, and the absolute stock now issued is recorded under the context's original clock binding for its fixture caller's retirement.
+    pub fn issue_initiating_event(cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<(),ValueError>{
+        let current=retained_delta(*cx.retained_progress,cx.reserved_return_progress);
+        if !retained_delta(current,cx.issued_start).fits(cx.issued_ceiling.0){return Err(ValueError::invariant("the previous initiating event exceeded its issued stock"))}
+        let raw=*cx.retained_progress;let add=|spent:usize,issued:usize|spent.checked_add(issued).ok_or_else(||ValueError::invariant("issued initiating-event stock overflows"));
+        let issued=RetainedCloneGrant{maximum_items:add(raw.copied_items,grant.maximum_items)?,maximum_copy_bytes:add(raw.copied_bytes,grant.maximum_copy_bytes)?,maximum_capacity_bytes:add(raw.retained_capacity_bytes,grant.maximum_capacity_bytes)?,maximum_release_bytes:add(raw.released_bytes,grant.maximum_release_bytes)?,maximum_depth:grant.maximum_depth};
+        cx.issued_start=current;cx.issued_ceiling.0=grant;
+        if let Some(binding)=cx.original_clock_binding{ISSUED_EVENT_STOCKS.with(|stocks|{let mut stocks=stocks.borrow_mut();stocks.retain(|(known,_)|*known!=binding);stocks.push((binding,issued))})}
+        Ok(())
+    }
+    /// 🧾️ Takes the absolute stock last issued to the context bound to `binding`, if any initiating event was issued to it.
+    pub fn take_issued_event_stock(binding:u64)->Option<RetainedCloneGrant>{ISSUED_EVENT_STOCKS.with(|stocks|{let mut stocks=stocks.borrow_mut();let index=stocks.iter().position(|(known,_)|*known==binding)?;Some(stocks.swap_remove(index).1)})}
     pub fn child_source_status(child:&OriginalCallerChildSource)->(bool,bool,usize,OriginalSourceBinding){child.test_status()}
     pub fn source_return_budget_is_bound(parent:&OriginalCallerSourceParent)->Result<bool,ValueError>{Ok(parent.return_source()?.try_borrow().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"actual source budget is borrowed"))?.get().is_bound())}
     pub fn return_budget_is_inherited(cx:&StepContext<'_>)->bool{matches!(cx.return_budget.as_ref(),Some(original_return_source::OriginalReturnBudgetReference::Borrowed(_)))}

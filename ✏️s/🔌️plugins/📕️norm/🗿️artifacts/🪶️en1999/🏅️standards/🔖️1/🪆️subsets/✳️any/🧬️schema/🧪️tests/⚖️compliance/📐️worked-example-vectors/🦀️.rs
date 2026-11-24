@@ -27,7 +27,7 @@ fn evaluate_rust(name: &str, a: &[serde_json::Value]) -> f64 {
         "haz_width" => part_1_1::haz_width(num(&a[0])),
         "shear_rho" => part_1_1::shear_buckling_rho(num(&a[0]), num(&a[1]), num(&a[2]), num(&a[3])),
         "haz_width_for" => {
-            let mut el = semio_s_artifact_norm_en1999_model::PlateElement { id: "e".into(), width: 0.1, thickness: num(&a[0]), outstand: true, welded: true, weld_position: 0.0, weld_process: a[1].as_str().unwrap().into(), weld_t_junction: a[2].as_bool().unwrap(), weld_direction: semio_s_artifact_norm_en1999_model::WeldDirection::Longitudinal, edge_stiffener_depth: 0.0, edge_stiffener_thickness: 0.0 };
+            let mut el = semio_s_artifact_norm_en1999_model::PlateElement { id: "e".into(), width: 0.1, thickness: num(&a[0]), outstand: true, welded: true, weld_position: 0.0, weld_process: match a[1].as_str().unwrap() { "mig" => semio_s_artifact_norm_en1999_model::WeldProcess::Mig, "tig" => semio_s_artifact_norm_en1999_model::WeldProcess::Tig, other => panic!("unknown weld process {other}") }, weld_t_junction: a[2].as_bool().unwrap(), weld_direction: semio_s_artifact_norm_en1999_model::WeldDirection::Longitudinal, edge_stiffener_depth: 0.0, edge_stiffener_thickness: 0.0 };
             el.welded = true;
             part_1_1::haz_width_for(&el)
         }

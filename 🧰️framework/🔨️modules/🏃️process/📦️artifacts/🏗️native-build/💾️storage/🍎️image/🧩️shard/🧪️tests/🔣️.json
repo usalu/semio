@@ -1,0 +1,851 @@
+{
+ "$comment": "Handcrafted inputs; every expected value is the answer of the independent Python oracle (🐍️.py), not of the TypeScript code.",
+ "rule": {
+  "enabled": true,
+  "headroomPercent": 25,
+  "hostFreeReservePercent": 66,
+  "roots": [
+   {
+    "prefix": "u/l",
+    "pattern": "^[a-z0-9]{1,12}$",
+    "needBytes": 8589934592
+   },
+   {
+    "prefix": "j",
+    "pattern": "^[0-9a-f]{20}$",
+    "needBytes": 2147483648
+   }
+  ]
+ },
+ "keys": [
+  {
+   "path": "u/l/pcab777/t/x",
+   "root": 0,
+   "key": "pcab777",
+   "id": "pcab777"
+  },
+  {
+   "path": "u/l/pcab777",
+   "root": 0,
+   "key": "pcab777",
+   "id": "pcab777"
+  },
+  {
+   "path": "u/l",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/UPPER",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/abcdefghijklm",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/o/abc",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "j/0123456789abcdef0123/node_modules",
+   "root": 1,
+   "key": "0123456789abcdef0123",
+   "id": "x1bd8fd47297"
+  },
+  {
+   "path": "j/0123456789abcdef012",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "cargo/home",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "../u/l/abc",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/./abc",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/a b",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l/pec11e9/lane.json",
+   "root": 0,
+   "key": "pec11e9",
+   "id": "pec11e9"
+  },
+  {
+   "path": "u/lanes/abc",
+   "root": null,
+   "key": null,
+   "id": null
+  },
+  {
+   "path": "u/l\\abc",
+   "root": null,
+   "key": null,
+   "id": null
+  }
+ ],
+ "capacity": [
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "hostFreeBytes": 107374182400,
+   "capacityBytes": 34359738368
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "hostFreeBytes": 21474836480,
+   "capacityBytes": 13958643712
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "hostFreeBytes": 10737418240,
+   "capacityBytes": null
+  },
+  {
+   "platform": "darwin",
+   "need": 42949672960,
+   "hostFreeBytes": 536870912000,
+   "capacityBytes": null
+  },
+  {
+   "platform": "darwin",
+   "need": 1048576,
+   "hostFreeBytes": 107374182400,
+   "capacityBytes": 34359738368
+  },
+  {
+   "platform": "linux",
+   "need": 42949672960,
+   "hostFreeBytes": 536870912000,
+   "capacityBytes": 137438953472
+  },
+  {
+   "platform": "linux",
+   "need": 42949672960,
+   "hostFreeBytes": 64424509440,
+   "capacityBytes": null
+  },
+  {
+   "platform": "win32",
+   "need": 42949672960,
+   "hostFreeBytes": 107374182400,
+   "capacityBytes": 68719476736
+  },
+  {
+   "platform": "win32",
+   "need": 75161927680,
+   "hostFreeBytes": 536870912000,
+   "capacityBytes": null
+  },
+  {
+   "platform": "darwin",
+   "need": 8589934592,
+   "hostFreeBytes": 16642998272,
+   "capacityBytes": 10737418240
+  }
+ ],
+ "selection": [
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "u/l/pcab777/t/x",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "existing",
+    "id": "pcab777",
+    "key": "pcab777",
+    "root": 0,
+    "capacityBytes": 34359738368
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "u/l/pec11e9",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "birth",
+    "id": "pec11e9",
+    "key": "pec11e9",
+    "root": 0,
+    "capacityBytes": 34359738368
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "u/l/pec11e9",
+   "hostFreeBytes": 5368709120,
+   "decision": {
+    "kind": "refused",
+    "id": "pec11e9",
+    "key": "pec11e9",
+    "root": 0,
+    "reason": "host-free"
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": false,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "u/l/pec11e9",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "home"
+   }
+  },
+  {
+   "platform": "linux",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "u/l/pec11e9",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "home"
+   }
+  },
+  {
+   "platform": "win32",
+   "enabled": true,
+   "live": [],
+   "path": "u/l/pec11e9",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "home"
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "j/0123456789abcdef0123/x",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "refused",
+    "id": "x1bd8fd47297",
+    "key": "0123456789abcdef0123",
+    "root": 1,
+    "reason": "id-collision"
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [
+    {
+     "id": "pcab777",
+     "key": "pcab777",
+     "root": 0,
+     "capacityBytes": 34359738368
+    },
+    {
+     "id": "x1bd8fd47297",
+     "key": "ffffffffffffffffffff",
+     "root": 1,
+     "capacityBytes": 4294967296
+    }
+   ],
+   "path": "cargo/home/x",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "home"
+   }
+  },
+  {
+   "platform": "darwin",
+   "enabled": true,
+   "live": [],
+   "path": "j/0123456789abcdef0123",
+   "hostFreeBytes": 107374182400,
+   "decision": {
+    "kind": "birth",
+    "id": "x1bd8fd47297",
+    "key": "0123456789abcdef0123",
+    "root": 1,
+    "capacityBytes": 34359738368
+   }
+  }
+ ],
+ "aggregate": [
+  {
+   "name": "one image",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 10737418240,
+     "allocatedBytes": 21474836480,
+     "hostFreeBytes": 53687091200
+    }
+   ],
+   "total": {
+    "shards": 1,
+    "capacityBytes": 34359738368,
+    "usedBytes": 10737418240,
+    "allocatedBytes": 21474836480,
+    "slackBytes": 10737418240,
+    "freeBytes": 23622320128,
+    "hostFreeBytes": 53687091200,
+    "rows": [
+     {
+      "id": "home",
+      "freeBytes": 23622320128
+     }
+    ]
+   }
+  },
+  {
+   "name": "two images on one host volume share its free bytes",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 10737418240,
+     "allocatedBytes": 21474836480,
+     "hostFreeBytes": 32212254720
+    },
+    {
+     "id": "pcab777",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 12884901888,
+     "allocatedBytes": 26843545600,
+     "hostFreeBytes": 32212254720
+    }
+   ],
+   "total": {
+    "shards": 2,
+    "capacityBytes": 68719476736,
+    "usedBytes": 23622320128,
+    "allocatedBytes": 48318382080,
+    "slackBytes": 24696061952,
+    "freeBytes": 32212254720,
+    "hostFreeBytes": 32212254720,
+    "rows": [
+     {
+      "id": "home",
+      "freeBytes": 23622320128
+     },
+     {
+      "id": "pcab777",
+      "freeBytes": 21474836480
+     }
+    ]
+   }
+  },
+  {
+   "name": "host volume tighter than the images",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 10737418240,
+     "allocatedBytes": 21474836480,
+     "hostFreeBytes": 5368709120
+    },
+    {
+     "id": "pcab777",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 12884901888,
+     "allocatedBytes": 26843545600,
+     "hostFreeBytes": 5368709120
+    }
+   ],
+   "total": {
+    "shards": 2,
+    "capacityBytes": 68719476736,
+    "usedBytes": 23622320128,
+    "allocatedBytes": 48318382080,
+    "slackBytes": 24696061952,
+    "freeBytes": 5368709120,
+    "hostFreeBytes": 5368709120,
+    "rows": [
+     {
+      "id": "home",
+      "freeBytes": 5368709120
+     },
+     {
+      "id": "pcab777",
+      "freeBytes": 5368709120
+     }
+    ]
+   }
+  },
+  {
+   "name": "images on two host volumes add",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 10737418240,
+     "allocatedBytes": 21474836480,
+     "hostFreeBytes": 16106127360
+    },
+    {
+     "id": "pcab777",
+     "volume": "2",
+     "capacityBytes": 34359738368,
+     "usedBytes": 12884901888,
+     "allocatedBytes": 12884901888,
+     "hostFreeBytes": 107374182400
+    }
+   ],
+   "total": {
+    "shards": 2,
+    "capacityBytes": 68719476736,
+    "usedBytes": 23622320128,
+    "allocatedBytes": 34359738368,
+    "slackBytes": 10737418240,
+    "freeBytes": 37580963840,
+    "hostFreeBytes": 123480309760,
+    "rows": [
+     {
+      "id": "home",
+      "freeBytes": 16106127360
+     },
+     {
+      "id": "pcab777",
+      "freeBytes": 21474836480
+     }
+    ]
+   }
+  },
+  {
+   "name": "a full image has no free bytes and no negative slack",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 34359738368,
+     "allocatedBytes": 33285996544,
+     "hostFreeBytes": 53687091200
+    },
+    {
+     "id": "a",
+     "volume": "1",
+     "capacityBytes": 34359738368,
+     "usedBytes": 0,
+     "allocatedBytes": 0,
+     "hostFreeBytes": 53687091200
+    }
+   ],
+   "total": {
+    "shards": 2,
+    "capacityBytes": 68719476736,
+    "usedBytes": 34359738368,
+    "allocatedBytes": 33285996544,
+    "slackBytes": 0,
+    "freeBytes": 34359738368,
+    "hostFreeBytes": 53687091200,
+    "rows": [
+     {
+      "id": "home",
+      "freeBytes": 0
+     },
+     {
+      "id": "a",
+      "freeBytes": 34359738368
+     }
+    ]
+   }
+  },
+  {
+   "name": "no images",
+   "rows": [],
+   "total": {
+    "shards": 0,
+    "capacityBytes": 0,
+    "usedBytes": 0,
+    "allocatedBytes": 0,
+    "slackBytes": 0,
+    "freeBytes": 0,
+    "hostFreeBytes": 0,
+    "rows": []
+   }
+  }
+ ],
+ "admission": [
+  {
+   "name": "roomy host",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "needBytes": 4294967296,
+     "slackBytes": 0,
+     "hostFreeBytes": 107374182400,
+     "newShard": false
+    }
+   ],
+   "reserveBytes": 4294967296,
+   "slackCreditBasisPoints": 5000,
+   "volumes": {
+    "1": {
+     "needBytes": 8589934592,
+     "hostFreeBytes": 107374182400,
+     "shortfallBytes": 0
+    }
+   },
+   "shortfallBytes": 0
+  },
+  {
+   "name": "slack credited",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "needBytes": 10737418240,
+     "slackBytes": 8589934592,
+     "hostFreeBytes": 12884901888,
+     "newShard": false
+    }
+   ],
+   "reserveBytes": 2147483648,
+   "slackCreditBasisPoints": 5000,
+   "volumes": {
+    "1": {
+     "needBytes": 8589934592,
+     "hostFreeBytes": 12884901888,
+     "shortfallBytes": 0
+    }
+   },
+   "shortfallBytes": 0
+  },
+  {
+   "name": "a new shard adds its birth allocation",
+   "rows": [
+    {
+     "id": "pcab777",
+     "volume": "1",
+     "needBytes": 4294967296,
+     "slackBytes": 0,
+     "hostFreeBytes": 5368709120,
+     "newShard": true
+    }
+   ],
+   "reserveBytes": 1073741824,
+   "slackCreditBasisPoints": 5000,
+   "volumes": {
+    "1": {
+     "needBytes": 5502926848,
+     "hostFreeBytes": 5368709120,
+     "shortfallBytes": 134217728
+    }
+   },
+   "shortfallBytes": 134217728
+  },
+  {
+   "name": "two volumes each short",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "needBytes": 10737418240,
+     "slackBytes": 0,
+     "hostFreeBytes": 5368709120,
+     "newShard": false
+    },
+    {
+     "id": "a",
+     "volume": "2",
+     "needBytes": 10737418240,
+     "slackBytes": 2147483648,
+     "hostFreeBytes": 6442450944,
+     "newShard": false
+    }
+   ],
+   "reserveBytes": 1073741824,
+   "slackCreditBasisPoints": 10000,
+   "volumes": {
+    "1": {
+     "needBytes": 11811160064,
+     "hostFreeBytes": 5368709120,
+     "shortfallBytes": 6442450944
+    },
+    "2": {
+     "needBytes": 9663676416,
+     "hostFreeBytes": 6442450944,
+     "shortfallBytes": 3221225472
+    }
+   },
+   "shortfallBytes": 9663676416
+  },
+  {
+   "name": "shards of one volume sum before the reserve",
+   "rows": [
+    {
+     "id": "home",
+     "volume": "1",
+     "needBytes": 3221225472,
+     "slackBytes": 0,
+     "hostFreeBytes": 10737418240,
+     "newShard": false
+    },
+    {
+     "id": "a",
+     "volume": "1",
+     "needBytes": 3221225472,
+     "slackBytes": 0,
+     "hostFreeBytes": 10737418240,
+     "newShard": false
+    },
+    {
+     "id": "b",
+     "volume": "1",
+     "needBytes": 3221225472,
+     "slackBytes": 1073741824,
+     "hostFreeBytes": 10737418240,
+     "newShard": true
+    }
+   ],
+   "reserveBytes": 1073741824,
+   "slackCreditBasisPoints": 5000,
+   "volumes": {
+    "1": {
+     "needBytes": 10334765056,
+     "hostFreeBytes": 10737418240,
+     "shortfallBytes": 0
+    }
+   },
+   "shortfallBytes": 0
+  }
+ ],
+ "paths": [
+  {
+   "flavor": "posix",
+   "directory": "/Users/ueli/Documents/semio/.cache/b/r",
+   "id": "pcab777",
+   "longest": 59,
+   "maximumDirectoryCharacters": 235,
+   "fits": true
+  },
+  {
+   "flavor": "posix",
+   "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/.cache/b/r",
+   "id": "x1bd8fd47297",
+   "longest": 188,
+   "maximumDirectoryCharacters": 230,
+   "fits": true
+  },
+  {
+   "flavor": "posix",
+   "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/r",
+   "id": "pcab777",
+   "longest": 245,
+   "maximumDirectoryCharacters": 235,
+   "fits": true
+  },
+  {
+   "flavor": "win32",
+   "directory": "C:\\Users\\ueli\\Documents\\semio\\.cache\\b\\r",
+   "id": "pcab777",
+   "longest": 61,
+   "maximumDirectoryCharacters": 235,
+   "fits": true
+  },
+  {
+   "flavor": "win32",
+   "directory": "C:\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\.cache\\b\\r",
+   "id": "x1bd8fd47297",
+   "longest": 240,
+   "maximumDirectoryCharacters": 230,
+   "fits": true
+  },
+  {
+   "flavor": "posix",
+   "directory": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "id": "abc",
+   "longest": 257,
+   "maximumDirectoryCharacters": 239,
+   "fits": false
+  }
+ ],
+ "reclaim": [
+  {
+   "rule": {
+    "reclaimFloorBytes": 8589934592,
+    "reclaimRatioPercent": 300,
+    "reclaimTightHostFreeBytes": 51539607552
+   },
+   "facts": [
+    {
+     "allocatedBytes": 42949672960,
+     "usedBytes": 10737418240,
+     "hostFreeBytes": 107374182400,
+     "sinceLastKickMilliseconds": 120000
+    },
+    {
+     "allocatedBytes": 42949672960,
+     "usedBytes": 10737418240,
+     "hostFreeBytes": 107374182400,
+     "sinceLastKickMilliseconds": 1000
+    },
+    {
+     "allocatedBytes": 21474836480,
+     "usedBytes": 12884901888,
+     "hostFreeBytes": 107374182400,
+     "sinceLastKickMilliseconds": 120000
+    },
+    {
+     "allocatedBytes": 12884901888,
+     "usedBytes": 3221225472,
+     "hostFreeBytes": 107374182400,
+     "sinceLastKickMilliseconds": 120000
+    },
+    {
+     "allocatedBytes": 12884901888,
+     "usedBytes": 10737418240,
+     "hostFreeBytes": 42949672960,
+     "sinceLastKickMilliseconds": 120000
+    },
+    {
+     "allocatedBytes": 9663676416,
+     "usedBytes": 8589934592,
+     "hostFreeBytes": 42949672960,
+     "sinceLastKickMilliseconds": 120000
+    },
+    {
+     "allocatedBytes": 32212254720,
+     "usedBytes": 10737418240,
+     "hostFreeBytes": 42949672960,
+     "sinceLastKickMilliseconds": 59999
+    }
+   ],
+   "due": [
+    true,
+    false,
+    false,
+    true,
+    true,
+    true,
+    false
+   ]
+  }
+ ]
+}

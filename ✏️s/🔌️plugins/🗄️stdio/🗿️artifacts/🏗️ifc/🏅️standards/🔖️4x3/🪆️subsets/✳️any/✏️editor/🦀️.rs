@@ -245,5 +245,8 @@ pub fn create_ifc4x3_any_editor() -> semio_plugin::AppDefinition {
 }
 
 #[cfg(test)]
+#[path = "tree-probe-tests.rs"]
+pub(crate) mod tree_probe;
+#[cfg(test)]
 #[path = "tests.rs"]
 mod tests;

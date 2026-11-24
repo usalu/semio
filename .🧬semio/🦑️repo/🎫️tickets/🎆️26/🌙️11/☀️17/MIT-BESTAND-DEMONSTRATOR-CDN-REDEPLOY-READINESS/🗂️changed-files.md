@@ -1474,3 +1474,179 @@ Retained ticket inputs gis-export-registration.rs and RELEASE-GRAPH-TEST-EDGE-AU
 - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts`
 - `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🧫️fixtures/🔣️.json`
 - `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️17/MIT-BESTAND-DEMONSTRATOR-CDN-REDEPLOY-READINESS/🔬️warm-failed-source-span-recapture.md`
+
+
+## 2026-11-23
+
+Files edited, removed or named as changed by the 2026-11-23 work (notes dated 2026-11-23 plus the redeploy log). Grouped by area; one-line purpose per entry.
+
+### Framework store
+
+| Path | Status | Purpose |
+|---|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs` | M | Changed per: Bearbeiten `original-turn.native-return-refused: semantic` (demo-2326) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🦀️.rs` | M | Changed per: Bearbeiten `original-turn.native-return-refused: semantic` (demo-2326) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🚀️guest-activation/🟦️.ts` | M | Changed per: Demonstrator wd3qizX Linked Guest Probe |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🔏️digest/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🧪️tests/🦀️.rs` | M | Changed per: store-tests-06 compile status (2026-11-23) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧳️replacement/⚖️canonical/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧳️replacement/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+
+### Job
+
+| Path | Status | Purpose |
+|---|---|---|
+| `🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️owned/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️tests/📊️native-progress/retained-charge.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs` | M | Changed per: 🔬️ Energie Pane: `plugin-ui.native-lifetime-required` |
+| `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🪙️return-escrow/🦀️.rs` | M | Named in the 2026-11-23 notes (return-escrow, budget or extra edited file) |
+| `🧰️framework/🔨️modules/🧵️job/📬️outcome/🪙️budget/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🎟️work/🦀️.rs` | M | Changed per: 🔬️ Issuer clock/deadline refusal at `poll_wit` (generator and demonstrator boot) |
+
+### Plugin
+
+| Path | Status | Purpose |
+|---|---|---|
+| `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️geojson/🦀️.rs` | M | Changed per: Remaining Roster Source Preflight |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/💼️job-bridge-and-live-mount/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🗂️mounted-state-and-preparation/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/native.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🎞️visual-job/🧮️solver-view/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️composite-bridge-girder/🧪️tests/🧩️example/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🔨️modules/🏠️host/🧪️tests/🔬️unit/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🛬️decode/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor/guided-type-tests.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/work.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📨️wire/source_loan.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📨️wire/source_staging.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧭️profile/retained.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧶️guidance/type-guidance.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🧪️tests/🧫️fixtures/📊️sheet-grid/🔣️.json` | M | Changed per: Closure: instance-commands and time-travel-turns |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/💾️native-save/🧪️tests/🔬️original-save/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/💾️native-save/🧱️program.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/📦️packages/🦀️rust/Cargo.toml` | M | Changed per: Closure guardian: wasm32-wasip2 check of demonstrator, procedural, sourcing |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🖼️page/🧱️model/📦️packages/🦀️rust/Cargo.toml` | M | Changed per: Closure guardian: wasm32-wasip2 check of demonstrator, procedural, sourcing |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/✏️editor/🧪️tests/🔬️unit/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📩️archive/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🛫️native/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧵️mesh-job/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️receipt/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🎞️raw-media/📦️packages/🦀️rust/Cargo.toml` | M | Changed per: runtime-ops source boundary split |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/⌨️command-ingress-turn/🦀️.rs` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🚚️more-work-drive.json` | M | Changed per: Opening Lifecycle Poll Audit |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🔌️actor-loading-and-replies/🟦️.ts` | M | Changed per: Boot failure: "original outcome acknowledgement requires its live receiving place" |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/⚠️failure/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/🧪️tests/📐️.json` | M | Changed per: Koordinator, Aussuchen and Bearbeiten boot readiness (Nov 21, 15:50 PST) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/🧪️tests/🦀️.rs` | M | Changed per: Koordinator, Aussuchen and Bearbeiten boot readiness (Nov 21, 15:50 PST) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📣️macros/⚛️wp4-reactor/🦀️.rs` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔌️plugin-instance-handle/🎫️operation-admission.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔌️plugin-instance-handle/📦️operation.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔌️plugin-instance-handle/🪙️escrow.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🎛️session/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/📥️operation/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧪️tests/🎚️profile/🔣️.json` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/📊️trace/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/📞️host/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/▶️invocation/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🚪️io/📞️imports/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🦀️.rs` | M | Changed per: Original readiness stall (10:15 probe, `ov-1015.log`) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1-x/🔧️replacement-fixtures-and-recursive-documents/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/📥️staging/🧾️typed-operations/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🖼️render/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🎞️media-transfer/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧷️command-routes/📥️staging/🚦️actions/🦀️.rs` | M | Changed per: Koordinator, Aussuchen and Bearbeiten boot readiness (Nov 21, 15:50 PST) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/♻️frontier/🦀️.rs` | M | Changed per: Original readiness stall (10:15 probe, `ov-1015.log`) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🪟️mounted/🚨️structural-refusal/🧪️tests/🧫️fixtures/🔣️.json` | M | Changed per: Publication stalls (0200 matrix): Verfolgen receipt overshoot, Koordinator blocked, silent |
+
+### Value
+
+| Path | Status | Purpose |
+|---|---|---|
+| `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs` | M | Changed per: Typed-operation publication stall (wd3qizX, wRATjNi) |
+| `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🌳️root/🦀️.rs` | M | Changed per: Typed-operation publication stall (wd3qizX, wRATjNi) |
+| `🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🔗️arc-custody/🦀️.rs` | M | Changed per: FEM Arc Custody Witness Audit |
+| `🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🎟️work-action/🤝️loan/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🎟️work-action/🫴️borrow/🦀️.rs` | M | Changed per: Boot failure: "source owner capture lacks original Source" |
+| `🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🧪️testing/👥️presence-retirement/🦀️.rs` | M | Changed per: store-tests-06 compile status (2026-11-23) |
+| `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+
+### Replication
+
+| Path | Status | Purpose |
+|---|---|---|
+| `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs` | M | Changed per: Bearbeiten `seal canonical second pass length changed` |
+| `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🧪️tests/🦀️.rs` | M | Changed per: Original readiness stall (10:15 probe, `ov-1015.log`) |
+
+### Apps
+
+| Path | Status | Purpose |
+|---|---|---|
+| `♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts` | M | Changed per: Site Trim |
+| `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📦️assets/🟦️.ts` | M | Changed per: 🚀️ Redeploy Log |
+| `♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧫️cases.json` | M | Changed per: 🔬️ Remaining Roots Audit |
+| `♻️mit-bestand/🧺️demonstrator/🪧️brand.ts` | M | Changed per: Startup Pane Control and Mesh Audit |
+| `🌎️hub/Cargo.toml` | M | Changed per: Native Release Module Pairing |
+| `🌎️hub/🧩️compositions/🗄️stdio/📇️publication/📜️native-catalog.json` | M | Changed per: 🚀️ Redeploy Log |
+| `🌎️hub/🧩️compositions/🗄️stdio/📇️publication/🔣️.json` | M | Changed per: 🚀️ Redeploy Log |
+| `🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🏗️projection/🦀️.rs` | M | Changed per: 🚀️ Redeploy Log |
+| `🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🔡️woff2-only/🟦️.ts` | M | Changed per: Site Trim |
+| `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts` | M | Changed per: Final Pipeline Readiness |
+| `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs` | M | Changed per: Closure: instance-commands and time-travel-turns |
+| `🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/📦️asset-delivery/🟦️.ts` | M | Changed per: Final Pipeline Readiness |
+| `🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧹️host-retirement/🦀️.rs` | M | Changed per: Demonstrator closure check after 17:48 failure |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/⚡️host-effects/🧭️on-demand-request/🟦️.ts` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🎨️theme-file-import-and-accessibility/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🎬️shell-actions/🎯️dispatch-action/🪟️layouts/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🖱️pointer-input/🔑️key-and-move/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️tests/🧫️fixtures/🛰️offer-answers/🔣️.json` | M | Changed per: 🚀️ Redeploy Log |
+
+### Build
+
+| Path | Status | Purpose |
+|---|---|---|
+| `🧰️framework/📦️packages/🦀️rust/🦀️.rs` | M | Changed per: 🔬️ Remaining Roots Audit |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🛟️reserve/🧪️tests/🟦️.ts` | M | Changed per: Stale volume figure of the macOS cache images: refresh, escalation and reserve |
+| `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧮️phase-ledger/🟦️.ts` | M | Changed per: Release Throughput Audit |
+| `🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔁️replaced-file/🟦️.ts` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json` | M | Changed per: Publication lease order: concurrent publisher of one shared artifact |
+| `🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧪️tests/📥️processes/🟦️.ts` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🧪️tests/🧊️sealed-subset/🟦️.ts` | M | Changed per: Post-build snapshot race (browser-partD, exit 75) |
+| `🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts` | M | Changed per: 🔬️ Relocatable Demonstrator Bundle |
+| `🧰️framework/🔨️modules/🖼️assets/🗺️tile-proxy/🧪️tests/🧫️fixtures/🔣️.json` | M | Changed per: CDN Final Steps Audit: mit-bestand Demonstrator |
+| `🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/authority.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/⏱️tessellation-job/🦀️.rs` | M | Changed per: Cargo Dependency View Audit |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/📨️plugin-artifact-channel/🔁️native-poll/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📤️publication/🖼️display/🧪️tests/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🪞️replica-sync-protocol/🦀️.rs` | M | Changed per: 🔬️ Debug Print Inventory (production Rust) |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️inputs/🟦️.ts` | M | Changed per: 🚀️ Redeploy Log |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs` | M | Changed per: Builtin-Read Import Coverage Refusal |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🍞️bun/🟦️.ts` | M | Changed per: Builtin-Read Import Coverage Refusal |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json` | M | Changed per: Generator empty preview (Procedural wmr64VB) |
+
+### Removed or not found
+
+| Path | Status | Purpose |
+|---|---|---|
+| `✏️s/🔌️plugins/**/📜️artifact-definition.json` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/.../✏️editor/🎮️commands/🧪️tests/🔬️unit/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `✏️s/🔌️plugins/🔋️energy/…/✏️editor/🎮️commands/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/.../🌱️initialization/🌱️state/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/.../✏️editor/🧪️tests/🔬️unit/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️definition/🧪️tests/🔬️executable-mappings/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `🧰️framework/.../🧿️collision/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🪜️mounted-grant-archive-publication/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📥️staging/🪜️maintenance-ladder/🧪️tests/🦀️.rs` | removed | Named in notes but not present in the repo (path or placeholder) |

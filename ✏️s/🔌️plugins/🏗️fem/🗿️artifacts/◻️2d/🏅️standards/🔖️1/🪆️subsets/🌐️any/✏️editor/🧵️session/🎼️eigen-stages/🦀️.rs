@@ -123,7 +123,7 @@ impl MountedState {
     pub(super) fn step_eigen(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         let eigen = self.eigen.as_mut().expect("mounted eigen owner");
         let mode = self.mode_index;
-        let operation = self.identity.operation();
+        let operation = self.identity.operation(cx.operation(), cx.generation());
         match eigen.phase {
             Phase::Assemble => {
                 let coefficient = |element: &semio_s_fem_static::Elements, positions: &[[f64; 3]], displacement: &[f64], row: usize, column: usize| match self.family {

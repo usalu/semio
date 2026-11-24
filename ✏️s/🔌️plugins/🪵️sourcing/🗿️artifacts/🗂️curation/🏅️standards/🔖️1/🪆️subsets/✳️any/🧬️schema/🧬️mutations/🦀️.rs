@@ -9,7 +9,7 @@ pub use crate::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed curated-selection mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = CurationSnapshot, diff = CurationDiff, schema = "sourcing.curation", reference = CurationSnapshot, reference_diff = CurationDiff)]

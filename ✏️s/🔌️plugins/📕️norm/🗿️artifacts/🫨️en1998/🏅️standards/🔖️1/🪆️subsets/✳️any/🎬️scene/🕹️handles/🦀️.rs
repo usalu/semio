@@ -1,6 +1,6 @@
 //! 🕹️ Handles: viewport grips that bind a drag to the EN 1998 fields behind a selected entity (storey heights, masses, centres, plan dimensions, tower and vessel dimensions).
 
-use super::scene::projection_kit::handle_kit::choice_handle;
+use super::scene::projection_kit::handle_kit::{choice_handle, rebased, with_rest_in_limits};
 use super::kit::{entity_kind_of, assessed_origin, foundation_centre, loc, path_of, region_drawn, region_origin, v3, DECK_WIDTH, FOOTING_DEPTH, PIER_HEIGHT, PIER_SIZE, PIER_X};
 use super::ground_and_bridges::{tie_beam_ends, MIN_SOIL_LAYER, SLOPE_WIDTH, WALL_BACKFILL_WIDTH, WALL_LENGTH, WALL_THICKNESS};
 use super::horizontal_elements::base_widths;
@@ -62,8 +62,9 @@ struct Grip<'a> {
     name: (String, String),
 }
 
+/// 🪝️ The grip as the framework drives it: declared relative to its current value (`base + k · s`, limits around zero), then re-based on the absolute parameter at its anchor, so the value read at the rest position is the current value exactly and the limits contain it.
 fn handle(g: Grip<'_>) -> Handle {
-    Handle {
+    with_rest_in_limits(rebased(Handle {
         id: g.id,
         entity: EntityRef::new(g.entity_kind, g.entity, g.path),
         kind: g.kind,
@@ -73,7 +74,7 @@ fn handle(g: Grip<'_>) -> Handle {
         snap: snap(g.step),
         limits: Some(Interval::new((g.limits.0 - g.base) / g.k, (g.limits.1 - g.base) / g.k)),
         accessible_name: loc(&g.name.0, &g.name.1),
-    }
+    }))
 }
 
 /// 🧲️ The move grips of every placed entity; a drag writes `placements[id=ENTITY].x|y`, the first drag of an entity without a row inserts it as one undo step.

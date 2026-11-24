@@ -9,6 +9,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{
 };
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfStreamRoleValue};
 use semio_framework_hash::Sha256;
+use semio_framework_value::ByteReadSource;
 use std::mem::size_of;
 
 const NAME: usize = 128;
@@ -171,16 +172,17 @@ impl PdfEmbeddedFontCursor {
                 inspect(self.program_owner.expect("qualified font descriptor"), &mut |value| {
                     let Some(PdfObject::Stream { dict, data, filters }) = value else { return; };
                     if dict.len() != 1 { return; }
+                    let prefix = |expected: &[u8]| expected.iter().enumerate().all(|(index, byte)| data.byte_at(index) == Some(*byte));
                     let valid = if self.descendant.is_some() {
-                        data.starts_with(&[0, 1, 0, 0]) && integer(dict, "Length1") == Some(data.len() as i64)
+                        prefix(&[0, 1, 0, 0]) && integer(dict, "Length1") == Some(data.len() as i64)
                     } else {
-                        name(dict, "Subtype") == Some("OpenType") && data.starts_with(b"OTTO")
+                        name(dict, "Subtype") == Some("OpenType") && prefix(b"OTTO")
                     };
                     if !valid { return; }
                     let Some(wire) = filter_wire(filters) else { return; };
                     if self.offset > data.len() { return; }
                     let end = (self.offset + 1).min(data.len());
-                    self.hash.update(&data[self.offset..end]);
+                    if let Some(byte) = data.byte_at(self.offset).filter(|_| end > self.offset) { self.hash.update(&[byte]); }
                     self.offset = end;
                     self.filter_wire = wire;
                     qualified = true;

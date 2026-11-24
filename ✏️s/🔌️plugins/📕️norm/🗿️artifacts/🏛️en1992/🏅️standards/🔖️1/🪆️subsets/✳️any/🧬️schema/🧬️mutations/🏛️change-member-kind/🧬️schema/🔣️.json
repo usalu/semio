@@ -50,7 +50,45 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "Beam": {
+            "en": "Beam",
+            "de": "Balken"
+          },
+          "Slab": {
+            "en": "Slab",
+            "de": "Platte"
+          },
+          "Column": {
+            "en": "Column",
+            "de": "Stütze"
+          },
+          "Wall": {
+            "en": "Wall",
+            "de": "Wand"
+          },
+          "FlatSlab": {
+            "en": "Flat slab",
+            "de": "Flachdecke"
+          },
+          "RibbedSlab": {
+            "en": "Ribbed slab",
+            "de": "Rippendecke"
+          },
+          "TensionMember": {
+            "en": "Tension member",
+            "de": "Zugglied"
+          },
+          "Bridge": {
+            "en": "Bridge",
+            "de": "Brücke"
+          },
+          "LiquidRetaining": {
+            "en": "Liquid-retaining structure",
+            "de": "Flüssigkeitsbehälter"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1992_model::MemberKind"

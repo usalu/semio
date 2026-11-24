@@ -1,0 +1,680 @@
+/** 🤖️ Greedy silhouette repair of one person and scale (after `humansb-D-auto.ts` of the 2026-11-17 guard ticket): the worst mismatch cluster of the guard is repaired by replacing the nearest drawn shape by the traced silhouette of the volume solids of its bone (drawn-only), or by adding that trace (volume-only); a change that worsens the view is reverted, and changes that make `validateAsset` report an issue are taken back. Writes the accumulated ops (all scales of the start file plus this scale) for `apply.ts`.
+ *  SH-2: every measurement evaluates a fresh copy of the asset and confirms a passing view with the tiling of the real guard (the evaluation keeps the depth of a flat front or plan shape per shape object, taken from its elevation twin of the same id and bone, so a copy that is edited in place measures the front and the plan with the twin of before), and a change of the elevation is kept only when front and plan stay as good as they were; the fit also moves the lateral ends `z0` and `z1` of an extruded shape and offsets a polygon locally about one vertex (LOCAL=0 switches that off).
+ *  bun auto.ts <slug|file.json> <scale> <ops-out.json> [maxIter] [startOps.json]   (the start ops may already be in the file: they are idempotent; the pass or the directed steps CMD run first in MAXSEC, then pruning, fit and polish in FITSEC, LIMIT a tighter largest distance in metres than two smallest features) */
+import type { Asset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🟦️.ts";
+import { featureOf } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/🧊️volumes/🧱️rules/🟦️.ts";
+import { validateAsset } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/🟦️.ts";
+import { restFrames } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🦴️rig/🟦️.ts";
+import { worldFrameOf } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧊️volume/🦴️skeleton/🟦️.ts";
+import { evaluate } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧮️evaluation/🟦️.ts";
+import { GATE, Mask, VIEWPOINTS, boundaryOf, distanceField, distanceToTriangle, fillSmallHoles, measureView, project, worldSolids } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🌓️silhouette/🟦️.ts";
+type P = { x: number; y: number };
+const [name, sc, outFile, maxArg, startFile] = process.argv.slice(2) as string[];
+const scale = Number(sc), feature = featureOf(scale), limit = Number(process.env.LIMIT ?? 2 * feature), maxIter = Number(maxArg ?? 40);
+const FILE = name!.endsWith(".json") ? name! : `/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans/${name}/🔣️.json`;
+const { asset } = (await Bun.file(FILE).json()) as { asset: Asset };
+const ops: any[] = [];
+const geo = (a: any, view: string): any[] => a.representations[sc].geometry[view];
+const applyOp = (a: any, o: any): void => {
+  if (!String(o.op).startsWith("shape") || o.op === "shape-remove") { try { applyOther(a, o); } catch (e) { if (o.op !== "shape-remove") throw e; } return; }
+  const l = a.representations[o.scale].geometry[o.view] as any[];
+  if (o.op === "shape-add") l.splice(l.findIndex((x: any) => x.id === o.after) + 1, 0, o.shape);
+  else if (o.op === "shape") l[l.findIndex((x: any) => x.id === o.id)] = o.shape;
+  else if (o.op === "shape-set") Object.assign(l.find((x: any) => x.id === o.id), o.set);
+};
+const { applyOther, applyOps, writeOps } = await import("./ops.ts");
+if (startFile && startFile !== "-" && await Bun.file(startFile).exists()) { const start = JSON.parse(await Bun.file(startFile).text()); applyOps(asset, start); ops.push(...start); }
+const pristine: any = structuredClone(asset);
+const keyOf = (i: any): string => JSON.stringify([i.code, i.path, i.data?.bone, [...(i.data?.shapes ?? [])].sort(), i.data?.bands]);
+const baseKeys = new Set<string>((validateAsset(structuredClone(asset) as never) as any[]).map(keyOf));
+/** The issues `validateAsset` reports now that it did not report before this run (an issue the run inherits is none of its own). */
+const issuesOf = (): any[] => (validateAsset(structuredClone(asset) as never) as any[]).filter((i) => !baseKeys.has(keyOf(i)));
+const baseIssues = 0;
+var IOU_TARGET = 0.935;
+const sel = { kind: "scale", scale: { denominator: scale } } as const;
+const pose = asset.presentation.defaultPose;
+const boneParent = new Map<string, string | null>((asset as any).rig.bones.map((b: any) => [b.id, b.parent]));
+const tmplOf = (view: string, bone: string): any => {
+  const l = geo(asset, view).filter((s: any) => s.role === "body" && s.filled !== false && s.kind !== "member");
+  return l.find((s: any) => s.bone === bone && s.id === bone) ?? l.filter((s: any) => s.bone === bone).sort((a: any, b: any) => (a.z ?? 0) - (b.z ?? 0))[0] ?? l.sort((a: any, b: any) => (a.z ?? 0) - (b.z ?? 0))[0];
+};
+const cross = (p: P, q: P, r: P) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+const dist = (p: P, q: P, r: P) => Math.abs(cross(q, r, p)) / (Math.hypot(r.x - q.x, r.y - q.y) || 1);
+const rdp = (l: P[], t: number): P[] => { if (l.length < 3) return l; let mi = 0, md = 0; for (let i = 1; i < l.length - 1; i++) { const d = dist(l[i]!, l[0]!, l[l.length - 1]!); if (d > md) { md = d; mi = i; } } return md > t ? [...rdp(l.slice(0, mi + 1), t).slice(0, -1), ...rdp(l.slice(mi), t)] : [l[0]!, l[l.length - 1]!]; };
+const rdpRing = (r: P[], t: number): P[] => { let a = 0, b = 0; for (let i = 0; i < r.length; i++) { if (r[i]!.x < r[a]!.x) a = i; if (r[i]!.x > r[b]!.x) b = i; } if (a === b) return r; const rot = [...r.slice(a), ...r.slice(0, a)]; const k = rot.indexOf(r[b]!); return [...rdp(rot.slice(0, k + 1), t).slice(0, -1), ...rdp([...rot.slice(k), rot[0]!], t).slice(0, -1)]; };
+const INFL = Number(process.env.INFL ?? 0) * feature;
+const offsetRing = (r: P[], d: number): P[] => d === 0 ? r : r.map((p, i) => { const a = r[(i + r.length - 1) % r.length]!, b = r[(i + 1) % r.length]!; const n1 = { x: p.y - a.y, y: a.x - p.x }, n2 = { x: b.y - p.y, y: p.x - b.x }; const l1 = Math.hypot(n1.x, n1.y) || 1, l2 = Math.hypot(n2.x, n2.y) || 1; const nx = n1.x / l1 + n2.x / l2, ny = n1.y / l1 + n2.y / l2; const nl = Math.hypot(nx, ny) || 1; return { x: p.x + (nx / nl) * d, y: p.y + (ny / nl) * d }; });
+const cellM = 0.0012 * Math.max(1, scale / 100);
+const traceLoops = (view: string, solidIds: Set<string>, state: any, slenderToo = false): P[][] => {
+  const tris: [P, P, P][] = [], pts: P[] = [];
+  for (const w of worldSolids(asset, state.bones as never, scale)) if (solidIds.has(w.id) && (slenderToo || w.slender !== true)) {
+    for (let i = 0; i < w.positions.length; i += 3) pts.push(project(view as any, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!));
+    for (let k = 0; k < w.indices.length; k += 3) tris.push([0, 1, 2].map((j) => { const i = w.indices[k + j]! * 3; return project(view as any, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!); }) as [P, P, P]);
+  }
+  if (pts.length === 0) return [];
+  const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
+  const x0 = Math.min(...xs) - 2 * cellM, y0 = Math.min(...ys) - 2 * cellM;
+  const W = Math.ceil((Math.max(...xs) - x0) / cellM) + 3, H = Math.ceil((Math.max(...ys) - y0) / cellM) + 3;
+  const g = new Uint8Array(W * H);
+  for (const [a, b, c] of tris) {
+    const i0 = Math.max(0, Math.floor((Math.min(a.x, b.x, c.x) - x0) / cellM)), i1 = Math.min(W - 1, Math.ceil((Math.max(a.x, b.x, c.x) - x0) / cellM));
+    const j0 = Math.max(0, Math.floor((Math.min(a.y, b.y, c.y) - y0) / cellM)), j1 = Math.min(H - 1, Math.ceil((Math.max(a.y, b.y, c.y) - y0) / cellM));
+    const den = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+    if (Math.abs(den) < 1e-14) continue;
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const px = x0 + (i + 0.5) * cellM, py = y0 + (j + 0.5) * cellM;
+      const l1 = ((b.y - c.y) * (px - c.x) + (c.x - b.x) * (py - c.y)) / den, l2 = ((c.y - a.y) * (px - c.x) + (a.x - c.x) * (py - c.y)) / den;
+      if (l1 >= 0 && l2 >= 0 && 1 - l1 - l2 >= 0) g[j * W + i] = 1;
+    }
+  }
+  const at = (i: number, j: number) => (i < 0 || j < 0 || i >= W || j >= H ? 0 : g[j * W + i]!);
+  const next = new Map<string, string[]>();
+  const add = (a: string, b: string) => { const l = next.get(a); if (l) l.push(b); else next.set(a, [b]); };
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) if (at(i, j)) {
+    if (!at(i, j - 1)) add(`${i},${j}`, `${i + 1},${j}`);
+    if (!at(i + 1, j)) add(`${i + 1},${j}`, `${i + 1},${j + 1}`);
+    if (!at(i, j + 1)) add(`${i + 1},${j + 1}`, `${i},${j + 1}`);
+    if (!at(i - 1, j)) add(`${i},${j + 1}`, `${i},${j}`);
+  }
+  const out: P[][] = [];
+  while (next.size > 0) {
+    const [start] = next.keys();
+    let cur = start!; const loop: string[] = [];
+    for (;;) { loop.push(cur); const l = next.get(cur)!; const n = l.pop()!; if (l.length === 0) next.delete(cur); cur = n; if (cur === start) break; if (!next.has(cur)) break; }
+    const ring = loop.map((s) => { const [i, j] = s.split(",").map(Number); return { x: x0 + i! * cellM, y: y0 + j! * cellM }; });
+    let area = 0; for (let i = 0; i < ring.length; i++) { const p = ring[i]!, q = ring[(i + 1) % ring.length]!; area += p.x * q.y - q.x * p.y; }
+    if (Math.abs(area) / 2 > (area > 0 ? 25 : 60) * cellM * cellM) out.push(offsetRing(rdpRing(ring, Math.max(0.0007, feature / Number(process.env.RDPDIV ?? 6))), area > 0 ? INFL : -INFL));
+  }
+  return out.sort((a, b) => b.length - a.length);
+};
+const placeLocal = (view: string, bone: string, id: string, targets: P[]): P[] | null => {
+  const forward = (points: P[]): P[] => {
+    const probe: any = structuredClone(asset);
+    geo(probe, view).push({ kind: "poly", points: points.map((p) => [p.x, p.y]), closed: true, id, bone, role: "body", z: 1, filled: true, tone: 0.5 });
+    const ps: any = evaluate(probe, { kind: "pose", pose }, sel);
+    return ps.shapes[view].find((s: any) => s.shape.id === id && s.shape.tone === 0.5 && s.shape.z === 1).rings[0].slice(0, points.length);
+  };
+  const [o, a, b] = forward([{ x: 0, y: 0 }, { x: 0.05, y: 0 }, { x: 0, y: 0.05 }]);
+  const m = { a: (a!.x - o!.x) / 0.05, b: (a!.y - o!.y) / 0.05, c: (b!.x - o!.x) / 0.05, d: (b!.y - o!.y) / 0.05 };
+  const det = m.a * m.d - m.b * m.c;
+  if (Math.abs(det) < 0.15) return null;
+  const inv = (p: P) => { const dx = p.x - o!.x, dy = p.y - o!.y; return { x: (m.d * dx - m.c * dy) / det, y: (-m.b * dx + m.a * dy) / det }; };
+  let local = targets.map(inv);
+  for (let it = 0; it < 6; it++) {
+    const got = forward(local);
+    const err = targets.map((t, i) => ({ x: t.x - got[i]!.x, y: t.y - got[i]!.y }));
+    const worst = Math.max(...err.map((e) => Math.hypot(e.x, e.y)));
+    if (worst < Math.max(2e-4, feature / 30)) return local;
+    if (it === 5) return null;
+    local = local.map((l, i) => { const d = inv({ x: o!.x + err[i]!.x, y: o!.y + err[i]!.y }); return { x: l.x + d.x, y: l.y + d.y }; });
+  }
+  return local;
+};
+const mkShapeMulti = (tmpl: any, id: string, bone: string, locals: P[][]): any => {
+  if (locals.length === 1) return mkShape(tmpl, id, bone, locals[0]!);
+  const base = mkShape(tmpl, id, bone, locals[0]!);
+  const { points: _pts, closed: _cl, kind: _k, ...rest } = base;
+  return { kind: "path", d: locals.map((l) => "M" + l.map((p) => `${p.x.toFixed(5)} ${p.y.toFixed(5)}`).join(" L") + " Z").join(" "), ...rest };
+};
+const mkShape = (tmpl: any, id: string, bone: string, local: P[]): any => {
+  const { kind: _k, points: _p, d: _d, id: _i, closed: _c, solid: _s, x: _x, y: _y, w: _w, h: _h, r: _r, x0: _x0, y0: _y0, x1: _x1, y1: _y1, r0: _r0, r1: _r1, cx: _cx, cy: _cy, rx: _rx, ry: _ry, rotationDeg: _rd, followTip: _f, bone: _b, ...keep } = tmpl;
+  return { kind: "poly", points: local.map((p) => [+p.x.toFixed(4), +p.y.toFixed(4)]), closed: true, id, bone, ...keep };
+};
+const bonesOf = (state: any): Map<string, string[]> => { const m = new Map<string, string[]>(); for (const s of (asset as any).volumes[sc].body) if (s.texture !== true && s.slender !== true) { const l = m.get(s.bone) ?? []; l.push(s.id); m.set(s.bone, l); } return m; };
+const tryTrace = (view: string, bone: string, solidIds: string[], state: any): { loops: P[][]; bone: string; local: P[][] } | null => {
+  const loops = traceLoops(view, new Set(solidIds), state);
+  if (loops.length === 0) return null;
+  let b: string | null = bone;
+  while (b) {
+    const local: P[][] = [];
+    let ok = true;
+    for (const [k, loop] of loops.entries()) { const l = placeLocal(view, b, `t-${k}`, loop); if (l === null) { ok = false; break; } local.push(l); }
+    if (ok) return { loops, bone: b, local };
+    b = boneParent.get(b) ?? null;
+  }
+  return null;
+};
+const dseg = (p: P, a: P, b: P) => { const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy; let t = l === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / l; t = Math.max(0, Math.min(1, t)); return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy); };
+type Cluster = { view: string; side: string; x: number; y: number; d: number };
+const measure = (only?: string) => {
+  const fresh: any = structuredClone(asset);
+  const state: any = evaluate(fresh, { kind: "pose", pose }, sel);
+  const solids = worldSolids(fresh, state.bones as never, scale).filter((w) => w.texture !== true);
+  const res: { view: string; iou: number; h: number; clusters: Cluster[]; area: Cluster[] }[] = [];
+  for (const view of VIEWPOINTS) {
+    if (only !== undefined && only !== "elevation" && only !== view) continue;
+    const m = measureView(fresh, state, solids, view, scale, undefined, feature, Infinity, false);
+    const real = m.hausdorffM <= limit && m.iou >= GATE.iou ? measureView(fresh, state, solids, view, scale, undefined, feature) : m;
+    const cell = m.cell, box = m.box;
+    const drawn = new Mask(box, cell);
+    for (const g of m.filled) drawn.fill(g);
+    for (const g of m.outlines) drawn.fill(g);
+    const vol = new Mask(box, cell);
+    for (const g of m.reference) vol.fill(g, true);
+    if (m.section) for (const g of m.visible) vol.fill(g, true);
+    vol.seal();
+    const [w, h] = [vol.width, vol.height];
+    const holes = Math.round((4 * feature / cell) ** 2);
+    const bd = boundaryOf(fillSmallHoles(drawn.cells, w, h, holes), w, h), bv = boundaryOf(fillSmallHoles(vol.cells, w, h, holes), w, h);
+    const toVol = distanceField(bv, w, h), toDrawn = distanceField(bd, w, h);
+    const clusters: Cluster[] = [];
+    for (const [side, from, field] of [["drawn-only", bd, toVol], ["volume-only", bv, toDrawn]] as const) {
+      const list: { i: number; j: number; d: number }[] = [];
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (from[j * w + i] && Math.sqrt(field[j * w + i]!) * cell > limit) list.push({ i, j, d: Math.sqrt(field[j * w + i]!) * cell });
+      list.sort((a, b) => b.d - a.d);
+      const seen = new Set<number>();
+      for (const c of list) { const key = Math.round(c.i / (0.08 / cell)) * 100000 + Math.round(c.j / (0.08 / cell)); if (seen.has(key)) continue; seen.add(key); clusters.push({ view, side, x: box.minX + (c.i + 0.5) * cell, y: box.minY + (c.j + 0.5) * cell, d: c.d }); if (clusters.length > 60) break; }
+    }
+    const area: Cluster[] = [];
+    if (m.iou < IOU_TARGET) {
+      const bin = Math.max(3, Math.round(0.05 / cell)), bw = Math.ceil(w / bin), bh = Math.ceil(h / bin);
+      const dOnly = new Float64Array(bw * bh), vOnly = new Float64Array(bw * bh);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const k = (j / bin | 0) * bw + (i / bin | 0); const a = drawn.cells[j * w + i], b = vol.cells[j * w + i]; if (a && !b) dOnly[k]!++; else if (b && !a) vOnly[k]!++; }
+      for (let k = 0; k < bw * bh; k++) { const by = (k / bw) | 0, bx = k % bw; const side = dOnly[k]! >= vOnly[k]! ? "drawn-only" : "volume-only"; const n = Math.max(dOnly[k]!, vOnly[k]!); if (n > 0.15 * bin * bin) area.push({ view, side, x: box.minX + (bx + 0.5) * bin * cell, y: box.minY + (by + 0.5) * bin * cell, d: n * cell * cell }); }
+      area.sort((a, b) => b.d - a.d);
+    }
+    res.push({ view, iou: Math.min(m.iou, real.iou), h: Math.max(m.hausdorffM, real.hausdorffM), clusters: clusters.sort((a, b) => b.d - a.d), area: area.slice(0, 40) });
+  }
+  return { state, solids, res };
+};
+type Res = ReturnType<typeof measure>["res"];
+const metricOf = (rs: Res, v: string): { max: number; sum: number; iou: number } => { const r = rs.find((x) => x.view === v)!; const pen = r.iou < 0.925 ? 1 + (0.925 - r.iou) * 20 : 0; return { max: Math.max(r.h / limit, pen), sum: r.clusters.reduce((t, c) => t + Math.max(0, c.d / limit - 1), 0) + pen, iou: r.iou }; };
+/** A change is kept when the worst distance of its view improves, or when the worst stays and the sum of the excesses of all mismatch clusters shrinks or the areas agree better. */
+const improves = (after: Res, before: Res, v: string): boolean => {
+  const [a, b] = [metricOf(after, v), metricOf(before, v)];
+  const twins = v !== "elevation" || VIEWPOINTS.every((w) => w === v || !after.some((x) => x.view === w) || !before.some((x) => x.view === w) || (metricOf(after, w).max <= Math.max(0.97, metricOf(before, w).max) + 0.005 && metricOf(after, w).iou >= Math.min(0.93, metricOf(before, w).iou) - 0.0005));
+  return twins && (a.max < b.max - 0.02 || (a.max <= b.max + 0.005 && (a.sum < b.sum * 0.95 - 1e-9 || a.iou > b.iou + 0.0005)));
+};
+const MAXSEC = Number(process.env.MAXSEC ?? 300);
+let deadline = performance.now() + MAXSEC * 1000;
+const timeLeft = (): boolean => performance.now() < deadline;
+const bannedIn: Record<string, Set<string>> = { elevation: new Set(), front: new Set(), plan: new Set() };
+{
+  const probe: any = structuredClone(asset);
+  const boneIds = new Set<string>((asset as any).volumes[sc].body.map((x: any) => x.bone));
+  for (const view of VIEWPOINTS) for (const bone of boneIds) {
+    const tmpl = tmplOf(view, bone);
+    if (tmpl === undefined) continue;
+    geo(probe, view).push(mkShape(tmpl, `probe-${view}-${bone}`, bone, [{ x: 0, y: -0.04 }, { x: 0.08, y: -0.04 }, { x: 0.08, y: 0.04 }, { x: 0, y: 0.04 }]));
+  }
+  for (const i of validateAsset(probe as never) as any[]) {
+    const names = [...(i.data?.shapes ?? []), ...[...String(i.message?.en ?? "").matchAll(/"(probe-[^"]+)"/g)].map((m) => m[1]!)] as string[];
+    for (const n of names) { const m = /^probe-(elevation|front|plan)-(.+)$/.exec(n); if (m) bannedIn[m[1]!]!.add(m[2]!); }
+  }
+}
+const hull2 = (pts: P[]): P[] => {
+  const p = pts.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+  if (p.length < 3) return p;
+  const lower: P[] = [], upper: P[] = [];
+  for (const q of p) { while (lower.length >= 2 && cross(lower[lower.length - 2]!, lower[lower.length - 1]!, q) <= 0) lower.pop(); lower.push(q); }
+  for (let i = p.length - 1; i >= 0; i--) { const q = p[i]!; while (upper.length >= 2 && cross(upper[upper.length - 2]!, upper[upper.length - 1]!, q) <= 0) upper.pop(); upper.push(q); }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+};
+const areaOf = (r: P[]): number => { let a = 0; for (let i = 0; i < r.length; i++) { const p = r[i]!, q = r[(i + 1) % r.length]!; a += p.x * q.y - q.x * p.y; } return Math.abs(a) / 2; };
+const REST = restFrames((asset as any).rig) as Record<string, { frame: any }>;
+const regionOfSolid = new Map<string, string>(((asset as any).volumes[sc].thermal as any[]).filter((t) => t.of !== undefined && t.region !== undefined).map((t) => [t.of, t.region]));
+/** Draws a bone as its volume models it: every rigid body solid of the bone becomes a drawn prism (the convex outline of the solid across the axis of its tightest prism, swept over the extent of the solid along that axis), placed by the 3D frame of the bone like the solid itself; the filled shapes the bone had in the view give way to them. Returns the ops, or undefined when the bone has nothing to draw this way. */
+const prismBone = (view: string, bone: string, state: any, solids: readonly any[], only?: string): any[] | undefined => {
+  const list = geo(asset, view);
+  const defs = new Map<string, any>(((asset as any).volumes[sc].body as any[]).map((x) => [x.id, x]));
+  const mine = solids.filter((w) => w.bone === bone && w.slender !== true && defs.get(w.id)?.weights === undefined && defs.get(w.id)?.texture !== true && (only === undefined || w.id === only));
+  if (mine.length === 0 || solids.some((w) => w.bone === bone && defs.get(w.id)?.weights !== undefined)) return undefined;
+  const f = state.bones[bone].frame as { o: any; u: any; v: any; w: any };
+  const base = worldFrameOf(REST[bone]!.frame).o[2] as number;
+  const drawnOfBone = (state.shapes[view] as any[]).filter((e) => e.shape.bone === bone && e.closed && e.shape.filled !== false && e.shape.role !== "ground").map((e) => e.shape.id as string);
+  const old = only === undefined ? drawnOfBone : [];
+  const oldShapes = list.filter((x: any) => drawnOfBone.includes(x.id));
+  const template = (material: string | undefined): any => oldShapes.find((x: any) => x.material === material) ?? oldShapes[0] ?? tmplOf(view, bone);
+  if (template(undefined) === undefined) return undefined;
+  const depth = (w: any): number => { let m = 0; const n = w.positions.length / 3; for (let i = 0; i < w.positions.length; i += 3) m += view === "elevation" ? -w.positions[i + 2]! : view === "front" ? w.positions[i]! : w.positions[i + 1]!; return m / n; };
+  const made: any[] = [];
+  const taken = new Set<string>(list.filter((x: any) => !old.includes(x.id)).map((x: any) => x.id));
+  const zs = oldShapes.map((x: any) => x.z ?? 0), z0 = zs.length > 0 ? Math.min(...zs) : (template(undefined).z ?? 0), z1 = zs.length > 0 ? Math.max(...zs) : z0;
+  const ordered = mine.slice().sort((a, b) => depth(a) - depth(b));
+  ordered.forEach((w, index) => {
+    const local: number[][] = [];
+    for (let i = 0; i < w.positions.length; i += 3) { const d = [w.positions[i]! - f.o.x, w.positions[i + 1]! - f.o.y, w.positions[i + 2]! - f.o.z]; local.push([d[0]! * f.u.x + d[1]! * f.u.y + d[2]! * f.u.z, d[0]! * f.v.x + d[1]! * f.v.y + d[2]! * f.v.z, d[0]! * f.w.x + d[1]! * f.w.y + d[2]! * f.w.z]); }
+    let best: { sweep: string; ring: P[]; lo: number; hi: number; volume: number } | undefined;
+    for (const [sweep, k, i, j] of [["w", 2, 0, 1], ["u", 0, 1, 2], ["v", 1, 0, 2]] as const) {
+      const ring = hull2(local.map((q) => ({ x: q[i]!, y: q[j]! })));
+      const lo = Math.min(...local.map((q) => q[k]!)), hi = Math.max(...local.map((q) => q[k]!));
+      const volume = areaOf(ring) * (hi - lo);
+      if (ring.length >= 3 && hi - lo > 1e-4 && (best === undefined || volume < best.volume)) best = { sweep, ring, lo, hi, volume };
+    }
+    if (best === undefined) return;
+    const def = defs.get(w.id)!;
+    const tmpl = template(def.material);
+    let id = w.id as string;
+    while (taken.has(id)) id = `${id}-p`;
+    taken.add(id);
+    const ring = rdpRing(best.ring, Math.max(0.0004, feature / 25));
+    const shape = mkShape(tmpl, id, bone, ring.length >= 3 ? ring : best.ring);
+    shape.points = (ring.length >= 3 ? ring : best.ring).map((p) => [+p.x.toFixed(5), +p.y.toFixed(5)]);
+    shape.filled = true;
+    shape.tone = def.tone ?? tmpl.tone;
+    if (def.material !== undefined) shape.material = def.material;
+    const region = regionOfSolid.get(w.id);
+    if (region !== undefined) { delete shape.regions; shape.region = region; }
+    shape.z = +(z0 + ((z1 - z0) * index) / Math.max(1, ordered.length - 1)).toFixed(4);
+    shape.solid = { kind: "extruded", sweep: best.sweep, z0: +(best.lo + (best.sweep === "w" ? base : 0)).toFixed(5), z1: +(best.hi + (best.sweep === "w" ? base : 0)).toFixed(5) };
+    made.push(shape);
+  });
+  if (made.length === 0) return undefined;
+  const lost = new Set<string>(oldShapes.flatMap((x: any) => [...(x.region === undefined ? [] : [x.region]), ...(x.regions ?? [])]));
+  for (const m of made) for (const r of [...(m.region === undefined ? [] : [m.region]), ...(m.regions ?? [])]) lost.delete(r);
+  if (only !== undefined) for (const m of made) { const def = defs.get(m.id) ?? defs.get(only)!; if (template(def.material)?.material !== def.material) delete m.hatch; }
+  if (only === undefined && lost.size > 0) { const first = made[0]; const all = new Set<string>([...(first.region === undefined ? [] : [first.region]), ...(first.regions ?? []), ...lost]); delete first.region; first.regions = [...all]; }
+  const first = list.findIndex((x: any) => (only === undefined ? old : drawnOfBone).includes(x.id)) + (only === undefined ? 0 : 1);
+  const anchor = first > 0 ? list[first - 1].id : first === 0 ? undefined : list[list.length - 1]?.id;
+  const out: any[] = old.map((id) => ({ op: "shape-remove", scale: sc, view, id, group: `prism|${view}|${bone}` }));
+  let after = anchor ?? list.find((x: any) => !old.includes(x.id))?.id;
+  for (const shape of made) { out.push({ op: "shape-add", scale: sc, view, after, shape, group: `prism|${view}|${bone}` }); after = shape.id; }
+  return out;
+};
+/** Redraws one drawn shape from the body solid of the same id on the same bone: the candidates are the body of revolution about the bone axis whose profile is the radial envelope of the solid along the axis (a round limb) and the tightest prism of the solid (a flat or boxy part), a shape that is already revolved stays revolved; the better one for the view is kept and the shape keeps its id, order, tone, material and regions. */
+const refitFrom = (view: string, id: string, state: any, solids: readonly any[]): any[] | undefined => {
+  const shape = geo(asset, view).find((x: any) => x.id === id);
+  const def = ((asset as any).volumes[sc].body as any[]).find((x) => x.id === id);
+  if (shape === undefined || def === undefined || def.bone !== shape.bone || def.weights !== undefined || def.slender === true || def.texture === true || shape.kind === "member") return undefined;
+  const w = solids.find((x) => x.id === id);
+  if (w === undefined) return undefined;
+  const f = state.bones[shape.bone].frame as { o: any; u: any; v: any; w: any };
+  const local: number[][] = [];
+  for (let i = 0; i < w.positions.length; i += 3) { const d = [w.positions[i]! - f.o.x, w.positions[i + 1]! - f.o.y, w.positions[i + 2]! - f.o.z]; local.push([d[0]! * f.u.x + d[1]! * f.u.y + d[2]! * f.u.z, d[0]! * f.v.x + d[1]! * f.v.y + d[2]! * f.v.z, d[0]! * f.w.x + d[1]! * f.w.y + d[2]! * f.w.z]); }
+  const keep = (points: P[], solid: any): any => { const out = mkShape(shape, id, shape.bone, points); out.points = points.map((p) => [+p.x.toFixed(5), +p.y.toFixed(5)]); out.solid = solid; return out; };
+  const so = shape.solid;
+  const out: any[] = [];
+  {
+    const lo = Math.min(...local.map((q) => q[0]!)), hi = Math.max(...local.map((q) => q[0]!));
+    const n = 16, step = (hi - lo) / n;
+    if (step > 1e-5) {
+      const radii = Array.from({ length: n + 1 }, (_, i) => { const a = lo + i * step; let r = 0; for (const q of local) if (Math.abs(q[0]! - a) <= step * 0.75) r = Math.max(r, Math.hypot(q[1]!, q[2]!)); return r; });
+      const upper = radii.map((r, i) => ({ x: lo + i * step, y: Math.max(r, 1e-4) }));
+      out.push(keep([...upper, ...upper.slice().reverse().map((p) => ({ x: p.x, y: -p.y }))], { kind: "revolved", axisBone: shape.bone, axis: "u", axisX: 0, axisZ: 0, mirror: true }));
+    }
+  }
+  if (so?.kind === "revolved") return out;
+  const base = worldFrameOf(REST[shape.bone]!.frame).o[2] as number;
+  let best: { sweep: string; ring: P[]; lo: number; hi: number; volume: number } | undefined;
+  for (const [sweep, k, i, j] of [["w", 2, 0, 1], ["u", 0, 1, 2], ["v", 1, 0, 2]] as const) {
+    const ring = hull2(local.map((q) => ({ x: q[i]!, y: q[j]! })));
+    const lo = Math.min(...local.map((q) => q[k]!)), hi = Math.max(...local.map((q) => q[k]!));
+    const volume = areaOf(ring) * (hi - lo);
+    if (ring.length >= 3 && hi - lo > 1e-4 && (best === undefined || volume < best.volume)) best = { sweep, ring, lo, hi, volume };
+  }
+  if (best === undefined) return out;
+  const ring = rdpRing(best.ring, Math.max(0.0004, feature / 25));
+  out.push(keep(ring.length >= 3 ? ring : best.ring, { kind: "extruded", sweep: best.sweep, z0: +(best.lo + (best.sweep === "w" ? base : 0)).toFixed(5), z1: +(best.hi + (best.sweep === "w" ? base : 0)).toFixed(5) }));
+  return out;
+};
+const refitDone = new Set<string>();
+const tryRefit = (view: string, id: string, why: string, cur: ReturnType<typeof measure>): boolean => {
+  if (refitDone.has(`${view}|${id}`)) return false;
+  refitDone.add(`${view}|${id}`);
+  const candidates = refitFrom(view, id, cur.state, cur.solids);
+  if (candidates === undefined || candidates.length === 0) return false;
+  const l = geo(asset, view), i = l.findIndex((x: any) => x.id === id), was = l[i];
+  let next: any, after: ReturnType<typeof measure>["res"] | undefined;
+  for (const candidate of candidates) {
+    l[i] = candidate;
+    let got: ReturnType<typeof measure>["res"] | undefined;
+    try { got = measure(view).res; } catch { got = undefined; }
+    if (got !== undefined && improves(got, after ?? cur.res, view)) { next = candidate; after = got; }
+  }
+  if (next === undefined || after === undefined) { l[i] = was; log(`refit of ${view} ${id} (${why}) revert`); return false; }
+  l[i] = next;
+  ops.push({ op: "shape", scale: sc, view, id, shape: structuredClone(next) });
+  log(`refit ${view} ${id} from its solid as ${next.solid.kind}${next.solid.sweep ? " " + next.solid.sweep : ""} (${why}): ${metricOf(cur.res, view).max.toFixed(3)} -> ${metricOf(after, view).max.toFixed(3)}, iou ${metricOf(cur.res, view).iou.toFixed(4)} -> ${metricOf(after, view).iou.toFixed(4)}`);
+  return true;
+};
+const prismDone = new Set<string>();
+const tryPrism = (view: string, bone: string, why: string, cur: ReturnType<typeof measure>): boolean => {
+  if (prismDone.has(`${view}|${bone}`)) return false;
+  prismDone.add(`${view}|${bone}`);
+  const made = prismBone(view, bone, cur.state, cur.solids);
+  if (made === undefined) { log(`no prisms for ${view} ${bone}`); return false; }
+  const snapshot = structuredClone(geo(asset, view)), kept = ops.length;
+  try { for (const o of made) { applyOther(asset, o); ops.push(o); } } catch (e) { (asset as any).representations[sc].geometry[view] = snapshot; ops.length = kept; log(`prisms of ${view} ${bone} do not apply: ${String(e).slice(0, 120)}`); return false; }
+  let after: ReturnType<typeof measure>["res"];
+  try { after = measure(view).res; } catch (e) { (asset as any).representations[sc].geometry[view] = snapshot; ops.length = kept; log(`prisms of ${view} ${bone} cannot be evaluated: ${String(e).slice(0, 120)}`); return false; }
+  const score1 = (rs: ReturnType<typeof measure>["res"]): number => { const r = rs.find((x) => x.view === view)!; return Math.max(r.h / limit, r.iou < 0.925 ? 1 + (0.925 - r.iou) * 20 : 0); };
+  if (!improves(after, cur.res, view)) { (asset as any).representations[sc].geometry[view] = snapshot; ops.length = kept; log(`prisms of ${view} ${bone} (${why}) revert (${score1(cur.res).toFixed(3)} -> ${score1(after).toFixed(3)})`); return false; }
+  log(`prisms ${view} ${bone}: ${made.filter((o) => o.op === "shape-add").length} solids drawn, ${made.filter((o) => o.op === "shape-remove").length} shapes replaced (${why}): ${score1(cur.res).toFixed(3)} -> ${score1(after).toFixed(3)}`);
+  return true;
+};
+const slenderBones = new Set<string>((asset as any).volumes[sc].body.filter((s: any) => s.slender === true).map((s: any) => s.bone));
+const done = new Set<string>();
+const log = (s: string) => console.error(`[DEBUG] ${s}`);
+const pass = (): void => {
+for (let iter = 0; iter < maxIter; iter++) {
+  const { state, solids, res } = measure();
+  const summary = res.map((r) => `${r.view[0]}:${r.iou.toFixed(3)}/${(r.h * 1000).toFixed(0)}mm`).join(" ");
+  if (iter === 0) log(`flat shapes are not placed on: ${VIEWPOINTS.map((v) => `${v}: ${[...bannedIn[v]!].join(" ")}`).join("; ")}`);
+  if (!timeLeft()) { log("time budget used"); break; }
+  log(`iter ${iter} 1:${sc} ${summary} ops=${ops.length}`);
+  let all = res.flatMap((r) => r.clusters).sort((a, b) => b.d - a.d);
+  if (all.length === 0) all = res.flatMap((r) => r.area).sort((a, b) => b.d - a.d);
+  if (all.length === 0) break;
+  const bonesSolids = bonesOf(state);
+  let acted = false;
+  for (const c of all) {
+    const near = (state.shapes[c.view] as any[]).map((s) => { let m = Infinity; for (const ring of s.rings) for (let i = 0; i < ring.length - 1 + (s.closed ? 1 : 0); i++) m = Math.min(m, dseg(c, ring[i], ring[(i + 1) % ring.length])); return { s, m }; }).filter((x) => x.m < Math.max(0.012, feature)).sort((a, b) => a.m - b.m || (b.s.shape.z ?? 0) - (a.s.shape.z ?? 0));
+    {
+      const drawnBones = near.map((x) => x.s.shape.bone as string).filter((b) => bannedIn[c.view]!.has(b));
+      const solidBones = solids.filter((w) => w.bone !== undefined && bannedIn[c.view]!.has(w.bone)).map((w) => { let m = Infinity; for (let k = 0; k < w.indices.length; k += 3) { const t = [0, 1, 2].map((j) => { const i = w.indices[k + j]! * 3; return project(c.view as any, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!); }) as [P, P, P]; m = Math.min(m, distanceToTriangle(c, t)); } return { bone: w.bone as string, m }; }).filter((x) => x.m < Math.max(0.012, feature)).sort((a, b) => a.m - b.m).map((x) => x.bone);
+      const inRing = (ring: P[]): boolean => { let k = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) if ((ring[i]!.y > c.y) !== (ring[j]!.y > c.y) && c.x < ((ring[j]!.x - ring[i]!.x) * (c.y - ring[i]!.y)) / (ring[j]!.y - ring[i]!.y) + ring[i]!.x) k = !k; return k; };
+      const wide = (state.shapes[c.view] as any[]).map((s) => { let m = Infinity; for (const ring of s.rings) for (let i = 0; i < ring.length - 1 + (s.closed ? 1 : 0); i++) m = Math.min(m, dseg(c, ring[i], ring[(i + 1) % ring.length])); return { s, m }; }).filter((x) => x.m < Math.max(0.03, 2 * feature) || (x.s.closed && x.s.rings.some(inRing))).sort((a, b) => a.m - b.m);
+      const again = wide.map((x) => x.s.shape).find((sh) => (bannedIn[c.view]!.has(sh.bone) || sh.solid !== undefined) && !refitDone.has(`${c.view}|${sh.id}`) && ((asset as any).volumes[sc].body as any[]).some((x) => x.id === sh.id && x.bone === sh.bone));
+      if (again !== undefined) { tryRefit(c.view, again.id, `${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)}`, { state, solids, res } as never); acted = true; break; }
+      const target = [...new Set([...solidBones, ...drawnBones])].find((b) => !prismDone.has(`${c.view}|${b}`));
+      if (target !== undefined) { if (tryPrism(c.view, target, `${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)}`, { state, solids, res } as never)) { acted = true; break; } acted = true; break; }
+    }
+    let act: (() => void) | null = null;
+    let actBone: string | undefined;
+    if (c.side === "drawn-only") {
+      const cand = near.find((x) => x.s.closed && x.s.shape.filled !== false && x.s.shape.role !== "ground" && bonesSolids.has(x.s.shape.bone) && !slenderBones.has(x.s.shape.bone) && !done.has(`${c.view}|r|${x.s.shape.id}`));
+      if (!cand) continue;
+      const id = cand.s.shape.id, bone = cand.s.shape.bone;
+      actBone = bone;
+      const tr = tryTrace(c.view, bone, bonesSolids.get(bone)!, state);
+      done.add(`${c.view}|r|${id}`);
+      if (tr && bannedIn[c.view]!.has(tr.bone)) { continue; }
+      if (!tr) { log(`cannot trace ${c.view} ${bone} for ${id}`); continue; }
+      act = () => {
+        const base = geo(asset, c.view).find((s: any) => s.id === id);
+        const sh = mkShapeMulti(base, id, tr.bone, tr.local);
+        const o = { op: "shape", scale: sc, view: c.view, id, shape: sh };
+        applyOp(asset, o); ops.push(o);
+        log(`replace ${c.view} ${id} (${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)}) by trace of ${bone}`);
+      };
+    } else if (!done.has(`${c.view}|i|${Math.round(c.x / 0.03)}|${Math.round(c.y / 0.03)}`) && (state.shapes[c.view] as any[]).some((s) => s.closed && s.shape.filled !== false && s.shape.role !== "ground" && bonesSolids.has(s.shape.bone) && !slenderBones.has(s.shape.bone) && !done.has(`${c.view}|r|${s.shape.id}`) && s.rings.some((ring: P[]) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) if ((ring[i]!.y > c.y) !== (ring[j]!.y > c.y) && c.x < ((ring[j]!.x - ring[i]!.x) * (c.y - ring[i]!.y)) / (ring[j]!.y - ring[i]!.y) + ring[i]!.x) inside = !inside; return inside; }))) {
+      done.add(`${c.view}|i|${Math.round(c.x / 0.03)}|${Math.round(c.y / 0.03)}`);
+      const cover = (state.shapes[c.view] as any[]).filter((s) => s.closed && s.shape.filled !== false && s.shape.role !== "ground" && bonesSolids.has(s.shape.bone) && !slenderBones.has(s.shape.bone) && !done.has(`${c.view}|r|${s.shape.id}`) && s.rings.some((ring: P[]) => { let inside = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) if ((ring[i]!.y > c.y) !== (ring[j]!.y > c.y) && c.x < ((ring[j]!.x - ring[i]!.x) * (c.y - ring[i]!.y)) / (ring[j]!.y - ring[i]!.y) + ring[i]!.x) inside = !inside; return inside; }))[0]!;
+      const id = cover.shape.id, bone = cover.shape.bone;
+      actBone = bone;
+      const tr = tryTrace(c.view, bone, bonesSolids.get(bone)!, state);
+      done.add(`${c.view}|r|${id}`);
+      if (tr && bannedIn[c.view]!.has(tr.bone)) { continue; }
+      if (!tr) { log(`cannot trace ${c.view} ${bone} for ${id}`); continue; }
+      act = () => {
+        const base = geo(asset, c.view).find((s: any) => s.id === id);
+        const o = { op: "shape", scale: sc, view: c.view, id, shape: mkShapeMulti(base, id, tr.bone, tr.local) };
+        applyOp(asset, o); ops.push(o);
+        log(`replace covering ${c.view} ${id} (${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)}) by trace of ${bone}`);
+      };
+    } else {
+      const sol = solids.filter((w) => w.slender !== true).map((w) => { let m = Infinity; for (let k = 0; k < w.indices.length; k += 3) { const t = [0, 1, 2].map((j) => { const i = w.indices[k + j]! * 3; return project(c.view as any, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!); }) as [P, P, P]; m = Math.min(m, distanceToTriangle(c, t)); } return { w, m }; }).filter((x) => x.m < 0.006 && x.w.bone !== undefined).sort((a, b) => a.m - b.m);
+      const cand = sol.find((x) => !done.has(`${c.view}|a|${x.w.bone}`));
+      if (!cand) {
+        const key = `${c.view}|u|${Math.round(c.x / 0.04)}|${Math.round(c.y / 0.04)}`;
+        const wide = solids.filter((w) => w.slender !== true).filter((w) => { let m = Infinity; for (let k = 0; k < w.indices.length; k += 3) { const t = [0, 1, 2].map((j) => { const i = w.indices[k + j]! * 3; return project(c.view as any, w.positions[i]!, w.positions[i + 1]!, w.positions[i + 2]!); }) as [P, P, P]; m = Math.min(m, distanceToTriangle(c, t)); } return m < 0.04; });
+        if (done.has(key) || wide.length === 0 || sol.length === 0) continue;
+        done.add(key);
+        const bone = sol[0]!.w.bone!;
+        actBone = bone;
+        if (bannedIn[c.view]!.has(bone)) continue;
+        const loops = traceLoops(c.view, new Set(wide.map((w) => w.id)), state);
+        const local = loops.map((l, k) => placeLocal(c.view, bone, `u-${k}`, l));
+        if (local.some((l) => l === null) || local.length === 0) { log(`cannot union-trace ${c.view} near ${c.x.toFixed(2)},${c.y.toFixed(2)}`); continue; }
+        act = () => {
+          const tmpl = tmplOf(c.view, bone);
+          const base = geo(asset, c.view).find((s: any) => s.bone === bone && s.role === "body") ?? tmpl;
+          let after = base.id;
+          const id = `${bone}-u${ops.length}`; const o = { op: "shape-add", scale: sc, view: c.view, after, shape: mkShapeMulti(tmpl, id, bone, local as P[][]) }; applyOp(asset, o); ops.push(o); after = id;
+          log(`add union ${c.view} near ${c.x.toFixed(3)},${c.y.toFixed(3)} of ${wide.map((w) => w.id).join("+")}`);
+        };
+      } else {
+        const bone = cand.w.bone!;
+        actBone = bone;
+        done.add(`${c.view}|a|${bone}`);
+        const tr = tryTrace(c.view, bone, bonesSolids.get(bone)!, state);
+        if (tr && bannedIn[c.view]!.has(tr.bone)) { continue; }
+      if (!tr) { log(`cannot trace ${c.view} ${bone}`); continue; }
+        act = () => {
+          const tmpl = tmplOf(c.view, bone) ?? tmplOf(c.view, tr.bone);
+          const base = geo(asset, c.view).find((s: any) => s.bone === tr.bone && s.role === "body") ?? tmpl;
+          let after = base.id;
+          const id = `${bone}-sil`;
+          const o = { op: "shape-add", scale: sc, view: c.view, after, shape: mkShapeMulti(tmpl, id, tr.bone, tr.local) };
+          applyOp(asset, o); ops.push(o); after = id;
+          log(`add ${c.view} ${bone}-sil (${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)})`);
+        };
+      }
+    }
+    const vScore = (rs: typeof res, v: string): number => { const r = rs.find((x) => x.view === v)!; return Math.max(r.h / limit, r.iou < 0.925 ? 1 + (0.925 - r.iou) * 20 : 0); };
+    const before = vScore(res, c.view), snapshot = structuredClone(geo(asset, c.view)), opsLen = ops.length;
+    act();
+    const afterRes = measure(c.view).res;
+    const after = vScore(afterRes, c.view);
+    if (!improves(afterRes, res, c.view)) { (asset as any).representations[sc].geometry[c.view] = snapshot; ops.length = opsLen; log(`revert (${before.toFixed(3)} -> ${after.toFixed(3)})`);  if (actBone !== undefined && !prismDone.has(`${c.view}|${actBone}`)) tryPrism(c.view, actBone, `after the trace ${c.side} ${c.d.toFixed(3)}`, { state, solids, res } as never); }
+    acted = true;
+    break;
+  }
+  if (!acted) { log("no more actionable clusters"); break; }
+}
+};
+
+const POSITION = ["x", "y", "cx", "cy", "x0", "y0", "x1", "y1"], SIZE = ["w", "h", "r", "r0", "r1", "rx", "ry"];
+const viewScore = (rs: ReturnType<typeof measure>["res"], v: string): number => { const r = rs.find((x) => x.view === v)!; return Math.max(r.h / limit, r.iou < 0.925 ? 1 + (0.925 - r.iou) * 20 : 0); };
+/** Fits the numbers of the drawn shape next to a mismatch cluster (position, radii, width, offset of a polygon) by the distance of the cluster; keeps a change that improves its view and worsens no other. */
+const paramFit = (): void => {
+  const tried = new Set<string>();
+  for (let round = 0; round < Number(process.env.PARAM ?? 60) && timeLeft(); round++) {
+    const cur = measure();
+    const c = cur.res.flatMap((r) => r.clusters).sort((a, b) => b.d - a.d).find((x) => !tried.has(`${x.view}|${x.side}|${Math.round(x.x / 0.02)}|${Math.round(x.y / 0.02)}`));
+    if (c === undefined) break;
+    tried.add(`${c.view}|${c.side}|${Math.round(c.x / 0.02)}|${Math.round(c.y / 0.02)}`);
+    const state: any = cur.state;
+    const near = (state.shapes[c.view] as any[]).map((s) => { let m = Infinity; for (const ring of s.rings) for (let i = 0; i < ring.length - 1 + (s.closed ? 1 : 0); i++) m = Math.min(m, dseg(c, ring[i], ring[(i + 1) % ring.length])); return { id: s.shape.id as string, m, role: s.shape.role }; }).filter((x) => x.m < Math.max(0.02, 1.5 * feature, c.side === "volume-only" ? c.d * 1.2 : 0) && x.role !== "ground").sort((a, b) => a.m - b.m).slice(0, 3);
+    const before = viewScore(cur.res, c.view);
+    const sign = c.side === "drawn-only" ? -1 : 1;
+    let best: { id: string; shape: any; s: number; what: string } | null = null;
+    for (const cand of near) {
+      const sh = geo(asset, c.view).find((x: any) => x.id === cand.id);
+      if (sh === undefined || sh.kind === "member" || ops.some((o) => o.op === "shape-add" && o.scale === sc && o.view === c.view && o.shape?.id === cand.id && String(o.group ?? "").startsWith("prism|"))) continue;
+      const saved = structuredClone(sh);
+      const trial = (what: string, change: () => boolean): void => {
+        Object.keys(sh).forEach((k) => delete sh[k]); Object.assign(sh, structuredClone(saved));
+        if (!timeLeft() || !change()) return;
+        let s2 = Infinity;
+        try { s2 = viewScore(measure(c.view).res, c.view); } catch { s2 = Infinity; }
+        if (s2 < (best?.s ?? before - 0.03)) best = { id: cand.id, shape: structuredClone(sh), s: s2, what };
+      };
+      for (const amount of [...new Set([Math.max(c.d - limit, 0) + 0.25 * feature, Math.max(c.d - limit, 0) + 0.6 * feature, c.d / 2, c.d])]) {
+        for (const k of SIZE) if (typeof saved[k] === "number") trial(`${k} ${(sign * amount * 1000).toFixed(1)}mm`, () => { const v = saved[k] + sign * amount * (k === "w" || k === "h" ? 2 : 1); if (v <= 1e-4) return false; sh[k] = +v.toFixed(5); return true; });
+        for (const k of POSITION) if (typeof saved[k] === "number") for (const dir of [1, -1]) trial(`${k} ${(dir * amount * 1000).toFixed(1)}mm`, () => { sh[k] = +(saved[k] + dir * amount).toFixed(5); return true; });
+        if (saved.solid?.kind === "revolved") for (const k of ["axisZ", "axisX"]) for (const dir of [1, -1]) trial(`revolved ${k} ${(dir * amount * 1000).toFixed(1)}mm`, () => { sh.solid = { ...saved.solid, [k]: +((saved.solid[k] ?? 0) + dir * amount).toFixed(5) }; return true; });
+        if (saved.solid?.kind === "extruded" && amount <= 2 * feature) for (const k of ["z0", "z1"]) for (const dir of [1, -1]) trial(`extruded ${k} ${(dir * amount * 1000).toFixed(1)}mm`, () => { const v = +((saved.solid[k] ?? 0) + dir * amount).toFixed(5); if (k === "z0" ? v >= saved.solid.z1 - 1e-3 : v <= saved.solid.z0 + 1e-3) return false; sh.solid = { ...saved.solid, [k]: v }; return true; });
+        if (saved.kind === "poly" && Array.isArray(saved.points)) {
+          const pts: P[] = saved.points.map(([x, y]: number[]) => ({ x: x!, y: y! }));
+          let area = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i]!, q = pts[(i + 1) % pts.length]!; area += p.x * q.y - q.x * p.y; }
+          trial(`offset ${(sign * amount * 1000).toFixed(1)}mm`, () => { sh.points = offsetRing(pts, sign * amount * (area >= 0 ? 1 : -1)).map((p) => [+p.x.toFixed(5), +p.y.toFixed(5)]); return true; });
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) trial(`shift ${(dx * amount * 1000).toFixed(1)},${(dy * amount * 1000).toFixed(1)}mm`, () => { sh.points = pts.map((p) => [+(p.x + dx * amount).toFixed(5), +(p.y + dy * amount).toFixed(5)]); return true; });
+        }
+      }
+      if (saved.kind === "poly" && Array.isArray(saved.points) && saved.points.length >= 6 && process.env.LOCAL !== "0") {
+        const pts: P[] = saved.points.map(([x, y]: number[]) => ({ x: x!, y: y! }));
+        let area = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i]!, q = pts[(i + 1) % pts.length]!; area += p.x * q.y - q.x * p.y; }
+        const n = pts.length, half = Math.max(1, Math.round(n / 10)), stride = Math.max(1, Math.round(n / 8));
+        for (const amount of [Math.max(c.d - limit, 0) + 0.4 * feature, Math.max(c.d - limit, 0) + feature]) {
+          const moved = offsetRing(pts, sign * amount * (area >= 0 ? 1 : -1));
+          for (let centre = 0; centre < n; centre += stride) trial(`local offset ${(sign * amount * 1000).toFixed(1)}mm about vertex ${centre}`, () => {
+            sh.points = pts.map((q, j) => { const steps = Math.min((j - centre + n) % n, (centre - j + n) % n); const weight = steps > half ? 0 : Math.cos((steps / (half + 1)) * (Math.PI / 2)) ** 2; return [+(q.x + weight * (moved[j]!.x - q.x)).toFixed(5), +(q.y + weight * (moved[j]!.y - q.y)).toFixed(5)]; });
+            return true;
+          });
+        }
+      }
+      Object.keys(sh).forEach((k) => delete sh[k]); Object.assign(sh, saved);
+    }
+    if (best === null) continue;
+    const chosen: { id: string; shape: any; s: number; what: string } = best;
+    const l = geo(asset, c.view), i = l.findIndex((x: any) => x.id === chosen.id), was = l[i];
+    l[i] = chosen.shape;
+    const after = measure().res;
+    if (VIEWPOINTS.some((v) => viewScore(after, v) > Math.max(1, viewScore(cur.res, v)) + 0.02 && viewScore(after, v) > viewScore(cur.res, v) + 0.02)) { l[i] = was; log(`fit ${c.view} ${chosen.id} ${chosen.what} would worsen another view`); continue; }
+    ops.push({ op: "shape", scale: sc, view: c.view, id: chosen.id, shape: structuredClone(chosen.shape) });
+    tried.delete(`${c.view}|${c.side}|${Math.round(c.x / 0.02)}|${Math.round(c.y / 0.02)}`);
+    log(`fit ${c.view} ${chosen.id} ${chosen.what} (${c.side} ${c.d.toFixed(3)} at ${c.x.toFixed(3)},${c.y.toFixed(3)}): ${before.toFixed(3)} -> ${chosen.s.toFixed(3)}`);
+  }
+};
+/** Takes out again every traced shape this run or an earlier one added that the guard does not need: without it the view is no worse. */
+const prune = (): void => {
+  for (const o of ops.filter((x) => x.op === "shape-add" && x.scale === sc && !String(x.group ?? "").startsWith("prism|")).slice()) {
+    if (!timeLeft()) break;
+    const l = geo(asset, o.view), i = l.findIndex((x: any) => x.id === o.shape.id);
+    if (i < 0) continue;
+    const before = measure(o.view).res, was = l[i];
+    l.splice(i, 1);
+    const after = measure(o.view).res;
+    const [a, b] = [metricOf(after, o.view), metricOf(before, o.view)];
+    if (a.max <= b.max + 0.005 && a.sum <= b.sum + 1e-9 && a.iou >= b.iou - 0.0003) { for (let k = ops.length - 1; k >= 0; k--) if (ops[k].scale === sc && ops[k].view === o.view && (ops[k].id ?? ops[k].shape?.id) === o.shape.id) ops.splice(k, 1); log(`pruned ${o.view} ${o.shape.id}: not needed`); }
+    else l.splice(i, 0, was);
+  }
+};
+/** Prunes, fits and polishes what the pass (or the directed steps) left, in its own time budget FITSEC (default: MAXSEC). */
+const refine = (): void => {
+deadline = performance.now() + Number(process.env.FITSEC ?? MAXSEC) * 1000;
+if (process.env.PRUNE !== "0") prune();
+if (process.env.PARAM !== "0") paramFit();
+const score = (res: ReturnType<typeof measure>["res"]): number => Math.max(...res.map((r) => Math.max(r.h / limit, r.iou < 0.925 ? 1 + (0.925 - r.iou) * 20 : 0)));
+if (process.env.POLISH !== "0") {
+  for (let round = 0; round < Number(process.env.POLISH ?? 25) && timeLeft(); round++) {
+    const cur = measure();
+    const base = score(cur.res);
+    if (base <= 0.96) break;
+    const worst = cur.res.flatMap((r) => r.clusters).sort((a, b) => b.d - a.d)[0];
+    if (!worst) break;
+    const state: any = cur.state;
+    const isTool = (sh: any): boolean => sh.kind === "poly" || (sh.kind === "path" && /^M[-\d. L]+Z( M[-\d. L]+Z)*$/.test(sh.d));
+    const getLoops = (sh: any): number[][][] => sh.kind === "poly" ? [sh.points] : sh.d.split("Z").filter((x: string) => x.trim().length > 0).map((seg: string) => seg.trim().replace(/^M/, "").split("L").map((q: string) => q.trim().split(/\s+/).map(Number)));
+    const setLoops = (sh: any, loops: P[][]): void => { if (sh.kind === "poly") sh.points = loops[0]!.map((p) => [+p.x.toFixed(4), +p.y.toFixed(4)]); else sh.d = loops.map((l) => "M" + l.map((p) => `${p.x.toFixed(5)} ${p.y.toFixed(5)}`).join(" L") + " Z").join(" "); };
+    const orient = (l: P[]): number => { let a = 0; for (let i = 0; i < l.length; i++) { const p = l[i]!, q = l[(i + 1) % l.length]!; a += p.x * q.y - q.x * p.y; } return a >= 0 ? 1 : -1; };
+    const xform = (loops: number[][][], dx: number, dy: number, d: number): P[][] => loops.map((l) => { const pts = l.map(([x, y]) => ({ x: x! + dx, y: y! + dy })); return offsetRing(pts, d * orient(pts)); });
+    const cands = (state.shapes[worst.view] as any[]).map((s) => { let m = Infinity; for (const ring of s.rings) for (let i = 0; i < ring.length - 1 + (s.closed ? 1 : 0); i++) m = Math.min(m, dseg(worst, ring[i], ring[(i + 1) % ring.length])); return { s, m }; }).filter((x) => x.m < Math.max(0.03, 2 * feature) && x.s.closed && isTool(geo(asset, worst.view).find((g: any) => g.id === x.s.shape.id) ?? {})).map((x) => x.s.shape.id as string);
+    let best: { id: string; d: number; sc: number; dx?: number; dy?: number } | null = null;
+    for (const id of [...new Set(cands)]) {
+      const sh = geo(asset, worst.view).find((s: any) => s.id === id);
+      if (!sh) continue;
+      const orig = getLoops(sh);
+      const tries: { mul: number; dx: number; dy: number }[] = [0.15, -0.15, 0.3, -0.3, 0.6, -0.6].map((mul) => ({ mul, dx: 0, dy: 0 }));
+      for (const m of [0.1, 0.2, 0.3]) for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) tries.push({ mul: 0, dx: a * m * feature, dy: b * m * feature });
+      const saved = structuredClone(sh);
+      for (const tr of tries) {
+        if (!timeLeft()) break;
+        setLoops(sh, xform(orig, tr.dx, tr.dy, tr.mul * feature));
+        const tried = measure(worst.view).res;
+        const sc2 = Math.max(...VIEWPOINTS.map((v) => metricOf(tried.some((r) => r.view === v) ? tried : cur.res, v).max));
+        if (best === null ? sc2 < base - 0.02 : sc2 < best.sc) best = { id, d: tr.mul * feature, sc: sc2, dx: tr.dx, dy: tr.dy };
+      }
+      Object.assign(sh, saved);
+    }
+    if (best === null) { log(`polish: no improving change for cluster ${worst.view} ${worst.x.toFixed(3)},${worst.y.toFixed(3)} d=${worst.d.toFixed(3)}`); break; }
+    const sh = geo(asset, worst.view).find((s: any) => s.id === best!.id);
+    setLoops(sh, xform(getLoops(sh), best.dx ?? 0, best.dy ?? 0, best.d));
+    const o = { op: "shape", scale: sc, view: worst.view, id: best.id, shape: structuredClone(sh) };
+    ops.push(o);
+    log(`polish ${worst.view} ${best.id} by ${(best.d * 1000).toFixed(2)}mm shift ${((best.dx ?? 0) * 1000).toFixed(1)},${((best.dy ?? 0) * 1000).toFixed(1)}: score ${base.toFixed(3)} -> ${best.sc.toFixed(3)}`);
+  }
+}
+};
+const revertShape = (view: string, id: string): void => {
+  const l = geo(asset, view), p = geo(pristine, view) as any[];
+  const i = l.findIndex((x: any) => x.id === id), was = p.find((x: any) => x.id === id);
+  if (was !== undefined && i >= 0) l[i] = structuredClone(was); else if (i >= 0) l.splice(i, 1);
+  for (let k = ops.length - 1; k >= 0; k--) if (ops[k].scale === sc && ops[k].view === view && (ops[k].id ?? ops[k].shape?.id) === id) ops.splice(k, 1);
+};
+/** Directed steps instead of the greedy pass, `;`-separated in CMD, each kept only when its view improves (FORCE=1 keeps it anyway): `trace|<view>|<bone>|<solid>,<solid>…|<new id>|<after id>` adds the traced silhouette of the named solids as a filled shape on the bone, `refit|<view>|<shape id>` redraws a shape from the solid of its id, `prism|<view>|<bone>` draws a bone solid by solid, `solid|<view>|<solid id>` adds one body solid as a drawn prism beside the shapes of its bone, `drop|<view>|<shape id>` removes a shape, `replace|<view>|<shape id>|<solid>,<solid>…` redraws a shape as the traced silhouette of the named solids on its own bone, `set|<view>|<shape id>|<json>` sets members of a shape. */
+/** A group of directed `prism` and `refit` steps of one view applied together and kept or taken back as a whole (GROUP=1): single fingers do not improve a view before the palm is redrawn, the hand as a whole does. */
+const grouped = (view: string, steps: string[][]): void => {
+  const before = measure();
+  const snapshot = structuredClone(geo(asset, view)), kept = ops.length;
+  for (const [what, , a] of steps as [string, string, string][]) {
+    const cur = before;
+    if (what === "prism") { const made = prismBone(view, a, cur.state, cur.solids); if (made === undefined) continue; try { for (const o of made) { applyOther(asset, o); ops.push(o); } } catch (e) { log(`group: prisms of ${view} ${a} do not apply: ${String(e).slice(0, 100)}`); } }
+    else if (what === "refit") {
+      const candidates = refitFrom(view, a, cur.state, cur.solids) ?? [];
+      const l = geo(asset, view), i = l.findIndex((x: any) => x.id === a), was = l[i];
+      let best: { shape: any; max: number; iou: number } | undefined;
+      for (const candidate of candidates) { l[i] = candidate; let got: Res | undefined; try { got = measure(view).res; } catch { got = undefined; } if (got === undefined) continue; const m = metricOf(got, view); if (best === undefined || m.max < best.max - 1e-6 || (Math.abs(m.max - best.max) <= 1e-6 && m.iou > best.iou)) best = { shape: candidate, max: m.max, iou: m.iou }; }
+      l[i] = best?.shape ?? was;
+      if (best !== undefined) ops.push({ op: "shape", scale: sc, view, id: a, shape: structuredClone(best.shape) });
+    }
+  }
+  const after = measure(view).res;
+  if (!improves(after, before.res, view)) { (asset as any).representations[sc].geometry[view] = snapshot; ops.length = kept; log(`group ${view} (${steps.length} steps): revert (${metricOf(before.res, view).max.toFixed(3)} -> ${metricOf(after, view).max.toFixed(3)}, iou ${metricOf(before.res, view).iou.toFixed(4)} -> ${metricOf(after, view).iou.toFixed(4)})`); }
+  else log(`group ${view} (${steps.length} steps): ${metricOf(before.res, view).max.toFixed(3)} -> ${metricOf(after, view).max.toFixed(3)}, iou ${metricOf(before.res, view).iou.toFixed(4)} -> ${metricOf(after, view).iou.toFixed(4)}`);
+};
+const directed = (commands: string): void => {
+  if (process.env.GROUP === "1") {
+    const steps = commands.split(";").map((x) => x.trim()).filter((x) => x.length > 0).map((x) => x.split("|"));
+    for (let i = 0; i < steps.length; ) { let j = i; while (j < steps.length && steps[j]![1] === steps[i]![1]) j++; grouped(steps[i]![1]!, steps.slice(i, j)); i = j; }
+    return;
+  }
+  for (const command of commands.split(";").map((x) => x.trim()).filter((x) => x.length > 0)) {
+    const [what, view, a, b, c, d] = command.split("|") as [string, string, string, string, string, string];
+    const cur = measure();
+    if (what === "refit") { refitDone.delete(`${view}|${a}`); if (!tryRefit(view, a, "directed", cur as never)) log(`directed refit of ${view} ${a}: nothing kept`); continue; }
+    if (what === "prism") { prismDone.delete(`${view}|${a}`); if (!tryPrism(view, a, "directed", cur as never)) log(`directed prisms of ${view} ${a}: nothing kept`); continue; }
+    const snapshot = structuredClone(geo(asset, view)), kept = ops.length;
+    if (what === "solid") {
+      const def = ((asset as any).volumes[sc].body as any[]).find((x) => x.id === a);
+      const made = def === undefined ? undefined : prismBone(view, def.bone, cur.state, cur.solids, a);
+      if (made === undefined) { log(`directed solid ${view} ${a}: nothing to draw`); continue; }
+      for (const o of made) { const plain = { ...o, group: `solid|${view}|${a}` }; applyOther(asset, plain); ops.push(plain); }
+    } else if (what === "drop") { const o = { op: "shape-remove", scale: sc, view, id: a }; applyOther(asset, o); ops.push(o); }
+    else if (what === "trace") {
+      const ids = b.split(",");
+      const loops = traceLoops(view, new Set(ids), cur.state, true);
+      const local = loops.map((l, k) => placeLocal(view, a, `d-${k}`, l));
+      if (loops.length === 0 || local.some((l) => l === null)) { log(`directed trace of ${view} ${b} on ${a}: ${loops.length} loops, ${local.filter((l) => l === null).length} cannot be placed`); continue; }
+      const def = ((asset as any).volumes[sc].body as any[]).find((x) => x.id === ids[0]);
+      const anchor = geo(asset, view).find((x: any) => x.id === d);
+      const made = mkShapeMulti({ role: "body", z: anchor?.z ?? 1, filled: true, tone: def?.tone ?? anchor?.tone ?? 0.5, ...(def?.material === undefined ? {} : { material: def.material }), ...(regionOfSolid.get(ids[0]!) === undefined ? {} : { region: regionOfSolid.get(ids[0]!) }) }, c, a, local as P[][]);
+      const o = { op: "shape-add", scale: sc, view, after: d, shape: made };
+      applyOp(asset, o); ops.push(o);
+    } else if (what === "replace") {
+      const was = geo(asset, view).find((x: any) => x.id === a);
+      const loops = traceLoops(view, new Set(b.split(",")), cur.state, true);
+      const local = loops.map((l, k) => placeLocal(view, was.bone, `d-${k}`, l));
+      if (loops.length === 0 || local.some((l) => l === null)) { log(`directed replace of ${view} ${a}: ${loops.length} loops, ${local.filter((l) => l === null).length} cannot be placed`); continue; }
+      const o = { op: "shape", scale: sc, view, id: a, shape: mkShapeMulti(was, a, was.bone, local as P[][]) };
+      applyOp(asset, o); ops.push(o);
+    } else if (what === "set") {
+      const was = geo(asset, view).find((x: any) => x.id === a);
+      const o = { op: "shape", scale: sc, view, id: a, shape: { ...structuredClone(was), ...JSON.parse(b) } };
+      applyOp(asset, o); ops.push(o);
+    } else throw new Error(`unknown directed step ${what}`);
+    const after = measure(view).res;
+    if (process.env.FORCE !== "1" && !improves(after, cur.res, view)) { (asset as any).representations[sc].geometry[view] = snapshot; ops.length = kept; log(`directed ${command}: revert (${metricOf(cur.res, view).max.toFixed(3)} -> ${metricOf(after, view).max.toFixed(3)})`); }
+    else log(`directed ${command}: ${metricOf(cur.res, view).max.toFixed(3)} -> ${metricOf(after, view).max.toFixed(3)}, iou ${metricOf(cur.res, view).iou.toFixed(4)} -> ${metricOf(after, view).iou.toFixed(4)}`);
+  }
+};
+for (let round = 0; round < 4; round++) {
+  if (process.env.CMD !== undefined && round === 0) directed(process.env.CMD); else if (process.env.CMD === undefined) pass();
+  if (round === 0) refine();
+  let issues = issuesOf();
+  if (issues.length <= baseIssues) break;
+  log(`validateAsset: ${issues.length} issues (base ${baseIssues}): ${[...new Set(issues.map((i) => i.code))].join(", ")}`);
+  const mine = (): { view: string; id: string }[] => { const seen = new Set<string>(); const out: { view: string; id: string }[] = []; for (let k = ops.length - 1; k >= 0; k--) { const o = ops[k]; if (o.scale !== sc || !String(o.op).startsWith("shape")) continue; const id = o.id ?? o.shape?.id; if (!seen.has(`${o.view}|${id}`)) { seen.add(`${o.view}|${id}`); out.push({ view: o.view, id }); } } return out; };
+  const revertMany = (pairs: { view: string; id: string }[], why: string): void => {
+    const live = pairs.filter((m) => ops.some((o) => o.scale === sc && o.view === m.view && (o.id ?? o.shape?.id) === m.id));
+    if (live.length === 0) return;
+    const snapshot = Object.fromEntries(VIEWPOINTS.map((v) => [v, structuredClone(geo(asset, v))])), kept = ops.slice();
+    for (const m of live) revertShape(m.view, m.id);
+    const after = issuesOf();
+    if (after.length < issues.length) { issues = after; for (const m of live) done.add(`${m.view}|r|${m.id}`); log(`taken back ${live.map((m) => `${m.view} ${m.id}`).join(", ")} (${why}): ${after.length} issues left`); }
+    else { for (const v of VIEWPOINTS) (asset as any).representations[sc].geometry[v] = snapshot[v]; ops.length = 0; ops.push(...kept); }
+  };
+  for (const issue of issues.slice()) {
+    if (issues.length <= baseIssues) break;
+    const named = new Set<string>([...(issue.data?.shapes ?? []), ...[...String(issue.message?.en ?? "").matchAll(/"([^"]+)"/g)].map((m) => m[1]!)]);
+    revertMany(mine().filter((m) => named.has(m.id)), issue.code);
+  }
+  for (const m of mine()) { if (issues.length <= baseIssues) break; revertMany([m], "single"); }
+  if (issues.length > baseIssues) { for (const v of VIEWPOINTS) (asset as any).representations[sc].geometry[v] = structuredClone(geo(pristine, v)); for (let k = ops.length - 1; k >= 0; k--) if (ops[k].scale === sc && String(ops[k].op).startsWith("shape")) ops.splice(k, 1); issues = issuesOf(); log(`taken back every change of 1:${sc}: ${issues.length} issues left`); break; }
+  if (issues.length > baseIssues) { log(`validateAsset still reports ${issues.length} issues: ${issues.slice(0, 5).map((i) => `${i.code} ${i.path ?? ""} ${i.message?.en ?? ""}`.slice(0, 300)).join(" || ")}`); break; }
+}
+const fin = measure();
+log(`issues ${issuesOf().length} new (inherited ${baseKeys.size})`);
+log("final " + fin.res.map((r) => `${r.view[0]}:${r.iou.toFixed(3)}/${(r.h * 1000).toFixed(1)}mm(${r.clusters.length},${r.area.length})`).join(" "));
+await writeOps(outFile!, ops);

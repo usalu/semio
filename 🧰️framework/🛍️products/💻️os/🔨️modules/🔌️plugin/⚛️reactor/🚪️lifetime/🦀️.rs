@@ -294,7 +294,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
 
 impl<O: GuestLifetimeOwner> Drop for GuestLifecycleCell<O> {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && matches!(self.phase, Phase::Opening | Phase::Released), "guest lifecycle owner and receipt must remain mounted through final exact ACK");
+        assert!(std::thread::panicking()||(self.owner.is_none() && matches!(self.phase, Phase::Opening | Phase::Released)), "guest lifecycle owner and receipt must remain mounted through final exact ACK");
     }
 }
 

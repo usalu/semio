@@ -43,7 +43,7 @@ pub fn case_diagram(case_id: &str, title: &LocalizedCopy, report: &CheckReport, 
         .map(|(i, c)| Marker { id: format!("check-{}", i + 1), at: at(i, c), shape: MarkerShape::Circle, tone: tone_of(c), label: LocalizedCopy::new(&c.title.en, &c.title.de), utilisation: Some(c.utilization), bound_check: Some(c.id.clone()), binding: None })
         .collect();
     Some(Diagram2d {
-        id: format!("case-{case_id}"),
+        id: format!("case:{case_id}"),
         title: title.clone(),
         description: LocalizedCopy::new("Utilisation of every check of the design case against the limit of 100 %.", "Ausnutzung jedes Nachweises des Bemessungsfalls gegen die Grenze von 100 %."),
         axes: vec![axis("Check", "Nachweis", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.0, count + 1.0))), axis("Utilisation", "Ausnutzung", QuantityKind::Dimensionless, "1", AxisScale::Linear, Some((0.0, top)))],

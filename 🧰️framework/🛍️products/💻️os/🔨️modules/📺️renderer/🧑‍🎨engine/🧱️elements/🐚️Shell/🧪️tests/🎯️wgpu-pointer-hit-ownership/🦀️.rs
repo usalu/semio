@@ -16,7 +16,7 @@
 //! [`ShellState::pointer_owner_at`] (the layers) and [`PointerCapture`] (the sequence), and the laws
 //! below drive the probe's exact gestures through both.
 
-use semio_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe, split_pane_shell};
+use semio_renderer_wgpu_fixtures::shell::{retained_world_sequence_probe_closing, split_pane_shell};
 use super::*;
 
 /// 🧾️ The eight leaking steps, each with the hit its press actually resolved to in run 14 — kind and
@@ -204,7 +204,7 @@ fn an_open_panels_whole_box_owns_the_pointer_over_the_pane_it_floats_on() {
 /// a move the chrome owns hands the surface a LEAVE instead.
 #[test]
 fn the_renderer_ingress_routes_every_pointer_phase_through_the_capture() {
-    retained_world_sequence_probe("motion-wheel");
+    retained_world_sequence_probe_closing("motion-wheel", semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close);
 }
 
 //#endregion 🧊️RendererIngress

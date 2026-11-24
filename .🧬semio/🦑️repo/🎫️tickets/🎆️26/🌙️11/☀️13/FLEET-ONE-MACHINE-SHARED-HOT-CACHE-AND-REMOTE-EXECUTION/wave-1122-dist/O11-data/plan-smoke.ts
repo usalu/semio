@@ -1,0 +1,24 @@
+import {mkdtempSync,readFileSync} from "node:fs";
+import {join} from "node:path";
+import {tmpdir} from "node:os";
+const R="/Users/ueli/Documents/semio/🧰️framework/";
+const NB=R+"🔨️modules/🏃️process/📦️artifacts/🏗️native-build/";
+const L=R+"🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/";
+const {readUnitHistoryV1,unitHistoryPathV1,componentFinalCratePeaksV1}=await import(NB+"🎟️admission/🟦️.ts");
+const {planComponentJobsV1}=await import(NB+"🧩️component-pass/🧵️job-slots/🟦️.ts");
+const {readFamilyPeakV1,readUnitPeakV1,writeUnitPeakV1,fleetIdleSlotsV1}=await import(L+"🚀️offload/🚦️admission/🟦️.ts");
+const {offloadUnitPeakMegabytesV1}=await import(L+"🚀️offload/📐️policy/🟦️.ts");
+const history=await readUnitHistoryV1(unitHistoryPathV1("/Users/ueli/.sinc/play/.cache/b/r/m/components"));
+const root=mkdtempSync(join(tmpdir(),"o11-ledger-"));
+const folded=componentFinalCratePeaksV1(history);
+for(const[crate,mb]of folded)if(readUnitPeakV1(root,crate)===undefined)writeUnitPeakV1(root,crate,mb);
+const family=readFamilyPeakV1(root);
+const log=readFileSync("/Users/ueli/Documents/semio/.🧬semio/🌐hub/play-cdn-1122/pinned/site-build-181007.log","utf8");
+const crates=[...new Set([...log.matchAll(/packageName\\":\\"(semio-hub-[a-z0-9-]*-component)\\"/gu)].map(m=>m[1]!.replaceAll("-","_")))].sort();
+const per=crates.map(c=>offloadUnitPeakMegabytesV1(readUnitPeakV1(root,c),["cdylib"],"wasm32-wasip2",family));
+const sorted=[...per].sort((a,b)=>a-b),median=sorted[Math.floor(sorted.length/2)]!;
+const out:any={folded:Object.fromEntries(folded),family,crates:crates.length,distribution:Object.fromEntries([...new Set(per)].sort((a,b)=>a-b).map(v=>[v,per.filter(x=>x===v).length])),median,old:6144};
+const host={availableMegabytes:13050,pressure:"normal" as const};
+out.plans={};
+for(const peak of [1024,2048,4096,6144,median,10000]){const slots=await fleetIdleSlotsV1(process.env,{peakMegabytes:peak});out.plans[peak]={slots,plan:planComponentJobsV1({local:4,fleetSlots:slots,availableMegabytes:host.availableMegabytes,pressure:host.pressure,unitMegabytes:2048})};}
+console.log(JSON.stringify(out));

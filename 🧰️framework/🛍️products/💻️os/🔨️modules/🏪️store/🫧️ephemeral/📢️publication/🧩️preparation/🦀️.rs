@@ -244,6 +244,6 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralTaskPreparati
 
 impl<P, M> Drop for ArtifactEphemeralTaskPreparation<P, M> {
     fn drop(&mut self) {
-        assert!(self.base.is_none() && self.mutation.is_none() && self.task.is_none() && self.prepared.is_none() && self.retirement.is_none() && self.base_registry.is_none() && self.state_retirement.is_none() && self.mutation_retirement.is_none() && self.factory_close.iter().all(Option::is_none), "ephemeral preparation dropped before terminal-empty ownership");
+        assert!(std::thread::panicking()||(self.base.is_none() && self.mutation.is_none() && self.task.is_none() && self.prepared.is_none() && self.retirement.is_none() && self.base_registry.is_none() && self.state_retirement.is_none() && self.mutation_retirement.is_none() && self.factory_close.iter().all(Option::is_none)), "ephemeral preparation dropped before terminal-empty ownership");
     }
 }

@@ -1,0 +1,32 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/framework/repo/shared-worktree/bootstrap/v1",
+ "title": "Shared worktree bootstrap archive: retention of superseded archives and the group server's record",
+ "definitions": {
+  "Retention": {
+   "description": "How long an archive (worktree-<16 hex>.tar and .entries) that the manifest no longer names stays for readers that are copying it, counted from the later of the file's mtime and the manifest switch. A sweep retires every unnamed file past the grace at the start of every build round and at the end of each grace, so an orphan of a crash never leaks; while the volume is too short for the next build the shorter pressure grace applies. A build is refused (reason space) when the volume would keep less than the reserve after the estimated tar and staged pack; the refusal is reported in the status.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["graceMilliseconds", "pressureGraceMilliseconds"],
+   "properties": {
+    "graceMilliseconds": {"type": "integer", "minimum": 1, "default": 3600000},
+    "pressureGraceMilliseconds": {"type": "integer", "minimum": 1, "default": 600000}
+   }
+  },
+  "BootstrapRecord": {
+   "description": ".cache/f/bootstrap.json of the group server: the archive the manifest names, its bytes, the superseded archive bytes still held inside the grace, the bytes the latest build retired and the last refusal for lack of space (null once a build succeeded).",
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "wallMs", "archive", "bytes", "held", "retiredBytes", "refusal"],
+   "properties": {
+    "version": {"const": 1},
+    "wallMs": {"type": "integer", "minimum": 0},
+    "archive": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+    "bytes": {"type": "integer", "minimum": 0},
+    "held": {"type": "object", "additionalProperties": false, "required": ["files", "bytes"], "properties": {"files": {"type": "integer", "minimum": 0}, "bytes": {"type": "integer", "minimum": 0}}},
+    "retiredBytes": {"type": "integer", "minimum": 0},
+    "refusal": {"oneOf": [{"type": "null"}, {"type": "object", "additionalProperties": false, "required": ["need", "free", "reserve", "wallMs"], "properties": {"need": {"type": "string"}, "free": {"type": "string"}, "reserve": {"type": "string"}, "wallMs": {"type": "integer", "minimum": 0}}}]}
+   }
+  }
+ }
+}

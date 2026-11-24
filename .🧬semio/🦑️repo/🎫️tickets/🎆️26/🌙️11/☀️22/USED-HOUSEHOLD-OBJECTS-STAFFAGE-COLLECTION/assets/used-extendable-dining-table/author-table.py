@@ -324,7 +324,7 @@ def elevation(s):
     out.append(shape("bars", "frame", "body", 1, TONE["bar"], box_world_elev("frame", BAR_X0, p["bar_y"][0], BAR_X0 + BAR_LEN, p["bar_y"][1]), region="slide", material="steel-zinc"))
     for half, b, x0, x1 in (("l", "top-left", 0.0, 0.70), ("r", "top-right", 0.70, L)):
         out.append(shape(f"top-{half}", b, "body", 7, TONE["top"], box_world_elev(b, x0, ty, x1, H), region="table-top", material="beech-aged"))
-        ax0, ax1 = (0.13 if not sq else 0.1375, 0.70) if half == "l" else (0.70, 1.27 if not sq else 1.2625)
+        ax0, ax1 = (0.12 if not sq else 0.1375, 0.70) if half == "l" else (0.70, 1.28 if not sq else 1.2625)
         out.append(shape(f"apron-{half}", b, "body", 4, TONE["apron"], box_world_elev(b, ax0, fy - APRON_H, ax1, fy), region="apron", material="beech-frame", hatch=hatch_h))
         seen = {}
         for bid, bx0, bx1, bz0, bz1 in blocks_of(s, half):
@@ -358,7 +358,7 @@ def elevation(s):
 
 
 def front(s):
-    """🪞 The front elevation of scale s, seen from ahead (the right end of the table)."""
+    """🪞 The front elevation of scale s, seen from ahead (the right end of the table). The end apron is drawn as long as its solid, 10 mm into each leg like its tenon (drawn butt to the leg it left a hairline beside the tapered leg that the body does not have: silhouette repair SF of 2026-11-23, `catalog-silhouette` 52.5 mm; the side aprons of the side elevation likewise, 39.4 mm)."""
     p, out = P[s], []
     fy, ty, at = p["frame"], top_y(s), p["apron_t"]
     a0, a1 = leaf_a_y(s)
@@ -368,7 +368,7 @@ def front(s):
     for bid, bx0, bx1, bz0, bz1 in blocks_of(s, "r"):
         if "end" in bid or bid.startswith("block-r-0"):
             out.append(shape(bid, "top-right", "body", 3, TONE["block"], rect(bz0, fy, bz1, ty), region="apron", material="beech-frame"))
-    out.append(shape("end-apron-r", "top-right", "body", 4, TONE["apron"], rect(-0.34 if not sq else -0.3325, fy - APRON_H, 0.34 if not sq else 0.3325, fy), region="apron", material="beech-frame", hatch="grain-h" if s == "50" else None))
+    out.append(shape("end-apron-r", "top-right", "body", 4, TONE["apron"], rect(-0.35 if not sq else -0.3325, fy - APRON_H, 0.35 if not sq else 0.3325, fy), region="apron", material="beech-frame", hatch="grain-h" if s == "50" else None))
     out.append(shape("top-r", "top-right", "body", 7, TONE["top"], rect(-W / 2, ty, W / 2, H), region="table-top", material="beech-aged"))
     if sq:
         h = 0.0375

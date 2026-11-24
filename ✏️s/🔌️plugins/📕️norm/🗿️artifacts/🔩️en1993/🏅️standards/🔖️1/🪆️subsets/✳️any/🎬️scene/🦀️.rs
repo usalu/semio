@@ -8,8 +8,11 @@ extern crate semio_s_plugin_norm_structural_scene as scene;
 extern crate semio_s_artifact_norm_en1993_scene_members as scene_members;
 extern crate semio_s_artifact_norm_en1993_scene_members_projection as projection;
 
-use scene_members::{kit, tracks};
-use projection::{detail_sketches, fatigue_views};
+use scene_members::kit;
+#[cfg(test)]
+use scene_members::tracks;
+#[cfg(test)]
+use projection::fatigue_views;
 pub use scene_members::kit::{EntityKindSpec, ENTITY_KINDS, entities_of, entity_dependencies, entity_kind_of};
 pub use scene_members::layout;
 pub use scene_members::layout::{Layout, Placement};
@@ -17,9 +20,8 @@ pub use scene_members::handles;
 pub use scene_members::SceneInput;
 pub use projection::fragment;
 
-#[path = "📈️diagrams/🦀️.rs"]
-pub mod diagrams;
-pub use diagrams::diagrams;
+extern crate semio_s_artifact_norm_en1993_scene_diagrams as scene_diagrams;
+pub use scene_diagrams::diagrams;
 
 use model::En1993Snapshot;
 use norm::CheckReport;

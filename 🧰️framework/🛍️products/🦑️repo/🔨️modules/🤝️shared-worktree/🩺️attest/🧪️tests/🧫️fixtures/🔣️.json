@@ -15119,7 +15119,7 @@
    },
    {
     "path": ".git/shallow",
-    "git": true
+    "git": false
    },
    {
     "path": ".cache/f/index-base",

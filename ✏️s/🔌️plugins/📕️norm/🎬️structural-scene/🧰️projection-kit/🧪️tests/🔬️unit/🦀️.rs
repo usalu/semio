@@ -216,6 +216,21 @@ fn move_handles_write_placement_leaves_and_yaw_anchors_at_the_angle() {
     assert!(matches!(&commit.ops[..], [PlacementOp::Insert(row)] if row.entity_id == "beam-1" && row.origin.x == 2.5));
 }
 
+#[test]
+fn load_arrows_rest_at_their_value_in_the_absolute_parameter_of_the_framework() {
+    let entity = EntityRef::new(EntityKind::Member, "beam-1", "members[id=beam-1]");
+    for (axis, at, value) in [(Vec3::Z, v3(1.0, 2.0, 3.0), 2000.0), (Vec3::Y, v3(-4.0, 5.0, 0.5), -750.0), (Vec3::X, v3(0.0, 0.0, 0.0), 0.0)] {
+        let grip = handle_kit::load_arrow(&entity, "load", axis.clone(), &at, "members[id=beam-1].nK".into(), value, 500.0, "N", LocalizedCopy::new("Load", "Last"));
+        let rest = grip.anchor.dot(&axis);
+        let (binding, limits) = (&grip.writes[0], grip.limits.as_ref().unwrap());
+        assert!((binding.value_at(rest) - value).abs() < 1e-9, "{value}: rests at {}", binding.value_at(rest));
+        assert!((binding.value_at(limits.min)).abs() < 1e-9, "{value}: the lower limit is the glyph point");
+        assert!(limits.min <= rest && rest < limits.max);
+        assert_eq!(handle_kit::rest_of(&grip.kind, &grip.anchor), Some(rest));
+        assert_eq!(handle_kit::with_rest_in_limits(grip.clone()).limits, grip.limits);
+    }
+}
+
 use semio_framework_value::DslValue;
 
 struct RowsOnly {

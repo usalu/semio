@@ -1,0 +1,18 @@
+furniture	bar-stool	1:50 plan Hausdorff: expected 0.058876194255403434 to be less than or equal to 0.015
+furniture	height-adjustable-desk	1:100 front Hausdorff: expected 0.08657547285461396 to be less than or equal to 0.03
+furniture	office-swivel-chair	1:50 elevation Hausdorff: expected 0.041249999999999995 to be less than or equal to 0.015
+furniture	operating-table	1:100 front Hausdorff: expected 0.0675 to be less than or equal to 0.03
+furniture	park-bench	1:500 elevation: expected 0.9028271280704465 to be greater than or equal to 0.92
+furniture	picnic-table	1:50 elevation Hausdorff: expected 0.025155764746872634 to be less than or equal to 0.015
+furniture	single-bed	Test timed out in 900000ms
+furniture	used-beer-garden-set	1:50 elevation Hausdorff: expected 0.032745467243574335 to be less than or equal to 0.015
+furniture	used-bentwood-dining-chairs	1:500 front Hausdorff: expected 0.3758927230377559 to be less than or equal to 0.15
+furniture	used-bunk-bed	1:50 elevation Hausdorff: expected 0.024375 to be less than or equal to 0.015
+furniture	used-double-bed	1:50 front Hausdorff: expected 0.016875 to be less than or equal to 0.015
+furniture	used-extendable-dining-table	1:50 elevation Hausdorff: expected 0.039375 to be less than or equal to 0.015
+furniture	used-hinged-wardrobe	1:50 front Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+furniture	used-kitchen-base-cabinet	1:50 front Hausdorff: expected 0.0544073179820509 to be less than or equal to 0.015
+furniture	used-recliner-chair	1:200 front Hausdorff: expected 0.12034687750153925 to be less than or equal to 0.06
+furniture	used-shoe-cabinet	1:100 axis 1: 1.4649999999999999 m against 1.49 m: expected 0.025000000000000133 to be less than or equal to 0.015
+furniture	used-sun-lounger-bench	1:50 plan Hausdorff: expected 0.080625 to be less than or equal to 0.015
+furniture	used-wall-unit	1:50 front Hausdorff: expected 0.080625 to be less than or equal to 0.015

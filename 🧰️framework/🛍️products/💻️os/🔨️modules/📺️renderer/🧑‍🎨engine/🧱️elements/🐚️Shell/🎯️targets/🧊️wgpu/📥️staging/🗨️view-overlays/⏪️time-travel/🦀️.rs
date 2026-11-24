@@ -316,7 +316,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         }
         let Some(rect) = cursor.rect else { return true };
         if cursor.depth == 0 {
-            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.chip_glass(Level::Base)).saturating_add(1);
         }
         draw.begin_glass_content(cursor.depth - 1);
         let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);
@@ -362,7 +362,7 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         }
         let Some(rect) = cursor.rect else { return true };
         if cursor.depth == 0 {
-            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.glass(Level::Window)).saturating_add(1);
+            cursor.depth = draw.push_glass([rect.x, rect.y, rect.w, rect.h], 0.0, theme.chip_glass(Level::Base)).saturating_add(1);
         }
         draw.begin_glass_content(cursor.depth - 1);
         let step = render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, false);

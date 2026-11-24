@@ -3,8 +3,9 @@
 /// 🪟️ Closing a Dock window retires its exact Canvas owner before a pending camera can settle.
 #[test]
 fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::default();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-closed-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
@@ -15,7 +16,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
     shell.windows.active_window_id = Some(surface.into());
     let scene = semio_ui_scene_plane::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
     let document = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
-    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &document, body)]);
     let owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
     shell.docs.window_ui.insert(surface.into(), document);
     let mut interaction = pointer_interaction(shell, input);
@@ -33,7 +34,7 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
         if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
             break;
         }
-        assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"), "each admitted close opportunity advances one bounded unit");
+        assert!(turns.pump_document_close_one(), "each admitted close opportunity advances one bounded unit");
     }
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "the bounded runtime close reaches terminal");
     let target_after_close = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0);
@@ -46,18 +47,20 @@ fn renderer_canvas_closed_window_retires_its_pending_camera_owner() {
         None,
     );
     let mut cleanup = interaction.shell.windows.publish_surface_records(surface, vec![removed_record]).unwrap();
-    let _ = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &cleanup, body)]);
+    let _ = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(surface, controller, &cleanup, body)]);
     semio_renderer_wgpu_scene_state::retire_scene_identity(&owner);
     while !cleanup.close_step() {}
 
     assert!(target_after_close.is_none(), "the complete window close retires the retained component target");
+    turns.finish();
     caller.finish();
 }
 
 #[test]
 fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::default();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-reopened-window";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
@@ -67,7 +70,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     shell.dock.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(surface)], active: surface.into() };
     shell.dock.dock.sync_active_window(surface);
     let old = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
-    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &old, body)]);
+    let _ = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &old, body)]);
     let old_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
     shell.docs.window_ui.insert(surface.into(), old);
     assert!(SessionCtx::of(&mut shell).close_dock_window(surface));
@@ -85,17 +88,17 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
     let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-    assert!(!caller.turn(|cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx)));
+    assert!(!caller.turn_funded(TEST_TURN_WORK, |cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx)));
     assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
 
     for _ in 0..262_144 {
         if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
             break;
         }
-        assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
+        assert!(turns.pump_document_close_one());
     }
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending());
-    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &successor, body)]);
+    let _ = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &successor, body)]);
     let successor_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
     assert_ne!(successor_owner, old_owner, "the reopened same-ID window receives a fresh exact generation");
     assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&successor_owner));
@@ -108,18 +111,20 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
         None,
     );
     let mut cleanup = shell.windows.publish_surface_records(surface, vec![removed_record]).unwrap();
-    let _ = paint_component_pointer_documents(&mut shell, &[(surface, controller, &cleanup, body)]);
+    let _ = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &cleanup, body)]);
     while !successor.close_step() {}
     while !cleanup.close_step() {}
     caller.retire_world(&mut world_resources);
+    turns.finish();
     caller.finish();
 }
 
 /// 🪟️ Sibling components retain independent cameras while sharing their document action address.
 #[test]
 fn sibling_canvas_components_mount_under_one_document_without_sharing_their_camera() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::default();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["siblingWindowLifetime"];
     let surface = "sibling-canvas-document";
@@ -149,7 +154,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
         record
     };
     let mut document = shell.windows.publish_surface_records(surface, vec![root(&[2, 3]), child(2, "left-canvas", &scene(0)), child(3, "right-canvas", &scene(1))]).unwrap();
-    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
+    let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &document, body)]);
     let mut rects: Vec<_> = input.hits().iter().filter(|hit| hit.kind == semio_ui_wgpu_input::HitKind::ComponentScene).map(|hit| hit.rect).collect();
     assert_eq!(rects.len(), 2);
     rects.sort_by(|a, b| a.x.total_cmp(&b.x));
@@ -170,7 +175,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
         assert!((cameras[0]["camera"]["zoom"].as_f64().unwrap() - law["expectedZooms"][index].as_f64().unwrap()).abs() < 0.0001);
     }
     let mut successor = interaction.shell.windows.publish_surface_records(surface, vec![root(&[3]), child(3, "right-canvas", &scene(1))]).unwrap();
-    interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
+    interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(surface, controller, &successor, body)]);
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&targets[0]));
     let survivor = interaction.input.hits().iter().find(|hit| hit.kind == semio_ui_wgpu_input::HitKind::ComponentScene).unwrap().rect;
     semio_framework_async::block_on(semio_renderer_wgpu_frame_actions::dispatch_normalized_event(
@@ -182,21 +187,23 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
     assert!((camera["camera"]["zoom"].as_f64().unwrap() - law["survivingZoom"].as_f64().unwrap()).abs() < 0.0001);
     assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(surface));
     for _ in 0..262_144 {
-        if !caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn") {
+        if !turns.pump_document_close_one() {
             break;
         }
     }
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(surface));
     while !document.close_step() {}
     while !successor.close_step() {}
+    turns.finish();
     caller.finish();
 }
 
 /// 🪟️ Closing each distinct window returns its retained capacity before the next window opens.
 #[test]
 fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::default();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let law = &fixture["sequentialWindowLifetime"];
     let mount_count = law["mountCount"].as_u64().unwrap() as usize;
@@ -211,7 +218,7 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
         interaction.shell.dock.dock.root = DockNode::Stack { windows: vec![DockStackTab::new(&surface)], active: surface.clone() };
         interaction.shell.dock.dock.sync_active_window(&surface);
         let document = interaction.shell.windows.publish_surface_records(&surface, vec![canvas_pointer_record(1, "canvas-owner", &scene)]).unwrap();
-        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(&surface, controller, &document, body)]);
+        interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(&surface, controller, &document, body)]);
         assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(&surface, 200.0, 150.0).is_some(), "window {index} mounts after earlier windows have closed");
         semio_framework_async::block_on(semio_renderer_wgpu_frame_actions::dispatch_normalized_event(&mut interaction, &mut ui_render::DispatchEvent::Scroll { x: 200.0, y: 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() }));
         let actions = semio_renderer_wgpu_scene_state::sweep_expired_scene_camera_dispatches(semio_renderer_wgpu_host_base::app_now_ms() + 400.0);
@@ -228,12 +235,13 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
             if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() {
                 break;
             }
-            assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
+            assert!(turns.pump_document_close_one());
         }
         assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending(), "window {index} closes within the bounded opportunity ceiling");
         assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(&surface, 200.0, 150.0).is_none());
         assert_eq!(interaction.shell.docs.window_ui.len(), law["liveWindowsAfterClose"].as_u64().unwrap() as usize);
     }
+    turns.finish();
     caller.finish();
 }
 
@@ -241,6 +249,7 @@ fn renderer_canvas_sequential_window_close_reuses_retained_surface_capacity() {
 #[test]
 fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
+    let mut turns = PointerFixtureTurns::default();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧭️canvas2d-camera-gestures/🔣️.json")).unwrap();
     let surface = "renderer-canvas-mount-lifetime";
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
@@ -251,7 +260,7 @@ fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
     for step in fixture["mountLifetime"]["steps"].as_array().unwrap() {
         let scene = semio_ui_scene_plane::Canvas2dScene::base(12.0, -8.0, step["authoredZoom"].as_f64().unwrap(), "[]".into());
         let document = interaction.shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, step["key"].as_str().unwrap(), &scene)]).unwrap();
-        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &document, body)]);
+        interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(surface, controller, &document, body)]);
         semio_framework_async::block_on(semio_renderer_wgpu_frame_actions::dispatch_normalized_event(
             &mut interaction,
             &mut ui_render::DispatchEvent::Scroll { x: body.x + body.w * 0.5, y: body.y + body.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() },
@@ -264,6 +273,7 @@ fn renderer_canvas_camera_obeys_the_mounted_component_identity() {
     for document in &mut documents {
         while !document.close_step() {}
     }
+    turns.finish();
     for (actual, expected) in actual.iter().zip(fixture["mountLifetime"]["steps"].as_array().unwrap()) {
         let camera = actual.as_ref().expect("each mounted wheel settles its camera");
         assert!((camera["zoom"].as_f64().unwrap() - expected["expectedZoom"].as_f64().unwrap()).abs() < 0.00001, "{actual:?}");
@@ -305,9 +315,10 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
     let controller = fixture["surface"]["controllerId"].as_str().unwrap();
     let body = Rect::new(17.0, 31.0, 400.0, 300.0);
     let mut shell = host_test_shell();
+    let mut turns = PointerFixtureTurns::default();
     let scene = semio_ui_scene_plane::Canvas2dScene::base(12.0, -8.0, 2.0, "[]".into());
     let mut original = shell.windows.publish_surface_records(surface, vec![canvas_pointer_record(1, key, &scene)]).unwrap();
-    let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &original, body)]);
+    let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(surface, controller, &original, body)]);
     let original_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0).unwrap();
     let mut interaction = pointer_interaction(shell, input);
     let scroll = || ui_render::DispatchEvent::Scroll { x: body.x + 200.0, y: body.y + 150.0, delta_x: 0.0, delta_y: -120.0, modifiers: ui_render::EventModifiers::default() };
@@ -317,13 +328,13 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
         |key| tree_pointer_record(1, key, ui_contract::Component::Container(ui_contract::ContainerProps { role: Default::default(), label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }), &[], None);
     let mut removed = if remount { Some(interaction.shell.windows.publish_surface_records(surface, vec![container(key)]).unwrap()) } else { None };
     if let Some(removed) = removed.as_ref() {
-        interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, removed, body)]);
+        interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(surface, controller, removed, body)]);
         assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(surface, 200.0, 150.0).is_none());
     }
     let next_scene = semio_ui_scene_plane::Canvas2dScene::base(12.0, -8.0, if remount { lifetime["remountAuthoredZoom"].as_f64().unwrap() } else { 3.0 }, "[]".into());
     let record = if replace { canvas_pointer_record(1, if remount { key } else { "successor" }, &next_scene) } else { container("removed") };
     let mut successor = interaction.shell.windows.publish_surface_records(surface, vec![record]).unwrap();
-    interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
+    interaction.input = paint_component_pointer_documents_in(&mut turns, &mut interaction.shell, &[(surface, controller, &successor, body)]);
     if replace {
         semio_framework_async::block_on(semio_renderer_wgpu_frame_actions::dispatch_normalized_event(&mut interaction, &mut scroll()));
     }
@@ -352,6 +363,7 @@ fn renderer_canvas_retirement_probe(replace: bool, close: bool, remount: bool) {
         while !removed.close_step() {}
     }
     while !successor.close_step() {}
+    turns.finish();
     let expected = if remount { lifetime["retiredDeadlineActions"].as_u64().unwrap() as usize } else { fixture["mountLifetime"][if replace { "retiredDeadlineActions" } else { "removedCameraActions" }].as_u64().unwrap() as usize };
     assert_eq!(actions.len(), expected, "a retired Canvas camera cannot publish after replacement/removal");
     assert_eq!(settled.len(), if remount { lifetime["remountedCameraActions"].as_u64().unwrap() as usize } else { usize::from(replace) }, "only the live successor retains its camera deadline");

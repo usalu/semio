@@ -1,7 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {decodeProtobufV1,REAPI_V1} from "../📡️wire/📦️protobuf/🟦️.ts";
 import type {RemoteExecutionContentV1} from "../🗄️content/🟦️.ts";
-import {placementAnyCandidateV1,placementHasHeadroomV1,placementIdleCountV1,placementIdleElsewhereV1,placementKeyV1,planDispatchV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1} from "./⚖️placement/🟦️.ts";
+import {placementAnyCandidateV1,placementChargeMegabytesV1,placementHasHeadroomV1,placementIdleCountV1,placementIdleElsewhereV1,placementKeyV1,planDispatchV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1} from "./⚖️placement/🟦️.ts";
 import type {RemoteExecutionLoadReportV1,RemoteExecutionWorkerStateV1} from "../🌡️load/🟦️.ts";
 import {remoteExecutionWorkerWhyV1} from "../🌡️load/🔎️why/🟦️.ts";
 import {OFFLOAD_REFUSAL_PREFIX_V1} from "../🚀️offload/🩺️failure/🟦️.ts";
@@ -23,7 +23,7 @@ export type RemoteExecutionSnapshotV1=Readonly<{name:string;instance:string;acti
 export type RemoteExecutionSchedulerEventV1=Readonly<{stage:"submitted"|"cached"|"assigned"|"completed"|"retried"|"worker-joined"|"worker-left"|"worker-lost"|"unmatched"|"refused"|"declined";detail:string}>;
 
 /** ⚙️ Bounds of the scheduler; all durations are seconds. */
-export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;keepAliveSeconds?:number;cancelGraceSeconds?:number;stuckSeconds?:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
+export type RemoteExecutionSchedulerOptionsV1=Readonly<{content:RemoteExecutionContentV1;unmatchedSeconds:number;lingerSeconds:number;leaseSeconds:number;maximumAttempts:number;defaultActionSeconds:number;maximumActionSeconds:number;maximumQueued:number;heartbeatSeconds:number;pollSeconds:number;loadExpireSeconds:number;refusalCooldownSeconds:number;keepAliveSeconds?:number;cancelGraceSeconds?:number;stuckSeconds?:number;chargeRampSeconds?:number;cache:Readonly<{url:string;relative:boolean}>;language:"en"|"de"|"none";sweepMilliseconds?:number;now?:()=>number;onEvent?:(event:RemoteExecutionSchedulerEventV1)=>void}>;
 
 type Operation={
  id:string;instance:string;action:RemoteExecutionDigestV1;key:string;platform:RemoteExecutionPropertyV1[];timeoutSeconds:number;stage:RemoteExecutionStageV1;version:number;createdAt:number;queuedAt:number;
@@ -31,7 +31,7 @@ type Operation={
 };
 
 type Worker={
- id:string;registration:RemoteExecutionWorkerRegistrationV1;lastSeen:number;running:Set<string>;cancel:Set<string>;announced:Set<string>;waiter?:(answer:RemoteExecutionPollAnswerV1)=>void;draining:boolean;refusedUntil:number;refused:number;
+ id:string;registration:RemoteExecutionWorkerRegistrationV1;lastSeen:number;running:Set<string>;usage:Map<string,number>;cancel:Set<string>;announced:Set<string>;waiter?:(answer:RemoteExecutionPollAnswerV1)=>void;draining:boolean;refusedUntil:number;refused:number;
 };
 
 /** ⏳️ How long the answer "another machine is idle" holds for the machine that was told: its next units are queued instead of declined while the headroom that was promised may have been taken by someone else in between (the queue limit of the requester still bounds the wait). */
@@ -53,8 +53,8 @@ export class RemoteExecutionSchedulerV1{
  private timer?:ReturnType<typeof setInterval>;
  readonly startedAt:string;
 
- readonly options:RemoteExecutionSchedulerOptionsV1;private readonly keepAliveMilliseconds:number;private readonly cancelGraceMilliseconds:number;private readonly stuckMilliseconds:number; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
-  const server=readRemoteExecutionPolicyV1().server;this.keepAliveMilliseconds=(options.keepAliveSeconds??server.keepAliveSeconds)*1000;this.cancelGraceMilliseconds=(options.cancelGraceSeconds??server.cancelGraceSeconds)*1000;this.stuckMilliseconds=(options.stuckSeconds??server.stuckSeconds)*1000;
+ readonly options:RemoteExecutionSchedulerOptionsV1;private readonly keepAliveMilliseconds:number;private readonly cancelGraceMilliseconds:number;private readonly stuckMilliseconds:number;private readonly chargeRampMilliseconds:number; constructor(options:RemoteExecutionSchedulerOptionsV1){this.options=options;
+  const server=readRemoteExecutionPolicyV1().server;this.keepAliveMilliseconds=(options.keepAliveSeconds??server.keepAliveSeconds)*1000;this.cancelGraceMilliseconds=(options.cancelGraceSeconds??server.cancelGraceSeconds)*1000;this.stuckMilliseconds=(options.stuckSeconds??server.stuckSeconds)*1000;this.chargeRampMilliseconds=(options.chargeRampSeconds??server.chargeRampSeconds)*1000;
   this.clock=options.now??Date.now;this.startedAt=new Date(this.clock()).toISOString();this.load=new RemoteExecutionLoadTableV1(options.loadExpireSeconds*1000,this.clock);
   const every=options.sweepMilliseconds??1000;
   this.lastTick=this.clock();
@@ -186,7 +186,7 @@ export class RemoteExecutionSchedulerV1{
   const known=[...this.workers.values()].find(worker=>worker.registration.name===registration.name&&worker.registration.origin===registration.origin);
   if(known){known.registration=registration;known.lastSeen=this.clock();this.counters.workersReused++;this.dispatch();return this.registered(known.id);}
   const id=randomUUID();
-  this.workers.set(id,{id,registration,lastSeen:this.clock(),running:new Set(),cancel:new Set(),announced:new Set(),draining:false,refusedUntil:0,refused:0});
+  this.workers.set(id,{id,registration,lastSeen:this.clock(),running:new Set(),usage:new Map(),cancel:new Set(),announced:new Set(),draining:false,refusedUntil:0,refused:0});
   for(const row of registration.resumed??[]){
    const dot=row.task.lastIndexOf("."),oldId=row.task.slice(0,dot),attempt=Number(row.task.slice(dot+1)),key=`${row.instance}|${row.action.hash}`,existing=this.byKey.get(key);
    if(existing?.stage==="EXECUTING"||this.operations.has(oldId))continue;
@@ -236,10 +236,13 @@ export class RemoteExecutionSchedulerV1{
  private view(operation:Operation):PlacementOperationV1{
   return {id:operation.id,platform:operation.platform,tried:operation.requester===undefined?new Set():operation.tried,requester:operation.requester,peakMegabytes:operation.peakMegabytes??0};
  }
- /** 💾️ The peak megabytes of the actions this scheduler placed on a worker that are still running there (the machine's next load report may not show them yet). */
+ /** 💾️ What the actions this scheduler placed on a worker still cost beyond the free memory its machine reports (`placementChargeMegabytesV1`: each running action once, never twice). */
  private committedMegabytes(worker:Worker):number{
-  let sum=0;
-  for(const task of worker.running)sum+=this.operations.get(task.slice(0,task.lastIndexOf(".")))?.peakMegabytes??0;
+  const reportAtMs=this.load.get(worker.registration.origin)?.receivedAtMs;let sum=0;
+  for(const task of worker.running){
+   const operation=this.operations.get(task.slice(0,task.lastIndexOf(".")));
+   sum+=placementChargeMegabytesV1({declaredMegabytes:operation?.peakMegabytes??0,measuredMegabytes:worker.usage.get(task),startedAtMs:operation?.startedAt??0},reportAtMs,this.chargeRampMilliseconds);
+  }
   return sum;
  }
 
@@ -260,7 +263,7 @@ export class RemoteExecutionSchedulerV1{
    const operation=this.operations.get(step.operation),worker=this.workers.get(step.worker);
    if(!operation||!worker||!worker.waiter)continue;
    this.queue.splice(this.queue.indexOf(operation),1);
-   const task:RemoteExecutionTaskV1={id:`${operation.id}.${operation.attempt}`,instance:operation.instance,action:operation.action,timeoutSeconds:operation.timeoutSeconds,attempt:operation.attempt};
+   const task:RemoteExecutionTaskV1={id:`${operation.id}.${operation.attempt}`,instance:operation.instance,action:operation.action,timeoutSeconds:operation.timeoutSeconds,attempt:operation.attempt,...operation.peakMegabytes?{peakMegabytes:operation.peakMegabytes}:{}};
    const waited=this.clock()-operation.queuedAt;this.waits.push(waited);if(this.waits.length>512)this.waits.shift();
    operation.stage="EXECUTING";operation.worker=worker.id;operation.startedAt=this.clock();this.counters.executing++;worker.running.add(task.id);this.load.count(worker.registration.origin,"offloadedIn");
    this.emit("assigned",`${this.label(operation)} -> ${worker.registration.name}`);
@@ -288,10 +291,10 @@ export class RemoteExecutionSchedulerV1{
  }
 
  /** 💓️ Marks a worker alive and tells it which of its tasks to abandon. */
- heartbeat(workerId:string,running:readonly string[]):RemoteExecutionHeartbeatAnswerV1{
+ heartbeat(workerId:string,running:readonly string[],usage?:readonly Readonly<{task:string;megabytes:number}>[]):RemoteExecutionHeartbeatAnswerV1{
   const worker=this.workers.get(workerId);
   if(!worker)return {version:1,known:false,cancel:[]};
-  worker.lastSeen=this.clock();
+  worker.lastSeen=this.clock();worker.usage=new Map((usage??[]).filter(row=>running.includes(row.task)).map(row=>[row.task,row.megabytes]));
   for(const id of [...worker.running])if(!running.includes(id)){
    const operation=this.operations.get(id.split(".")[0]!);
    if(!operation||operation.stage!=="EXECUTING"||`${operation.id}.${operation.attempt}`!==id){worker.running.delete(id);continue;}
@@ -393,10 +396,10 @@ export class RemoteExecutionSchedulerV1{
   return {queueWaitSamples:sorted.length,queueWaitP50Milliseconds:at(0.5),queueWaitP90Milliseconds:at(0.9),queueWaitMaxMilliseconds:sorted.at(-1)??0};
  }
 
- /** 🔢️ How the workers stand for a unit of `requester` right now, by the very counting the submission check uses, for the action format of this version: what the build door asks before it admits cargo without a grant. */
- idleFor(requester:string):ReturnType<typeof placementIdleCountV1>{
+ /** 🔢️ How the workers stand for a unit of `requester` (of `peakMegabytes` when it is sized: workers without the free memory for it are not candidates and their slots count whole multiples of the peak) right now, by the very counting the submission check uses, for the action format of this version: what the build door asks before it admits cargo without a grant. */
+ idleFor(requester:string,peakMegabytes:number=0):ReturnType<typeof placementIdleCountV1>{
   const property=OFFLOAD_POLICY_V1.property;
-  const standing=placementIdleCountV1({id:"idle-probe",platform:[{name:property.format,value:property.formatValue}],tried:new Set<string>(),requester},this.views(),this.load,this.clock());
+  const standing=placementIdleCountV1({id:"idle-probe",platform:[{name:property.format,value:property.formatValue}],tried:new Set<string>(),requester,peakMegabytes},this.views(),this.load,this.clock());
   if(standing.candidates>0)this.reserved.set(requester,this.clock()+RESERVATION_SECONDS*1000);
   return standing;
  }

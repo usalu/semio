@@ -1,7 +1,7 @@
 import{machinePathV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
 import {spawnSync} from "node:child_process";
-import {homedir} from "node:os";
+import {homedir,hostname} from "node:os";
 import {join,resolve} from "node:path";
 import type {LeaseHolderV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/📋️status/🟦️.ts";
 import sessionSchema from "../../🔧️tools/🏗️bazel/🧵️sessions/🧬️schema/🔣️.json" with {type:"json"};
@@ -10,7 +10,8 @@ import generationSchema from "../../🕸️graph/🕰️generations/🧬️schem
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {fleetTextV1} from "../🟦️.ts";
-import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
+import type {HostWardenMirrorV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
+import type {FleetBazelSlotFactV1,FleetCapacityWaiterFactV1,FleetCasFactV1,FleetOffloadFactV1,FleetFactsV1,FleetGrantFactV1,FleetHolderFactV1,FleetLanguageV1,FleetSealedEntryFactV1,FleetWorkerMemoryV1,FleetSourceV1,FleetStandingFactV1,FleetWaiterFactV1} from "../🟦️.ts";
 
 /** 📥️ The readers of the fleet status: each one asks an existing status reader of the build (leases, capacity, Bazel slots, cache ledger, sealed store, graph generation pointer) and turns the answer into the facts the aggregation reads. A reader never takes a lease, never loads the graph and never writes; a reader that fails is reported in `sources` and leaves its section out.
  * @see ../🟦️.ts the aggregation, ../🧬️schema/🔣️.json the facts */
@@ -147,6 +148,32 @@ export async function readFleetWorkersV1(context:FleetReaderContextV1):Promise<P
  return rows.length===0?{}:{workers:{offlineSeconds:READY_OFFLINE_SECONDS_V1,rows}};
 }
 
+/** 🛡️ Turns a validated `memory.json` record (a warden state or the absent record) into the memory fact of one origin; null for no record. The last alarm is the newest of the state. */
+export function workerMemoryOfV1(origin:string,mirror:HostWardenMirrorV1|null,nowMs:number):FleetWorkerMemoryV1|null{
+ if(mirror===null)return null;
+ const ageSeconds=Math.max(0,Math.floor((nowMs-mirror.atMs)/1000));
+ if("absent" in mirror)return Object.freeze({origin,ageSeconds,absent:true,mode:null,level:null,hold:null,guardMegabytes:null,dangerMegabytes:null,availableMegabytes:null,totalMegabytes:null,swapUsedMegabytes:null,swapOutMegabytesPerSecond:null,compressedMegabytes:null,pressure:null,subjects:null,subjectMegabytes:null,suspended:null,counters:null,lastAlarm:null,overhead:null});
+ const alarm=mirror.lastAlarms.reduce<(typeof mirror.lastAlarms)[number]|undefined>((newest,row)=>newest===undefined||row.atMs>=newest.atMs?row:newest,undefined);
+ return Object.freeze({origin,ageSeconds,absent:false,mode:mirror.mode,level:mirror.level,hold:mirror.hold,guardMegabytes:mirror.guardMegabytes,dangerMegabytes:mirror.dangerMegabytes,availableMegabytes:mirror.host.availableMegabytes,totalMegabytes:mirror.host.totalMegabytes,swapUsedMegabytes:mirror.host.swapUsedMegabytes,swapOutMegabytesPerSecond:mirror.host.swapOutMegabytesPerSecond,compressedMegabytes:mirror.host.compressedMegabytes,pressure:mirror.host.pressure,subjects:mirror.subjects.count,subjectMegabytes:mirror.subjects.megabytes,suspended:mirror.suspended.length,counters:Object.freeze({suspended:mirror.counters.suspended,resumed:mirror.counters.resumed,cancelled:mirror.counters.cancelled}),lastAlarm:alarm===undefined?null:Object.freeze({atMs:alarm.atMs,action:alarm.action,kind:alarm.kind,pid:alarm.pid,owner:alarm.owner,megabytes:alarm.megabytes,text:Object.freeze({en:alarm.text.en,de:alarm.text.de})}),overhead:Object.freeze({tickMillisecondsP95:mirror.overhead.tickMillisecondsP95,cpuBasisPoints:mirror.overhead.cpuBasisPoints,residentMegabytes:mirror.overhead.residentMegabytes})});
+}
+
+/** 🛡️ Memory: the `memory.json` every worker mirrors to the group store (`<store>/v1/origins/<origin>/memory.json`) next to its readiness record, plus the state of the warden of this machine; no scheduler is asked. A missing, oversized, half-written or invalid file is null for that origin and never throws. */
+export const readFleetMemoryV1:FleetReaderV1=async context=>{
+ const [{fleetStoreRootV1},{hostCapacityDirectoryV1},{readHostWardenMirrorV1,readHostWardenStateV1}]=await Promise.all([import("../../🌐️remote-cache/🛰️fleet/🟦️.ts"),import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts"),import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts")]);
+ const store=context.environment.SEMIO_FLEET_STORE_ROOT??fleetStoreRootV1(context.root),base=store===undefined||store===""?undefined:join(store,"v1","origins"),origins:Record<string,FleetWorkerMemoryV1|null>={},limit=policy.readers.maximumMemoryRecordBytes,at=context.now();
+ let names:string[]=[];
+ if(base!==undefined)try{names=readdirSync(base,{withFileTypes:true}).filter(row=>row.isDirectory()&&/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/u.test(row.name)).map(row=>row.name).sort();}catch{}
+ for(const origin of names){
+  const file=join(base!,origin,"memory.json");
+  try{origins[origin]=statSync(file).size>limit?null:workerMemoryOfV1(origin,readHostWardenMirrorV1(file),at);}catch{origins[origin]=null;}
+ }
+ let state=null;
+ try{state=readHostWardenStateV1(hostCapacityDirectoryV1(context.environment),at);}catch{}
+ const name=context.environment.SEMIO_FLEET_ORIGIN||hostname(),local=state===null?null:workerMemoryOfV1(name,state,at);
+ if(local!==null&&name in origins)origins[name]=local;
+ return {memory:{local,origins}};
+};
+
 /** 🗄️ Host store: the cap in force with its watermarks and the last finished collection from the usage hint the collector leaves, and the leases of transient offload inputs (count and bytes). It reads no object tree: only the hint, the lease ledger and one stat per leased blob (bytes are null above `maximumLeaseStats`). */
 export const readFleetCasV1:FleetReaderV1=async context=>{
  const [{CAS_POLICY_V1},{casRootV1,casObjectPathV1},{casEffectiveCapBytesV1,measureCasPartitionV1},{readCasUsageHintV1},{readCasTransientsV1}]=await Promise.all([import("../../🗄️cas/🧬️schema/🟦️.ts"),import("../../🗄️cas/🗃️store/🟦️.ts"),import("../../🗄️cas/🌡️partition/🟦️.ts"),import("../../🗄️cas/🧹️collector/🟦️.ts"),import("../../🗄️cas/📌️pins/🟦️.ts")]);
@@ -172,7 +199,7 @@ export const readFleetOffloadV1:FleetReaderV1=async context=>{
 };
 
 /** 🏭️ The readers of the real workspace. */
-export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
+export const FLEET_READERS_V1:FleetReadersV1=Object.freeze({leases:readFleetLeasesV1,capacity:readFleetCapacityV1,bazel:readFleetBazelV1,storage:readFleetStorageV1,sealed:readFleetSealedV1,generation:readFleetGenerationV1,scheduler:readFleetSchedulerV1,fleet:readFleetLoadV1,workers:readFleetWorkersV1,memory:readFleetMemoryV1,cas:readFleetCasV1,offload:readFleetOffloadV1});
 
 /** 🧺️ Runs every reader at once, times it and merges what it returned; a reader that throws is a failed source, never a failed command. */
 export async function collectFleetFactsV1(context:FleetReaderContextV1,readers:FleetReadersV1=FLEET_READERS_V1,timeoutMilliseconds:number=policy.readers.timeoutMilliseconds):Promise<FleetFactsV1>{

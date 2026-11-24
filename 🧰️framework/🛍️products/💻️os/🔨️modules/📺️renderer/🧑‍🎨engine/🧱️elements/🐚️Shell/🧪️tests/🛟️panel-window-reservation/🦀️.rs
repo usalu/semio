@@ -36,8 +36,8 @@ fn plan_through_chrome(shell: &mut ShellState, theme: &Theme) {
     let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..2 {
         caller.turn(|cx| {
-            let body = SessionCtx::of(&mut shell).body_rect(theme);
-            PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, theme, body, &mut world, cx)
+            let body = SessionCtx::of(shell).body_rect(theme);
+            PanelsViewCtx::of(shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, theme, body, &mut world, cx)
         });
     }
     assert_eq!(cursor.phase, 2, "the real chrome phases published the dock plan");

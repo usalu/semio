@@ -34,6 +34,11 @@ def t(en, de):
     return {"en": en, "de": de}
 
 
+def one_text(texts):
+    """🧷️ Joins several Texts into the one Text a schema member such as provenance.notes holds."""
+    return {language: " ".join(text[language] for text in texts) for language in ("en", "de")}
+
+
 def rnd(value, digits=5):
     if isinstance(value, float):
         r = round(value, digits)

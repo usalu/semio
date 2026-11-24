@@ -1,0 +1,15 @@
+order	file (under the snapshot root)	patches in order	read	note
+1	LIB/🏗️build/🌐️remote-execution/🚀️offload/🧬️schema/🔣️.json	O11 offload-schema.json.patch, O13 offload-schema.patch, O17 o17-schema.patch	W per rustc call	policy values (peak.family, limits, finals) and texts
+2	LIB/🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts	O11 offload-policy.ts.patch, O13 offload-policy.patch, O17 o17-policy.patch	W per rustc call	imported by the schema module
+3	LIB/🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts	O11 offload-admission.ts.patch, O13 admission.patch, O17 o17-admission.patch	W per rustc call	the gate
+4	LIB/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts	O13 offload.patch, O17 o17-offload.patch (O11 offload-client.ts.patch is SKIPPED: its three hunks are contained in o17-offload.patch)	W per rustc call	O11 and O13 touch the same lines of this file and do not stack; the O17 patch is made against the O13 result
+5	LIB/🏗️build/🌐️remote-execution/🚀️offload/🔌️client/🟦️.ts	O13 client.patch	W per rustc call	
+6	LIB/🏗️build/🌐️remote-execution/🟦️.ts	O13 remote-execution-root.patch	W per rustc call	
+7	LIB/🏗️build/🌐️remote-execution/🚀️offload/📜️action/🟦️.ts	O16 action.patch	W per rustc call	requester no longer sends -Z no-parallel-backend: workers should have restarted first (O16 section 5)
+8	LIB/⚡️caching/🦀️cargo/🗃️unit-cache/📜️script.ts	O13 script.patch, O17 o17-script.patch	W per rustc call	the wrapper entry that calls the gate
+9	LIB/⚡️caching/🦀️cargo/🗃️unit-cache/🔒️lock/🟦️.ts	O13 lock.patch	W per rustc call	
+10	🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts	O13 jobserver.patch	D driver start	cargoJobsV1
+11	🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts	O13 wasm-build.patch	D per `repo ... wasm` process	
+12	🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts	O13 component-pass.patch	D driver start	applies on the snapshot's file (has O14)
+13	🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts	O11 native-admission.ts.patch	D driver start	
+14	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts	O11 driver-stages.ts.patch	D driver start	

@@ -83,7 +83,7 @@ impl NodeWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.number.is_none()&&self.plain.is_none()&&self.field.is_none()&&self.unknown.is_none()&&self.fields.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for NodeWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original child node fields require terminal source and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for NodeWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original child node fields require terminal source and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
 #[cfg(test)]
 #[path="🧪️laws/🦀️.rs"]

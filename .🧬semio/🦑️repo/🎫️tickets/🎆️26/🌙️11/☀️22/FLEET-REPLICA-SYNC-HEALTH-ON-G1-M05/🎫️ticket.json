@@ -3,11 +3,12 @@
   "emoji": "🔁",
   "status": "closed",
   "description": "Verify and restore the fleet replica sync of the shared worktree C:\\semio on Windows workstation g1-m05: scheduled task semio-fleet-replica, beat.json/health.json freshness, head.json publication, inbound changes from other origins, errors/backlog in C:\\semio\\.cache\\f. Fix root-cause defects. Report with timestamps.",
-  "summary": "g1-m05 replica caught up fully (0 origins behind). The daemon runs at AboveNormal. Before anything inbound was applied, a sha-manifested backup of the 1,321 locally differing files went to C:\\b\\semio-local-20261123. Lost copies were reconciled with three-way merges against the frozen-view base (last fleet put before min(mtime, 2026-11-22T11:15:43Z)). An earlier nearest-ancestor merge had reverted fleet work in 13 files; each was restored to the exact fleet bytes and merged again correctly. All 31 merged or restored files are published fleet-wide (published-check.mjs). Local work superseded by the fleet stays in .cache/f/lost and is listed in the report. Own fixes (sidecar priority, journal replaceFile) were re-merged onto the newer fleet versions; pass-reuse went back to the fleet design.",
+  "summary": "Old checkout C:\\git\\semio merged into C:\\semio and emptied. Of 706 uncommitted entries, 676 were already in C:\\semio, 20 energy course files with later old-side work (base commit 747) were written and are published fleet-wide, 7 superseded files and 2 tool logs were skipped. All refs and stashes are reachable in C:\\semio; 6 agent checkpoint refs and uncertain git-ignored leftovers are archived in C:\\git-semio-rescue-archive. All content incl. .git is deleted; only the empty folder remains: it is the working directory of the Claude session \"Fem plugin end-to-end\" (claude.exe pid 31448, pwsh pid 31352, found with process-cwd.ps1). Report: old-checkout-merge-and-removal.md.",
   "goal": "🎯runningrepo",
   "sessions": [
     "08ed676a-7d47-42d0-b206-b29155371f2f",
-    "f54745f4-93e4-458e-9f79-3b228751b51f"
+    "f54745f4-93e4-458e-9f79-3b228751b51f",
+    "4d2ba6f6-3783-4f47-ac59-f69624a29207"
   ],
   "interactions": [
     {
@@ -81,6 +82,24 @@
           "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🗃️🤝️sharedworktree🗃️📒️journal💻🟦️"
         }
       ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 15:25:57",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Merge everything from the old checkout C:\\git\\semio into C:\\semio without overwriting newer progress, then delete C:\\git\\semio."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 16:17:20",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Old checkout C:\\git\\semio merged into C:\\semio and emptied. Of 706 uncommitted entries, 676 were already in C:\\semio, 20 energy course files with later old-side work (base commit 747) were written and are published fleet-wide, 7 superseded files and 2 tool logs were skipped. All refs and stashes are reachable in C:\\semio; 6 agent checkpoint refs and uncertain git-ignored leftovers are archived in C:\\git-semio-rescue-archive. All content incl. .git is deleted; only the empty folder remains: it is the working directory of the Claude session \"Fem plugin end-to-end\" (claude.exe pid 31448, pwsh pid 31352, found with process-cwd.ps1). Report: old-checkout-merge-and-removal.md."
     }
   ]
 }

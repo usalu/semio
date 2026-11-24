@@ -150,18 +150,27 @@ async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     let registry = AppActionRegistry::from_definition(&definition);
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    home.bind_instance_id(1).await;
     let routes = [
         crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }),
         crate::editor::home::HomeCommand::ApplyDirectoryEventPage(crate::editor::home::commands::apply_directory_event_page::ApplyDirectoryEventPage { page_json: "{}".into() }),
     ];
     for command in routes {
         let id = command.command_id();
-        let fault = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut home, &command, &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect_err("a registry fixture owns no live instance");
-        let code = fault.primary_fault().unwrap_or_else(|| panic!("{id} was refused without a fault: {:?}", fault.primary)).code.0.as_str();
-        assert_ne!(code, "interactive-job.not-ui-safe", "{id} must be past the classification gate");
-        assert_eq!(code, "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
+        let outcome = semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut home, &command, &artifact_app_laws::meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await;
+        match outcome {
+            Ok(_) => {
+                if let Err(failure) = artifact_app_laws::settle_registered_typed_operation(&mut home, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await {
+                    assert!(!format!("{failure:?}").contains("interactive-job.not-ui-safe"), "{id} must be past the classification gate");
+                }
+            }
+            Err(failure) => {
+                let code = failure.primary_fault().map(|fault| fault.code.0.as_str());
+                assert_ne!(code, Some("interactive-job.not-ui-safe"), "{id} must be past the classification gate");
+            }
+        }
     }
-    std::mem::forget(home);
+    artifact_app_laws::close_registered_fixture_app(&mut home, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,5 +1,6 @@
 use crate::modes::edit::windows::diagrams::*;
 use crate::unit_tests::context;
+use semio_s_artifact_norm_en1990_scene_diagrams::diagrams;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {

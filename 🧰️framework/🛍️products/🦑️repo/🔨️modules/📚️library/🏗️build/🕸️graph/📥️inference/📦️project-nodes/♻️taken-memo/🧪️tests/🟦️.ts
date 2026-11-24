@@ -139,8 +139,8 @@ test("the owner loop answers from the memo before any look, remembers an owner o
  expect(text).toContain("const takenMemo=late?undefined:context.takenMemo");
  expect(text).toContain("serialize([registryDigest,commandRevision,late,[...projectsByRoot],componentRoots,contracts])");
  expect(text).toContain("try{await preloadTaken();await runTakeBesideInferV1({take:resolveOwners,");
- const finished=text.indexOf("result.projects[name].targets={...inactive,...result.projects[name].targets};noteProjectSizeV1(name,result.projects[name]);"),remembered=text.indexOf("takenMemo.remember(name,{key:memoKey,project:result.projects[name],rows:stored})");
- expect(finished).toBeGreaterThan(-1);expect(remembered).toBeGreaterThan(finished);expect(text.split("takenMemo.remember(").length).toBe(2);
+ const finished=text.indexOf("result.projects[name].targets={...inactive,...result.projects[name].targets};noteProjectSizeV1(name,result.projects[name]);"),remembered=text.indexOf("keepTakenThenReleaseV1({memo:takenMemo,name,key:memoKey,project:result.projects[name],read:()=>projectInferenceObservationsV1(cachePath),release:letGo})");
+ expect(finished).toBeGreaterThan(-1);expect(remembered).toBeGreaterThan(finished);expect(text.split("keepTakenThenReleaseV1({").length).toBe(2);expect(text.indexOf("takenMemo.remember(")).toBe(-1);
  expect(text.indexOf("if(result.projects[name].unavailable){")).toBeLessThan(remembered);
 });
 

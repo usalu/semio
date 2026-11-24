@@ -59,7 +59,7 @@ fn indirect_length_quotes_once_and_preserves_the_borrowed_range() {
             assert_eq!(callbacks, 1);
             assert_eq!(id, object.id);
             let PdfObject::Stream { data, .. } = value else { panic!("production resolver did not yield a stream"); };
-            assert_eq!(data, CONTENT);
+            assert_eq!(data.to_vec_owner(), CONTENT);
             return;
         }
         assert!(cursor.take_object().is_none());

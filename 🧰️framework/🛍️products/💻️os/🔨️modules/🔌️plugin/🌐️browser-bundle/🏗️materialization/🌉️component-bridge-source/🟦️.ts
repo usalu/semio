@@ -1,5 +1,6 @@
 /** 🌉️ Component bridge source of the plugin web materialization: the generated jco component bridge that wraps one actor activation behind the actor api. */
 import { originalOperationWorkerSource } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
+import { pluginStagedGuestSource } from "../../🎚️staged-guest/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { COMMAND_INGRESS_KINDS } from "../../../../../../../📦️packages/🟦️typescript/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
@@ -47,6 +48,7 @@ import { PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio actor jco component bridge */
 ${originalOperationWorkerSource()}
+${pluginStagedGuestSource()}
 
 const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = ${ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES};
 const encodeActorInstanceLifecycle = ${encodeActorInstanceLifecycle.toString()};
@@ -115,8 +117,9 @@ function uiPatchReceipt(result, activationGeneration) {
 }
 
 function nativeRefusalError(failure, detail) {
-  const tag = (failure?.payload ?? failure)?.failure?.tag;
-  if (typeof tag === "string") return new Error("original-turn.native-return-refused: " + tag + (detail ? ": " + detail : ""), { cause: failure });
+  const refusal = (failure?.payload ?? failure)?.failure;
+  const tag = refusal?.tag;
+  if (typeof tag === "string") return new Error("original-turn.native-return-refused: " + tag + (typeof refusal.val === "string" ? " (" + refusal.val + ")" : "") + (detail ? ": " + detail : ""), { cause: failure });
   return failure instanceof Error ? failure : undefined;
 }
 
@@ -130,7 +133,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
   const hostUrl = new URL("./${PLUGIN_HOST_SHIM_FILE}", import.meta.url);
   hostUrl.search = componentUrl.search;
   const hostShim = await import(hostUrl.href);
-  const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
+  const { reactor, jobs, checkpoint, describe, codec } = pluginStagedGuest(await import(componentUrl.href));
   hostShim.__bindOriginalClock(operationClockUs);
   const originalSource = new OriginalOperationSource(originalAdmission, () => hostShim.operationClockUs());
   let refusalDetail;

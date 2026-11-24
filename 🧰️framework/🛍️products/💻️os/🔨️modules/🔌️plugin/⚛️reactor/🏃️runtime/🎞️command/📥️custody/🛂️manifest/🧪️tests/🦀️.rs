@@ -86,4 +86,38 @@ pub fn original_manifest_close_batches_paid_steps(){
  decoded.receiving.take();
  assert!(decoded.terminal_is_empty());
  drop(decoded);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
+ #[cfg(not(test))]
+ original_manifest_refusal_settles_as_a_typed_outcome_and_retires_the_source();
+}
+
+/// 🚪️ A refused input settles as the typed `Err(Fault)` outcome beside invocation results: the source retires through paid steps and returns the refusal intact, so the turn and every later input stay healthy.
+#[cfg_attr(test,test)]
+pub fn original_manifest_refusal_settles_as_a_typed_outcome_and_retires_the_source(){
+ use super::ManifestOutcome;
+ use semio_framework::{Fault,FaultCode,FaultOrigin};
+ let corpus:Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&corpus["refusal"];
+ let mut source=store::pack_rt::encode_wire_value(&DslValue::from(&corpus["invocation"]));
+ let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
+ let loan=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
+ let mut limits=store::os_pack::PackLimits::default();limits.max_depth=16;limits.max_total_alloc=1<<20;
+ let mut offered=None;
+ cx.with_retained_loan(loan,|same|{offered=OriginalManifestCommandReceiving::admit(&mut source,false,limits,same)?;Ok(offered.is_some())}).unwrap();
+ let mut owner=offered.take().unwrap();
+ let turns=semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns();
+ let mut ready=false;
+ for _ in 0..turns{if cx.with_retained_loan(loan,|same|owner.advance_step(same)).unwrap(){ready=true;break}}
+ assert!(ready&&!owner.finished());
+ assert!(owner.begin_dispatch()&&!owner.begin_dispatch());
+ owner.finish_refusal(Fault::new(FaultOrigin::Framework,FaultCode::new(law["code"].as_str().unwrap()),law["message"].as_str().unwrap()).with_retryable(law["retryable"].as_bool().unwrap()));
+ assert!(owner.finished()&&!owner.terminal_is_empty());
+ let mut outcome:Option<ManifestOutcome>=None;
+ for _ in 0..turns{
+  cx.with_retained_loan(loan,|same|owner.close_step(same)).unwrap();
+  let taken=cx.with_retained_loan(loan,|same|{outcome=owner.take_result(same)?;Ok(outcome.is_some())}).unwrap();
+  if taken{break}
+ }
+ let Some(Err(fault))=outcome else{panic!("a refused input settles as its typed refusal, never as a result or a turn failure")};
+ assert_eq!(fault.code.0,law["code"].as_str().unwrap());assert_eq!(fault.message,law["message"].as_str().unwrap());assert_eq!(fault.retryable,law["retryable"].as_bool().unwrap());
+ assert!(owner.terminal_is_empty());
+ drop(owner);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
 }

@@ -42,8 +42,11 @@ fn published_canvas_catalogue_document(shell: &mut ShellState, surface: &str, ra
     shell.windows.publish_surface_records(surface, records).expect("catalogue pointer document publishes")
 }
 
-fn paint_tree_pointer_document(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
-    paint_tree_pointer_documents(shell, &[(surface, document, body)])
+/// 🎟️ The fuel one pointer-test turn is quoted: a paint or document-close turn posts one unit per node, which the one-unit default turn cannot hold.
+const TEST_TURN_WORK: u64 = 1 << 20;
+
+fn paint_tree_pointer_document(turns: &mut PointerFixtureTurns, shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect) -> InputState<ActionDescriptor> {
+    paint_tree_pointer_documents_in(turns, shell, &[(surface, document, body)])
 }
 
 fn table_pointer_record(id: u64, key: &str, scene: &semio_ui_scene_views::TableScene) -> ui_contract::UiNodeRecord {

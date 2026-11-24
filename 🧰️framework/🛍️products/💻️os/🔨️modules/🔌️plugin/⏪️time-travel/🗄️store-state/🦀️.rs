@@ -350,6 +350,9 @@ where
         Ok(())
     }
 
+    /// 🧷️ Whether any owner of a started preview is still unsettled: the one fact both the next selected input's refusal and the pump's pending-work answer read, so a driver cannot stop while the next input would be refused.
+    pub(crate) fn preview_owners_live(&self)->bool{self.preview_job.is_some()||self.preview_derived.is_some()||self.preview_original.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some()||self.preview_input_close.is_some()||self.preview_original_close.is_some()}
+
     fn cancel_preview(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
         self.preview_cancelled=true;
         if let Some(owner)=self.preview_derived.as_mut(){owner.cancel();}
@@ -424,7 +427,7 @@ where
             }
             TimeTravelStoreCommand::Rebuild(candidate) => TimeTravelStoreOutput::Rebuilt(self.rebuild(store, candidate)),
             TimeTravelStoreCommand::Preview { target, replacement, drafts, deadline_us, clock } => {
-                if self.preview_job.is_some()||self.preview_derived.is_some()||self.preview_original.is_some()||self.preview_source.is_some()||self.preview_native_input.is_some()||self.preview_input_close.is_some()||self.preview_original_close.is_some(){self.cancel_preview(store)?;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original preview cancellation must settle before another selected input").into_fault());}
+                if self.preview_owners_live(){self.cancel_preview(store)?;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original preview cancellation must settle before another selected input").into_fault());}
                 self.cancel_preview(store)?;
                 self.preview_job = Some(store.begin_derived_history_preview(target, drafts).map_err(|error| error.into_fault())?);
                 self.preview_cancelled=false;

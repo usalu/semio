@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { registeredToolExecutableV1 } from "../../../../🧰️tools/🏃️run/🟦️.ts";
-import { admitJobserverConfigV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, withoutJobserverEnvironmentV1, type JobserverStyleV1 } from "../🟦️.ts";
+import { admitJobserverConfigV1, cargoJobsV1, createJobserverV1, defaultJobserverStyleV1, jobserverAuthFromEnvironmentV1, jobserverMakeflagsV1, withoutJobserverEnvironmentV1, type JobserverStyleV1 } from "../🟦️.ts";
 import { schedulerBinaries } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
@@ -215,4 +215,9 @@ test.skipIf(make === null)(`GNU make ≥ ${fixture.gnuMake.minimumVersion.join("
     for (const line of readFileSync(log, "utf8").trim().split("\n").map((row) => row.split(" ")).sort((left, right) => Number(left[0]) - Number(right[0]) || (left[1] === "end" ? -1 : 1))) { running += line[1] === "start" ? 1 : -1; peak = Math.max(peak, running); }
     expect(peak).toBeLessThanOrEqual(fixture.gnuMake.tokens);
   } finally { jobserver.close(); }
+});
+
+test("cargo gets the local grant plus the light slots of the environment as its job count", () => {
+  const rows: readonly (readonly [number, string | undefined, number])[] = [[4, "44", 48], [4, undefined, 4], [4, "0", 4], [4, "-3", 4], [4, "x", 4], [4, "2.5", 4], [1, "5", 6], [0, "5", 6], [3.9, "1", 4]];
+  for (const [local, light, jobs] of rows) expect(cargoJobsV1(local, light === undefined ? {} : { SEMIO_UNIT_CACHE_LIGHT_SLOTS: light }), `${local} + ${light}`).toBe(jobs);
 });

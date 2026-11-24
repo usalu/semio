@@ -1,6 +1,7 @@
 //! 📦️ Bounded object stream index pairs and indexed COS members.
 
 use semio_s_artifact_stdio_pdf_lexer::{is_ws, CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor};
+use semio_framework_value::ByteReadSource;
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
 
 /// 🧾 The next object stream header event.
@@ -39,7 +40,7 @@ impl ObjectStreamHeaderCursor {
     }
 
     /// ▶️ Emits at most one member index using the admitted header byte work.
-    pub fn advance(&mut self, decoded: &[u8], grant: usize, cancelled: bool) -> ObjectStreamHeaderReceipt {
+    pub fn advance(&mut self, decoded: &(impl ByteReadSource + ?Sized), grant: usize, cancelled: bool) -> ObjectStreamHeaderReceipt {
         if cancelled && self.remaining != 0 && matches!(self.phase, HeaderPhase::Between | HeaderPhase::Comment | HeaderPhase::Number { .. }) {
             self.phase = HeaderPhase::Cancelled;
         }
@@ -63,9 +64,9 @@ impl ObjectStreamHeaderCursor {
         ObjectStreamHeaderReceipt { event, work }
     }
 
-    fn advance_byte(&mut self, decoded: &[u8]) -> Result<Option<ObjectStreamHeaderEvent>, &'static str> {
-        let header = decoded.get(..self.first).ok_or("object stream /First exceeds its decoded bytes")?;
-        let byte = header.get(self.position).copied();
+    fn advance_byte(&mut self, decoded: &(impl ByteReadSource + ?Sized)) -> Result<Option<ObjectStreamHeaderEvent>, &'static str> {
+        if self.first > decoded.byte_len() { return Err("object stream /First exceeds its decoded bytes"); }
+        let byte = if self.position < self.first { decoded.byte_at(self.position) } else { None };
         match (self.phase, byte) {
             (HeaderPhase::Between, Some(b'%')) => { self.phase = HeaderPhase::Comment; }
             (HeaderPhase::Between, Some(b)) if is_ws(b) => {}
@@ -81,7 +82,7 @@ impl ObjectStreamHeaderCursor {
             }
             (HeaderPhase::Number { value, digits: true }, next) if next.is_none_or(|b| is_ws(b) || b == b'%') => {
                 self.phase = HeaderPhase::Between;
-                return self.finish_integer(value, decoded.len());
+                return self.finish_integer(value, decoded.byte_len());
             }
             (_, None) => return Err("incomplete object stream header"),
             _ => return Err("invalid object stream header integer"),
@@ -123,7 +124,7 @@ impl ObjectStreamMemberCursor {
     }
 
     /// ▶️ Drives the typed COS member and its bounded trailing whitespace/comments.
-    pub fn advance(&mut self, decoded: &[u8], grant: CosGrant, cancelled: bool) -> CosReceipt {
+    pub fn advance(&mut self, decoded: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> CosReceipt {
         if cancelled && matches!(self.phase, MemberPhase::Value | MemberPhase::Tail { .. }) { self.phase = MemberPhase::Cancelled; }
         let mut receipt = CosReceipt { status: Ok(CosStatus::More), work: 0, allocated_bytes: 0, released_bytes: 0 };
         if !matches!(self.phase, MemberPhase::Value | MemberPhase::Tail { .. }) || grant.work == 0 {
@@ -135,15 +136,17 @@ impl ObjectStreamMemberCursor {
             };
             return receipt;
         }
-        let Some(source) = decoded.get(..self.end) else {
+        let end = self.end;
+        if end > decoded.byte_len() {
             self.phase = MemberPhase::Failed("object stream member exceeds its decoded bytes");
             receipt.status = Err("object stream member exceeds its decoded bytes");
             receipt.work = 1;
             return receipt;
-        };
+        }
+        let source = |position: usize| if position < end { decoded.byte_at(position) } else { None };
         receipt.status = match self.phase {
             MemberPhase::Value => {
-                let result = self.value.advance(source, grant, false);
+                let result = self.value.advance_bytes(source, grant, false);
                 if let Ok(CosStatus::Complete { end }) = result.status {
                     self.phase = MemberPhase::Tail { position: end, comment: false };
                     return CosReceipt { status: Ok(CosStatus::More), ..result };
@@ -158,7 +161,11 @@ impl ObjectStreamMemberCursor {
                         receipt.status = Ok(CosStatus::Complete { end: self.end });
                         return receipt;
                     }
-                    let byte = source[position];
+                    let Some(byte) = source(position) else {
+                        self.phase = MemberPhase::Failed("object stream member lost a decoded byte");
+                        receipt.status = Err("object stream member lost a decoded byte");
+                        return receipt;
+                    };
                     position += 1;
                     receipt.work += 1;
                     if comment { comment = !matches!(byte, b'\r' | b'\n'); }
@@ -247,7 +254,7 @@ impl ObjectStreamCursor {
     }
 
     /// 🛤️ Drives one selection or its retirement while the caller keeps decoded bytes stable.
-    pub fn advance(&mut self, decoded: &[u8], grant: CosGrant, cancelled: bool) -> ObjectStreamReceipt {
+    pub fn advance(&mut self, decoded: &(impl ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> ObjectStreamReceipt {
         use ObjectStreamEvent as Event;
         if cancelled && !matches!(self.phase, StreamPhase::Closing | StreamPhase::Closed) { self.phase = StreamPhase::Cancelled; }
         match self.phase {
@@ -272,7 +279,7 @@ impl ObjectStreamCursor {
             }
             StreamPhase::Boundary(start) => {
                 let end = if self.next == self.count {
-                    decoded.len()
+                    decoded.byte_len()
                 } else {
                     let Some((_, end)) = self.pair else { return self.read_pair(decoded, grant.work); };
                     end
@@ -284,7 +291,7 @@ impl ObjectStreamCursor {
         }
     }
 
-    fn read_pair(&mut self, decoded: &[u8], work: usize) -> ObjectStreamReceipt {
+    fn read_pair(&mut self, decoded: &(impl ByteReadSource + ?Sized), work: usize) -> ObjectStreamReceipt {
         use ObjectStreamHeaderEvent as Header;
         let step = self.header.advance(decoded, work, false);
         let event = match step.event {

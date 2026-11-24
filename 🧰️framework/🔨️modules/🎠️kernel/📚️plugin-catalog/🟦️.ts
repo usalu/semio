@@ -70,6 +70,17 @@ export const ON_ARTIFACT_KIND_ACTIVATION_PREFIX = "on-artifact-kind:";
  * up, which for the `registerCatalog` cascade is the parent plugin id. */
 export const ON_EXTENSION_REQUEST_ACTIVATION_PREFIX = "on-extension-request:";
 
+/** 🧩️ The `on-node-kind:` prefix of a catalog-level activation event: the plugin is activated on demand when a flow
+ * graph, an example or the node palette first names a node kind of this namespace (`on-node-kind:brep` answers
+ * `brep.bool.cut`). Host-only like `manual`: it justifies an activation, never reaches a guest as a WIT event. */
+export const ON_NODE_KIND_ACTIVATION_PREFIX = "on-node-kind:";
+
+/** 🧩️ The activation event a node kind justifies: its leading dotted namespace (`brep.bool.cut` is `on-node-kind:brep`). */
+export function nodeKindActivationEvent(nodeKind: string): string | undefined {
+  const namespace = nodeKind.split(".", 1)[0] ?? "";
+  return namespace === "" || namespace.trim() !== namespace ? undefined : `${ON_NODE_KIND_ACTIVATION_PREFIX}${namespace}`;
+}
+
 /**
  * 🧲️ The plugin an artifact kind activates, from declared activation events alone — the one
  * resolution path that works BEFORE the owner's manifest exists, which is exactly the hub case:

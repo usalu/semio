@@ -173,12 +173,18 @@ impl Generation3dMutation {
     /// 🧊️ Explicit cold-only disposal of one owned mutation. `create-widget`/`update-widget` carry a
     /// whole `Widget`, and a `Neuron`/`OutputPreview`/`Cluster` widget owns a `neural::Dictionary`
     /// (and an `OrderedSet`/`Tree`) that FAIL-CLOSE on a bare drop
-    /// (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`), so a dropped mutation aborts the process. Every other
-    /// variant is strings, numbers and plain `DslValue`s, which drop freely
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// (`🧠️neural/⚙️engine/🦀️.rs`'s `Drop`), so a dropped mutation aborts the process. `create-generation`
+    /// carries a `FormGeneration` whose values are an `OrderedMap`, and `change-generation-value` a `DslValue`
+    /// that may hold one; both retire through their decoded-owner retirement. Every other variant is strings
+    /// and numbers, which drop freely (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn retire_cold(self) {
         match self {
             Self::CreateWidget(semio_s_artifact_procedural_3d_mut_widgets::create_widget::CreateWidget { widget, .. }) | Self::UpdateWidget(semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget { widget }) => widget.retire_cold(),
+            Self::CreateGeneration(payload) => {
+                let semio_framework_artifact_playbook_playbook::FormGeneration { values, .. } = payload.generation;
+                values.retire_cold();
+            }
+            Self::ChangeGenerationValue(payload) => semio_framework_value::FromValue::retire_decoded(payload.new_value),
             _ => {}
         }
     }

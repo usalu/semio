@@ -10,7 +10,8 @@
     "OriginalActorCallError",
     "OriginalActorContextSlot",
     "OriginalActorAdmissionReply",
-    "OriginalActorCloseReply"
+    "OriginalActorCloseReply",
+    "ActorBorrow"
   ],
   "productIndependent": true,
   "privateBinding": true,

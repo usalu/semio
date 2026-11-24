@@ -1,0 +1,7 @@
+#!/bin/zsh
+# 🛒️ Repair of `worker-with-pallet-jack` 1:50 (drawing only): writes ops/worker-with-pallet-jack.json from the catalog file: the gloves of the side elevation (one prism each, 16 mm beside the fingers that close round the tiller and hang beside the thigh) and the right sleeve of the plan (a prism 29 mm beside its loft) are prisms on their bones with the outline of their solids; behind them stood the right forearm with its cuff strap and the hands of the plan (21 mm) and the cargo pockets on the thighs, which the plan did not draw (17 mm): both are drawn the same way, and so are the two bows of the tiller head, round tubes that were drawn as square prisms 6 mm too wide in the plan of the raked tiller. The ops run after the repair file of the generator chain (`STAFFAGE-HUMAN-COLLECTION-WAVE/🧰️scripts/HW-18/repair`). make/worker-with-pallet-jack.sh
+source "${0:A:h:h}/env.sh"; cd "$W"
+a=worker-with-pallet-jack; o="$W/ops/$a.json"; rm -f "$o"
+P="@prism=1,fit=2"
+./t.sh outline.ts $a 50 elevation "$o" "glove-r=glove-palm-r+glove-cuff-r+glove-*-r$P" "glove-l=glove-palm-l+glove-cuff-l+glove-*-l$P"
+./t.sh outline.ts $a 50 plan "$o" "sleeve-r=sleeve-r$P" "forearm-r=forearm-r$P" "cuff-strap-r=cuff-strap-r$P" "hand-r=glove-palm-r+glove-cuff-r+glove-*-r$P" "hand-l=glove-palm-l+glove-cuff-l+glove-*-l$P" "cargo-pocket-r=cargo-pocket-r$P,like=thigh-r,after=thigh-r" "cargo-pocket-l=cargo-pocket-l$P,like=thigh-l,after=thigh-l" "tiller-bow-r=tiller-bow-r$P" "tiller-bow-l=tiller-bow-l$P" --base "$o"

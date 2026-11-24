@@ -113,7 +113,7 @@ fn image_bytes(pdf:&PdfSnapshot,image:&semio_s_artifact_stdio_pdf::standards::v1
             if image.soft_mask.is_some(){return Err("layout.pdf.encoded-image-soft-mask".into());}
             if !reference.artifact_id.contains("s.stdio.jpeg:"){return Err("layout.pdf.image-codec".into());}
             let PdfObject::Stream{data,..}=NativePdfArtifactResources::from_objects(&pdf.objects).resolve(reference).map_err(|error|error.to_string())? else{return Err("layout.pdf.image-resource".into());};
-            Ok(("image/jpeg".into(),data))
+            Ok(("image/jpeg".into(),data.to_vec_owner()))
         },
         PdfImageBody::Samples{values}=>{
             use semio_s_artifact_stdio_png::{PngSnapshot,schema::snapshot::PngColorType,standards::v1_2::subsets::any::io::encode_png};

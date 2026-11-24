@@ -116,7 +116,7 @@ fn radial_layer(snapshot: &PdfSnapshot, page: &PdfPage, item: &Placed, shading: 
 fn mesh_layer(snapshot: &PdfSnapshot, page: &PdfPage, item: &Placed, shading: &PdfShading, parameters: paint_codecs::mesh::MeshParameters, function: Option<&PdfFunction>, reference: &ArtifactRef) -> Option<Value> {
     let resources = NativePdfArtifactResources::from_objects(&snapshot.objects);
     let PdfObject::Stream { data, .. } = resources.resolve(reference).ok()? else { return None };
-    let triangles = paint_codecs::mesh::triangles(data.as_slice(), &parameters, &mut |_| true).ok()?;
+    let triangles = paint_codecs::mesh::triangles(&data.to_vec_owner(), &parameters, &mut |_| true).ok()?;
     let (x, y, a, b, c, d) = shading_basis(page, item);
     let [region_x, region_y, region_w, region_h] = if shading.bbox.is_some() { [item.canvas_x, item.canvas_y, item.canvas_w, item.canvas_h] } else { item.viewport.clip_rect() };
     if region_w <= 0.0 || region_h <= 0.0 { return None; }

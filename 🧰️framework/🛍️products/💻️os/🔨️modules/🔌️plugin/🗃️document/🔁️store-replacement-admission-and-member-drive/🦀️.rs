@@ -1,6 +1,7 @@
 //! 🔁️ Store replacement admission and member drive: construction, refusal, member admission and sealing, the exact demands, and the member open, closure and candidate view drivers of the active store replacement. See [`super`].
 
 use super::*;
+use semio_plugin_ownership::bounded_ownership::EmptyBacking as _;
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
 where
@@ -510,7 +511,7 @@ where
         if let Some(retirement) = self.retiring_child.as_ref() { return if retirement.terminal_is_empty() { Ok(header(size_of_val(&*self.retiring_child))) } else { parent(retirement.retirement_demands(body)?) }; }
         if let Some(children) = self.candidate_children.as_ref() {
             if children.len() != 0 { return Ok(header(size_of::<ChildMemberEntry<M>>() + size_of_val(&*self.retiring_child) + size_of::<ChildMemberRetirement<M>>() + 2*size_of::<u64>() + 6*size_of::<usize>())); }
-            if !children.slots.is_empty() { return Ok(RetirementDemand { copy_bytes: size_of_val(&children.slots) + size_of::<bool>(), release_bytes: size_of_val(children.slots.as_ref()), depth: 1, ..Default::default() }); }
+            if let Some(bytes) = children.release_bytes().filter(|bytes| *bytes != 0) { return Ok(RetirementDemand { copy_bytes: size_of::<Box<[u8]>>() + size_of::<bool>(), release_bytes: bytes, depth: 1, ..Default::default() }); }
             return Ok(header(size_of_val(&*self.candidate_children)));
         }
         if self.cancel.is_some() { return Ok(header(size_of_val(&*self.cancel) + size_of_val(&*self.cancel_retirement) + size_of::<semio_framework_async::CancelTokenRetirement>())); }

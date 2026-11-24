@@ -65,7 +65,7 @@ export function SwitchIdentity(props: Pick<LearnerProps, "session" | "state" | "
   const close = (): void => setAsking(false);
   return (
     <>
-      <CardAction onClick={() => setAsking(true)}>{text("course.identity.switch")}</CardAction>
+      <CardAction icon="user" onClick={() => setAsking(true)}>{text("course.identity.switch")}</CardAction>
       {asking ? (
         <Dialog
           id={`${id}-title`}
@@ -75,12 +75,12 @@ export function SwitchIdentity(props: Pick<LearnerProps, "session" | "state" | "
           describedBy={`${id}-body`}
           onEscape={close}
           footerLeft={
-            <CardAction data-autofocus="" onClick={close}>
+            <CardAction icon="x" data-autofocus="" onClick={close}>
               {text("course.identity.switchKeep")}
             </CardAction>
           }
           footerRight={
-            <CardAction
+            <CardAction icon="user"
               primary
               onClick={() => {
                 close();
@@ -107,7 +107,7 @@ export function LearnerCard(props: LearnerProps & { readonly revealed: boolean; 
   const shown = totals(props, usePresenceFollow().following);
   if (state.course === undefined) return null;
   if (shown === undefined) return (
-    <CourseCard id={id} card="learner" anchor={PRESENCE_ANCHORS.home("learner")} revealed={revealed} icon={<CardIcon icon="user" />} title={text("course.identity.signIn")} footerRight={<CardAction primary onClick={() => session.open({ screen: "identity" })}>{text("course.identity.signIn")}</CardAction>}>
+    <CourseCard id={id} card="learner" anchor={PRESENCE_ANCHORS.home("learner")} revealed={revealed} icon={<CardIcon icon="user" />} title={text("course.identity.signIn")} footerRight={<CardAction icon="user" primary onClick={() => session.open({ screen: "identity" })}>{text("course.identity.signIn")}</CardAction>}>
       <p className="m-0 text-xs leading-normal text-muted-foreground">{text("course.identity.lead")}</p>
     </CourseCard>
   );
@@ -162,9 +162,9 @@ function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy:
       </td>
       <td {...TABLE.cell} data-cell="lead" className={cn(cell, "course-nowrap")}>
         {run.status === "submitted" ? (
-          <CardAction disabled={!available} onClick={() => session.open({ screen: "results", run: run.run })}>{text("course.learner.viewResult")}</CardAction>
+          <CardAction icon="bar-chart-3" disabled={!available} onClick={() => session.open({ screen: "results", run: run.run })}>{text("course.learner.viewResult")}</CardAction>
         ) : run.status === "open" ? (
-          <CardAction primary disabled={busy || !available} onClick={() => act((signal) => session.resumeRun(run.run, signal))}>
+          <CardAction icon="play" primary disabled={busy || !available} onClick={() => act((signal) => session.resumeRun(run.run, signal))}>
             {text("course.home.resume", { challenge: text(CHALLENGE_LABELS[run.challenge]) })}
           </CardAction>
         ) : null}
@@ -188,7 +188,7 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
   const head = "border-b border-normal px-single py-single text-left font-semibold course-nowrap";
   const columns = ["course.learner.quiz", "course.learner.status", "course.learner.challenge", "course.learner.score", "course.learner.points", "course.learner.started", "course.learner.submitted"] as const;
   return (
-    <PageFrame page={HOME_PAGES.learner} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "learner" })} opened={props.view.opened} />}>
+    <PageFrame page={HOME_PAGES.learner} overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "learner" })} opened={props.view.opened} />}>
       <CourseCard id={`${id}-profile`} card="profile" icon={<CardIcon icon="user" />} title={shown.name} footerRight={<SwitchIdentity {...props} />}>
         <p className="m-0 text-xs leading-normal">{text("course.home.totalHint")}</p>
         <p className="m-0 text-2xl font-semibold tabular-nums">{shown.points}</p>

@@ -9,7 +9,7 @@ pub mod octets;
 
 #[path = "🔗️object-model/🦀️.rs"]
 mod object_model;
-pub use object_model::{ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfMatrix, PdfObject, PdfPredictor, PdfRect, PdfStreamFilter, PDF_IDENTITY_MATRIX};
+pub use object_model::{ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfIndirectObject, PdfMatrix, PdfObject, PdfPredictor, PdfRect, PdfStreamBytes, PdfStreamFilter, stream_bytes, PDF_IDENTITY_MATRIX, PDF_STREAM_MAXIMUM_BYTES};
 
 #[path = "🖋️content-operators/🦀️.rs"]
 mod content_operators;

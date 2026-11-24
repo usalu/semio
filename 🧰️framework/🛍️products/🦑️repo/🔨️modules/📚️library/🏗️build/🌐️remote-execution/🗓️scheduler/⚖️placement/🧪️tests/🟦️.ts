@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {join} from "node:path";
-import {planDispatchV1,placementAnyCandidateV1,placementIdleCountV1,placementIdleElsewhereV1,placementKeyV1,placementRequiredV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1,type RemoteExecutionLoadEntryV1} from "../🟦️.ts";
+import {planDispatchV1,placementAnyCandidateV1,placementIdleCountV1,placementSlotsV1,placementIdleElsewhereV1,placementKeyV1,placementRequiredV1,RemoteExecutionLoadTableV1,type PlacementOperationV1,type PlacementWorkerV1,type RemoteExecutionLoadEntryV1} from "../🟦️.ts";
 import {remoteExecutionPeakMegabytesV1,remoteExecutionPlatformMatchesV1,type RemoteExecutionPropertyV1} from "../../../🟦️.ts";
 import type {RemoteExecutionLoadReportV1} from "../../../🌡️load/🟦️.ts";
 
@@ -159,4 +159,19 @@ test("the idle count reports the free action slots of the candidates, the width 
  const workers=[worker("r","w0",4,0),worker("a","w1",4,1),worker("b","w2",2,2),worker("c","w3",3,0),worker("d","w4",8,0,{draining:true})];
  expect(placementIdleCountV1(operation,workers,none,1_000_000)).toEqual({workers:5,compatible:4,headroom:3,candidates:2,slots:6});
  expect(placementIdleCountV1(operation,[],none,1_000_000)).toEqual({workers:0,compatible:0,headroom:0,candidates:0,slots:0});
+});
+
+test("the idle count of a sized action counts whole multiples of its peak the free memory of each machine covers, so a 16 GB worker takes one or two wasm finals, never more than its free action slots and never less than one",()=>{
+ const worker=(origin:string,id:string,concurrency:number,running:number,extra:Partial<PlacementWorkerV1>={}):PlacementWorkerV1=>({id,name:origin,origin,properties:[{name:"OSFamily",value:"macos"}],concurrency,running,waiting:true,draining:false,refusedUntilMs:0,...extra});
+ const entry=(origin:string,freeMegabytes:number):RemoteExecutionLoadEntryV1=>({report:{...report(origin,random(3),TOOLCHAINS[0]!),origin,pressure:"normal",headroom:true,freeMegabytes},receivedAtMs:1_000_000,offloadedIn:0,offloadedOut:0,refused:0});
+ const table:Record<string,RemoteExecutionLoadEntryV1>={a:entry("a",7000),b:entry("b",13000),c:entry("c",30000),d:entry("d",3000)},get={get:(origin:string)=>table[origin]};
+ const workers=[worker("a","w1",4,0),worker("b","w2",4,0),worker("c","w3",2,0),worker("d","w4",4,0),worker("e","w5",3,0)];
+ const operation:PlacementOperationV1={id:"p",platform:[{name:"OSFamily",value:"macos"}],tried:new Set(),requester:"r"};
+ expect(placementIdleCountV1(operation,workers,get,1_000_000).slots,"no peak: free action slots").toBe(4+4+2+4+3);
+ const sized=placementIdleCountV1({...operation,peakMegabytes:6144},workers,get,1_000_000);
+ expect(sized.candidates,"d has 3000 MB, e never reported: neither takes a sized action").toBe(3);
+ expect(sized.slots).toBe(1+2+2);
+ expect(placementSlotsV1(workers[0]!,table.a,6144)).toBe(1);expect(placementSlotsV1(workers[1]!,table.b,6144)).toBe(2);expect(placementSlotsV1(workers[2]!,table.c,6144),"bounded by its two action slots").toBe(2);
+ expect(placementSlotsV1(workers[0]!,table.a,0)).toBe(4);expect(placementSlotsV1(workers[4]!,undefined,6144)).toBe(3);
+ expect(placementSlotsV1({...workers[1]!,committedMegabytes:7000},table.b,6144),"what the scheduler placed already is not free").toBe(1);
 });

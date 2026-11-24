@@ -508,6 +508,40 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
       ]
     },
     {
@@ -539,6 +573,40 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
       ]
     },
     {
@@ -590,6 +658,40 @@
         "darwin",
         "linux",
         "win32"
+      ],
+      "launches": [
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=prototype",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        },
+        {
+          "command": "cargo",
+          "arguments": [
+            "--store=shared",
+            "--configuration=release",
+            "--",
+            "build",
+            "--bins",
+            "--examples",
+            "--message-format=json",
+            "--manifest-path"
+          ],
+          "paths": [
+            "📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml"
+          ]
+        }
       ]
     },
     {

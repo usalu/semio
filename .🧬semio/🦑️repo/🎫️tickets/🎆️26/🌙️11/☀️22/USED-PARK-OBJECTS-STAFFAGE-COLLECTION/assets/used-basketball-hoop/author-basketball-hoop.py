@@ -1066,3 +1066,13 @@ if __name__ == "__main__":
     print("[DEBUG] masses", {k: round(v, 2) for k, v in BONE_MASS.items()}, "total", round(M_TOTAL, 2), "chain m", round(NET_LEN, 2))
     print("[DEBUG] bounds x %.3f..%.3f y %.3f..%.3f z %.3f..%.3f" % B)
     print("[DEBUG] ring centre", RING_C_WORLD, "dunk N", DUNK_N, "wind N", WIND_N)
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch R2-O, the last step: ops/used-basketball-hoop.json of the umbrella ticket of 2026-11-22
+    import importlib.util as _util
+    from pathlib import Path as _Path
+    _spec = _util.spec_from_file_location("silhouette_r2o_lib", "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/R2-O/lib.py")
+    _r2o = _util.module_from_spec(_spec)
+    _spec.loader.exec_module(_r2o)
+    _r2o.repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-basketball-hoop")

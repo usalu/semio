@@ -10,6 +10,10 @@ use serde_json::{json, Value};
 mod actions;
 pub use self::actions::*;
 
+#[path = "🔢️page-number/🦀️.rs"]
+mod page_numbers;
+pub use self::page_numbers::*;
+
 #[path = "🔍️search/🦀️.rs"]
 mod search;
 pub use self::search::*;

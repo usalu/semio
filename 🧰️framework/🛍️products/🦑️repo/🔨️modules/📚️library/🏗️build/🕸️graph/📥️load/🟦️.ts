@@ -28,7 +28,7 @@ import {openOwnerCheckpointV1} from "./💾️owner-checkpoint/🟦️.ts";
 import {createPassReuseV1} from "./♻️pass-reuse/🟦️.ts";
 import type {TakenMemoV1} from "../📥️inference/📦️project-nodes/♻️taken-memo/🟨️.mjs";
 import {settleInventoryRoundsV1,type InventoryVolatileV1} from "./🔁️inventory-rounds/🟦️.ts";
-import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1} from "./🧲️membership-follow/🟦️.ts";
+import {graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1} from "./🧲️membership-follow/🟦️.ts";
 import {awaitPlannerQuietV1} from "./🔕️settle-quiet/🟦️.ts";
 import {observeOwnerWithRetryV1,ownerWithheldTextV1,stableOwnerFailureHoldsV1} from "./🛟️owner-isolation/🟦️.ts";
 import {readAdmissionMemoV1,writeAdmissionMemoV1,packAdmissionMemoV1,ownersOfAdmissionMemoV1} from "./🧠️admission-memo/🟦️.ts";
@@ -177,7 +177,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
     if(!scope)return undefined;
     try{return await openOwnerCheckpointV1(join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"oc"),scope,loadedGraphAdmissionFormatV1,{check,yieldContinuation:()=>phaseControl.yieldContinuation(),publish:(paths,plan,write)=>withBuildGraphOptionalPublicationsV1(paths,plan,write,undefined)});}catch{check();return undefined;}
   })();
-  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()},volatile:ReadonlySet<string>=new Set())=>{
+  const inventory=async(report:ReturnType<typeof createGraphInventoryAwaitReportV1>,followUp=false,trust:{current:WeakSet<object>}={current:new WeakSet()},volatile:ReadonlySet<string>=new Set(),vanished?:(path:string)=>void)=>{
     let started=performance.now();
     if(selected&&scope){
       report.begin("registry-check");
@@ -215,7 +215,7 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
         const suffix=owner.name+"\0"+JSON.stringify([targets,inputs]),key=scope+"\0"+loadedGraphAdmissionFormatV1+"\0"+suffix,lookup=report.ownerLookup(owner.name,key);
         try{
           const facts=await observeOwnerFactsMemoizedV1({
-            key,owner:owner.name,aborted:()=>invocation?.control.signal.aborted===true,foreign:error=>followedPathsV1(root,error).length>0,onRetry:event=>{process.stderr.write("[graph-owner-retry] "+JSON.stringify({version:1,...event})+"\n");},
+            key,owner:owner.name,aborted:()=>invocation?.control.signal.aborted===true,foreign:error=>untoleratedFollowedPathsV1(root,error,volatile).length>0,onRetry:event=>{process.stderr.write("[graph-owner-retry] "+JSON.stringify({version:1,...event})+"\n");},
             hold:rows=>{lookup.stage("memo-check");return buildGraphSourceFactsHoldV1(rows,invocation,undefined,lookup.verified,true);},
             observation,
             recover:()=>checkpoint?.read(suffix)??Promise.resolve(undefined),
@@ -245,19 +245,19 @@ async function loadBuildGraphAttemptV1(root:string,invocation:ScriptInvocation,p
       if(published!==undefined)report.count({published});timing("admission-memo-write",started);
     }
     report.begin("catalog");
-    const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation,volatile)),counts={files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0};
+    const admission=candidate as BuildOwnerAdmissionV1|undefined,files=admission?.files??buildGraphMembersV1(await workspaceBuildFilesV1(root,invocation,volatile,vanished)),counts={files:files.length,directories:inventoryDirectoriesV1.get(files)?.length??0};
     report.count(counts);timing("workspace-catalog-lookup",started,counts);started=performance.now();
-    report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation,volatile);timing("workspace-membership-hash",started);
+    report.begin("membership-hash",counts);const digest=await buildGraphMembershipV1(root,files,invocation,volatile,vanished);timing("workspace-membership-hash",started);
     return {files,digest,admission,observations:captured?.observations??[]};
   };
   const settledInventory=async(orNothing:boolean):Promise<(Awaited<ReturnType<typeof inventory>>&{volatile?:InventoryVolatileV1})|undefined>=>{
     const started=performance.now(),trust={current:new WeakSet<object>()},relative=(path:string)=>(path.startsWith(root)?path.slice(root.length+1):path).split("\\").join("/");
     let attemptStarted=performance.now(),note:{en:string;de:string}|undefined,report=createGraphInventoryAwaitReportV1(),attempts=0;
     const settled=await settleInventoryRoundsV1({
-      limits:{repairRounds:GRAPH_LIMITS_V1.repairRounds,volatileRounds:GRAPH_LIMITS_V1.inventoryVolatileRounds,inventoryRounds:GRAPH_LIMITS_V1.inventoryRounds},orNothing,
-      attempt:async(round,volatile)=>{
+      limits:{repairRounds:GRAPH_LIMITS_V1.repairRounds,volatileRounds:GRAPH_LIMITS_V1.inventoryVolatileRounds,inventoryRounds:GRAPH_LIMITS_V1.inventoryRounds},orNothing,lenient:true,
+      attempt:async(round,volatile,lenient)=>{
         attempts=round;report=createGraphInventoryAwaitReportV1();attemptStarted=performance.now();
-        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust,new Set([...volatile].map(relative))),{},()=>({...report.read(),...(note&&{note})}));
+        const value=await sliceReadStepV1("inventory",()=>inventory(report,round>1,trust,new Set([...volatile].map(relative)),lenient?path=>{(volatile as Set<string>).add(join(root,path));}:undefined),{},()=>({...report.read(),...(note&&{note})}));
         if(round>1)process.stderr.write("[graph-inventory] "+JSON.stringify({version:1,round,elapsedMilliseconds:Math.round(performance.now()-started),...report.outcomes(),text:graphInventoryTextV1(round,report.outcomes(),Math.round(performance.now()-started))})+"\n");
         return value;
       },

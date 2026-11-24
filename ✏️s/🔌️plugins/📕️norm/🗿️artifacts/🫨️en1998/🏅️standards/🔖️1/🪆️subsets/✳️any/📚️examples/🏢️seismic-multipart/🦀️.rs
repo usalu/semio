@@ -16,7 +16,9 @@ pub fn label() -> LocalizedLabel {
 }
 
 pub fn snapshot() -> En1998Snapshot {
-    En1998Snapshot::compliant_de_multipart().with_example_joints(false)
+    let mut snapshot = En1998Snapshot::compliant_de_multipart().with_example_joints(false);
+    snapshot.silos[0].n_rd_n = 8.0e6;
+    snapshot
 }
 
 pub fn source() -> ExampleSource {

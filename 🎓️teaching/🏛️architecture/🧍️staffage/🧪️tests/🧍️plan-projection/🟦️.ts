@@ -1,6 +1,6 @@
 /** 🧍️ Plan projection: plan shapes follow their bone by its x travel, a `followTip` capsule stretches along a limb, and the handcrafted plan drawings of the standing adult, the walking commuter, the seated office worker and the city car track poses.
  *
- * THE REFERENCE is gl-matrix `mat2d` (an independent forward kinematics of the rig) and, for the cast depth, jsdom reading the exported SVG.
+ * THE REFERENCE is gl-matrix `mat4` (an independent forward kinematics of the three-dimensional rig: `R(bone) = R(parent) · R(rest) · R(offset)` with `R = Rw(angle) · Rv(abduction) · Ru(twist)`, so a leg below a laterally placed pelvis half travels as the rig carries it) and, for the cast depth, jsdom reading the exported SVG.
  *
  * @see ./🥒️.feature — the scenarios
  * @see ../../🧫️fixtures/🧍️plan-projection/🔣️.json — the vectors
@@ -8,7 +8,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { glMatrix, mat2d } from "gl-matrix";
+import { glMatrix, mat4 } from "gl-matrix";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, Bone, Shape } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape } from "../../🔨️modules/🔗️contracts/🟦️.ts";
@@ -52,30 +52,44 @@ const extentOf = (evaluated: EvaluatedShape): { minX: number; maxX: number; minY
 
 const radians = (degrees: number): number => (degrees * Math.PI) / 180;
 
-function worldOf(asset: Asset, pose: string, boneId: string): mat2d {
+/** 🔄️ Turns a matrix as the rig turns a bone: about its joint axis `w`, then about its own normal `v` (`u` towards `w`), then about its own axis `u` (`v` away from `w`). */
+function turn(matrix: mat4, angleDeg: number, abductionDeg: number, twistDeg: number): void {
+  mat4.rotateZ(matrix, matrix, radians(angleDeg));
+  mat4.rotateY(matrix, matrix, -radians(abductionDeg));
+  mat4.rotateX(matrix, matrix, -radians(twistDeg));
+}
+
+function worldOf(asset: Asset, pose: string, boneId: string): mat4 {
   const offsets = asset.poses.find((candidate) => candidate.id === pose)?.bones ?? {};
   const chain: Bone[] = [];
   for (let bone: Bone | undefined = asset.rig.bones.find((b) => b.id === boneId); bone !== undefined; bone = asset.rig.bones.find((b) => b.id === bone!.parent)) chain.unshift(bone);
-  const matrix = mat2d.create();
+  const matrix = mat4.create();
   for (const bone of chain) {
     const offset = offsets[bone.id] ?? {};
     let angle = 0;
+    let abduction = 0;
+    let twist = 0;
     let dx = 0;
     let dy = 0;
-    if (bone.joint.type === "revolute") angle = Math.min(Math.max(offset.angleDeg ?? 0, bone.joint.minDeg ?? -Infinity), bone.joint.maxDeg ?? Infinity);
+    if (bone.joint.type === "revolute") {
+      angle = Math.min(Math.max(offset.angleDeg ?? 0, bone.joint.minDeg ?? -Infinity), bone.joint.maxDeg ?? Infinity);
+      abduction = Math.min(Math.max(offset.abductionDeg ?? 0, -180), 180);
+      twist = Math.min(Math.max(offset.twistDeg ?? 0, bone.joint.twistMinDeg ?? -180), bone.joint.twistMaxDeg ?? 180);
+    }
     if (bone.joint.type === "prismatic") {
       const axis = radians(bone.joint.axisDeg ?? 0);
       const s = Math.min(Math.max((offset.dx ?? 0) * Math.cos(axis) + (offset.dy ?? 0) * Math.sin(axis), bone.joint.minM ?? -Infinity), bone.joint.maxM ?? Infinity);
       dx = s * Math.cos(axis);
       dy = s * Math.sin(axis);
     }
-    mat2d.translate(matrix, matrix, [bone.x + dx, bone.y + dy]);
-    mat2d.rotate(matrix, matrix, radians(bone.angleDeg + angle));
+    mat4.translate(matrix, matrix, [bone.x + dx, bone.y + dy, bone.z ?? 0]);
+    turn(matrix, bone.angleDeg, bone.abductionDeg ?? 0, bone.twistDeg ?? 0);
+    turn(matrix, angle, abduction, twist);
   }
   return matrix;
 }
 
-const pointAt = (matrix: mat2d, x: number): { x: number; y: number } => ({ x: matrix[0]! * x + matrix[4]!, y: matrix[1]! * x + matrix[5]! });
+const pointAt = (matrix: mat4, x: number): { x: number; y: number } => ({ x: matrix[0]! * x + matrix[12]!, y: matrix[1]! * x + matrix[13]! });
 
 function travel(asset: Asset, pose: string, boneId: string, along: number): number {
   const bone = asset.rig.bones.find((b) => b.id === boneId)!;

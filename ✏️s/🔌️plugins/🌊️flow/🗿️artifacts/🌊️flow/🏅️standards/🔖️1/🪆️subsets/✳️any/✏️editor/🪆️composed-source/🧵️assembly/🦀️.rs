@@ -31,7 +31,7 @@ impl semio_framework_value::retirement::RetireOwned for FlowComposedScene{
  fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<HostSnapshot>())}
  fn controlled_retirement_supported()->bool{true}
 }
-impl Drop for FlowComposedScene{fn drop(&mut self){assert!(self.original.is_none(),"composed scene must retire its actual Arc");unsafe{ManuallyDrop::drop(&mut self.original)}}}
+impl Drop for FlowComposedScene{fn drop(&mut self){assert!(std::thread::panicking()||(self.original.is_none()),"composed scene must retire its actual Arc");unsafe{ManuallyDrop::drop(&mut self.original)}}}
 struct Owners{schema:Option<String>,widgets:Option<Vec<Widget>>,synapses:Option<Vec<SynapseSpec>>,layout:Option<flow::OrderedMap<WidgetLayout>>,node:Option<NodeOutput>,snapshot:Option<HostSnapshot>,scene:Option<FlowComposedScene>}
 /// 🪆️ The original command owns every admitted field and the actual stable composed execution scene.
 pub struct FlowComposedSourceWork{owners:ManuallyDrop<Owners>,admission:OriginalConstructionAdmission,node:Option<NodeWork>,edge:Option<flow::FlowSynapseFieldsWork>,text:Option<flow::FlowTextCopyWork>,entry:Option<flow::FlowLayoutEntryWork>,retirement:RetainedCloneClose,binding:Option<SourceBinding>,local_binding:Option<FlowSourceIdentity>,origin:Option<OriginalSourceBinding>,parent_reference:Option<(u64,usize,usize,usize)>,index:usize,phase:u8,ready:bool,local:bool,recover:bool,closing:bool}
@@ -117,7 +117,7 @@ impl FlowComposedSourceWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.node.is_none()&&self.edge.is_none()&&self.entry.is_none()&&self.text.is_none()&&self.retirement.is_empty()&&self.owners.schema.is_none()&&self.owners.widgets.is_none()&&self.owners.synapses.is_none()&&self.owners.layout.is_none()&&self.owners.node.is_none()&&self.owners.snapshot.is_none()&&self.owners.scene.is_none()&&self.admission.terminal_is_empty()&&self.binding.is_none()&&self.local_binding.is_none()&&self.origin.is_none()&&self.parent_reference.is_none()}
 }
-impl Drop for FlowComposedSourceWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"composed source must close every original field and stable scene");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
+impl Drop for FlowComposedSourceWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"composed source must close every original field and stable scene");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
 
 #[cfg(test)]
 #[path="🧪️scene.rs"]

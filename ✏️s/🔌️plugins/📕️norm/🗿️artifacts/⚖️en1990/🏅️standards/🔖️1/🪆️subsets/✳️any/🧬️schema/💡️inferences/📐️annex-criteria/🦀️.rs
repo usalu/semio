@@ -165,7 +165,7 @@ pub(super) fn push_k_fi_applied(report: &mut CheckReport, document: &En1990Snaps
     let (Some(k_fi), Some(domain)) = (k_fi_for_rc(document.reliability_class.number()), Some(document.structure_kind.domain())) else { return };
     let (g_sup, g_inf) = gamma_g(document.annex, domain, FactorSet::StrB);
     let g_q = gamma_q(document.annex, domain, FactorSet::StrB, "other");
-    let subject = SubjectRef::new(document.project_id.clone(), "reliabilityClass", copy("Applied K_FI", "Angewendetes K_FI"));
+    let subject = SubjectRef::new("", "reliabilityClass", copy("Applied K_FI", "Angewendetes K_FI"));
     report.push(
         CheckResult::assess("en1990.annex-b.kfi-applied", "EN 1990 Annex B", ClauseId::new("EN 1990", "Annex B", "B3.3 Table B3"), subject, copy("K_FI applied to the unfavourable partial factors", "K_FI auf die ungünstigen Teilsicherheitsbeiwerte angewendet"))
             .informative(q_dim(k_fi * g_sup))

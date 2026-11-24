@@ -21,17 +21,21 @@ fn original_lifecycle_refused_source_original_heap_and_context_are_retained_unti
    (Probe{bytes:vec![7;law["ownedJobBytes"].as_u64().unwrap()as usize],closing:false},{let original=OriginalTurnFailure::from(primary);OriginalTurnFailure{receipt_refusal:case["receipt"].as_str().map(|text|ValueError::new(ValueRefusalKind::OwnershipLimit,text)),context_refusal:case["context"].as_str().map(|text|ValueError::new(ValueRefusalKind::DepthLimit,text)),..original}})
   });
   let source=job.bytes.as_ptr();let cause=error.primary.message().as_ptr();let receipt_pointer=error.receipt_refusal.as_ref().map(|error|error.message.as_ptr());let context_pointer=error.context_refusal.as_ref().map(|error|error.message.as_ptr());
-  let(cancel,cancel_heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(root_cancel_token);
+  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),whole,||Some(1),law["deadlineMicros"].as_u64().unwrap(),law["fuel"].as_u64().unwrap());let cancel=caller.admit_alias(whole);
   let params=BatchJobParams{operation:OperationId(17),generation:Generation(9),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig{retained:turn,site:"original-refused-source",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000000},now_us:||Some(1)};
-  let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||refused(Some(job),Some(params),Some(error)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut receipt=Default::default();let mut sequence=0;let mut cx=StepContext::new(OperationId(17),Generation(9),StepBudget::new(law["fuel"].as_u64().unwrap(),law["deadlineMicros"].as_u64().unwrap(),whole),root_cancel_token(),||Some(1),&mut sequence,&mut receipt);let original=&mut cx as*mut StepContext<'_>;let cancel=cx.original_cancel_token()as*const _;let mut born=initial.requested_bytes+cancel_heap.requested_bytes;let mut freed=initial.released_bytes;
+  let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||refused(Some(job),Some(params),Some(error)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut born=initial.requested_bytes;let mut freed=initial.released_bytes;
   for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){
    if owner.terminal_is_empty(){break}
-   let before=cx.retained_progress();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(RetainedCloneGrant{maximum_items:0,..turn},|same|owner.close_step(same)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);
-   if let Some(job)=owner.job().filter(|job|job.bytes.capacity()>0){assert_eq!(job.bytes.as_ptr(),source)}
-   if let Some(error)=owner.error(){assert_eq!(error.primary.message().as_ptr(),cause);assert_eq!(error.primary.message(),law["message"].as_str().unwrap());assert_eq!(error.receipt_refusal.as_ref().map(|error|error.message.as_ptr()),receipt_pointer);assert_eq!(error.context_refusal.as_ref().map(|error|error.message.as_ptr()),context_pointer);}
-   let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(turn,|same|{assert_eq!(same as*mut _,original);assert_eq!(same.original_cancel_token()as*const _,cancel);owner.close_step(same)}).unwrap());let progress=step.progress();assert!(progress.fits(turn));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(cx.retained_progress().copied_items-before.copied_items,progress.copied_items);assert_eq!(cx.retained_progress().released_bytes-before.released_bytes,progress.released_bytes);born+=heap.requested_bytes;freed+=heap.released_bytes;
+   let(requested,released)=caller.bare_turn(turn,|cx|{
+    let original=cx as*mut StepContext<'_>;let cancel=cx.original_cancel_token()as*const _;
+    let before=cx.retained_progress();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(RetainedCloneGrant{maximum_items:0,..turn},|same|owner.close_step(same)).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);
+    if let Some(job)=owner.job().filter(|job|job.bytes.capacity()>0){assert_eq!(job.bytes.as_ptr(),source)}
+    if let Some(error)=owner.error(){assert_eq!(error.primary.message().as_ptr(),cause);assert_eq!(error.primary.message(),law["message"].as_str().unwrap());assert_eq!(error.receipt_refusal.as_ref().map(|error|error.message.as_ptr()),receipt_pointer);assert_eq!(error.context_refusal.as_ref().map(|error|error.message.as_ptr()),context_pointer);}
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(turn,|same|{assert_eq!(same as*mut _,original);assert_eq!(same.original_cancel_token()as*const _,cancel);owner.close_step(same)}).unwrap());let progress=step.progress();assert!(progress.fits(turn));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));assert_eq!(cx.retained_progress().copied_items-before.copied_items,progress.copied_items);assert_eq!(cx.retained_progress().released_bytes-before.released_bytes,progress.released_bytes);
+    Ok((heap.requested_bytes,heap.released_bytes))
+   }).unwrap();born+=requested;freed+=released;
   }
-  assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,freed);
+  assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,freed);caller.retire(whole);
  }
 }
 
@@ -40,7 +44,7 @@ fn original_reserved_pending_worker_same_source_denials_admission_cancel_and_pai
  let law:serde_json::Value=serde_json::from_str(include_str!("../../🎟️pending/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let source=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:4194304,maximum_capacity_bytes:4194304,maximum_release_bytes:4194304,maximum_depth:128};
  for body in law["bodyCredits"].as_array().unwrap(){for stop in 0..4{
-  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),source,||Some(1),600000000,1000000);
+  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),source,||Some(1),600000000,1000000);let resident=caller.born_bytes();
   let(job,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Probe{bytes:vec![7;128],closing:false});let pointer=job.bytes.as_ptr();let mut born=heap.requested_bytes;let mut freed=heap.released_bytes;
   let(mut pending,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||RefusedWorkerSource::pending(job,(OperationId(17),Generation(9))));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:source,site:"original-reserved-pending",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:1000000,step_budget_us:600000000};
@@ -53,7 +57,7 @@ fn original_reserved_pending_worker_same_source_denials_admission_cancel_and_pai
   for _ in 0..100000{if pending.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|pending.close_step(cx)).unwrap());assert_eq!(caller.receipt(),step.progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}
   assert!(pending.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   if let Some(mut session)=session{session.begin_close();for _ in 0..100000{if session.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(source,|cx|session.close_step(cx)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;}assert!(session.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(session));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-  assert_eq!(born,freed);caller.retire(source);
+  assert_eq!(born,freed+caller.born_bytes()-resident);caller.retire(source);
  }}
 }
 

@@ -345,7 +345,7 @@ fn inspector_draft_target(controller_id: &str, action_id: &str, page: usize, obj
 }
 
 pub(super) fn object_args(page: usize, object_id: &str, field: &str, numbers: &[(&str, f64)]) -> UiAssemblyResult<UiValue> {
-    let mut entries = vec![("page", UiValue::Number(page as f64)), ("object", UiValue::Text(inspector_text(object_id)?)), ("field", UiValue::Text(inspector_text(field)?))];
+    let mut entries = vec![("page", UiValue::Number(page_number(page) as f64)), ("object", UiValue::Text(inspector_text(object_id)?)), ("field", UiValue::Text(inspector_text(field)?))];
     for (key, value) in numbers {
         entries.push((key, UiValue::Number(*value)));
     }

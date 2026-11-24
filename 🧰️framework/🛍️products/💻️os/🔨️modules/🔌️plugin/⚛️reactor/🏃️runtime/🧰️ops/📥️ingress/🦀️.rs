@@ -170,7 +170,7 @@ pub struct OriginalCommandExchangeState{
  pub frames:Vec<protocol::AppFrame>,pub effects:Vec<Vec<u8>>,pub events:Vec<Vec<u8>>,
  pub frame_bytes:Vec<Vec<u8>>,pub pending_effects:Option<Vec<Effect>>,
  pub dispatch:Option<protocol::AppCommand>,
- pub manifest:Option<(u64,InvocationResult)>,pub preview:Option<(InvocationResult,semio_plugin_job::EmitWire)>,pub configuration:Option<InvocationResult>,
+ pub manifest:Option<(u64,original_manifest_receiving::ManifestOutcome)>,pub preview:Option<(InvocationResult,semio_plugin_job::EmitWire)>,pub configuration:Option<InvocationResult>,
  pub archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission,
  pub media_artifact:Option<semio_plugin_document_media::lifted_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,pub media_archive:Option<protocol::DocumentArchivePack>,
  pub typed_output:Option<PluginExchangeOutput>,pub typed_leftover:Option<semio_plugin_job::TypedOperationLeftover>,

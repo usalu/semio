@@ -65,4 +65,4 @@ impl IdentityWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.text.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
-impl Drop for IdentityWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original widget identity requires terminal closure")}}
+impl Drop for IdentityWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original widget identity requires terminal closure")}}

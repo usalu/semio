@@ -716,7 +716,7 @@ impl Drop for MountedJobReplay {
         let Some(token) = self.recovery.take() else { return };
         if self.log.terminal_is_empty() && self.captured.is_none() && self.policy.is_none() {
             unsafe { ManuallyDrop::drop(&mut self.log) };
-            assert!(mounted_replay_recovery_registry().lock().expect("replay recovery lock").release(token));
+            assert!(std::thread::panicking()||(mounted_replay_recovery_registry().lock().expect("replay recovery lock").release(token)));
             return;
         }
         let owner =

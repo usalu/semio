@@ -138,9 +138,24 @@ fn a_round_trip_preserves_every_field() {
 /// `#[cfg(not(target_arch = "wasm32"))]` anywhere inside them is exactly the regression that made
 /// this chrome native-only, and it is invisible to a native `cargo check`.
 fn region_of(source: &str, region: &str) -> String {
-    let start = source.find(&format!("//#region {region}")).unwrap_or_else(|| panic!("region {region} is present"));
-    let end = source[start..].find(&format!("//#endregion {region}")).unwrap_or_else(|| panic!("region {region} is closed"));
-    source[start..start + end].to_string()
+    let (open, close) = (format!("//#region {region}"), format!("//#endregion {region}"));
+    let mut found = String::new();
+    let mut rest = source;
+    while let Some(start) = rest.find(&open) {
+        let end = rest[start..].find(&close).unwrap_or_else(|| panic!("region {region} is closed"));
+        found.push_str(&rest[start..start + end]);
+        rest = &rest[start + end..];
+    }
+    assert!(!found.is_empty(), "region {region} is present");
+    found
+}
+
+/// 🧭️ The text of every attribute and doc line directly above the first declaration of `entry`.
+fn declaration_head(source: &str, entry: &str) -> Option<String> {
+    let at = source.find(entry)?;
+    let lines: Vec<&str> = source[..at].lines().collect();
+    let head: Vec<&str> = lines.iter().rev().skip(1).take_while(|line| line.trim_start().starts_with("#[") || line.trim_start().starts_with("///")).copied().collect();
+    Some(head.join("\n"))
 }
 
 #[test]
@@ -186,7 +201,6 @@ fn no_method_of_the_shared_directory_lane_is_left_without_a_browser_answer() {
 
 #[test]
 fn the_shared_directory_lane_declares_the_space_administration_entry_points() {
-    let lane = region_of(SHELL_SOURCE(), "📇️DirectoryLane");
     for entry in [
         "pub fn open_space_administration(",
         "pub fn close_space_administration(",
@@ -195,7 +209,8 @@ fn the_shared_directory_lane_declares_the_space_administration_entry_points() {
         "async fn dispatch_directory_command(",
         "async fn flush_pending_directory_commands(",
     ] {
-        assert!(lane.contains(entry), "{entry} left the shared directory lane");
+        let head = declaration_head(SHELL_SOURCE(), entry).unwrap_or_else(|| panic!("{entry} left the shell source"));
+        assert!(!head.contains(r#"cfg(not(target_arch = "wasm32"))"#), "{entry} is gated out of the browser build again");
     }
 }
 //#endregion ⚖️BrowserParityLaw

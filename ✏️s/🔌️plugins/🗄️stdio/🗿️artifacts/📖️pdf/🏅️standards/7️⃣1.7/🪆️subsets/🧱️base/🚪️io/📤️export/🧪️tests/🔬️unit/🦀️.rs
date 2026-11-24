@@ -95,7 +95,7 @@ fn rich_document() -> PdfSnapshot {
     mask.decode = vec![1.0, 0.0];
     snapshot.images.push(mask);
     snapshot.images[0].soft_mask = Some("Im1SMask".into());
-    let reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact(&mut snapshot,"s.stdio.jpeg",PdfObject::Stream{dict:Vec::new(),data:vec![0xFF,0xD8,0xFF,0xD9],filters:vec![PdfStreamFilter::Dct{color_transform:None}]}).unwrap();let mut photo=PdfImage::rgb8("Photo",1,1,vec![0,0,0]);photo.body=PdfImageBody::Artifact{reference};snapshot.images.push(photo);
+    let reference=crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact(&mut snapshot,"s.stdio.jpeg",PdfObject::Stream{dict:Vec::new(),data:stream_bytes(&vec![0xFF,0xD8,0xFF,0xD9]),filters:vec![PdfStreamFilter::Dct{color_transform:None}]}).unwrap();let mut photo=PdfImage::rgb8("Photo",1,1,vec![0,0,0]);photo.body=PdfImageBody::Artifact{reference};snapshot.images.push(photo);
     snapshot.forms.push(PdfFormXObject::new("Fm1", [0.0, 0.0, 50.0, 50.0], vec![PdfOp::SetFillRgb { r: 0.0, g: 0.5, b: 1.0 }, PdfOp::Rectangle { x: 0.0, y: 0.0, width: 50.0, height: 50.0 }, PdfOp::Fill]));
     snapshot.ext_g_states.push(PdfExtGState { id: "GS1".into(), fill_alpha: Some(0.5), stroke_alpha: Some(0.75), blend_mode: Some(vec!["Multiply".into()]), soft_mask: Some(PdfSoftMask::Luminosity { group: "Fm1".into(), backdrop: Some(vec![0.0]), transfer: None }), dash: Some((vec![3.0, 1.0], 0.5)), ..PdfExtGState::default() });
     snapshot.shadings.push(PdfShading { id: "Sh1".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Axial { coords: [0.0, 0.0, 100.0, 0.0], domain: None, function: PdfFunction::Exponential { domain: vec![0.0, 1.0], range: None, c0: vec![1.0, 0.0, 0.0], c1: vec![0.0, 0.0, 1.0], n: 1.0 }, extend: [true, true] }, background: None, bbox: None, anti_alias: false, extra: Vec::new() });
@@ -496,7 +496,7 @@ fn retained_text_dates_admit_owned_values_and_keep_indirect_identity() {
         let r=|num|ObjRef {num,gen:0};
         let mut objects=vec![PdfIndirectObject{id:r(1),value:PdfObject::Dict(vec![PdfDictEntry::new("Title",PdfObject::Ref(r(2))),PdfDictEntry::new("CreationDate",PdfObject::Ref(r(3))),PdfDictEntry::new("Opt",PdfObject::Ref(r(4)))] )},PdfIndirectObject{id:r(2),value},PdfIndirectObject{id:r(3),value:PdfObject::Str(case["date"].as_str().unwrap().as_bytes().to_vec())},PdfIndirectObject{id:r(4),value:PdfObject::Array(vec![PdfObject::Str(b"choice".to_vec())])},PdfIndirectObject{id:r(5),value:PdfObject::Str(vec![0,255,1])}];
         let mut trailer=vec![PdfDictEntry::new("Info",PdfObject::Ref(r(1)))];
-        crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer,|id| (id.gen==0 && (1..=5).contains(&id.num)).then(||id.num as usize-1)).unwrap();
+        semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::text::snapshot::retained_text::admit_retained_text(&mut objects,&mut trailer,|id| (id.gen==0 && (1..=5).contains(&id.num)).then(||id.num as usize-1)).unwrap();
         assert_eq!(objects.len(),5);
         assert_eq!(objects[0].value.dict_get("Title"),Some(&PdfObject::Ref(r(2))));
         assert_eq!(objects[1].value,PdfObject::Text(title.into()));

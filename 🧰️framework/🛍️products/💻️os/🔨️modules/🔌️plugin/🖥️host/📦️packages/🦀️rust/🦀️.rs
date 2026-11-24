@@ -29,8 +29,13 @@ pub mod shard {
 
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️.rs` (other packets are live
-/// in that file). The test uses a narrow owned WIT source inspector and adds no external parser to
-/// the test graph.
+/// in that file). This test uses a narrow owned WIT source inspector; the flat-parameter law below validates
+/// against `wit-parser`, a dev-only dependency.
 #[cfg(test)]
 #[path = "../../🪞️schema-parity/🧪️tests/🔬️unit/🦀️.rs"]
 mod schema_parity;
+
+/// 🧮️ The canonical-ABI flat-parameter law: every async export of the plugin world flattens to at most 16 core params, validated against `wit-parser`'s own canonical-ABI signatures.
+#[cfg(test)]
+#[path = "../../🪞️schema-parity/🧪️tests/🧮️canonical-abi-flat-params/🦀️.rs"]
+mod canonical_abi_flat_params;

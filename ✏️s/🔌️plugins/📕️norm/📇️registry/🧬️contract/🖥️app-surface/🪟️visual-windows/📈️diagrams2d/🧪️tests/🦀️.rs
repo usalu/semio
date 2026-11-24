@@ -165,6 +165,22 @@ fn large_marker_table_renders_the_requested_rows() {
 }
 
 #[test]
+fn many_marker_diagram_keeps_the_surface_description_within_the_fixed_text_capacity() {
+    use semio_plugin::{TreeWindows, ViewModel};
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
+    let mut diagram = diagram();
+    let marker = diagram.markers[0].clone();
+    diagram.markers = (0..40).map(|index| Marker { id: format!("marker-{index}"), label: copy(&format!("Bridge tb-window-reveal-{index} (categoryA)"), &format!("Bauteil tb-fenster-laibung-{index}")), ..marker.clone() }).collect();
+    assert!(accessible_description(&diagram, Locale::En).len() > semio_ui_contract::UI_TEXT_MAX_BYTES, "the full enumeration overflows one fixed text");
+    for locale in [Locale::En, Locale::De] {
+        let summary = surface_description(&diagram, locale);
+        assert!(summary.len() <= semio_ui_contract::UI_TEXT_MAX_BYTES && summary.contains(": 40, ") && summary.contains("62\u{202f}%"), "{locale:?}: {summary}");
+        let view = ViewModel::new(locale, semio_ui_locale::Terminology::Native);
+        render_diagrams("diagram", &[diagram.clone()], &DiagramsWindowSpec::default(), &TreeWindows::for_body(&view, "diagram"), locale).expect("the surface admits the summary");
+    }
+}
+
+#[test]
 fn lowering_is_deterministic_and_clips_to_the_plot() {
     let d = diagram();
     let a = lower_diagram(&d, &options(Locale::En));

@@ -10,6 +10,7 @@ export function buildOverviewButton({ interactive, opened, labels, close }: Pick
       <button
         type="button"
         data-layered-overview-button=""
+        data-glass-chip=""
         data-shared-border-frame=""
         data-shared-border-edges="bottom left"
         data-level="dialog"

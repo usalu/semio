@@ -1,0 +1,10 @@
+machinery	forklift	1:500 elevation Hausdorff: expected 0.256359375 to be less than or equal to 0.15
+machinery	wheel-loader	1:500 plan Hausdorff: expected 0.2466177457118607 to be less than or equal to 0.15
+machinery	oil-pumpjack	1:500 axis 0: 9.100000000000001 m against 9.2 m: expected 0.09999999999999787 to be less than or equal to 0.075
+machinery	concrete-mixer-truck	1:500 elevation Hausdorff: expected 0.6541036328442154 to be less than or equal to 0.15
+machinery	tower-crane	1:500 elevation: expected 0.7935860609714293 to be greater than or equal to 0.92
+machinery	excavator	1:500 elevation Hausdorff: expected 0.31875 to be less than or equal to 0.15
+components	sectional-garage-door	1:100 elevation Hausdorff: expected 0.0557477578024444 to be less than or equal to 0.03
+components	used-insulated-copper-coils	1:100 elevation Hausdorff: expected 0.042962090407414256 to be less than or equal to 0.03
+components	reclaimed-trapezoidal-sheet-stack	1:100 front Hausdorff: expected 0.03181980515339464 to be less than or equal to 0.03
+furniture	used-bentwood-dining-chairs	1:500 front Hausdorff: expected 0.3758927230377559 to be less than or equal to 0.15

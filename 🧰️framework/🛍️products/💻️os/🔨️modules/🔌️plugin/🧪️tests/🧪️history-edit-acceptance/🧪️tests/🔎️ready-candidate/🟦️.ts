@@ -18,3 +18,14 @@ test("history acceptance search discards blocked trials before selecting a ready
  expect(search).toContain("change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked))");
  expect(search).toContain("HISTORY_EDIT_EXIT_ACTION_ID");expect(search).toContain("discarding a blocked trial left a supersession of the mutation");
 });
+
+test("a discarded blocked trial leaves no preview owner the pump stops on while the next selected input would be refused",()=>{
+ const tree=resolve(import.meta.dir,"../../../../⏪️time-travel");
+ const state=readFileSync(resolve(tree,"🗄️store-state/🦀️.rs"),"utf8");const visitors=readFileSync(resolve(tree,"🧱️store-owners-and-member-visitors/🦀️.rs"),"utf8");
+ const live=state.slice(state.indexOf("fn preview_owners_live("),state.indexOf("fn cancel_preview("));
+ for(const owner of ["preview_job","preview_derived","preview_original","preview_source","preview_native_input","preview_input_close","preview_original_close"])expect(live).toContain(`self.${owner}.is_some()`);
+ const preview=state.slice(state.indexOf("TimeTravelStoreCommand::Preview {"),state.indexOf("TimeTravelStoreCommand::StepPreview"));
+ expect(preview).toContain("if self.preview_owners_live(){self.cancel_preview(store)?;return Err(");expect(preview).toContain("original preview cancellation must settle before another selected input");
+ const pending=visitors.slice(visitors.indexOf("fn has_pending_work("),visitors.indexOf("fn terminal_is_empty("));
+ expect(pending).toContain("self.preview_cancelled&&(self.preview_owners_live()");
+});

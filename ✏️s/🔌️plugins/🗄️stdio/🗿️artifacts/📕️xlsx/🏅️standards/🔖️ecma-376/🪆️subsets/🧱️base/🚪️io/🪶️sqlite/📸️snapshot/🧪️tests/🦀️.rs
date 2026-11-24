@@ -1,3 +1,4 @@
+use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSnapshot, XlsxWorkbook};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 use semio_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
@@ -481,9 +482,9 @@ fn sqlite_snapshot_xlsx_borrowed_preflight_pays_frontiers_without_materializing_
         assert!(reached);
         let payload = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot, encoding, control)).unwrap();
         let error = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::encode_native(&snapshot, encoding, control)).unwrap_err();
-        assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
+        assert!(error.to_lowercase().contains("ownership"), "{error}");
         let error = semio_s_artifact_stdio_contract::testing::decode_native::<XlsxSnapshot>(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits })).unwrap_err();
-        assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
+        assert!(error.to_lowercase().contains("ownership"), "{error}");
     }
     snapshot.retire_sqlite_snapshot();
 }

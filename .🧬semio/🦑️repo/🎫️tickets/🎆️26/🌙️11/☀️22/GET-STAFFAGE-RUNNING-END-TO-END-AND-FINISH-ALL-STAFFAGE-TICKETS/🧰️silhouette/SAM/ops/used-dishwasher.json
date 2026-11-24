@@ -1,0 +1,4 @@
+[
+{"op": "set", "path": ["volumes", "50", "body", {"id": "drain-coil"}, "slender"]},
+{"op": "set", "path": ["volumes", "50", "body", {"id": "inlet-coil"}, "slender"]}
+]

@@ -1,0 +1,51 @@
+--- a/admission.ts
++++ b/admission.ts
+@@ -126,20 +126,39 @@
+   mkdirSync(join(root,"c"),{recursive:true});writeFileSync(temporary,String(next));renameSync(temporary,path);
+  }catch{}
+ }
+-/** 🎯️ Whether a unit is worth a round trip: its recorded local cost is not below the measured round trip; a unit without a record is offloaded (the first compile teaches the cost). */
+-export function worthARoundTripV1(root:string,crate:string):boolean{
+- const cost=readUnitCostV1(root,crate);return cost===undefined||cost>=limits.roundTripMilliseconds;
++/** 🎯️ What a round trip costs a unit beyond its own compile, in milliseconds: the average of the measured overheads of the units that ran on a worker (the whole round trip minus the compile time the worker reports, so queue, input fetch, output upload, download and token waits are in it), else the authored floor `roundTripMilliseconds`. */
++export function readOffloadOverheadV1(root:string):number{
++ try{const value=Number(readFileSync(join(root,"offload-overhead"),"utf8"));if(Number.isFinite(value)&&value>=0)return value;}catch{}
++ return limits.roundTripMilliseconds;
+ }
++/** 🖊️ Records the overhead of one offloaded unit: the estimate moves halfway to the new measurement, so a fleet that gets slower or faster is followed within a few units. */
++export function writeOffloadOverheadV1(root:string,milliseconds:number):void{
++ try{
++  if(!Number.isFinite(milliseconds)||milliseconds<0)return;
++  let before:number|undefined;try{const value=Number(readFileSync(join(root,"offload-overhead"),"utf8"));if(Number.isFinite(value)&&value>=0)before=value;}catch{}
++  const next=before===undefined?Math.round(milliseconds):Math.round((before+milliseconds)/2),path=join(root,"offload-overhead"),temporary=path+"."+randomBytes(3).toString("hex");
++  mkdirSync(root,{recursive:true});writeFileSync(temporary,String(next));renameSync(temporary,path);
++ }catch{}
++}
++/** 🎯️ The answer of the round trip test. */
++export type OffloadWorthV1="worth"|"cheap"|"unmeasured";
++/** 🎯️ Whether a unit is worth a round trip: `worth` when its recorded local compile time (`readUnitCostV1`, the run of the compiler without any wait for a slot) is not below the expected overhead of a round trip (`readOffloadOverheadV1`), `cheap` when it is, `unmeasured` when none was recorded (the unit compiles here first, which teaches the cost). */
++export function worthARoundTripV1(root:string,crate:string):OffloadWorthV1{
++ const cost=readUnitCostV1(root,crate);return cost===undefined?"unmeasured":cost>=readOffloadOverheadV1(root)?"worth":"cheap";
++}
+ 
+-/** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: a unit worth a round trip, the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
+-export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;worth:()=>boolean;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
+-/** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`headroom`: this machine is calm, the unit goes where another machine has room). */
+-export type OffloadGateReasonV1="never"|"pin"|"cheap"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
+-/** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. `pin` offers every unit and queues it on the named machine. `distribute` offers every unit worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where this machine is calm, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
++/** 🧭️ The signals one unit's offload decision reads, each asked only when the cheaper ones before it did not decide: a free compile slot of this machine taken at once (`localSlot(0)`, the caller keeps it and compiles in it), the round trip test (`worth`: a unit cheaper than the overhead of a round trip stays; a unit without a recorded cost waits up to `unmeasuredWaitMilliseconds` for a slot here, so it is measured, and goes away only when none became free), the door's verdict on the whole build (`SEMIO_OFFLOAD_PRESSURE=door`), the unit-cache slot queue, the host-capacity verdict and the build's own admission broker (`wait` when the unit would queue behind the memory budget or a frozen broker, `unknown` when no broker answers). */
++export type OffloadGateInputV1=Readonly<{mode:"distribute"|"pin"|"never";door:boolean;localSlot:(waitMilliseconds:number)=>Promise<boolean>;worth:()=>OffloadWorthV1;slotQueueMilliseconds:()=>number;host:()=>Promise<"admit"|"wait">;broker:()=>Promise<"admit"|"wait"|"unknown">}>;
++/** 🧭️ Why a unit is offered to the fleet or stays: the first signal that decides (`local-slot`: a compile slot here was free, local first; `unmeasured`: its cost is unknown and a slot came free soon; `headroom`: every slot here is busy, the unit goes where another machine has room). */
++export type OffloadGateReasonV1="never"|"pin"|"local-slot"|"cheap"|"unmeasured"|"door"|"slot-queue"|"host-wait"|"broker-wait"|"headroom";
++/** 🚪️ Whether a unit is offered to the fleet, and whether it queues there. Local first: a unit that finds a free compile slot compiles here at once, the fleet only takes units that would wait for one. `pin` offers every unit and queues it on the named machine. `distribute` offers a unit that would wait here and is worth a round trip: where this machine is saturated (the door refused the build, a slot queue, the host or the build's memory budget would make the unit wait) the unit queues on the fleet because waiting here would be no better; where the wait is short, the fleet takes it only if another machine has headroom now, else it compiles here. Unknown signals count as calm. */
+ export async function offloadGateV1(input:OffloadGateInputV1):Promise<Readonly<{offload:boolean;queue:boolean;reason:OffloadGateReasonV1}>>{
+  if(input.mode==="never")return{offload:false,queue:false,reason:"never"};
+  if(input.mode==="pin")return{offload:true,queue:true,reason:"pin"};
+- if(!input.worth())return{offload:false,queue:false,reason:"cheap"};
++ if(await input.localSlot(0))return{offload:false,queue:false,reason:"local-slot"};
++ const worth=input.worth();
++ if(worth==="cheap")return{offload:false,queue:false,reason:"cheap"};
++ if(worth==="unmeasured"&&await input.localSlot(limits.unmeasuredWaitMilliseconds))return{offload:false,queue:false,reason:"unmeasured"};
+  if(input.door)return{offload:true,queue:true,reason:"door"};
+  if(input.slotQueueMilliseconds()>=limits.queueThresholdMilliseconds)return{offload:true,queue:true,reason:"slot-queue"};
+  if(await input.host()==="wait")return{offload:true,queue:true,reason:"host-wait"};

@@ -38,6 +38,7 @@ pub trait ErasedWindowConfigPublication: Send {
     fn preparation_refusal_progress(&self) -> Option<semio_framework_value::RetainedCloneProgress>;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
+    fn abandon(&mut self, cause: ValueError);
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll;
     fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
@@ -123,6 +124,11 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
     fn begin_close(&mut self) {
         self.closing=true;
         if let Some(publication)=self.publication.as_mut(){publication.begin_close();}
+    }
+
+    fn abandon(&mut self, cause: ValueError) {
+        self.closing=true;
+        if let Some(publication)=self.publication.as_mut(){publication.abandon(cause);}
     }
 
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{

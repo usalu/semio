@@ -35,7 +35,10 @@ pub fn example_media(example_id: &str) -> Vec<(String, semio_s_artifact_stdio_se
 
 /// 🌱️ The registered example as a complete document, its declared media already planted in the asset pool.
 pub fn example_document(example_id: &str) -> Option<RasterSnapshot> {
-    let mut document = raster_example_document(example_id)?;
+    let mut document = match example_id {
+        "" => semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_document(),
+        id => raster_example_document(id)?,
+    };
     for (asset_id, image) in example_media(example_id) {
         let child = semio_s_artifact_raster_raster_model::image_content_child_handle(&asset_id, &image)
             .with_local_owner(std::sync::Arc::new(image));

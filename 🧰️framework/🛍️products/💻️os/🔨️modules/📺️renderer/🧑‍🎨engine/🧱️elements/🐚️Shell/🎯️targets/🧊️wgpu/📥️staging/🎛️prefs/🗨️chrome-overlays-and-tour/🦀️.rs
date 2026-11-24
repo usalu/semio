@@ -42,7 +42,7 @@ pub fn classify_dispatch_fault_notice(error: &str, refused: Option<&RefusedGuest
     if refused.is_some() {
         return (LocalizedLabel::native("The input could not be delivered.", "Die Eingabe konnte nicht zugestellt werden.").resolve(terminology, locale).to_string(), Severity::Info, None);
     }
-    (error.to_string(), Severity::Error, None)
+    (semio_renderer_wgpu_shell_vocab::shell_fault_text(error, locale == Locale::De).map_or_else(|| error.to_string(), str::to_owned), Severity::Error, None)
 }
 
 /// 📣️ The text a refused program call reads in the shell's language: the localized notice of the structured fault behind it

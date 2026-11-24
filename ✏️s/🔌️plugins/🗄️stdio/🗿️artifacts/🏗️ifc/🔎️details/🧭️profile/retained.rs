@@ -99,25 +99,27 @@ pub fn receive_effect<E: semio_framework_value::native_decoding::NativeReceiving
     if cx.should_yield() || !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(), demand) {
         return Ok(());
     }
-    let maximum = cx.fuel_remaining();
     let mut out = None;
     let mut frame = NativeReceivingEffect::<E>::default();
     let mut done = None;
-    cx.with_native_receiving(&mut out, |native, _| {
-        let polled = native.receive_effect(demand, maximum, &mut frame, run)?;
+    let mut frame_phase = None;
+    cx.with_native_receiving_work(&mut out, demand, |native, _, maximum| {
+        let polled = match native.receive_effect(demand, maximum, &mut frame, run) { Ok(polled) => polled, Err(error) => { eprintln!("[DEBUG] receive_effect error {error:?} phase={:?} demand={:?} maximum={maximum}", frame.phase(), demand); return Err(error); } };
         if matches!(polled, NativeReceivingEffectPoll::Pending { work: 0 }) && frame.phase() == NativeReceivingEffectPhase::Granted {
             frame.cancel_unstarted(native)?
         }
         done = Some(polled);
+        frame_phase = Some(frame.phase());
         Ok(())
     })?;
+    if matches!(done, Some(NativeReceivingEffectPoll::Pending { work: 0 })) { eprintln!("[DEBUG] receive_effect pending0 phase={:?}", frame_phase); }
     match done {
         Some(NativeReceivingEffectPoll::Complete(turn)) => {
             semio_framework_job::receive_original_receiving_work(cx, RetainedWorkOutcome { result: turn.result.map_err(receiving_fault), work: turn.work })?;
             Ok(())
         }
         Some(NativeReceivingEffectPoll::Pending { work: 0 }) | None => Ok(()),
-        Some(NativeReceivingEffectPoll::Pending { .. }) => Err(ValueError::invariant("native receiving effect suspended mid-turn").into()),
+        Some(NativeReceivingEffectPoll::Pending { work }) => { eprintln!("[DEBUG] receive_effect pending work={work} phase={:?} demand={:?} fuel={}", frame_phase, demand, cx.fuel_remaining()); Err(ValueError::invariant("native receiving effect suspended mid-turn").into()) }
     }
 }
 /// 🪙️ Runs one quoted owner close inside the context's own effect and settles the outcome's performed work once.

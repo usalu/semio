@@ -129,7 +129,7 @@ fn meet(a:RetainedCloneGrant,b:RetainedCloneGrant)->RetainedCloneGrant{RetainedC
 fn subset(a:RetainedCloneGrant,b:RetainedCloneGrant)->bool{a.maximum_items<=b.maximum_items&&a.maximum_copy_bytes<=b.maximum_copy_bytes&&a.maximum_capacity_bytes<=b.maximum_capacity_bytes&&a.maximum_release_bytes<=b.maximum_release_bytes&&a.maximum_depth<=b.maximum_depth}
 fn metadata(complete:bool)->RetainedCloneStep{let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if complete{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)}}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
-impl<T> Drop for OriginalActorContext<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original actor context reached Drop before paid authority retirement");}}
+impl<T> Drop for OriginalActorContext<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original actor context reached Drop before paid authority retirement");}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
@@ -203,7 +203,7 @@ impl OriginalActorContextSlot{
  pub fn native_sources_pending(&self)->bool{self.context.as_ref().is_some_and(OriginalActorContext::native_sources_pending)}
  pub fn native_close_requires_execution(&self)->Option<bool>{self.context.as_ref().map_or(Some(false),OriginalActorContext::native_close_requires_execution)}
 }
-impl Drop for OriginalActorContextSlot{fn drop(&mut self){assert!(self.terminal_is_empty(),"original guest context slot reached Drop before funded context closure");}}
+impl Drop for OriginalActorContextSlot{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original guest context slot reached Drop before funded context closure");}}
 
 /// 🎫️ Carries the exact original empty admission receipt without transporting refusal prose.
 #[derive(Clone,Copy,Debug,PartialEq,Eq,serde::Serialize,serde::Deserialize)]

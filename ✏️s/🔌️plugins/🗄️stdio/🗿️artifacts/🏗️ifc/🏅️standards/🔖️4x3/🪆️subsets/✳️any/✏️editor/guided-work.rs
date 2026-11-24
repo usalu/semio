@@ -68,7 +68,7 @@ impl GuidedWork{
 }
 fn build_body(source:&impl StagedBodySource,body:&mut StagedBodyCursor,output:&mut StagedBodyOutput,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     let output=output.donor()?;let demand=body.demand(source)?;let mut complete=false;
-    receive_effect(cx,demand,|native,effect|{let grant=effect.grant();let result=body.step(source,native,output,grant);complete=matches!(result,Ok(RetainedCloneStep::Complete(_)));RetainedWorkOutcome{result,work:effect.performed_work()}})?;
+    receive_effect(cx,demand,|native,effect|{let grant=effect.grant();let result=body.step(source,native,output,grant);if let Ok(step)=&result{let capacity=step.progress().retained_capacity_bytes;if capacity!=0{*effect.actual()=Some(capacity);}}complete=matches!(result,Ok(RetainedCloneStep::Complete(_)));RetainedWorkOutcome{result,work:effect.performed_work()}})?;
     Ok(complete)
 }
 impl GuidedWork{

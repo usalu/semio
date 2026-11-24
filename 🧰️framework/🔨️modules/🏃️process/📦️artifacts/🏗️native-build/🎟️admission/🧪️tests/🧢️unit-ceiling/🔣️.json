@@ -1,0 +1,245 @@
+{
+ "cases": [
+  {
+   "id": "measured-telemetry",
+   "observations": [
+    {
+     "key": "semio-framework-editor-component@semio_framework_editor_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 340787200
+    },
+    {
+     "key": "semio-framework-editor-component@semio_framework_editor_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 401604608
+    },
+    {
+     "key": "semio-framework-editor-component@semio_framework_editor_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 617611264
+    },
+    {
+     "key": "semio-framework-surface-component@semio_framework_surface_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 531628032
+    },
+    {
+     "key": "semio-framework-surface-component@semio_framework_surface_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 574619648
+    },
+    {
+     "key": "semio-framework-surface-component@semio_framework_surface_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 706740224
+    },
+    {
+     "key": "semio-os-node-graph-component@semio_os_node_graph_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 1212153856
+    },
+    {
+     "key": "semio-os-node-graph-component@semio_os_node_graph_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 1288699904
+    },
+    {
+     "key": "semio-os-node-graph-component@semio_os_node_graph_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 1412431872
+    },
+    {
+     "key": "semio-os-flow-component@semio_os_flow_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 1786773504
+    },
+    {
+     "key": "semio-os-flow-component@semio_os_flow_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 1947205632
+    },
+    {
+     "key": "semio-os-flow-component@semio_os_flow_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 2064646144
+    },
+    {
+     "key": "semio-hub-dag-component@semio_hub_dag_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 3450863616
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 3008364544
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 4351590400
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6446645248
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6868172800
+    }
+   ]
+  },
+  {
+   "id": "empty-ledger",
+   "observations": []
+  },
+  {
+   "id": "exactly-at-ceiling",
+   "observations": [
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 4294967296
+    }
+   ]
+  },
+  {
+   "id": "one-mib-above-unlisted",
+   "observations": [
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 4296015872
+    }
+   ]
+  },
+  {
+   "id": "one-byte-above-rounds-up",
+   "observations": [
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 4294967297
+    }
+   ]
+  },
+  {
+   "id": "listed-and-resolved",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 4194304000
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 3145728000
+    }
+   ]
+  },
+  {
+   "id": "listed-but-unobserved",
+   "observations": [
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 104857600
+    }
+   ]
+  },
+  {
+   "id": "two-profiles-one-crate",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 5242880000
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|prototype|cdylib",
+     "peakRssBytes": 3145728000
+    }
+   ]
+  },
+  {
+   "id": "largest-row-per-key-wins",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6868172800
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 104857600
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6446645248
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 52428800
+    }
+   ]
+  },
+  {
+   "id": "malformed-keys-ignored",
+   "observations": [
+    {
+     "key": "no-separators",
+     "peakRssBytes": 10484711424
+    },
+    {
+     "key": "a@b|only-two",
+     "peakRssBytes": 10484711424
+    },
+    {
+     "key": "@|x|y|z",
+     "peakRssBytes": 10484711424
+    },
+    {
+     "key": "p@c|t|r|cdylib|extra",
+     "peakRssBytes": 10484711424
+    },
+    {
+     "key": "c|t|r|cdylib",
+     "peakRssBytes": 10484711424
+    },
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 10485760
+    }
+   ]
+  },
+  {
+   "id": "unlisted-exceeder-not-ok",
+   "observations": [
+    {
+     "key": "semio-other-component@semio_other_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 5242880000
+    },
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6868172800
+    }
+   ]
+  },
+  {
+   "id": "same-crate-other-target-is-unlisted",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-unknown-unknown|release|cdylib",
+     "peakRssBytes": 5242880000
+    }
+   ]
+  },
+  {
+   "id": "one-listed-resolved-one-listed-exceeding",
+   "observations": [
+    {
+     "key": "semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6868172800
+    },
+    {
+     "key": "semio-hub-puzzle-component@semio_hub_puzzle_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 2097152000
+    }
+   ]
+  },
+  {
+   "id": "ordering-ties-by-key",
+   "observations": [
+    {
+     "key": "semio-b-component@semio_b_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 5242880000
+    },
+    {
+     "key": "semio-a-component@semio_a_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 5242880000
+    },
+    {
+     "key": "semio-c-component@semio_c_component|wasm32-wasip2|release|cdylib",
+     "peakRssBytes": 6291456000
+    }
+   ]
+  }
+ ]
+}

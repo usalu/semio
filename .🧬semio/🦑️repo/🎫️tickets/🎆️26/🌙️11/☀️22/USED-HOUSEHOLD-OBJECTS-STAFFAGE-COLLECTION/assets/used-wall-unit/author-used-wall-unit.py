@@ -394,11 +394,17 @@ def flap_solid(z0, z1):
     return {"kind": "extruded", "sweep": "w", "z0": R(z0), "z1": R(z1)}
 
 
+def pierced(z0, z1, y0, y1, zc, yc, rad):
+    """🕳️ A rectangle of the front elevation with a round hole through it (even-odd path): the panel around the cable hole of the television body."""
+    return {"kind": "path", "d": f"M {z0:.4f} {y0:.4f} L {z1:.4f} {y0:.4f} L {z1:.4f} {y1:.4f} L {z0:.4f} {y1:.4f} Z M {zc + rad:.4f} {yc:.4f} A {rad} {rad} 0 1 0 {zc - rad:.4f} {yc:.4f} A {rad} {rad} 0 1 0 {zc + rad:.4f} {yc:.4f} Z"}
+
+
 def front_50():
+    """🪟 The front elevation of 1:50. The 60 mm cable hole goes through the back of the television body and nothing stands behind it, so the body is open there: the outline shape of that body and its back are drawn with the hole and the hole itself as an unfilled circle, not as a dark disc on a closed panel (silhouette repair SF of 2026-11-23, `catalog-silhouette` 80.6 mm)."""
     out = []
     for b in BODIES:
         bone, zc = f"{b}-body", ZC[b]
-        out.append(S(f"{b}-side", bone, "body", 1, True, 0.55, Draw.rect(zc - HW, zc + HW, BL, Y_T1 + BL), region="carcass", material="oak-decor-chipboard", pen=0.25))
+        out.append(S(f"{b}-side", bone, "body", 1, True, 0.55, pierced(zc - HW, zc + HW, BL, Y_T1 + BL, zc, 0.95 + BL, 0.03) if b == "tv" else Draw.rect(zc - HW, zc + HW, BL, Y_T1 + BL), region="carcass", material="oak-decor-chipboard", pen=0.25))
         out.append(S(f"{b}-plinth", bone, "body", 1.2, True, 0.3, Draw.rect(zc - IN, zc + IN, BL, Y_PL + BL), region="carcass", material="oak-decor-chipboard"))
         for k in range(3):
             z = zc - 0.3 + 0.25 * k
@@ -416,8 +422,8 @@ def front_50():
         out.append(S(f"centre-display-shelf-{k + 1}", c, "detail", 5.3, False, 0.3, Draw.poly([(-0.43, y + BL), (0.43, y + BL)], closed=False), material="float-glass"))
     tv = "tv-body"
     zc = ZC["tv"]
-    out.append(S("tv-back", tv, "body", 1.5, True, 0.8, Draw.rect(zc - IN, zc + IN, 0.799 + BL, 1.35 + BL), region="back-panel", material="hardboard"))
-    out.append(S("tv-cable-hole", tv, "detail", 1.6, True, 0.1, Draw.ellipse(zc, 0.95 + BL, 0.03, 0.03)))
+    out.append(S("tv-back", tv, "body", 1.5, True, 0.8, pierced(zc - IN, zc + IN, 0.799 + BL, 1.35 + BL, zc, 0.95 + BL, 0.03), region="back-panel", material="hardboard"))
+    out.append(S("tv-cable-hole", tv, "detail", 1.6, False, 0.1, Draw.ellipse(zc, 0.95 + BL, 0.03, 0.03)))
     out.append(S("tv-tv-mark", tv, "texture", 1.7, False, 0.3, Draw.rect(zc - 0.30, zc + 0.30, 0.799 + BL, 1.28 + BL)))
     out.append(S("tv-niche-bottom", tv, "body", 2, True, 0.55, Draw.rect(zc - IN, zc + IN, 0.78 + BL, 0.799 + BL), region="carcass", material="oak-decor-chipboard"))
     out.append(S("tv-niche-top", tv, "body", 2, True, 0.55, Draw.rect(zc - IN, zc + IN, 1.35 + BL, 1.369 + BL), region="carcass", material="oak-decor-chipboard"))

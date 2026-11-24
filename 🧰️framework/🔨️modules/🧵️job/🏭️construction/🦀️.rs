@@ -62,7 +62,8 @@ fn child_primary(failure:semio_framework_value_native_owned::native_decoding::Na
 #[value(crate="::semio_framework_value")]
 pub struct OriginalConstructionAdmission{binding:Option<super::OriginalSourceBinding>,authority:Option<semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority<ConstructionProducer>>,frame:semio_framework_value_native_owned::native_decoding::NativeReceivingEffect,source:Option<super::OriginalNativeReceivingOutcome>,child:Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>,failed_taken:bool,complete:bool}
 impl OriginalConstructionAdmission{
- fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("constructor changed its actual Source").into())}Ok(())}
+ /// 🫆️ Refuses any caller or source other than the one that bound this construction, whatever state the owner is in.
+ pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("constructor changed its actual Source").into())}Ok(())}
  /// 🧾️ True while a born candidate still owns its unsettled Source outcome, which the next constructor call must settle before any reset.
  pub fn settling(&self)->bool{self.source.is_some()}
  /// 🧾️ Reports a failure whose causes still await their paid move into the caller's destination.

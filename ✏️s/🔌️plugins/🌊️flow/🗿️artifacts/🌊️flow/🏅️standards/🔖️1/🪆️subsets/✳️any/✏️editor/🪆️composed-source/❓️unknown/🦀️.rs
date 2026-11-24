@@ -29,4 +29,4 @@ impl UnknownTextWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.admission.terminal_is_empty()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl Drop for UnknownTextWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"unknown-kind source text requires original output closure")}}
+impl Drop for UnknownTextWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"unknown-kind source text requires original output closure")}}

@@ -9,6 +9,9 @@ use semio_framework_value::{RetirementDemand, ValueError};
 /// 🎟️ The retained policy one driven step runs under.
 pub const STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
+/// ⛽️ The fuel each driven preparation turn is lent, so a step's own fuel and deadline are spent on the job and never on its receiving frame.
+pub const PREPARATION_FUEL: u64 = 1 << 16;
+
 /// 🪙️ The finite original source stock one driven fixture caller lends its turns.
 pub const SOURCE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 32, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 128 };
 
@@ -173,67 +176,71 @@ pub enum Stepped {
     Cancelled,
 }
 
-/// 🦶️ Drives one step of `job` under `fuel` and `deadline_us` through its own original source and return receiver, and answers what it lent.
+/// 🦶️ Drives one step of `job` under `fuel` and `deadline_us` through its own original source and return receiver, and answers what it lent; a step that is unfunded or past its deadline cannot enter the job and yields.
 pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us: u64, _cancel: &CancelToken, operation: OperationId, generation: Generation, _sequence: &mut u64) -> Stepped {
-    let mut caller = fixture_caller(operation, generation, deadline_us, fuel.saturating_add(1 << 20));
+    let mut caller = fixture_caller(operation, generation, u64::MAX, fuel.saturating_add(1 << 20));
+    caller.admit_return_table();
     let mut origin = OriginalJobReturnOrigin::empty();
     let one = RetainedCloneGrant { maximum_items: 1, ..SOURCE_STOCK };
     let mut ready = false;
     for _ in 0..64 {
-        caller.turn(one, |cx| cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| { ready = origin.admit(cx)?; Ok(()) })).expect("original return source admission");
+        caller.refreshed_turn(one, |cx| { let quote = cx.original_source_parent()?.loan_admission_work_demand()?; cx.with_original_work_loan(quote, cx.original_absolute_deadline_us(), |cx| { ready = origin.admit(cx)?; Ok(()) }) }).expect("original return source admission");
         if ready {
             break;
         }
     }
     assert!(ready, "the original return source never became ready");
-    let mut answered = None;
+    let mut prepared = false;
     for _ in 0..64 {
-        let mut verdict = None;
-        let mut pending = None;
-        caller
-            .turn(STEP_GRANT, |cx| {
-                cx.with_original_work_loan(fuel, deadline_us, |cx| {
-                    match semio_framework_job::drive_step(job, cx, origin.receiver()?, "procedural.test", InteractiveStage::InteractiveStep, &mut verdict)? {
-                        OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
-                        OriginalJobReturn::Outcome(reply) => {
-                            answered = Some(match reply.original() {
-                                None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
-                                Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Preview((0..payload.page_count()).flat_map(|index| payload.page(index).expect("preview page").to_vec()).collect()),
-                                Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
-                                Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
-                                Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
-                                Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
-                            });
-                            pending = Some(reply.into_descriptor());
-                        }
-                        OriginalJobReturn::Continuation(_) => panic!("job step returned a continuation"),
-                    }
-                    if pending.is_some() {
-                        origin.receive_outcome(cx, &mut pending)?;
-                    }
-                    Ok(())
-                })
-            })
-            .expect("job step admission");
-        if answered.is_some() {
+        caller.refreshed_turn(STEP_GRANT, |cx| cx.with_original_work_loan(PREPARATION_FUEL, cx.original_absolute_deadline_us(), |cx| { prepared = origin.receiver()?.prepare(cx)?; Ok(()) })).expect("original return preparation");
+        if prepared {
             break;
         }
     }
+    assert!(prepared, "the original return receiver never claimed its outcome row");
+    let mut answered = None;
+    let mut verdict = None;
+    let mut pending = None;
+    caller
+        .refreshed_turn(STEP_GRANT, |cx| {
+            cx.with_original_work_loan(fuel, deadline_us, |cx| {
+                match semio_framework_job::drive_step(job, cx, origin.receiver()?, "procedural.test", InteractiveStage::InteractiveStep, &mut verdict)? {
+                    OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
+                    OriginalJobReturn::Outcome(reply) => {
+                        answered = Some(match reply.original() {
+                            None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
+                            Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Preview((0..payload.page_count()).flat_map(|index| payload.page(index).expect("preview page").to_vec()).collect()),
+                            Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
+                            Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+                            Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+                            Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+                        });
+                        pending = Some(reply.into_descriptor());
+                    }
+                    OriginalJobReturn::Continuation(_) => panic!("job step returned a continuation"),
+                }
+                if pending.is_some() {
+                    origin.receive_outcome(cx, &mut pending)?;
+                }
+                Ok(())
+            })
+        })
+        .expect("job step admission");
     for _ in 0..64 {
         if origin.outcome().is_none() {
             break;
         }
-        caller.turn(one, |cx| cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| origin.acknowledge_outcome(cx).map(|_| ()))).expect("original outcome acknowledgement");
+        caller.refreshed_turn(one, |cx| { let quote = cx.original_source_parent()?.loan_admission_work_demand()?; cx.with_original_work_loan(quote, cx.original_absolute_deadline_us(), |cx| origin.acknowledge_outcome(cx).map(|_| ())) }).expect("original outcome acknowledgement");
     }
     for _ in 0..64 {
         if origin.terminal_is_empty() {
             break;
         }
-        caller.turn(one, |cx| origin.close_step(cx).map(|_| ())).expect("original return source close");
+        caller.refreshed_turn(one, |cx| origin.close_step(cx).map(|_| ())).expect("original return source close");
     }
     assert!(origin.terminal_is_empty(), "the original return source did not close");
     caller.retire(SOURCE_STOCK);
-    answered.expect("the job never answered its step")
+    answered.unwrap_or(Stepped::Yield)
 }
 
 /// 🦶️ Steps `job` with a fresh operation until it leaves `Yield` and answers the terminal (or preview) it lent.

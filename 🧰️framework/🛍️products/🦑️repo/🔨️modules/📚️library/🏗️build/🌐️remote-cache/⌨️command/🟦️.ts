@@ -144,7 +144,7 @@ export async function serveRemoteCacheV1(args:readonly string[],context:RemoteCa
   tls:certificate===undefined||key===undefined?undefined:{certificate:where(context.root,certificate),key:where(context.root,key)},
   validation:policy.actionResults as RemoteCacheValidationV1,
   maximumActionResultBytes:policy.maximumActionResultBytes,
-  maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,
+  maintenanceSeconds:policy.maintenanceSeconds,blobSharePercent:policy.blobSharePercent,graph:policy.graph,
   staleness:{mode:modeAsked,workspace:context.root,recheckSeconds:policy.staleness.recheckSeconds,manifestNames:policy.staleness.manifestNames,examples:policy.staleness.examples,...toolchains===undefined?{}:{toolchains:()=>toolchains}},
   signal:context.signal,
   onEvent:event=>{

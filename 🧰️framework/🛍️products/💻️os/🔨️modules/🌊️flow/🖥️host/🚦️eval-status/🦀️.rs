@@ -74,6 +74,33 @@ pub fn unserved_flow_operator_kinds(host_snapshot: &FlowHostSnapshot, registry: 
     unserved.into_iter().collect()
 }
 
+/// 🧭️ The topic of the typed request a guest publishes when a document names a node kind no active extension serves. The payload is the UTF-8 JSON of `$defs.onDemandRequest` (`{"kind":"node-kind","nodeKind":"brep.bool.cut"}`) in the OS engine's `🧬️schema/🧩️plugin-modules/🔣️.json`; the host answers by activating the deferred extension, whose contributions push moves the registry generation and resumes the parked window.
+pub const ON_DEMAND_REQUEST_TOPIC: &str = "os.on-demand.request";
+
+/// 🧭️ One wire request per leading namespace of `unserved`, ascending, carrying the first kind that named it — the Rust twin of the kernel's `nodeKindRequests`, pinned against the same namespace rule (`brep.bool.cut` is `brep`; an empty or padded namespace asks nothing).
+pub fn on_demand_node_kind_requests(unserved: &[String]) -> Vec<String> {
+    let mut first_by_namespace = std::collections::BTreeMap::new();
+    for kind in unserved {
+        let namespace = kind.split('.').next().unwrap_or_default();
+        if !namespace.is_empty() && namespace.trim() == namespace {
+            first_by_namespace.entry(namespace).or_insert(kind.as_str());
+        }
+    }
+    first_by_namespace.into_values().map(|kind| format!("{{\"kind\":\"node-kind\",\"nodeKind\":\"{}\"}}", json_escaped(kind))).collect()
+}
+
+fn json_escaped(text: &str) -> String {
+    text.chars().fold(String::with_capacity(text.len()), |mut out, character| {
+        match character {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            control if (control as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", control as u32)),
+            other => out.push(other),
+        }
+        out
+    })
+}
+
 fn node_eval_status_json(status: &NodeEvalStatus) -> semio_framework_pack_json::Value {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(status))
 }

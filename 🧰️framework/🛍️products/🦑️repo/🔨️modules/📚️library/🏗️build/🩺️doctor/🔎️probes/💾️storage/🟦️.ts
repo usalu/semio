@@ -7,7 +7,8 @@ import {readJsonFileV1,type DoctorPortsV1} from "../../🔌️ports/🟦️.ts";
 import type {DoctorProbeV1,DoctorRepairRunV1} from "../📋️contract/🟦️.ts";
 import {tryImageLeaseV1} from "./🔒️image-lease/🟦️.ts";
 import {requireMaterializedPathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {nativeImageAttachArgumentsV1,nativeImageAttachProgramV1,requireNativeImageHostOwnersV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts";
+import {requireNativeImageHostOwnersV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👤️owners/🟦️.ts";
+import {attachNativeImageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🔗️attach/🟦️.ts";
 import {nativeFreeSpaceSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {nativeStorageBackendsV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 import {nativeImageInventoryV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📥️information/🟦️.ts";
@@ -65,11 +66,11 @@ async function readStorage(ports:DoctorPortsV1):Promise<StorageFactsV1>{
  return {hostFreeBytes:hostSpace?.availableBytes??null,hostTotalBytes:hostSpace?.totalBytes??null,loaderBlocked:loaderBlocked(ports.root),partitions:rows};
 }
 
-/** 🧭️ One partition the image repair touches and the steps it takes: a misplaced image is detached from its stray mount and attached at its mount point, a detached image behind a dangling `node_modules` is attached. The leases image comes first because the lease directory of every other image lives inside it. Pure and language-agnostic.
+/** 🧭️ One partition the image repair touches and the steps it takes: a misplaced image is detached from its stray mount and attached at its mount point, a detached image is attached. The leases image comes first because the lease directory of every other image lives inside it. Pure and language-agnostic.
  * @see ./🧪️tests/🟦️.ts */
 export type ImageRepairStepV1=Readonly<{id:string;steps:readonly ("detach"|"attach")[]}>;
 export function imageRepairPlanV1(storage:Pick<StorageFactsV1,"loaderBlocked"|"partitions">|undefined):readonly ImageRepairStepV1[]{
- const targets=(storage?.partitions??[]).filter(row=>row.image!=="damaged"&&(row.state==="misplaced"||row.state==="detached"&&storage?.loaderBlocked===true));
+ const targets=(storage?.partitions??[]).filter(row=>row.image!=="damaged"&&(row.state==="misplaced"||row.state==="detached"));
  return targets.map(row=>({id:row.id,steps:row.state==="misplaced"?["detach","attach"] as const:["attach"] as const})).sort((left,right)=>Number(right.id==="leases")-Number(left.id==="leases"));
 }
 
@@ -90,7 +91,7 @@ async function repairImage(ports:DoctorPortsV1,item:ImageRepairStepV1,directory:
   const inner=lstatSync(mount),outer=lstatSync(real);
   if(!inner.isDirectory()||inner.dev!==outer.dev||readdirSync(mount).length>0)throw Error(`The mount point ${mount} is not an empty, unmounted directory / Der Einhängepunkt ${mount} ist kein leeres, nicht eingehängtes Verzeichnis`);
   requireNativeImageHostOwnersV1(await ports.command("/sbin/mount",[]),real);
-  await ports.command(nativeImageAttachProgramV1,[...nativeImageAttachArgumentsV1(mount,image)]);
+  await attachNativeImageV1((program,args)=>ports.command(program,[...args]),mount,image);
   if(statSync(mount).dev===outer.dev)throw Error(`The image did not attach at ${mount} / Das Image wurde nicht unter ${mount} eingehängt`);
   return "done";
  }finally{lease?.release();}

@@ -113,7 +113,7 @@ impl<'a,'b> super::retained_scratch_driver::OriginalScratchWork<(&'a mut Diction
  fn advance(&mut self,source:&mut(&'a mut Dictionary,&'b str),effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{NativeParamPatchWork::advance(self,&mut*source.0,source.1,effect)}
  fn step_progress(&self)->RetainedCloneProgress{NativeParamPatchWork::step_progress(self)}
 }
-impl Drop for NativeParamPatchWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"native parameter patch must close its actual value, map, key and child cursors");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
+impl Drop for NativeParamPatchWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"native parameter patch must close its actual value, map, key and child cursors");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
 
 #[cfg(test)]
 #[path="🧪️.rs"]mod laws;

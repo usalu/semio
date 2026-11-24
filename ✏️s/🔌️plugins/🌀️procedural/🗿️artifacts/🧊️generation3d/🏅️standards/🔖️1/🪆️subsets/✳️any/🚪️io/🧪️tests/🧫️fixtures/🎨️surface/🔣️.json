@@ -1397,7 +1397,7 @@
       "widgets": [
         {
           "id": "hidden",
-          "type": "neuron",
+          "kind": "neuron",
           "preview": false,
           "neuronKind": "brep.mesh.construct",
           "params": {},
@@ -1406,7 +1406,7 @@
         },
         {
           "id": "shown",
-          "type": "neuron",
+          "kind": "neuron",
           "preview": true,
           "neuronKind": "brep.mesh.construct",
           "params": {},
@@ -1415,12 +1415,12 @@
         },
         {
           "id": "output",
-          "type": "outputExport",
+          "kind": "outputExport",
           "format": "gltf"
         },
         {
           "id": "bundle",
-          "type": "outputExport",
+          "kind": "outputExport",
           "format": "gltf"
         }
       ],

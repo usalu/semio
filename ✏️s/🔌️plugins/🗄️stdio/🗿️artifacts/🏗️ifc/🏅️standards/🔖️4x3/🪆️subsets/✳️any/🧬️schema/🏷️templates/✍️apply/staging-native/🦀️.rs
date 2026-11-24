@@ -2,10 +2,10 @@
 use super::*;
 use semio_plugin::action_staging::*;
 use semio_framework_job::{admit_original_construction_settled,OriginalConstructionAdmission,OriginalConstructionDemand,OriginalSourceBinding};
-use crate::details::{advance_cursor,closed_cursor,closed_in,costed,funded_turn,owned_step,settled,take_cursor};
+use crate::details::{SourceStaging,advance_cursor,close_quote,closed_cursor,closed_in,closed_in_source,costed,funded_turn,owned_step,settled,take_cursor};
 use semio_plugin_decl_staged_form::*;
 use semio_ui_locale::Locale;
-use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource,StagedSourceAdmission};
+use semio_framework_value::retained_clone::{RetainedClone,RetainedCloneCursor,RetainedCloneSource};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{RetainedAllocationEffect,RetainedWorkOutcome};
 use std::mem::ManuallyDrop;
@@ -95,7 +95,7 @@ impl RetireOwned for IfcPreparedTemplateSource{
 /// 🧵️ The caller retains its original snapshot lease and supplies the full canonical source hash on every turn.
 pub struct IfcTemplateSourceWork{
     request:ManuallyDrop<Option<StagedFormRequest>>,source:ManuallyDrop<Option<RawSource>>,page:ManuallyDrop<Option<Page>>,copy:ManuallyDrop<Option<DslValue>>,discarded:ManuallyDrop<Option<DslValue>>,
-    clone:<DslValue as RetainedClone>::Cursor,commit_clone:<DslValue as RetainedClone>::Cursor,admission:Option<StagedSourceAdmission<DslValue,StagedFormRequest>>,construction:Option<OriginalConstructionAdmission>,recover:bool,query:IfcTemplateWork,full:IfcTemplateWork,retirement:RetainedCloneClose,identities:IdentityDraftState,identity_control:IdentityControlState,
+    clone:<DslValue as RetainedClone>::Cursor,commit_clone:<DslValue as RetainedClone>::Cursor,admission:Option<SourceStaging<DslValue,StagedFormRequest>>,construction:Option<OriginalConstructionAdmission>,recover:bool,query:IfcTemplateWork,full:IfcTemplateWork,retirement:RetainedCloneClose,identities:IdentityDraftState,identity_control:IdentityControlState,
     binding:Option<(OriginalSourceBinding,usize,[u8;32])>,walk:Walk,ordinal:u64,offset:u64,phase:u8,part:usize,path_part:usize,navigation:u8,closing:bool,failed:bool,
 }
 impl Default for IfcTemplateSourceWork{fn default()->Self{Self{request:ManuallyDrop::new(None),source:ManuallyDrop::new(None),page:ManuallyDrop::new(None),copy:ManuallyDrop::new(None),discarded:ManuallyDrop::new(None),clone:DslValue::retained_clone_cursor(),commit_clone:DslValue::retained_clone_cursor(),admission:None,construction:None,recover:false,query:Default::default(),full:Default::default(),retirement:Default::default(),identities:Default::default(),identity_control:Default::default(),binding:None,walk:Default::default(),ordinal:0,offset:0,phase:0,part:0,path_part:0,navigation:0,closing:false,failed:false}}}
@@ -112,7 +112,7 @@ fn metadata(cx:&mut StepContext<'_>,bytes:usize,change:impl FnOnce())->Result<bo
 impl IfcTemplateSourceWork{
     pub fn original_request_received(&self)->bool{self.binding.is_some()}
     pub fn context_matches(&self,window:Option<&str>,locale:Locale)->Result<bool,ValueError>{
-        if let Some(request)=self.request.as_ref(){return Ok(request.context_matches(window,locale));}if let Some(source)=self.source.as_ref(){return Ok(source.try_authority()?.context_matches(window,locale));}if let Some(page)=self.page.as_ref(){return Ok(page.source.as_ref().ok_or_else(stale)?.try_authority()?.context_matches(window,locale));}if let Some(request)=self.admission.as_ref().and_then(StagedSourceAdmission::original_authority){return Ok(request.context_matches(window,locale));}Err(stale())
+        if let Some(request)=self.request.as_ref(){return Ok(request.context_matches(window,locale));}if let Some(source)=self.source.as_ref(){return Ok(source.try_authority()?.context_matches(window,locale));}if let Some(page)=self.page.as_ref(){return Ok(page.source.as_ref().ok_or_else(stale)?.try_authority()?.context_matches(window,locale));}if let Some(request)=self.admission.as_ref().and_then(SourceStaging::original_authority){return Ok(request.context_matches(window,locale));}Err(stale())
     }
     /// 📨️ A denied header grant leaves the admitted request with its original donor.
     pub fn receive(&mut self,donor:&mut Option<StagedFormRequest>,snapshot:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -124,7 +124,7 @@ impl IfcTemplateSourceWork{
     }
     fn advance_inner(&mut self,snapshot:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         match self.phase{
-            0=>{let request=self.request.as_ref().ok_or_else(refused)?;if !request.token.admitted()||request.token.action!=APPLY_TEMPLATE_ACTION||!revision_matches(&request.token.revision,revision){return Err(stale().into());}if let Some(page)=&request.page{if !page.admitted()||page.choice.is_some()||page.diagnostic_offset!="0"{return Err(refused().into());}self.offset=page.field_offset.parse().map_err(|_|refused())?;if self.offset%STAGED_FORM_BODY_LIMITS.content as u64!=0{return Err(refused().into());}}let demand=RawSource::borrowed_constructor_demand::<StagedFormRequest>();let physical=RetirementDemand{capacity_bytes:demand.capacity_bytes,copy_bytes:2*size_of::<StagedFormRequest>(),depth:demand.depth,..Default::default()};if !fits(cx.retained_grant(),physical){return Ok(false);}let request=self.request.take().unwrap();self.admission=Some(StagedSourceAdmission::borrowed(request));self.phase=50;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,..Default::default()})?;cx.consume_fuel(1);},
+            0=>{let request=self.request.as_ref().ok_or_else(refused)?;if !request.token.admitted()||request.token.action!=APPLY_TEMPLATE_ACTION||!revision_matches(&request.token.revision,revision){return Err(stale().into());}if let Some(page)=&request.page{if !page.admitted()||page.choice.is_some()||page.diagnostic_offset!="0"{return Err(refused().into());}self.offset=page.field_offset.parse().map_err(|_|refused())?;if self.offset%STAGED_FORM_BODY_LIMITS.content as u64!=0{return Err(refused().into());}}let demand=RawSource::borrowed_constructor_demand::<StagedFormRequest>();let physical=RetirementDemand{capacity_bytes:demand.capacity_bytes,copy_bytes:2*size_of::<StagedFormRequest>(),depth:demand.depth,..Default::default()};if !fits(cx.retained_grant(),physical){return Ok(false);}let request=self.request.take().unwrap();self.admission=Some(SourceStaging::borrowed(request));self.phase=50;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,..Default::default()})?;cx.consume_fuel(1);},
             50=>{let admission=self.admission.as_mut().ok_or_else(refused)?;if admission.terminal_is_empty(){if self.source.is_none(){return Err(refused().into());}self.admission=None;self.phase=1;}else{let source=&mut *self.source;if funded_turn(cx,|effect|admission.advance(source,effect))?.is_none(){return Ok(false);}}},
             1=>{if self.clone.output_ready(){self.phase=2;return Ok(false);}let source=self.source.as_ref().unwrap();let demand=self.clone.advance_demands(source.try_borrow()?,4096,cx.fuel_remaining())?;if !fits(cx.retained_grant(),demand){return Ok(false);}advance_cursor(cx,&mut self.clone,source.try_borrow()?,4096,&mut self.recover)?;},
             2=>{let demand=self.clone.take_demand()?;if !fits(cx.retained_grant(),demand){return Ok(false);}if take_cursor(cx,&mut self.clone,&mut self.copy)?{self.phase=if self.identities.full{29}else{25};}},
@@ -146,13 +146,13 @@ impl IfcTemplateSourceWork{
             18=>{let forward=self.navigation==1;let destination=if forward{self.offset.checked_add(STAGED_FORM_BODY_LIMITS.content as u64).filter(|offset|*offset<self.ordinal)}else{self.offset.checked_sub(STAGED_FORM_BODY_LIMITS.content as u64)};if let Some(_)=destination{let page=self.page.as_mut().unwrap();metadata(cx,size_of::<Control>()+size_of::<Self>(),||{page.controls.push(Control::Page{address:u64::MAX-2+self.navigation as u64,forward,binding:StagedFormPageBinding{token:empty_token(),page:StagedFormPage{field_offset:String::new(),diagnostic_offset:String::new(),choice:None}}});self.part=0;self.phase=22;})?;}else{metadata(cx,size_of::<Self>(),||{self.navigation+=1;if self.navigation==2{self.phase=24;}})?;}},
             22=>{let page=self.page.as_mut().unwrap();let token=&page.source.as_ref().unwrap().try_authority()?.token;let Control::Page{binding,..}=page.controls.last_mut().unwrap()else{return Err(refused().into())};if copy_text(admission(&mut self.construction),token_part_mut(&mut binding.token,self.part),token_part(token,self.part),cx)?{self.part+=1;if self.part==4{self.phase=23;}}},
             23=>{let Control::Page{binding,forward,..}=self.page.as_mut().unwrap().controls.last_mut().unwrap()else{return Err(refused().into())};if self.part==4{let destination=if *forward{self.offset.checked_add(STAGED_FORM_BODY_LIMITS.content as u64)}else{self.offset.checked_sub(STAGED_FORM_BODY_LIMITS.content as u64)}.ok_or_else(refused)?;let mut number=[0;20];let text=decimal(destination,&mut number);if copy_text(admission(&mut self.construction),&mut binding.page.field_offset,text,cx)?{self.part=5;}}else if copy_text(admission(&mut self.construction),&mut binding.page.diagnostic_offset,"0",cx)?{self.navigation+=1;self.phase=if self.navigation==2{24}else{18};}},
-            24=>{if !self.clone.terminal_is_empty(){let demand=self.clone.close_demands(4096)?;closed_in(cx,demand,|effect|closed_cursor(effect,&mut self.clone,4096,&mut self.recover))?;}else{metadata(cx,size_of::<Self>(),||{self.query.begin_close();self.full.begin_close();self.phase=19;})?;}},
+            24=>{if !self.clone.terminal_is_empty(){let demand=close_quote(&self.clone, 4096)?;closed_in(cx,demand,|effect|closed_cursor(effect,&mut self.clone,4096,&mut self.recover))?;}else{metadata(cx,size_of::<Self>(),||{self.query.begin_close();self.full.begin_close();self.phase=19;})?;}},
             19=>{if !self.query.terminal_is_empty(){self.query.close_step(cx)?;}else if !self.full.terminal_is_empty(){self.full.close_step(cx)?;}else if self.discarded.is_some()||!self.retirement.is_empty(){let demand=self.retirement.next_owner_demands::<DslValue>(self.discarded.is_some(),&None,4096)?;closed_in(cx,demand,|effect|if self.retirement.is_empty(){owned_step(self.retirement.begin_granted(&mut self.discarded,effect),"Template discarded value omitted its owner")}else{settled(self.retirement.step_granted(4096,effect))})?;}else{let page=self.page.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("IFC4x3 template page is absent"))?;metadata(cx,size_of::<bool>(),||{page.status.ready=false;self.phase=if self.identities.draft{20}else{47};})?;}},
             25..=32|40..=46=>self.advance_identity(cx)?,
             33|34=>self.advance_identity_control(cx)?,
             47=>{if self.commit_clone.output_ready(){self.phase=48;return Ok(false);}let source=self.page.as_ref().ok_or_else(stale)?.source.as_ref().ok_or_else(stale)?;let demand=self.commit_clone.advance_demands(source.try_borrow()?,4096,cx.fuel_remaining())?;if !fits(cx.retained_grant(),demand){return Ok(false);}advance_cursor(cx,&mut self.commit_clone,source.try_borrow()?,4096,&mut self.recover)?;},
             48=>{let demand=self.commit_clone.take_demand()?;if !fits(cx.retained_grant(),demand){return Ok(false);}let page=self.page.as_mut().ok_or_else(stale)?;if take_cursor(cx,&mut self.commit_clone,&mut page.status.commit_args)?{self.phase=49;}},
-            49=>{if !self.commit_clone.terminal_is_empty(){let demand=self.commit_clone.close_demands(4096)?;closed_in(cx,demand,|effect|closed_cursor(effect,&mut self.commit_clone,4096,&mut self.recover))?;}else{metadata(cx,size_of::<bool>(),||{self.page.as_mut().unwrap().status.ready=true;self.phase=20;})?;}},
+            49=>{if !self.commit_clone.terminal_is_empty(){let demand=close_quote(&self.commit_clone, 4096)?;closed_in(cx,demand,|effect|closed_cursor(effect,&mut self.commit_clone,4096,&mut self.recover))?;}else{metadata(cx,size_of::<bool>(),||{self.page.as_mut().unwrap().status.ready=true;self.phase=20;})?;}},
             _=>{},
         }Ok(self.phase==20)
     }
@@ -168,12 +168,12 @@ impl IfcTemplateSourceWork{
     }
     fn close_one(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);}if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()});}
-        let demand=self.close_demands(4096)?;closed_in(cx,demand,|effect|self.close_owned(4096,effect))
+        let demand=self.close_demands(4096)?;closed_in_source(cx,demand,|effect|self.close_owned(4096,effect))
     }
 }
 impl IfcTemplateSourceWork{
     pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if !self.query.terminal_is_empty(){return self.query.close_demand(body);}if !self.full.terminal_is_empty(){return self.full.close_demand(body);}if !self.clone.terminal_is_empty(){return self.clone.close_demands(body);}if !self.commit_clone.terminal_is_empty(){return self.commit_clone.close_demands(body);}
+        if !self.query.terminal_is_empty(){return self.query.close_demand(body);}if !self.full.terminal_is_empty(){return self.full.close_demand(body);}if !self.clone.terminal_is_empty(){return close_quote(&self.clone, body);}if !self.commit_clone.terminal_is_empty(){return close_quote(&self.commit_clone, body);}
         if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
         if let Some(admission)=self.admission.as_ref(){return admission.close_demand();}
         macro_rules! demand{($owner:expr,$kind:ty)=>{if ($owner).is_some(){return self.retirement.next_owner_demands::<$kind>(true,&None,body);}};}

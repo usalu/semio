@@ -6,7 +6,7 @@ use std::mem::size_of;
 
 /// 📬️ Validated bytes and typed declarations for the held stream.
 pub struct DecodedStreamData {
-    pub bytes: Vec<u8>,
+    pub bytes: PdfStreamBytes,
     pub filters: Vec<PdfStreamFilter>,
 }
 
@@ -22,8 +22,8 @@ pub struct PdfDecodedStreamCursor {
     checked_stages: usize,
     decoder: Option<PdfStreamDataCursor>,
     filters: Vec<PdfStreamFilter>,
-    input: Option<Vec<u8>>,
-    next_input: Option<Vec<u8>>,
+    input: Option<PdfStreamBytes>,
+    next_input: Option<PdfStreamBytes>,
     consumed: usize,
     maximum_inflated: usize,
     maximum_output: usize,
@@ -52,6 +52,11 @@ impl PdfDecodedStreamCursor {
 
     fn is_last_stage(&self) -> bool {
         self.stages.is_some_and(|stages| self.stage + 1 >= stages)
+    }
+
+    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
+    pub fn copies_identity_bytes(&self) -> bool {
+        !self.cancelled && !self.closing && !self.complete && !self.finishing_stage && self.decoder.as_ref().is_some_and(PdfStreamDataCursor::copies_identity_bytes)
     }
 
     /// 🎚️ Quotes only the fresh history unit of the currently decoding filter.
@@ -215,16 +220,15 @@ impl PdfDecodedStreamCursor {
             }
             return receipt;
         }
-        let bytes = self.input.as_ref().map_or(0, Vec::capacity);
-        if bytes > grant.release_bytes { return empty(Ok(StreamDataStatus::NeedsRelease { bytes }), 0); }
+        if let Some(input) = self.input.as_mut() {
+            if !input.retained_bytes().terminal_is_empty() { return retire_page(input, grant); }
+        }
         self.input = self.next_input.take();
         self.stage += 1;
         self.parameter_position = 0;
         self.parameters = [None; 5];
         self.finishing_stage = false;
-        let mut receipt = empty(Ok(StreamDataStatus::More), 1);
-        receipt.released_bytes = bytes;
-        receipt
+        empty(Ok(StreamDataStatus::More), 1)
     }
 
     /// 📩️ Moves validated bytes and the typed pipeline, retaining internal retirement custody.
@@ -234,7 +238,7 @@ impl PdfDecodedStreamCursor {
     }
 
     /// 📬️ Moves only the validated bytes, retaining filter metadata for controlled closure.
-    pub fn take_bytes(&mut self) -> Option<Vec<u8>> {
+    pub fn take_bytes(&mut self) -> Option<PdfStreamBytes> {
         if self.cancelled || !self.complete || self.closing { return None; }
         let bytes = self.decoder.as_mut()?.take_output()?;
         self.closing = true;
@@ -263,18 +267,27 @@ impl PdfDecodedStreamCursor {
             }
             return receipt;
         }
-        let input = self.input.as_ref().or(self.next_input.as_ref());
-        let bytes = input.map_or_else(|| self.filters.capacity() * size_of::<PdfStreamFilter>(), Vec::capacity);
-        if bytes > grant.release_bytes { return empty(Ok(StreamDataStatus::NeedsRelease { bytes }), 0); }
-        let mut receipt = empty(Ok(StreamDataStatus::More), 1);
-        receipt.released_bytes = bytes;
-        if input.is_some() {
+        if let Some(bytes) = self.input.as_mut().or(self.next_input.as_mut()) {
+            if !bytes.retained_bytes().terminal_is_empty() { return retire_page(bytes, grant); }
             if self.input.is_some() { self.input = None; } else { self.next_input = None; }
-        } else {
-            self.filters = Vec::new();
-            receipt.status = Ok(StreamDataStatus::Closed);
+            return empty(Ok(StreamDataStatus::More), 1);
         }
+        let bytes = self.filters.capacity() * size_of::<PdfStreamFilter>();
+        if bytes > grant.release_bytes { return empty(Ok(StreamDataStatus::NeedsRelease { bytes }), 0); }
+        let mut receipt = empty(Ok(StreamDataStatus::Closed), 1);
+        receipt.released_bytes = bytes;
+        self.filters = Vec::new();
         receipt
+    }
+}
+
+fn retire_page(bytes: &mut PdfStreamBytes, grant: StreamDataGrant) -> StreamDataReceipt {
+    match bytes.cold_retire_page(grant.release_bytes) {
+        Err(error) => empty(Err(error), 0),
+        Ok(step) => match step.needs_release {
+            Some(bytes) => empty(Ok(StreamDataStatus::NeedsRelease { bytes }), 0),
+            None => StreamDataReceipt { status: Ok(StreamDataStatus::More), work: step.work.max(1), allocated_bytes: 0, released_bytes: step.released_bytes },
+        },
     }
 }
 
@@ -329,7 +342,7 @@ pub fn decode_stream_admitted(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec
     cursor.begin_close();
     while cursor.close_step(grant).status.ok() != Some(StreamDataStatus::Closed) {}
     match output? {
-        Some(output) => Ok((output.bytes, output.filters)),
+        Some(output) => Ok((output.bytes.to_vec_owner(), output.filters)),
         None => decode_stream(dict, raw),
     }
 }

@@ -1,4 +1,5 @@
 import {nativeImageVolumeUsedBytesSyncV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/⚖️availability/🟦️.ts";
+import {nativeImageShardFoldV1,nativeImageShardLayoutsV1,readNativeImageShardLedgerV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧩️shard/🟦️.ts";
 import{machinePathV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🏠️machine-state/🟦️.ts";
 import {statSync,statfsSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
@@ -13,13 +14,13 @@ import policy from "./🔣️policy.json" with {type:"json"};
 /** 📦️ Identifies the complete closed set of managed generated-storage owners. */
 export type RepositoryCachePartitionIdV1="rust"|"tools"|"graph"|"dependencies"|"products"|"diagnostics"|"nx"|"leases";
 /** 🗜️ Declares physical funding, the payload bytes left after filesystem overhead, and independent logical publication observation limits. */
-export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumArtifactBytes:number;readonly maximumLogicalBytes:number;readonly usableBytes:number;readonly hostSharePercent?:number;readonly needBytes?:Readonly<Record<string,number>>}
+export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumArtifactBytes:number;readonly maximumLogicalBytes:number;readonly usableBytes:number;readonly hostSharePercent?:number;readonly needBytes?:Readonly<Record<string,number>>;readonly imageShards?:Readonly<{enabled:boolean;maximumImageBytes?:number;headroomPercent:number;hostFreeReservePercent:number;roots:readonly Readonly<{prefix:string;pattern:string;needBytes:number}>[]}>}
 /** 📏️ Accounts all fixed backing envelopes plus their finite bootstrap-control allowance. */
 export interface RepositoryCacheBudgetV1 {readonly version:1;readonly maximumBytes:number;readonly maximumControlBytes:number;readonly partitionBytes:number;readonly headroomBytes:number;readonly partitions:Readonly<Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>>}
 /** 📋️ Validates the entire partition ledger before any physical provisioning or cache write. */
 export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudgetV1{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed repository cache partition declaration required");
- const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumArtifactBytes?:number;maximumLogicalBytes:number;hostSharePercent?:number;needBytes?:Record<string,number>}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,overhead=schema.$defs.filesystemOverhead.const,paths:string[]=[];let partitionBytes=0;
+ const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumArtifactBytes?:number;maximumLogicalBytes:number;hostSharePercent?:number;needBytes?:Record<string,number>;imageShards?:RepositoryCachePartitionV1["imageShards"]}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,overhead=schema.$defs.filesystemOverhead.const,paths:string[]=[];let partitionBytes=0;
  for(const[id,partition]of Object.entries(declaration.partitions)){
   const directory=partition.directory,path=directory.toLowerCase();
   if(directory.startsWith("/")||/[\\:\u0000-\u001f]/u.test(directory)||directory.split("/").some(part=>!part||part==="."||part==="..")||partition.capacityBytes%1048576!==0)throw Error("Aligned physical cache partition and relative directory required");
@@ -57,13 +58,14 @@ export function repositoryRustReclaimWaitDueV1({hostFreeBytes,hostTotalBytes,mou
  return (hostFreeBytes<Math.min(hostTotalBytes,rule.reclaimTightHostFreeBytes)&&elasticBloatedV1(rule,allocatedBytes,usedBytes,hostFreeBytes))
   ||(mountedFreeBytes<rule.pressureFreeBytes&&allocatedBytes-usedBytes>=rule.reclaimFloorBytes);
 }
-/** 🧲️ Whether the mounted image of a partition holds host blocks it no longer uses (host allocation of its file against the bytes used inside by the partition's bloat rule); an image that is not mounted cannot say what it uses and is not due. */
+/** 🧲️ Whether a mounted image of a partition holds host blocks it no longer uses (host allocation of its file against the bytes used inside by the partition's bloat rule): the one image, or any image of a sharded partition; an image that is not mounted cannot say what it uses and is not due. */
 export function repositoryPartitionReclaimDueV1(workspace:string,partition:RepositoryCachePartitionIdV1):boolean{
  try{
   const declared=policy.partitions[partition],directory=machinePathV1(requireMaterializedPathV1(resolve(workspace)),declared.directory),mount=join(directory,"m");
   if(statSync(mount).dev===statSync(directory).dev)return false;
-  const used=nativeImageVolumeUsedBytesSyncV1(mount,statfsSync(mount)),host=statfsSync(dirname(directory));
-  return used!==undefined&&elasticBloatedV1(repositoryPartitionReclaimRuleV1(partition),statSync(join(directory,"fixed.dmg")).blocks*512,used,host.bavail*host.bsize);
+  const rule=repositoryPartitionReclaimRuleV1(partition),host=statfsSync(dirname(directory)),shards=(declared as {imageShards?:RepositoryCachePartitionV1["imageShards"]}).imageShards;
+  const bloated=(image:string,at:string)=>{try{if(statSync(at).dev===statSync(dirname(at)).dev)return false;const used=nativeImageVolumeUsedBytesSyncV1(at,statfsSync(at));return used!==undefined&&elasticBloatedV1(rule,statSync(image).blocks*512,used,host.bavail*host.bsize);}catch{return false;}};
+  return shards?.enabled?nativeImageShardLayoutsV1(directory,nativeImageShardFoldV1(readNativeImageShardLedgerV1(directory))).some(layout=>bloated(layout.image,layout.mountPoint)):bloated(join(directory,"fixed.dmg"),mount);
  }catch{return false;}
 }
 /** 📝️ Records the size the next image of a pressed elastic partition is born with (the image that is about to be recreated has less free space than the pressure floor), so the recreation grows instead of repeating the same size; answers the recorded bytes, or 0 when the image is not pressed or cannot grow. */

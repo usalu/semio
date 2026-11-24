@@ -10,16 +10,16 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import schema from "../../🧬️schema/🪧️declared-selection/🔣️.json" with {type:"json"};
 import fixture from "../🧫️fixtures/🪧️declared-selection/🔣️.json" with {type:"json"};
-import {cargoDeclaredPackageSelectionsV1,cargoPackageSelectionsNearV1,cargoRepositoryPackageSelections,cargoRepositoryPackages,type CargoWorkspacePackage} from "../../🟦️.ts";
+import {cargoDeclaredPackageSelectionsV1,cargoDependencyPackageSelectionsV1,cargoPackageSelectionsNearV1,cargoRepositoryPackageSelections,cargoRepositoryPackages,type CargoWorkspacePackage} from "../../🟦️.ts";
 import type {CargoPhysicalObservationsV1} from "../../🛠️preparation/👁️witness/🟦️.ts";
 
 const answer=(run:()=>readonly CargoWorkspacePackage[]):string=>{try{return JSON.stringify(run());}catch(error){return "refused: "+(error instanceof Error?error.message:String(error));}};
-const workspaceSource=(row:typeof fixture.workspaces[number]):string=>'[workspace]\nresolver="2"\nmembers='+JSON.stringify(row.members)+"\nexclude="+JSON.stringify(row.exclude)+'\n[workspace.metadata.semio.repository]\nschema-version=1\n'+(row.directory==="."?'owner-manifests=["[!.]*/**/Cargo.toml"]\n':"")+"member-manifests="+JSON.stringify(row.memberManifests)+"\nexclude-patterns="+JSON.stringify(row.excludePatterns)+"\n";
+const workspaceSource=(row:typeof fixture.workspaces[number]):string=>'[workspace]\nresolver="2"\nmembers='+JSON.stringify(row.members)+"\nexclude="+JSON.stringify(row.exclude)+((row as {dependencies?:{name:string;path:string}[]}).dependencies??[]).map(dependency=>"\n[workspace.dependencies."+dependency.name+"]\npath="+JSON.stringify(dependency.path)).join("")+'\n[workspace.metadata.semio.repository]\nschema-version=1\n'+(row.directory==="."?'owner-manifests=["[!.]*/**/Cargo.toml"]\n':"")+"member-manifests="+JSON.stringify(row.memberManifests)+"\nexclude-patterns="+JSON.stringify(row.excludePatterns)+"\n";
 function corpus():string{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});
  const root=mkdtempSync(join(output,"declared-selection-")),put=(path:string,body:string)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),body);};
  for(const row of fixture.workspaces)put(join(row.directory,"Cargo.toml"),workspaceSource(row));
- for(const row of fixture.packages){put(join(row.directory,"Cargo.toml"),'[package]\nname="'+row.name+'"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n');put(join(row.directory,"🦀️.rs"),"pub fn observed() {}\n");}
+ for(const row of fixture.packages){put(join(row.directory,"Cargo.toml"),'[package]\nname="'+row.name+'"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n'+((row as {uses?:string[]}).uses?.length?"[dependencies]\n"+(row as {uses:string[]}).uses.map(name=>name+"={workspace=true}\n").join(""):""));put(join(row.directory,"🦀️.rs"),"pub fn observed() {}\n");}
  return root;
 }
 function cargoManifest(root:string,workspace:string,name:string):string{
@@ -66,4 +66,37 @@ test("repository Cargo tests and lint select through the declaring workspace, ne
   const source=readFileSync(new URL(relative,import.meta.url),"utf8");
   expect([relative,/cargoPackageSelectionsNearV1\(repository, ?join\(cwd, ?"Cargo\.toml"\)/u.test(source),source.includes("cargoRepositoryPackageSelections")]).toEqual([relative,true,false]);
  }
+});
+
+test("a workspace path dependency is looked up again after its package is renamed or removed, never remembered",()=>{
+ const root=corpus(),near="framework/a/📦️packages/🦀️rust/Cargo.toml",directory="framework/d/📦️packages/🦀️rust";
+ expect(JSON.stringify(cargoDeclaredPackageSelectionsV1(root,near,["fx-pathdep"]))).toBe(answer(()=>cargoRepositoryPackageSelections(root,["fx-pathdep"])));
+ const manifest=join(root,directory,"Cargo.toml");writeFileSync(manifest,readFileSync(manifest,"utf8").replace('name="fx-pathdep"','name="fx-renamed"'));
+ expect(cargoDeclaredPackageSelectionsV1(root,near,["fx-pathdep"])).toBeUndefined();
+ expect(answer(()=>cargoPackageSelectionsNearV1(root,near,["fx-pathdep"]))).toStartWith("refused: Unknown current repository Cargo package");
+ rmSync(join(root,directory),{recursive:true,force:true});
+ expect(cargoDeclaredPackageSelectionsV1(root,near,["fx-renamed"])).toBeUndefined();
+});
+
+test("a package of another discovered workspace is answered through the root path dependency of its name, equals the inventory and lists no directory",()=>{
+ const root=corpus();
+ for(const names of [["fx-nested"],["fx-pathdep"],["fx-glob"],["fx-nested","fx-pathdep","fx-glob"]]){
+  const observations:CargoPhysicalObservationsV1=new Map(),got=cargoDependencyPackageSelectionsV1(root,names,observations);
+  expect([names,JSON.stringify(got)]).toEqual([names,answer(()=>cargoRepositoryPackageSelections(root,names))]);
+  expect([names,[...observations.values()].filter(step=>step.operation==="list").length]).toEqual([names,0]);
+ }
+ for(const names of [["fx-oracle"],["fx-undeclared"],["fx-missing"],["fx-nested","fx-missing"]])expect([names,cargoDependencyPackageSelectionsV1(root,names)]).toEqual([names,undefined]);
+ for(const names of [["fx-glob"],["fx-oracle"],["fx-undeclared"],["fx-nested","fx-pathdep"]])expect([names,answer(()=>cargoPackageSelectionsNearV1(root,"Cargo.toml",names))]).toEqual([names,answer(()=>cargoRepositoryPackageSelections(root,names))]);
+});
+
+test("the root path dependency answer is recomputed after the owner loses its authority, the package is renamed, or the dependency vanishes",()=>{
+ const root=corpus(),nested=join(root,"framework/nested/Cargo.toml"),member=join(root,"framework/nested/📦️packages/🦀️rust/Cargo.toml");
+ expect(cargoDependencyPackageSelectionsV1(root,["fx-nested"])).toBeDefined();
+ const source=readFileSync(nested,"utf8");writeFileSync(nested,source.replace("[workspace.metadata.semio.repository]","[workspace.metadata.semio.other]"));
+ expect(cargoDependencyPackageSelectionsV1(root,["fx-nested"])).toBeUndefined();
+ writeFileSync(nested,source);expect(cargoDependencyPackageSelectionsV1(root,["fx-nested"])).toBeDefined();
+ writeFileSync(member,readFileSync(member,"utf8").replace('name="fx-nested"','name="fx-other"'));
+ expect(cargoDependencyPackageSelectionsV1(root,["fx-nested"])).toBeUndefined();
+ rmSync(join(root,"framework/nested"),{recursive:true,force:true});
+ expect(cargoDependencyPackageSelectionsV1(root,["fx-nested"])).toBeUndefined();
 });

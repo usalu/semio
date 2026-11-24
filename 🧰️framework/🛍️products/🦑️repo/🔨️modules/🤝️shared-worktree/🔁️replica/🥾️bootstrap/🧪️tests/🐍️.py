@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """🐍️ Independent oracle of the bootstrap archive of the shared worktree fleet: it reads the tar that `<store>/v1/bootstrap/manifest.json` names with Python's standard `tarfile` and `manifest.json` with `json`, and shares no code with `../🟦️.ts`.
 
-usage: python3 -I oracle.py check STORE [EXPECTED.json]
+usage: python3 -I oracle.py retention STORE [ALLOWED_NAME...]
+       lists every worktree-<16 hex>.tar or .entries in the bootstrap directory that the manifest does not name and that is not allowed (a superseded archive inside its grace); exit 1 when there is one
+       python3 -I oracle.py check STORE [EXPECTED.json]
        checks that manifest.json has exactly version, hlc, files, bytes and sha256, that the sha256 is the hash of the tar, that the tar is a multiple of 512 bytes
        and ends with two zero blocks, that every member is a regular file with a safe NFC name, that files and bytes equal the members, and, when EXPECTED.json
        (a list of {"path","bytes","sha256","executable"}) is given, that names, sizes, content hashes and executable bits are exactly those; exit 1 with one line per problem.
@@ -97,7 +99,20 @@ def check(store, expected_path):
     return problems
 
 
+def retention(store, allowed):
+    directory = os.path.join(store, "v1", "bootstrap")
+    with open(os.path.join(directory, "manifest.json"), encoding="utf-8") as handle:
+        named = json.load(handle)["archive"]
+    keep = {named, named[: -len(".tar")] + ".entries"} | set(allowed)
+    return ["not named by the manifest: " + name for name in sorted(os.listdir(directory)) if re.fullmatch(r"worktree(-[0-9a-f]{16})?\.(tar|entries)", name) and name not in keep]
+
+
 def main(argv):
+    if len(argv) >= 3 and argv[1] == "retention":
+        problems = retention(argv[2], argv[3:])
+        for problem in problems:
+            sys.stderr.write(problem + "\n")
+        return 1 if problems else 0
     if len(argv) not in (3, 4) or argv[1] != "check":
         sys.stderr.write(__doc__)
         return 2

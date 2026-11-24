@@ -1,5 +1,5 @@
 import {isOpaqueSourcePathV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
-import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
+import {buildOptionsV1,buildSelectorPatternV1,literalBuildProjectSelectorsV1,selectBuildNamesV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
 export {buildOptionsV1} from "./📥️options/🟦️.ts";
 import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
 import type { BuildWatchChildPortV1 } from "./👁️watch/🟦️.ts";
@@ -30,15 +30,12 @@ export function buildBooleanOptionV1(args:readonly string[],name:string|readonly
 }
 
 /** 🧵️ Matches project selectors using literal text and portable wildcards. */
-export function buildPatternV1(pattern:string,value:string):boolean { if(/[?\[\]{}()\\]/u.test(pattern))throw Error("Unsupported build selector pattern: "+pattern);return new RegExp("^"+pattern.split("*").map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join(".*")+"$").test(value); }
+export function buildPatternV1(pattern:string,value:string):boolean { return buildSelectorPatternV1(pattern,value); }
 
 /** 🎯️ Selects projects by identity, root or declared tag. */
 export function selectBuildProjectsV1(graph:BuildGraphV1,patterns:readonly string[]=[],exclude:readonly string[]=[]):string[] {
   if(literalBuildProjectSelectorsV1(patterns,exclude))return selectLiteralBuildProjectsV1(Object.entries(graph.projects).map(([name,project])=>({name,root:project.root})),patterns,exclude);
-  const match=(name:string,pattern:string)=>pattern.startsWith("tag:")?(graph.projects[name]!.tags as string[]??[]).some(tag=>buildPatternV1(pattern.slice(4),tag)):pattern.startsWith("name:")?buildPatternV1(pattern.slice(5),name):pattern.startsWith("directory:")?buildPatternV1(pattern.slice(10),graph.projects[name]!.root):buildPatternV1(pattern,name)||buildPatternV1(pattern,graph.projects[name]!.root);
-  const names=Object.keys(graph.projects),selected=new Set<string>(),ordered=patterns.length?patterns:["*"];if(ordered[0]!.startsWith("!"))for(const name of names)selected.add(name);
-  for(const value of ordered){const negative=value.startsWith("!"),pattern=negative?value.slice(1):value;buildPatternV1(pattern,"");for(const name of names)if(match(name,pattern)){if(negative)selected.delete(name);else selected.add(name);}}
-  for(const pattern of exclude){buildPatternV1(pattern,"");for(const name of selected)if(match(name,pattern))selected.delete(name);}return [...selected].sort();
+  return selectBuildNamesV1(Object.entries(graph.projects).map(([name,project])=>({name,root:project.root,tags:project.tags as string[]??[]})),patterns,exclude);
 }
 
 /** 🐚️ Quotes literal command arguments for the platform shell. */

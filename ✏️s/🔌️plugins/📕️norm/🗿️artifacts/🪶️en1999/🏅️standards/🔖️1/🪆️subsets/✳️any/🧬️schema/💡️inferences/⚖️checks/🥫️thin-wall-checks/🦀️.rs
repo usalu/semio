@@ -29,9 +29,9 @@ fn sheet_checks(sheet: &ColdFormedSheet, rib: Option<thin::Rib>, annex: AnnexCho
     let cl = |s: &str| ClauseId::new("EN 1999-1-4", format!("§{s}"), s);
     let part = "DIN EN 1999-1-4";
     let mut out = Vec::new();
-    let mut mk = |suffix: &str, sec: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl: String, u: f64, extra: Vec<Remedy>, lead: &str| {
+    let mut mk = |suffix: &str, sec: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl: String, u: f64, extra: Vec<Remedy>, reads: &[(&str, f64)]| {
         let mut rem = extra;
-        rem.extend(leaf_remedies("coldFormed", &sheet.id, &sheet.actions, u, &label, "Reduce the sheet load", "Blechlast senken", lead));
+        rem.extend(leaf_remedies("coldFormed", &sheet.id, &sheet.actions, u, &label, "Reduce the sheet load", "Blechlast senken", reads));
         out.push(utilization_check(format!("{suffix}.{}", sheet.id), part, cl(sec), subject("thickness"), loc(title.0, title.1), computed, limit, annex,
             loc(&format!("{expl} {tag_en}"), &format!("{expl} {tag_de}")), rem));
     };
@@ -40,25 +40,26 @@ fn sheet_checks(sheet: &ColdFormedSheet, rib: Option<thin::Rib>, annex: AnnexCho
         vec![Remedy::at_least(subject("thickness"), q_length(t), q_length(t * u * 1.05), loc("Increase the sheet thickness.", "Blechdicke erhöhen."))]
     };
     mk("en1999.1-4.axial", "5.5", if rib.is_some() { ("Axial resistance N_Rd of the profiled sheet (effective thickness, HAZ)", "Normalkraftwiderstand N_Rd des Profilblechs (wirksame Dicke, WEZ)") } else { ("Axial resistance N_Rd (effective width, HAZ)", "Normalkraftwiderstand N_Rd (wirksame Breite, WEZ)") }, q_force(n), q_force(n_rd),
-        format!("β/ε = {beta_eps:.2} (limits {:.1}/{:.1}/{:.1}), ρ_c = {rho:.4}, ρ_o,haz = {rho_haz:.2}, A_eff = {:.1} mm², N_Rd = {:.1} kN", limits[0], limits[1], limits[2], a_eff * 1e6, n_rd / 1e3), n / n_rd.max(1e-12), thick(n / n_rd.max(1e-12)), "nK");
+        format!("β/ε = {beta_eps:.2} (limits {:.1}/{:.1}/{:.1}), ρ_c = {rho:.4}, ρ_o,haz = {rho_haz:.2}, A_eff = {:.1} mm², N_Rd = {:.1} kN", limits[0], limits[1], limits[2], a_eff * 1e6, n_rd / 1e3), n / n_rd.max(1e-12), thick(n / n_rd.max(1e-12)), &[("nK", g.n_ed)]);
     let bend_text = flex.map_or_else(|| format!("W_el = {:.1} mm³, ρ_o,haz = {rho_haz:.2}, M_Rd = {:.3} kNm", w_el * 1e9, m_rd / 1e3), |f| format!("per rib p = {:.0} mm: W_eff,sag = {:.0} mm³, W_eff,hog = {:.0} mm³; M_Rd,sag = {:.3} kNm, M_Rd,hog = {:.3} kNm per b = {:.0} mm, ρ_o,haz = {rho_haz:.2}", rib.map_or(0.0, |r| r.pitch) * 1e3, f.w_sag * 1e9, f.w_hog * 1e9, f.m_sag / 1e3, f.m_hog / 1e3, b * 1e3));
     mk("en1999.1-4.bend", "6.1", if rib.is_some() { ("Bending resistance M_Rd of the effective rib (sagging and hogging)", "Biegewiderstand M_Rd der wirksamen Rippe (Feld und Stütze)") } else { ("Bending resistance M_Rd (W_el = b·t²/6)", "Biegewiderstand M_Rd (W_el = b·t²/6)") }, q_moment(m), q_moment(m_rd),
-        bend_text, m / m_rd.max(1e-12), thick(m / m_rd.max(1e-12)), "mYK");
+        bend_text, m / m_rd.max(1e-12), thick(m / m_rd.max(1e-12)), &[("mYK", g.m_y_ed), ("mZK", g.m_z_ed)]);
     let (v_rd, shear_text) = rib.map_or_else(|| { let v_rd = b * t * fo / (3.0f64.sqrt() * g1); (v_rd, format!("A_v = {:.1} mm², V_Rd = {:.1} kN", b * t * 1e6, v_rd / 1e3)) }, |r| {
         let v_rd = thin::rib_sheet_shear(&r, b, t, fo, thin::sheet_web_shear_constants(), g1);
         (v_rd, format!("two webs of s_w = {:.1} mm (φ = {:.1}°), h = {:.1} mm: V_Rd = 2·h·t·ρ_v·f_o/(√3·γ_M1) = {:.1} kN per b = {:.0} mm", r.web_length() * 1e3, r.web_angle().to_degrees(), r.height * 1e3, v_rd / 1e3, b * 1e3))
     });
     mk("en1999.1-4.shear", "6.1.5", if rib.is_some() { ("Web shear resistance V_Rd of the profiled sheet", "Stegquerkraftwiderstand V_Rd des Profilblechs") } else { ("Shear resistance V_Rd (A_v = b·t)", "Querkraftwiderstand V_Rd (A_v = b·t)") }, q_force(v), q_force(v_rd),
-        shear_text, v / v_rd.max(1e-12), thick(v / v_rd.max(1e-12)), "vZK");
+        shear_text, v / v_rd.max(1e-12), thick(v / v_rd.max(1e-12)), &[("vYK", g.v_y_ed), ("vZK", g.v_z_ed)]);
     mk("en1999.1-4.nm", "6.1.4", ("Combined axial force and bending", "Interaktion Normalkraft und Biegung"), q_dim(u_nm), q_dim(1.0),
-        format!("N/N_Rd + M/M_Rd = {u_nm:.3}"), u_nm, thick(u_nm), "nK");
-    let w_k: f64 = sheet.actions.iter().filter(|a| a.kind != semio_s_artifact_norm_en1999_model::ActionKind::Fire).map(|a| a.g_k_line + a.q_k_line).sum::<f64>().abs();
+        format!("N/N_Rd + M/M_Rd = {u_nm:.3}"), u_nm, thick(u_nm), &[("nK", g.n_ed), ("mYK", g.m_y_ed), ("mZK", g.m_z_ed)]);
+    let w_signed: f64 = sheet.actions.iter().filter(|a| a.kind != semio_s_artifact_norm_en1999_model::ActionKind::Fire).map(|a| a.g_k_line + a.q_k_line).sum();
+    let w_k = w_signed.abs();
     let delta = 5.0 * w_k * sheet.span.powi(4) / (384.0 * na_de::E_PA * inertia.max(1e-30));
     let delta_lim = sheet.span / params.deflection_ratio.max(1.0);
     let u_defl = delta / delta_lim.max(1e-12);
     let defl_remedies = if u_defl > 1.0 { vec![Remedy::at_least(subject("thickness"), q_length(t), q_length(t * u_defl.cbrt() * 1.05), loc("Increase the sheet thickness for the deflection limit.", "Blechdicke für die Durchbiegungsgrenze erhöhen.")), Remedy::at_most(subject("span"), q_length(sheet.span), q_length(sheet.span / u_defl.powf(0.25) * 0.99), loc("Shorten the span for the deflection limit.", "Spannweite für die Durchbiegungsgrenze verkürzen."))] } else { Vec::new() };
     mk("en1999.1-4.defl", "7.2", (if rib.is_some() { "SLS deflection δ = 5·w·L⁴/(384·E·I_eff) of the effective rib" } else { "SLS deflection δ = 5·w·L⁴/(384·E·I) of the flat strip" }, if rib.is_some() { "GZG Durchbiegung δ = 5·w·L⁴/(384·E·I_eff) der wirksamen Rippe" } else { "GZG Durchbiegung δ = 5·w·L⁴/(384·E·I) des ebenen Streifens" }), q_length(delta), q_length(delta_lim),
-        format!("w_k = {:.2} kN/m, I = {:.1} mm⁴, δ = {:.2} mm against L/{:.0} = {:.2} mm", w_k / 1e3, inertia * 1e12, delta * 1e3, params.deflection_ratio, delta_lim * 1e3), u_defl, defl_remedies, "gKLine");
+        format!("w_k = {:.2} kN/m, I = {:.1} mm⁴, δ = {:.2} mm against L/{:.0} = {:.2} mm", w_k / 1e3, inertia * 1e12, delta * 1e3, params.deflection_ratio, delta_lim * 1e3), u_defl, defl_remedies, &[("gKLine", w_signed), ("qKLine", w_signed)]);
     let mut local = CheckResult::assess(format!("en1999.1-4.local.{}", sheet.id), part, cl("5.5"), subject("width"), loc("Local buckling of the flat element", "Lokales Beulen des ebenen Elements"))
         .utilization(q_dim(beta_eps), q_dim(limits[2]))
         .annex(annex)
@@ -108,21 +109,21 @@ fn shell_checks(shell: &AluminiumShell, rings: &[f64], annex: AnnexChoice, param
     let tag_de = format!("(GZT {}, führend {}); {}", g.combination, g.action_id, actions_digest(&shell.actions));
     let cl = ClauseId::new("EN 1999-1-5", "§5.3", "5.3");
     let mut out = Vec::new();
-    let mut mk = |suffix: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl: String, u: f64, lead: &str| {
+    let mut mk = |suffix: &str, title: (&str, &str), computed: Quantity, limit: Quantity, expl: String, u: f64, reads: &[(&str, f64)]| {
         let mut rem = Vec::new();
         if u > 1.0 {
             rem.push(Remedy::at_least(SubjectRef::new(&shell.id, format!("shells[id={}].thickness", shell.id), label.clone()), q_length(t), q_length(t * (u * 1.05).powf(0.8).max(1.01 * 1.0)), loc("Increase the shell thickness.", "Schalendicke erhöhen.")));
         }
-        rem.extend(leaf_remedies("shells", &shell.id, &shell.actions, u, &label, "Reduce the shell stress", "Schalenspannung senken", lead));
+        rem.extend(leaf_remedies("shells", &shell.id, &shell.actions, u, &label, "Reduce the shell stress", "Schalenspannung senken", reads));
         out.push(utilization_check(format!("{suffix}.{}", shell.id), "DIN EN 1999-1-5", cl.clone(), SubjectRef::new(&shell.id, format!("shells[id={}].thickness", shell.id), label.clone()), loc(title.0, title.1), computed, limit, annex,
             loc(&format!("{expl} {tag_en}"), &format!("{expl} {tag_de}")), rem));
     };
     mk("en1999.1-5.buckle", ("Axial shell buckling σ_x,Rd", "Axiales Schalenbeulen σ_x,Rd"), q_stress(sx), q_stress(r_x),
-        format!("σ_x,Rcr = {:.1} MPa, λ̄_x = {lam_x:.3}, α_x = {alpha_x:.3} (fabrication class {:?}, Q = {q:.0}), f_o = {:.0} MPa, χ_x = {chi_x:.3}, σ_x,Rd = {:.1} MPa", s_x_cr / 1e6, shell.fabrication_class, fo / 1e6, r_x / 1e6), sx / r_x.max(1e-9), "nK");
+        format!("σ_x,Rcr = {:.1} MPa, λ̄_x = {lam_x:.3}, α_x = {alpha_x:.3} (fabrication class {:?}, Q = {q:.0}), f_o = {:.0} MPa, χ_x = {chi_x:.3}, σ_x,Rd = {:.1} MPa", s_x_cr / 1e6, shell.fabrication_class, fo / 1e6, r_x / 1e6), sx / r_x.max(1e-9), &[("nK", g.n_ed)]);
     mk("en1999.1-5.ring", ("Circumferential shell buckling σ_θ,Rd", "Umfangsbeulen der Schale σ_θ,Rd"), q_stress(st), q_stress(r_t),
-        format!("σ_θ,Rcr = {:.1} MPa, λ̄_θ = {lam_t:.3}, χ_θ = {chi_t:.3}, σ_θ,Rd = {:.1} MPa", s_t_cr / 1e6, r_t / 1e6), st / r_t.max(1e-9), "mYK");
+        format!("σ_θ,Rcr = {:.1} MPa, λ̄_θ = {lam_t:.3}, χ_θ = {chi_t:.3}, σ_θ,Rd = {:.1} MPa", s_t_cr / 1e6, r_t / 1e6), st / r_t.max(1e-9), &[("mYK", g.m_y_ed), ("mZK", g.m_z_ed)]);
     mk("en1999.1-5.shear", ("Shear shell buckling τ_Rd", "Schubbeulen der Schale τ_Rd"), q_stress(tau), q_stress(r_tau),
-        format!("τ_Rcr = {:.1} MPa, λ̄_τ = {lam_tau:.3}, χ_τ = {chi_tau:.3}, τ_Rd = {:.1} MPa", tau_cr / 1e6, r_tau / 1e6), tau / r_tau.max(1e-9), "vZK");
+        format!("τ_Rcr = {:.1} MPa, λ̄_τ = {lam_tau:.3}, χ_τ = {chi_tau:.3}, τ_Rd = {:.1} MPa", tau_cr / 1e6, r_tau / 1e6), tau / r_tau.max(1e-9), &[("vYK", g.v_y_ed), ("vZK", g.v_z_ed)]);
     let omega = thin::omega(l, r, t);
     let (rings_en, rings_de) = if bays.len() > 1 { (format!("The longest of {} bays between {} ring stiffeners ({:.3} m of {:.3} m) governs; the ring section is checked by `stiffener` and its required stiffness is an unverified registry row. Thickness steps are not modelled.", bays.len(), bays.len() - 1, l, shell.length), format!("Maßgebend ist das längste von {} Feldern zwischen {} Ringsteifen ({:.3} m von {:.3} m); der Ringquerschnitt wird mit `stiffener` geprüft, die erforderliche Steifigkeit ist eine ungeprüfte Registerzeile. Dickensprünge sind nicht modelliert.", bays.len(), bays.len() - 1, l, shell.length)) } else { ("No ring stiffeners or thickness steps are modelled.".to_owned(), "Ringsteifen und Dickensprünge sind nicht modelliert.".to_owned()) };
     let (regime_en, regime_de, short, long) = if omega < 1.7 { ("short cylinder (ω < 1.7: the end-restraint branch of C_x applies)", "kurzer Zylinder (ω < 1,7: Zweig der Endeinspannung von C_x)", true, false) } else if omega > 0.5 * r / t { ("long cylinder (ω > 0.5·r/t: C_x is reduced towards 0.6)", "langer Zylinder (ω > 0,5·r/t: C_x sinkt auf 0,6)", false, true) } else { ("medium-length cylinder (C_x = 1)", "Zylinder mittlerer Länge (C_x = 1)", false, false) };
@@ -135,7 +136,7 @@ fn shell_checks(shell: &AluminiumShell, rings: &[f64], annex: AnnexChoice, param
     }
     let regime_check = regime.build();
     mk("en1999.1-5.int", ("Interaction of the membrane stresses", "Interaktion der Membranspannungen"), q_dim(u_int), q_dim(1.0),
-        format!("(σ_x/σ_x,Rd)^k_x − k_i·… + (σ_θ/σ_θ,Rd)^k_θ + (τ/τ_Rd)^k_τ = {u_int:.3}"), u_int, "nK");
+        format!("(σ_x/σ_x,Rd)^k_x − k_i·… + (σ_θ/σ_θ,Rd)^k_θ + (τ/τ_Rd)^k_τ = {u_int:.3}"), u_int, &[("nK", g.n_ed), ("mYK", g.m_y_ed), ("mZK", g.m_z_ed), ("vYK", g.v_y_ed), ("vZK", g.v_z_ed)]);
     out.push(regime_check);
     out
 }

@@ -847,6 +847,22 @@
         "forgotten": {
           "type": "integer",
           "minimum": 0
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "$comment": "EN: Why entries left, so a loss can be attributed: `capacity` the host store evicted least recently used entries for its own cap; `lost` entries were dropped because an object they name vanished from the host store behind them. DE: Warum Einträge gingen, damit ein Verlust zuordenbar ist: `capacity` der Host-Speicher verdrängte am längsten ungenutzte Einträge für seine eigene Grenze; `lost` Einträge fielen weg, weil ein benanntes Objekt hinter ihnen aus dem Host-Speicher verschwand.",
+          "enum": ["capacity", "lost"]
+        },
+        "role": {
+          "type": "string",
+          "pattern": "^[a-z][a-z-]{0,31}$"
         }
       }
     },

@@ -1,4 +1,4 @@
-use semio_renderer_wgpu_fixtures::shell::{boot_manifest, host_test_shell, mouse_pointer, paint_component_pointer_documents, paint_tree_pointer_documents, pointer_interaction, retained_world_sequence_probe, tree_pointer_record, world3d_pointer_record};
+use semio_renderer_wgpu_fixtures::shell::{boot_manifest, host_test_shell, mouse_pointer, paint_component_pointer_documents, paint_component_pointer_documents_in, paint_tree_pointer_documents, paint_tree_pointer_documents_in, PointerFixtureTurns, pointer_interaction, retained_world_sequence_probe, retained_world_sequence_probe_closing, tree_pointer_record, world3d_pointer_record};
 use super::*;
 
 include!("🌍️retained-world-capture/🦀️.rs");

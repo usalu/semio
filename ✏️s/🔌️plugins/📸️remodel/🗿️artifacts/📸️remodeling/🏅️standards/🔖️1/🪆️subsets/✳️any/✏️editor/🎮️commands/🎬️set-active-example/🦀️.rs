@@ -23,12 +23,18 @@ pub struct SetActiveExample {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-/// 🎬️ Loads the named example as the open document. An unknown id, or an example whose committed text no longer parses, is a
+/// 🎬️ Loads the named example as the open document; the canonical empty id `""` loads the empty document. An unknown id, or an example whose committed text no longer parses, is a
 /// no-op rather than a fault: the picker is a navigation affordance. A document that already equals the example (the boot
 /// document IS the boot example) answers an empty emit, so the shell's boot-time `setActiveExample` loads nothing.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
-    let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
-    let Ok(mut next) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text) else { return Ok(Emit::default()) };
+    let mut next = match payload.example_id.as_str() {
+        "" => RemodelingSnapshot::default(),
+        id => {
+            let Some(text) = example_text(id) else { return Ok(Emit::default()) };
+            let Ok(next) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text) else { return Ok(Emit::default()) };
+            next
+        }
+    };
     example_media_content(&payload.example_id, &mut next);
     match &next == doc.snapshot {
         true => Ok(Emit::default()),

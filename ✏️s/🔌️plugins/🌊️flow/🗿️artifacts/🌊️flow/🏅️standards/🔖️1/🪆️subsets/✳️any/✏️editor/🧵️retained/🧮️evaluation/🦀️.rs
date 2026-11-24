@@ -47,7 +47,7 @@ impl FlowEvaluationCommandWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.pipeline.terminal_is_empty()&&self.source.terminal_is_empty()&&self.child.terminal_is_empty()&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl Drop for FlowEvaluationCommandWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow evaluation must close its whole source, result and publication family");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowEvaluationCommandWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow evaluation must close its whole source, result and publication family");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
 #[path="🔎️origin.rs"]
 mod origin;

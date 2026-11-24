@@ -46,8 +46,10 @@ pub fn original_receiving_scope_headroom()->(usize,usize,u64){scope_headroom(Out
 pub fn original_receiving_service_scope_headroom()->(usize,usize,u64){let(items,copy,work)=scope_headroom(Outcome::<[u8;RESERVED_OUTCOME_BYTES]>::placement());(items+RESERVED_BODY_ITEMS,copy,work)}
 fn scope_headroom(outcome:P)->(usize,usize,u64){
  let control=(outcome.copied_items+2,outcome.copied_bytes+stock::original_return_scope_completion_copy_bytes::<Input>(true,true)+std::mem::size_of::<Option<ScopeLoan>>(),4);
- (2+2*control.0,stock::original_return_scope_admission_copy_bytes::<Input>().max(stock::original_return_stock_top_up_copy_bytes())+2*control.1,2+2*control.2)
+ (2+2*control.0,stock::original_return_scope_admission_copy_bytes::<Input>().max(stock::original_return_stock_top_up_copy_bytes()).max(semio_framework_job_payload::ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES)+2*control.1,2+2*control.2)
 }
+/// 🧷️ Whether the attached decoder already holds its receiving scope claim, so a receiving step pays no further first-claim headroom.
+impl StepContext<'_>{pub fn original_receiving_scope_held(&self)->bool{self.original_decoder.as_deref().is_some_and(|owner|owner.scope.is_some())}}
 /// 🏦️ A constructed output that carries the scope credit its consumed payload held.
 pub type OriginalCreditedOutput<O>=stock::CreditedOutput<Input,O>;
 use stock::OriginalReturnEscrowAmounts as Amounts;
@@ -134,26 +136,26 @@ impl StepContext<'_>{
   let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;self.pay_original_scope_control(plan.control,plan.control_work)?;self.exclude_original_birth(work_before,kept);Ok(true)
  }
  pub(super) fn original_receiving_outcome<T>(&mut self,out:&mut Option<Outcome<T>>,quote:Option<(G,u64)>,operation:Operation<'_,T>)->Result<bool,Failure>{
-  let retirement=operation.is_retirement();let typed=operation.is_typed();let placement=if typed{Outcome::<T>::typed_placement()?}else{Outcome::<T>::placement()};let placement_work=if typed{Outcome::<T>::typed_placement_work()?}else{0};if out.is_some(){return Err(ValueError::invariant("receiving destination occupied").into())}self.original_decoder.as_deref().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;if !retirement&&!self.original_decoder.as_deref().is_some_and(|owner|owner.admission_complete()){let owner=self.original_decoder.take().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;let admitted=owner.admit_step(self);self.original_decoder=Some(owner);admitted?;{semio_framework_trace::debug_tag(1);return Ok(false)}}self.original_decoder.as_deref().unwrap().validate_source(self,retirement)?;
-  if self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none()){self.admit_original_return_table()?;{semio_framework_trace::debug_tag(2);return Ok(false)}}
+  let retirement=operation.is_retirement();let typed=operation.is_typed();let placement=if typed{Outcome::<T>::typed_placement()?}else{Outcome::<T>::placement()};let placement_work=if typed{Outcome::<T>::typed_placement_work()?}else{0};if out.is_some(){return Err(ValueError::invariant("receiving destination occupied").into())}self.original_decoder.as_deref().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;if !retirement&&!self.original_decoder.as_deref().is_some_and(|owner|owner.admission_complete()){let owner=self.original_decoder.take().ok_or_else(||ValueError::invariant("receiving decoder absent"))?;let admitted=owner.admit_step(self);self.original_decoder=Some(owner);admitted?;return Ok(false)}self.original_decoder.as_deref().unwrap().validate_source(self,retirement)?;
+  if self.return_budget.as_ref().is_none_or(|b|b.get().table().is_none()){self.admit_original_return_table()?;return Ok(false)}
   self.observe_native_scope()?;
-  if (!retirement&&(self.is_cancelled()||self.deadline_exceeded()))||(retirement&&!self.original_retirement&&self.deadline_exceeded())||(retirement&&self.loan_deadline_us.is_some_and(|held|self.now_us().is_none_or(|now|now>=held))){{semio_framework_trace::debug_tag(3);return Ok(false)}}
+  if (!retirement&&(self.is_cancelled()||self.deadline_exceeded()))||(retirement&&!self.original_retirement&&self.deadline_exceeded())||(retirement&&self.loan_deadline_us.is_some_and(|held|self.now_us().is_none_or(|now|now>=held))){return Ok(false)}
   let local=self.return_budget.as_ref().unwrap().get().delivery==stock::OriginalReturnDelivery::LocalWitness;let owner=self.original_decoder.as_deref().unwrap();let owner_loaned=owner.scope.is_some();let existing=match owner.scope.as_ref(){Some(loan)=>self.return_budget.as_ref().unwrap().get().scope_remaining(loan)?,None=>Amounts::default()};let whole=self.native_scope_quantum();
   let (quantum, quantum_work) = match quote {
       Some((grant, work)) => (G { maximum_depth: if whole.maximum_depth==0 { grant.maximum_depth } else { grant.maximum_depth.min(whole.maximum_depth) }, ..grant }, work),
       None => (unquoted_receiving_grant(whole), unquoted_receiving_work(self.fuel_remaining)),
   };
-  let Some(mut plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{{semio_framework_trace::debug_tag(4);return Ok(false)}};
+  let Some(mut plan)=stock::OriginalReturnScopePlan::quote::<Input>(self.retained_grant(),quantum,self.fuel_remaining(),quantum_work,existing,owner.scope.is_some(),owner.state.pending_work(),owner.state.has_pending_receiving(),retirement,local,placement,placement_work)?else{return Ok(false)};
   let reserved_receipt=typed||plan.recovering_pending;
-  if !plan.recovering_pending&&plan.ready&&quote.is_some(){let limit=self.native_scope_quantum();let limit=if limit.maximum_depth==0{self.retained_grant()}else{limit};if plan.quantum.restricted_by(limit)!=plan.quantum||plan.quantum_work>self.fuel_remaining{{semio_framework_trace::debug_tag(5);return Ok(false)}}}
+  if !plan.recovering_pending&&plan.ready&&quote.is_some(){let limit=self.native_scope_quantum();let limit=if limit.maximum_depth==0{self.retained_grant()}else{limit};if plan.quantum.restricted_by(limit)!=plan.quantum||plan.quantum_work>self.fuel_remaining{return Ok(false)}}
   if retirement&&plan.ready&&!reserved_receipt{self.receiving.open(self.retained_grant())?}
-  let claiming=!owner_loaned;let epoch=self.original_source_epoch().unwrap_or(0);let admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let Some((progress,work))=admitted else{if self.reclaim_original_escrow_slot()?{{semio_framework_trace::debug_tag(6);return Ok(false)}}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if claiming{self.pay_original_scope_control(plan.control,plan.control_work)?}if !plan.ready{{semio_framework_trace::debug_tag(7);return Ok(false)}}
+  let claiming=!owner_loaned;let epoch=self.original_source_epoch().unwrap_or(0);let mut admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?};let mut reclaimed=false;if admitted.is_none()&&self.reclaim_original_escrow_slot()?{reclaimed=true;admitted={let Self{original_decoder,return_budget,..}=self;return_budget.as_mut().unwrap().get_mut().admit_scope(&mut original_decoder.as_deref_mut().unwrap().scope,plan.wanted,epoch)?}}let Some((progress,work))=admitted else{if reclaimed{return Ok(false)}return Err(ValueError::literal(semio_framework_value_retained_clone::ValueRefusalKind::OwnershipLimit,"original return escrow table has no free slot for a new receiving scope").into())};let posted=self.consume_retained(progress);self.consume_fuel(work);posted?;if claiming{self.pay_original_scope_control(plan.control,plan.control_work)?}if !plan.ready{return Ok(false)}
   if !plan.recovering_pending {
    let limit=self.native_scope_quantum();let limit=if limit.maximum_depth==0{self.retained_grant()}else{limit};let grant = plan.quantum.restricted_by(limit);
    let work = plan.quantum_work.min(self.fuel_remaining);
    if grant.maximum_items == 0 || grant.maximum_depth == 0 || work == 0
        || quote.is_some() && (grant != plan.quantum || work != plan.quantum_work) {
-    {semio_framework_trace::debug_tag(8);return Ok(false)};
+    return Ok(false);
    }
    plan.quantum = grant;
    plan.quantum_work = work;
@@ -162,6 +164,6 @@ impl StepContext<'_>{
    let mut reserved_spent=P::default();
    let receiving_spent=if reserved_receipt{&mut reserved_spent}else{receiving.spent_mut()};
    owner.state.run_scoped_on_caller(return_budget.as_mut().unwrap().get_mut(),owner.scope.as_ref().unwrap(),out,&plan,before,&mut**retained_progress,receiving_spent,&mut ready,source,operation)
-  };if out.is_none(){result?;{semio_framework_trace::debug_tag(9);return Ok(false)}}let kept=out.as_mut().unwrap().source_refusal.take();let refusal=match result{Err(error)=>Some(error),Ok(())=>self.observe_native_scope().err()};out.as_mut().unwrap().source_refusal=refusal.or(kept);if plan.recovering_pending{self.settle_receiving_scope()?}Ok(true)
+  };if out.is_none(){result?;return Ok(false)}let kept=out.as_mut().unwrap().source_refusal.take();let refusal=match result{Err(error)=>Some(error),Ok(())=>self.observe_native_scope().err()};out.as_mut().unwrap().source_refusal=refusal.or(kept);if plan.recovering_pending{self.settle_receiving_scope()?}Ok(true)
  }
 }

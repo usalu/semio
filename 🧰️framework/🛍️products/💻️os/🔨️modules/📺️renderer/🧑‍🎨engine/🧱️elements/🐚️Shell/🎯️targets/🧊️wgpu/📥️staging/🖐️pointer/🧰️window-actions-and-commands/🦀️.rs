@@ -60,13 +60,15 @@ impl ShellEditVerb {
 
 /// ⏪️ The undo/redo verb a key event asks for.
 pub fn shell_edit_verb_for(action: &semio_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
-    if key_event_matches_chord(action, modifiers, "mod+z") {
-        return Some(ShellEditVerb::Undo);
+    let semio_ui_wgpu_input::KeyAction::Char(character) = action else { return None };
+    if modifiers.alt || !(modifiers.ctrl || modifiers.meta) {
+        return None;
     }
-    if key_event_matches_chord(action, modifiers, "mod+shift+z") || key_event_matches_chord(action, modifiers, "mod+y") {
-        return Some(ShellEditVerb::Redo);
+    match (character.to_ascii_lowercase().as_str(), modifiers.shift) {
+        ("z", false) => Some(ShellEditVerb::Undo),
+        ("z", true) | ("y", false) => Some(ShellEditVerb::Redo),
+        _ => None,
     }
-    None
 }
 
 //#endregion ⌨️ShellShortcutTable

@@ -1,0 +1,15 @@
+[
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-0", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-1", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-2", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-3", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-4", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "head-fin-5", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "head-fin-0", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-0", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-1", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-2", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-3", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-4", "set": {"role": "texture"}},
+{"op": "shape-set", "scale": "50", "view": "plan", "id": "head-fin-5", "set": {"role": "texture"}}
+]

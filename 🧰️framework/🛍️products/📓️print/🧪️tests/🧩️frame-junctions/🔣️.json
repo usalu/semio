@@ -1,0 +1,14 @@
+{
+  "stroke": 0.75,
+  "neutral": "semio-chrome-border-normal",
+  "junctions": [
+    { "name": "heading to heading", "previousBottom": 100, "gap": -1.38, "previousColor": "semio-tertiary", "ownColor": "semio-secondary", "top": 99.25, "sharedColor": "semio-tertiary" },
+    { "name": "heading to window", "previousBottom": 100, "gap": -1.38, "previousColor": "semio-secondary", "ownColor": "semio-chrome-border-normal", "top": 99.25, "sharedColor": "semio-secondary" },
+    { "name": "window to window", "previousBottom": 240, "gap": 3.83257, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-chrome-border-normal", "top": 239.25, "sharedColor": "semio-chrome-border-normal" },
+    { "name": "window to heading", "previousBottom": 240, "gap": 3.83257, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-primary", "top": 239.25, "sharedColor": "semio-primary" },
+    { "name": "list to heading", "previousBottom": 356.525, "gap": 5.47499, "previousColor": "semio-chrome-border-normal", "ownColor": "semio-secondary", "top": 355.775, "sharedColor": "semio-secondary" }
+  ],
+  "row": { "width": 430.87, "weights": [0.25, 0.25, 0.5], "lefts": [0, 107.3425, 214.685], "widths": [108.0925, 108.0925, 216.185] },
+  "list": { "points": 3, "dividers": 4 },
+  "page": { "headSeparation": -0.75, "footerHeight": 18, "footSkip": 17.25 }
+}

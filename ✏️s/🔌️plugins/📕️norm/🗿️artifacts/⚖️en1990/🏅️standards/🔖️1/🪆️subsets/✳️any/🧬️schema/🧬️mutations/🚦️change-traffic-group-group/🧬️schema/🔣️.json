@@ -52,7 +52,37 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "GR1A": {
+            "en": "gr1a tandem system, uniform load and footway",
+            "de": "gr1a Tandemsystem, Flächenlast und Gehweg"
+          },
+          "GR1B": {
+            "en": "gr1b single axle",
+            "de": "gr1b Einzelachse"
+          },
+          "GR2": {
+            "en": "gr2 horizontal forces",
+            "de": "gr2 Horizontalkräfte"
+          },
+          "GR3": {
+            "en": "gr3 pedestrian loads",
+            "de": "gr3 Fußgängerlasten"
+          },
+          "GR4": {
+            "en": "gr4 crowd loading",
+            "de": "gr4 Menschenansammlung"
+          },
+          "GR5": {
+            "en": "gr5 special vehicles",
+            "de": "gr5 Sonderfahrzeuge"
+          },
+          "GR6": {
+            "en": "gr6 (no normative table row registered, unverified)",
+            "de": "gr6 (keine normative Tabellenzeile registriert, ungeprüft)"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1990_model::LoadGroup"

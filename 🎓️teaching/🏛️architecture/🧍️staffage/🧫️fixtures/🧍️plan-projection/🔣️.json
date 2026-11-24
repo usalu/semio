@@ -145,7 +145,7 @@
       "asset": "walking-commuter",
       "from": "contact-left",
       "to": "passing-right",
-      "shape": "shoe-heel-l",
+      "shape": "shoe-toe-l",
       "minTravelM": 0.2
     },
     "lean": {

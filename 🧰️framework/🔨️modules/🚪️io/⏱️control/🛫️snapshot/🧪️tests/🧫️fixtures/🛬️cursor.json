@@ -29,6 +29,9 @@
   "headerTransfers": {
     "intermediateNativeWords": 3,
     "publicationNativeWords": 3,
-    "originalPayloadCopies": 1
+    "originalPayloadCopies": 1,
+    "intermediateRetirementBytes": {
+      "8": 808
+    }
   }
 }

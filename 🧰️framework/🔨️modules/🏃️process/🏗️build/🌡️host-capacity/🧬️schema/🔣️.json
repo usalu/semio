@@ -665,6 +665,14 @@
           ],
           "minimum": 0
         },
+        "compressedMegabytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "description": "The megabytes the memory compressor occupies (macOS: pages occupied by the compressor); absent where the platform does not report it."
+        },
         "counters": {
           "const": "partial"
         },

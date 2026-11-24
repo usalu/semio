@@ -7,14 +7,14 @@ import { graphChildEnvironmentV1 } from "../../../../../🧠️memory/🐏️chi
 import { graphFleetClientV1 } from "../../../../../🪪️graph-state/🛰️exchange/🟦️.ts";
 import { graphFleetSettingsV1 } from "../../../../../🪪️graph-state/🧶️nx/🟦️.ts";
 import { remoteCacheFetchV1 } from "../../../../../🌐️remote-cache/🛰️fleet/🟦️.ts";
-import { OWNER_POOL_POLICY_V1 as P, ownerPoolChildLimitsV1, ownerPoolAcceptsRevisionV1, ownerPoolChildMegabytesV1, ownerPoolKeepWaveV1, ownerPoolLiveChildrenV1, ownerPoolReopenMillisecondsV1, ownerPoolSizingV1, ownerPoolWhyIdleV1, readOwnerPoolPointerV1, readOwnerPoolV1, writeOwnerPoolWaveFilesV1 } from "../🟦️.ts";
+import { OWNER_POOL_POLICY_V1 as P, ownerPoolChildLimitsV1, ownerPoolAcceptsRevisionV1, ownerPoolChildMegabytesV1, ownerPoolKeepWaveV1, ownerPoolLiveChildrenV1, ownerPoolReopenMillisecondsV1, ownerPoolSizingV1, ownerPoolWaveOrderV1, ownerPoolWhyIdleV1, readOwnerPoolPointerV1, readOwnerPoolV1, writeOwnerPoolWaveFilesV1 } from "../🟦️.ts";
 import { ownerPoolExitRecordV1, ownerPoolExitsAddV1 } from "../🚪️exits/🟦️.ts";
-import { ownerPoolDrainPickV1, ownerPoolMayStartV1, ownerPoolStartDelayV1 } from "../🧮️lifecycle/🟦️.ts";
+import { ownerPoolDrainPickV1, ownerPoolMayStartV1, ownerPoolSharelessStepV1, ownerPoolStartDelayV1 } from "../🧮️lifecycle/🟦️.ts";
 import { ownerPoolProcessStartV1, ownerPoolSurvivorsV1, reapOwnerPoolOrphansV1, readOwnerPoolLeaseV1, writeOwnerPoolLeaseV1 } from "../🪦️reaper/🟦️.ts";
 import { OWNER_POOL_STAGING_POLICY_V1, ownerPoolStagingIoV1, ownerPoolStagingSweepV1, writeOwnerPoolStagingOwnerV1 } from "../🧹️staging-sweep/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
-const MEGABYTE = 1048576, T = schema.definitions.Texts.const, REASONS = { yielding: "reasonYielding", revision: "reasonRevision", "too-small": "reasonTooSmall", "no-wave": "reasonNoWave", "nothing-fits": "reasonNothingFits", pressure: "reasonPressure", waiting: "reasonWaiting", starting: "reasonStarting", memory: "reasonMemory", cores: "reasonCores", off: "reasonOff", "no-current-wave": "reasonNoCurrentWave", "waves-done": "reasonWavesDone", "waves-backoff": "reasonWavesBackoff" };
+const MEGABYTE = 1048576, T = schema.definitions.Texts.const, REASONS = { yielding: "reasonYielding", revision: "reasonRevision", "too-small": "reasonTooSmall", "no-wave": "reasonNoWave", "nothing-fits": "reasonNothingFits", pressure: "reasonPressure", waiting: "reasonWaiting", unshareable: "reasonUnshareable", starting: "reasonStarting", memory: "reasonMemory", cores: "reasonCores", off: "reasonOff", "no-current-wave": "reasonNoCurrentWave", "waves-done": "reasonWavesDone", "waves-backoff": "reasonWavesBackoff" };
 const originOf = fleetRoot => { try { return JSON.parse(readFileSync(machinePathV1(fleetRoot, ".cache", "f", "machine.json"), "utf8")).originId; } catch { return undefined; } };
 const sleep = (milliseconds, signal) => new Promise(done => { const timer = setTimeout(done, milliseconds); signal?.addEventListener("abort", () => { clearTimeout(timer); done(); }, { once: true }); });
 const fill = (text, fields) => text.replace(/\{(\w+)\}/gu, (_all, name) => String(fields[name] ?? ""));
@@ -36,7 +36,9 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
   const client = graphFleetClientV1(settings, { fetch: remoteCacheFetchV1(environment, { root: fleetRoot }) }), limits = ownerPoolChildLimitsV1(total), base = mkdtempSync(join(realpathSync(tmpdir()), OWNER_POOL_STAGING_POLICY_V1.prefix));
   writeOwnerPoolStagingOwnerV1(base);
   ownerPoolStagingSweepV1({ parents: [realpathSync(tmpdir()), machinePathV1(fleetRoot, ".cache", "f", P.stagingFallbackDirectory)], own: base, io: ownerPoolStagingIoV1 });
-  const kept = machinePathV1(fleetRoot, ".cache", "f", "owner-pool-waves"), waves = new Map(), children = new Set(), samples = [], finishedAt = [], totals = { claimed: 0, published: 0, stored: 0, held: 0, failed: 0, attempts: 0, recycled: 0 }, failures = {}, portTotals = { diverged: 0, resent: 0, kept: 0, shed: 0 };
+  const kept = machinePathV1(fleetRoot, ".cache", "f", "owner-pool-waves"), waves = new Map(), children = new Set(), samples = [], finishedAt = [], totals = { claimed: 0, published: 0, stored: 0, held: 0, failed: 0, attempts: 0, recycled: 0 }, failures = {},  portTotals = { diverged: 0, resent: 0, kept: 0, shed: 0 };
+  let shareless = { count: 0, until: 0 };
+  const shareStep = (event, at = now()) => { const step = ownerPoolSharelessStepV1(shareless, event, at); shareless = step.state; return step.tripped; };
   let exitState = { exits: {}, lastExits: [] }, lastStartMs = -Infinity, lastPointerAt = -Infinity, lastStarvedAt = -Infinity, pointerWaves = [], pointerOk = false, learned, tick = 0;
   const mine = () => learned, wanted = () => learned ?? (typeof revision === "function" ? revision() : revision), judge = wave => { if (wave.state !== "declined" && !ownerPoolAcceptsRevisionV1(wave.head?.revision, mine())) wave.state = "declined"; return wave; };
   const add = stats => { for (const key of ["claimed", "published", "stored", "held", "failed", "attempts"]) totals[key] += stats?.[key] ?? 0; };
@@ -97,8 +99,8 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
     if (typeof line.revision === "string") learned = line.revision;
     if (line.t === "ready") child.ready = true;
     if (line.t === "beat") { child.running = line.running ?? 0; if (line.stats) child.stats = line.stats; if (line.port) child.port = line.port; }
-    else if (line.t === "done") { child.owners++; if (line.ok) finishedAt.push(now()); if (line.rss > 0) samples.push(line.rss); if (samples.length > 64) samples.splice(0, samples.length - 64); }
-    else if (line.t === "fail") { if (typeof line.code === "string" && line.code !== "") failures[line.code] = (failures[line.code] ?? 0) + 1; status?.update({ lastError: `${line.name}: ${line.message}`.slice(0, 300), failures: { ...failures } }); }
+    else if (line.t === "done") { child.owners++; if (line.ok) { finishedAt.push(now()); shareStep("published"); } if (line.rss > 0) samples.push(line.rss); if (samples.length > 64) samples.splice(0, samples.length - 64); }
+    else if (line.t === "fail") { if (typeof line.code === "string" && line.code !== "") failures[line.code] = (failures[line.code] ?? 0) + 1; if (line.code === "unshareable" && shareStep("unshareable")) { say(ownerPoolTextV1("reasonUnshareable", { count: shareless.count, minutes: Math.round(P.unshareablePauseMilliseconds / 60000) })); } status?.update({ lastError: `${line.name}: ${line.message}`.slice(0, 300), failures: { ...failures } }); }
     else if (line.t === "end") { child.stats = line.stats ?? child.stats; child.port = line.port ?? child.port; child.reason = line.reason; child.message = line.message; }
   };
   const record = (child, code, target) => {
@@ -121,12 +123,12 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
   };
   const drain = child => { if (child.drained) return; child.drained = true; try { child.proc.stdin.write("drain\n"); child.proc.stdin.flush?.(); } catch {} };
   const rate = () => { const at = now() - P.rateWindowMilliseconds; while (finishedAt.length > 0 && finishedAt[0] < at) finishedAt.shift(); return Math.round(finishedAt.length * 60000 / P.rateWindowMilliseconds * 10) / 10; };
-  const report = ({ children: target, reason, limit }) => {
+  const report = ({ children: target, reason, limit, minutes }) => {
     const sum = live(), port = { ...portTotals }, open = active();
     for (const child of children) for (const key of Object.keys(port)) port[key] += child.port?.[key] ?? 0;
     const why = ownerPoolWhyIdleV1({ waves: [...waves.values()].map(wave => ({ state: wave.state, backoffUntil: wave.backoffUntil, acceptable: ownerPoolAcceptsRevisionV1(wave.head?.revision, mine()) })), open: open.length, children: children.size, targetChildren: target, targetReason: reason, now: now() }), newest = open[0] ?? [...waves.values()].sort((a, b) => b.createdMs - a.createdMs)[0];
     const starting = why === null && open.length > 0 && children.size < target, seconds = starting ? Math.ceil(ownerPoolStartDelayV1({ children: [...children], lastStartMs, now: now(), pollMilliseconds: targetPollMilliseconds }) / 1000) : Math.round((limit?.waitedMilliseconds ?? 0) / 1000), shown = starting ? "starting" : why;
-    const fields = { waves: waves.size, children: children.size, target, seconds, need: limit?.needMegabytes, free: limit?.freeMegabytes, floor: limit?.floorMegabytes, held: limit?.heldMegabytes, cores: limit?.cores, booked: limit?.bookedCores, idle: limit?.idleCores == null ? "?" : Math.floor(limit.idleCores), swap: Math.round(limit?.swapOutMegabytesPerSecond ?? 0) }, textKey = (shown === "nothing-fits" || shown === "yielding") && limit !== undefined ? (limit.limit === "memory" ? "memory" : "cores") : shown;
+    const fields = { count: shareless.count, minutes, waves: waves.size, children: children.size, target, seconds, need: limit?.needMegabytes, free: limit?.freeMegabytes, floor: limit?.floorMegabytes, held: limit?.heldMegabytes, cores: limit?.cores, booked: limit?.bookedCores, idle: limit?.idleCores == null ? "?" : Math.floor(limit.idleCores), swap: Math.round(limit?.swapOutMegabytesPerSecond ?? 0) }, textKey = (shown === "nothing-fits" || shown === "yielding") && limit !== undefined ? (limit.limit === "memory" ? "memory" : "cores") : shown;
     status?.update({ failures: { ...failures }, kept: port.kept, resent: port.resent, diverged: port.diverged, shed: port.shed, state: children.size > 0 ? "pulling" : waves.size > 0 ? "idle" : "idle", wave: newest?.id ?? null, units: [...waves.values()].reduce((count, wave) => count + wave.units, 0), waves: waves.size, children: children.size, target, slots: target, running: [...children].reduce((count, child) => count + child.running, 0), claimed: sum.claimed, published: sum.published, stored: sum.stored, held: sum.held, failed: sum.failed, claimAttempts: sum.attempts, recycled: totals.recycled, ownersPerMinute: rate(), childMegabytes: childMegabytes(), rssMegabytes: Math.round(process.memoryUsage().rss / MEGABYTE) + [...children].reduce((count, child) => count + child.rss, 0), ...reasonOf(shown, fields, textKey) });
     if (work !== undefined) work.busy = [...children].some(child => child.running > 0);
   };
@@ -143,15 +145,17 @@ export async function runOwnerPoolV1({ totalMegabytes, root, environment, signal
       let target = { children: 0, reason: null };
       if (work?.restartPending === true) target = { children: 0, reason: null };
       else if (open.length > 0) { try { target = await capacity({ children: children.size + passed, childMegabytes: childMegabytes() }); } catch { target = { children: 1, reason: null }; } }
+      shareStep("tick");
+      if (shareless.until > 0) target = { children: 0, reason: "unshareable", minutes: Math.ceil((shareless.until - now()) / 60000) };
       lastTarget = target;
       const have = [...children].filter(child => !child.drained);
-      if (target.reason === "waiting") {
+      if (target.reason === "waiting" || target.reason === "unshareable") {
         for (const child of children) {
           if (!child.drained) drain(child);
           child.yieldedMs ??= now();
           if (now() - child.yieldedMs >= P.yieldKillMilliseconds && !child.killed) { child.killed = true; try { child.proc.kill("SIGKILL"); } catch {} }
         }
-      } else if (have.length < target.children) for (let step = 0; step < 2 && have.length + step < target.children && ownerPoolMayStartV1({ children: [...children], survivors: passed, target: target.children, ramp, lastStartMs, now: now(), pollMilliseconds: targetPollMilliseconds }); step++) { const wave = open.sort((a, b) => a.children - b.children || b.createdMs - a.createdMs)[0]; if (wave === undefined) break; launch(wave); }
+      } else if (have.length < target.children) for (let step = 0; step < 2 && have.length + step < target.children && ownerPoolMayStartV1({ children: [...children], survivors: passed, target: target.children, ramp, lastStartMs, now: now(), pollMilliseconds: targetPollMilliseconds }); step++) { const wave = open.sort((a, b) => ownerPoolWaveOrderV1({ priority: a.head?.priority, children: a.children, createdMs: a.createdMs }, { priority: b.head?.priority, children: b.children, createdMs: b.createdMs }))[0]; if (wave === undefined) break; launch(wave); }
       else if (have.length > target.children) { const pick = ownerPoolDrainPickV1({ children: have, reason: target.reason, now: now(), pollMilliseconds: targetPollMilliseconds }); if (pick !== undefined) drain(pick); }
       for (const child of children) if ((child.wave.state === "declined" || !waves.has(child.wave.id)) && !child.drained) drain(child);
       report(target);

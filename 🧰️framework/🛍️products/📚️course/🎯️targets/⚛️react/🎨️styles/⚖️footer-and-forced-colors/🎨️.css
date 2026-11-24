@@ -2,17 +2,44 @@
 
 /* ⚖️ The footer: one quiet row under every screen. */
 .course-footer {
-  background: var(--base);
   height: calc-size(auto, round(up, size, var(--device-pixel)));
 }
 
-/* 🐾️ The ground of the pets: a screen whose one card fills the whole room leaves only the sliver between the card and the
-   footer, too low for any pet, so while pets are shown the main area keeps a free strip above the footer — a pet stands
-   on the footer line, in front of the page background and never in front of a card. Forced colours show no pets. */
-@media not (forced-colors: active) {
-  .course-app:not([data-pets="off"]) > #course-main {
-    padding-bottom: 48px;
-  }
+/* 🧊 The navbar and the footer lie one layer above the canvas: both are glass bands (`ui-glass` at panel level with the chip tint, clear enough for the content to show through), and the main area runs beneath them from the top edge of the client to its bottom edge.
+   The client publishes their heights (`--course-band-top`, `--course-band-bottom`); every scroller of a screen keeps that much clearance, so its content starts below the navbar and ends above the footer at rest and flows beneath both, visible through the glass, while it scrolls.
+   A band note under the navbar and the ground of the pets take the clearance themselves, and what follows them keeps none. */
+.course-app {
+  --course-band-top: 0px;
+  --course-band-bottom: 0px;
+  --course-clear-top: var(--course-band-top);
+  --course-clear-bottom: var(--course-band-bottom);
+}
+
+.course-app > :is(header, footer) {
+  position: relative;
+  z-index: 40;
+}
+
+.course-app > #course-main {
+  margin-block: calc(-1 * var(--course-band-top)) calc(-1 * var(--course-band-bottom));
+}
+
+.course-app > #course-main:has(> .course-alert) {
+  padding-block-start: var(--course-band-top);
+  --course-clear-top: 0px;
+}
+
+.course-app :is(.course-page-frame, .course-page-scroll, .course-home-grid) {
+  padding-block: var(--course-clear-top) var(--course-clear-bottom);
+  scroll-padding-block: var(--course-clear-top) var(--course-clear-bottom);
+}
+
+.course-app [data-layered-overview-button] {
+  margin-block-start: var(--course-clear-top);
+}
+
+.course-app [data-layered-neighbour] {
+  margin-block: var(--course-clear-top) var(--course-clear-bottom);
 }
 
 /* 🔲️ Forced colours (Windows high contrast): backgrounds, shadows and custom colours are replaced by system colours,

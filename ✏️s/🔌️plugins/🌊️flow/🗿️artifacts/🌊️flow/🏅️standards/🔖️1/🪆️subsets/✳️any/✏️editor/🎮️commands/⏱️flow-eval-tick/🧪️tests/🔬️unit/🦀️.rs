@@ -91,3 +91,19 @@ fn parked_extension_answers_own_the_continuation() {
     assert_eq!(session.window_extensions_in_flight(FLOW_PLAY_WINDOW_MAIN), 0);
     session.retire_cold();
 }
+
+/// ⚖️ LAW: a document parked on unserved kinds asks its host for exactly one deferred extension per namespace, as a typed
+/// `PublishEvent` on the on-demand topic whose payload is the wire JSON the host's activator admits; a served document asks nothing.
+#[test]
+fn unserved_kinds_publish_one_typed_activation_request_per_namespace() {
+    let effects = on_demand_effects(&["brep.bool.cut".to_string(), "math.add".to_string(), "brep.prim3d.box".to_string()]);
+    let rows: Vec<(String, String)> = effects.iter().map(|effect| match effect {
+        Effect::PublishEvent { topic, payload } => (topic.clone(), String::from_utf8(payload.clone()).expect("the payload is UTF-8 JSON")),
+        other => panic!("an activation request is a PublishEvent, got {other:?}"),
+    }).collect();
+    assert_eq!(rows, vec![
+        (flow::ON_DEMAND_REQUEST_TOPIC.to_string(), r#"{"kind":"node-kind","nodeKind":"brep.bool.cut"}"#.to_string()),
+        (flow::ON_DEMAND_REQUEST_TOPIC.to_string(), r#"{"kind":"node-kind","nodeKind":"math.add"}"#.to_string()),
+    ]);
+    assert!(on_demand_effects(&[]).is_empty());
+}

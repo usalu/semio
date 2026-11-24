@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio:build:graph:provider-closures:ceilings:v1",
+  "title": "Provider Closure Ceilings",
+  "description": "EN: The size ceiling of every shared closure group of the providers project and the unrelated subsystems a group may still reach. DE: Die Größenobergrenze jeder geteilten Abschlussgruppe des Anbieterprojekts und die fremden Teilsysteme, die eine Gruppe noch erreichen darf.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "contract", "groups", "subsystems"],
+  "properties": {
+    "version": {"const": 1},
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}
+    },
+    "groups": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "integer", "minimum": 1}},
+    "subsystems": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prefix", "maximumFilesPerGroup"],
+        "properties": {"prefix": {"type": "string", "minLength": 1}, "maximumFilesPerGroup": {"type": "integer", "minimum": 0}}
+      }
+    }
+  }
+}

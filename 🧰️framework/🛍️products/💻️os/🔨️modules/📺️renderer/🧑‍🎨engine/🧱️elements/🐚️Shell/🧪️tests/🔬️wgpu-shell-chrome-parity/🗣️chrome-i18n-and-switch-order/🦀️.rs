@@ -44,7 +44,11 @@ fn no_user_visible_chrome_literal_bypasses_the_bilingual_paths() {
 /// sweep had already declared itself done.
 #[test]
 fn no_capitalised_chrome_phrase_escapes_the_bilingual_tables() {
-    let table = region_of(WGPU_SHELL_SOURCE(), "//#region 🗣️ChromeI18n", "//#endregion 🗣️ChromeI18n");
+    let table = regions_of(WGPU_SHELL_SOURCE(), "//#region 🗣️ChromeI18n", "//#endregion 🗣️ChromeI18n");
+    let vocabulary_root = semio_renderer_wgpu_test_support::engine_root().join("🎯️targets/🧊️wgpu/📖️shell-vocab/🦀️.rs");
+    let vocabulary = semio_renderer_wgpu_test_support::read_module_tree_source_within(&vocabulary_root, &semio_renderer_wgpu_test_support::engine_root()).expect("the vocabulary module tree is readable");
+    let time_travel_labels = std::fs::read_to_string(semio_renderer_wgpu_test_support::engine_root().join("🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/⏪️time-travel/🗣️labels/🦀️.rs")).expect("the time-travel label table is readable");
+    let vocabulary_lines: std::collections::HashSet<&str> = vocabulary.lines().chain(time_travel_labels.lines()).collect();
     let administration = region_of(WGPU_SHELL_SOURCE(), "fn shell_space_administration_label", "\n}\n");
     let mut offenders = Vec::new();
     let mut exempted = 0;
@@ -56,7 +60,7 @@ fn no_capitalised_chrome_phrase_escapes_the_bilingual_tables() {
         if trimmed.starts_with("//") {
             continue;
         }
-        if table.contains(&at) || administration.contains(&at) || line.contains("LocalizedLabel::native(") {
+        if table.iter().any(|region| region.contains(&at)) || vocabulary_lines.contains(line) || administration.contains(&at) || line.contains("native(") {
             exempted += 1;
             continue;
         }
@@ -86,6 +90,19 @@ fn is_capitalised_phrase(literal: &str) -> bool {
     }
     let rest: Vec<&str> = words.collect();
     !rest.is_empty() && rest.iter().all(|word| !word.is_empty() && word.chars().all(|c| c.is_ascii_alphabetic()))
+}
+
+/// 📐️ Every byte range of a `//#region`-delimited stretch the shell source holds, one per mounting file.
+fn regions_of(source: &str, start: &str, end: &str) -> Vec<std::ops::Range<usize>> {
+    let mut regions = Vec::new();
+    let mut offset = 0;
+    while let Some(found) = source[offset..].find(start) {
+        let from = offset + found;
+        let to = source[from..].find(end).map(|length| from + length + end.len()).unwrap_or(source.len());
+        regions.push(from..to);
+        offset = to;
+    }
+    regions
 }
 
 /// 📐️ The byte range of one `//#region`-delimited (or brace-delimited) stretch of the shell source.
@@ -134,7 +151,7 @@ fn the_session_switch_creates_before_it_retires_and_leaks_no_instance() {
     let declared: Vec<String> = switched["expected"]["steps"].as_array().expect("fixture steps").iter().map(|step| step.as_str().expect("fixture step").split(':').next().expect("step verb").to_string()).collect();
     let body_start = WGPU_SHELL_SOURCE().find("async fn run_session_app_switch").expect("the shell declares the ordered session switch");
     let body = &WGPU_SHELL_SOURCE()[body_start..];
-    let body = &body[..body.find("\n    /// 🔁️ Steps the active mode").expect("the switch body ends before the next item")];
+    let body = &body[..["\n    /// ", "\n    pub ", "\n    fn ", "\n    async fn "].iter().filter_map(|marker| body[1..].find(marker).map(|at| at + 1)).min().expect("the switch body ends before the next item")];
     let at = |needle: &str| body.find(needle).unwrap_or_else(|| panic!("the ordered switch performs {needle}"));
     let (create, seal, retire, publish, refresh) = (at("create_app("), at("retire_documents_outside("), at("destroy_app("), at("push_contributions("), at("refresh_ui("));
     assert!(create < seal && seal < retire, "create → seal → retire: the successor exists before the predecessor's documents and instance go");

@@ -29,9 +29,9 @@ def blanket(sc, detail):
 
 
 def plinth(sc, detail):
-    """🦶 Clip-on plinth panel on the four front legs (1:50, 1:100 with its clips; 1:200 thickened to 30 mm against the legs)."""
+    """🦶 Clip-on plinth panel on the four front legs (1:50, 1:100 with its clips; 1:200 thickened to 30 mm against the legs). At 1:50 the panel reaches up to the carcass bottom: the 2 mm it stood below it was a slit that the legs behind close in the body over 1.16 of 1.20 m and that the front elevation, which draws no legs, left open over the whole width (silhouette repair SF of 2026-11-23, `catalog-silhouette` 54.4 mm)."""
     x0 = 0.500 if detail in ("50", "100") else 0.486
-    lo, hi = ((x0, BL + 0.002, -0.598), (0.516, CB - 0.002, 0.598)) if detail in ("50", "100") else ((x0, BL, -HALF), (0.516, CB, HALF))
+    lo, hi = ((x0, BL + 0.002, -0.598), (0.516, CB if detail == "50" else CB - 0.002, 0.598)) if detail in ("50", "100") else ((x0, BL, -HALF), (0.516, CB, HALF))
     sc.add("plinth", "carcass", lo, hi, "melamine-chipboard-aged", "plinth", TONE["plinth"], views=("elevation", "front"), member=False)
     if detail in ("50", "100"):
         for name, z in (("r", -0.565), ("l", 0.035)):

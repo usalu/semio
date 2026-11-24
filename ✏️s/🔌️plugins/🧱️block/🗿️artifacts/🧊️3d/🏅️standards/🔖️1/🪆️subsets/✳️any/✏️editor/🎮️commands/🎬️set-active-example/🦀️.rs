@@ -29,6 +29,7 @@ pub struct SetActiveExample {
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Block3dSnapshot>, _cfg: &ConfigView<'_, Block3dConfig>) -> Result<Emit<Block3dMutation, Block3dConfigMutation>, Fault> {
     let example = match payload.id.as_str() {
+        "" => Some(Block3dSnapshot::default()),
         BLOCK3D_EXAMPLE_CAPSULE => semio_s_artifact_block_3d_io::text::snapshot::parse_dsl(semio_s_artifact_block_3d_io::text::snapshot::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).ok(),
         BLOCK3D_EXAMPLE_FOREST_LEFT => semio_s_artifact_block_3d_io::text::snapshot::parse_dsl(semio_s_artifact_block_3d_io::text::snapshot::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).ok(),
         _ => None,

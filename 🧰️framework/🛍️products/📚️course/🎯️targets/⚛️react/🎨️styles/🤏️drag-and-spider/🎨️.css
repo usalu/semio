@@ -1,8 +1,9 @@
 /* 🤏 The pointer drag states and the spider diagram's paint. */
 
-/* 🤏️ Pointer drag: the ghost follows the pointer, the source dims, the zone under the pointer is highlighted. The ghost
-   is an empty copy of the source's list holding the copy of the source, so the copy is laid out as its source is.
-   An enabled grip reserves the gesture for dragging. */
+/* 🤏️ Pointer drag: the dragged element is detached. Its source leaves its place (it keeps its room, so nothing jumps under the pointer) and its copy
+   travels with the pointer as glass one layer above the page, outlined as the one rectangle that floats. While it travels, every place of its task
+   where it can be dropped is tinted, the one under the pointer more strongly. The ghost is an empty copy of the source's list holding the copy of
+   the source, so the copy is laid out as its source is. An enabled grip reserves the gesture for dragging. */
 [data-course-grip]:not([data-locked]) {
   touch-action: none;
   -webkit-user-select: none;
@@ -18,16 +19,26 @@
   margin: 0;
   padding: 0;
   pointer-events: none;
-  opacity: 0.92;
   list-style: none;
 }
 
-.course-dragging {
-  opacity: 0.4;
+.course-drag-ghost > * {
+  background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
+  outline: var(--stroke-hairline) solid var(--border-emphasized-color);
+  outline-offset: calc(-1 * var(--stroke-hairline));
 }
 
-.course-drop-active {
-  background: color-mix(in srgb, var(--active-base) 14%, transparent);
+.course-dragging {
+  opacity: 0;
+}
+
+[data-course-dragging] [data-course-drop] {
+  background-color: color-mix(in srgb, var(--active-base) 10%, transparent);
+  transition: background-color 120ms ease;
+}
+
+[data-course-dragging] [data-course-drop].course-drop-active {
+  background-color: color-mix(in srgb, var(--active-base) 32%, transparent);
 }
 
 /* 🕸️ Spider diagram paint. A diagram is laid out for the width it gets, up to the size it reads best at: in a bin

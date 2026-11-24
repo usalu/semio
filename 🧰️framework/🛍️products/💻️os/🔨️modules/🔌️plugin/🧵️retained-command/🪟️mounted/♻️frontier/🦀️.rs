@@ -63,6 +63,11 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   if let Some(owner)=self.output_retirement.as_ref(){return Ok(owner.next_demand(body)?);}
   Ok(RetirementDemand{depth:usize::from(self.output_chunks.is_some()),..Default::default()})
  }
+ /// 🐛️ [DEBUG] Names the owner `granted_retirement_step` retires next, mirroring its order, for the temporary mutation-latency histogram.
+ pub fn debug_granted_retirement_owner(&self)->&'static str{
+  if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){return "closing.not_ready"}
+  if !self.publication_failure.terminal_is_empty(){"closing.publication_failure"}else if !self.actor_capture_pending.terminal_is_empty(){"closing.actor_capture_pending"}else if self.actor_capture.is_some(){"closing.actor_capture"}else if self.reserved_producer.is_some(){"closing.reserved_producer"}else if self.raw_input.is_some(){"closing.raw_input"}else if self.store_refusal_for_capture().is_some(){"closing.refusal_capture"}else if self.pending_artifact_publication.is_some(){"closing.pending_publication"}else if self.pending_child_publication.is_some(){"closing.pending_child"}else if self.publication_retirement.is_some(){"closing.publication_retirement"}else if self.publication.is_some(){"closing.publication"}else if self.completion_retirement.is_some(){"closing.completion_retirement"}else if self.completion.is_some(){"closing.completion"}else if self.output_retirement.is_some(){"closing.output_retirement"}else if self.output_chunks.is_some(){"closing.output_chunks"}else{"closing.none"}
+ }
  pub fn granted_retirement_step(&mut self,cx:&mut job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,job::OriginalTurnFailure>{
   use semio_framework_value::retained_clone::RetainedCloneStep;
   if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -103,7 +108,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
     }
     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:bytes,..Default::default()}));
    }
-   owner.begin_close();
+   owner.continue_close();
    let step=if owner.requires_original_control(){semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect,control|owner.close_step_controlled(effect,control))?}else{semio_plugin_ownership::bounded_ownership::plugin_effect_close::<semio_framework_value::ValueError>(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_step(effect)))?};
    return Ok(RetainedCloneStep::Progress(step.progress()));
   }

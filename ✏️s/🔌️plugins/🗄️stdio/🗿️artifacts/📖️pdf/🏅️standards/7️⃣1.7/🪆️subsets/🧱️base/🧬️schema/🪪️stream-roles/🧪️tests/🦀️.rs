@@ -1,4 +1,4 @@
-use crate::standards::v1_7::subsets::base::schema::snapshot::model::{ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
+use crate::standards::v1_7::subsets::base::schema::snapshot::model::{stream_bytes, ObjRef, PdfObject, PdfIndirectObject, PdfOp, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::*;
 use crate::standards::v1_7::subsets::base::io::import::{decode_pdf};
 use crate::standards::v1_7::subsets::base::io::export::{encode_pdf, text_document};
@@ -19,17 +19,17 @@ fn role() -> PdfAdmittedStreamRole {
 #[test]
 fn pdf_stream_roles_require_exact_generation_and_explicit_replacement() {
     let role = role();
-    let stream = PdfObject::Stream { dict: Vec::new(), data: b"q Q".to_vec(), filters: Vec::new() };
+    let stream = PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"q Q"), filters: Vec::new() };
     let mut base = vec![PdfIndirectObject { id: role.dependencies[1].owner, value: stream }, PdfIndirectObject { id: role.identity.owner, value: PdfObject::Dict(vec![crate::standards::v1_7::subsets::base::schema::snapshot::PdfDictEntry::new("Contents", PdfObject::Ref(role.dependencies[1].owner))]) }];
     assert!(resolve_identity(&base, &PdfGraphIdentity { owner: ObjRef { gen: 3, ..role.dependencies[1].owner }, path: Vec::new() }).is_none());
     assert_eq!(page_content(std::slice::from_ref(&role), role.identity.owner), Some([PdfOp::Save, PdfOp::Restore].as_slice()));
     let mut next = base.clone();
-    let PdfObject::Stream { data, .. } = &mut next[0].value else { unreachable!() }; data.push(b'q');
+    let PdfObject::Stream { data, .. } = &mut next[0].value else { unreachable!() }; { let mut bytes = data.to_vec_owner(); bytes.push(b'q'); *data = stream_bytes(&bytes); }
     assert!(validate_role_inputs(&base, &next, std::slice::from_ref(&role), &[]).is_err());
     assert!(validate_role_inputs(&base, &next, std::slice::from_ref(&role), std::slice::from_ref(&role)).is_ok());
     let mut without_consumption=base.clone();without_consumption[1].value=PdfObject::Dict(Vec::new());
     assert!(validate_role_transition(&base,&without_consumption,std::slice::from_ref(&role),&[],&[]).is_ok());
-    let PdfObject::Stream {data,..}=&mut without_consumption[0].value else {unreachable!()};data.push(0);
+    let PdfObject::Stream {data,..}=&mut without_consumption[0].value else {unreachable!()};{ let mut bytes = data.to_vec_owner(); bytes.push(0); *data = stream_bytes(&bytes); }
     assert!(validate_role_transition(&base,&without_consumption,std::slice::from_ref(&role),&[],&[]).is_err());
     base[0].id.gen += 1;
     assert!(validate_role_inputs(&next, &base, std::slice::from_ref(&role), std::slice::from_ref(&role)).is_err());
@@ -58,7 +58,7 @@ fn pdf_stream_roles_pure_projection_replaces_operators_and_preserves_inverse() {
     let (index, role) = base.admitted_stream_roles.iter().enumerate().find(|(_, role)| matches!(role.value, PdfStreamRoleValue::Operators { .. })).unwrap();
     let dependency = role.dependencies.iter().find(|dependency| dependency.path.is_empty() && base.objects.iter().any(|object| object.id == dependency.owner && matches!(object.value,PdfObject::Stream { .. }))).unwrap();
     let mut object = base.objects.iter().find(|object| object.id == dependency.owner).unwrap().value.clone();
-    let PdfObject::Stream { data, .. } = &mut object else { unreachable!() }; *data = b"q Q".to_vec();
+    let PdfObject::Stream { data, .. } = &mut object else { unreachable!() }; *data = stream_bytes(b"q Q");
     let refused = PdfMutation::SetObjectValue(SetObjectValue { id: dependency.owner, value: object.clone(), index: None, admitted_stream_roles: None }).diff(&base);
     assert!(protocol::apply_diff_cold(refused.diff(), &base).is_err());
     let mut replacement = role.clone(); replacement.value = PdfStreamRoleValue::Operators { content: vec![PdfOp::Save, PdfOp::Restore] };
@@ -96,9 +96,9 @@ fn pdf_stream_roles_native_colour_admission_uses_components_and_foreign_referenc
     let profile=fixture_bytes!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🌈️x-vt-initial/🌈️sRGB2014.icc").to_vec();
     let mesh=vec![0,128,255];
     let objects=vec![
-        PdfIndirectObject {id:reference(5),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("N",PdfObject::Int(3))],data:profile.clone(),filters:Vec::new()}},
-        PdfIndirectObject {id:reference(6),value:PdfObject::Stream {dict:Vec::new(),data:palette.clone(),filters:Vec::new()}},
-        PdfIndirectObject {id:reference(7),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("ShadingType",PdfObject::Int(4)),PdfDictEntry::new("ColorSpace",PdfObject::name("DeviceRGB"))],data:mesh.clone(),filters:Vec::new()}}
+        PdfIndirectObject {id:reference(5),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("N",PdfObject::Int(3))],data:stream_bytes(&(profile.clone())),filters:Vec::new()}},
+        PdfIndirectObject {id:reference(6),value:PdfObject::Stream {dict:Vec::new(),data:stream_bytes(&(palette.clone())),filters:Vec::new()}},
+        PdfIndirectObject {id:reference(7),value:PdfObject::Stream {dict:vec![PdfDictEntry::new("ShadingType",PdfObject::Int(4)),PdfDictEntry::new("ColorSpace",PdfObject::name("DeviceRGB"))],data:stream_bytes(&(mesh.clone())),filters:Vec::new()}}
     ];
     let mut source=GraphSource::new(&objects);
     let icc=lift_colour_space(&PdfObject::Array(vec![PdfObject::name("ICCBased"),PdfObject::Ref(reference(5))]),&mut source);
@@ -143,7 +143,7 @@ fn pdf_stream_roles_role_only_projection_and_insert_remove_preserve_replay() {
     let owner=ObjRef {num:500,gen:7};
     let identity=PdfGraphIdentity {owner,path:Vec::new()};
     let added=PdfAdmittedStreamRole {identity:identity.clone(),dependencies:vec![identity],value:PdfStreamRoleValue::MetadataText {text:"retained fixture".into()}};
-    let insert=PdfMutation::InsertObject(InsertObject {id:owner,value:PdfObject::Stream {dict:Vec::new(),data:b"retained fixture".to_vec(),filters:Vec::new()},index:None,admitted_stream_roles:Some((PdfIndexedDiff {added:vec![PdfIndexedItem {index:base.admitted_stream_roles.len(),value:added}],..Default::default()}).into())});
+    let insert=PdfMutation::InsertObject(InsertObject {id:owner,value:PdfObject::Stream {dict:Vec::new(),data:stream_bytes(b"retained fixture"),filters:Vec::new()},index:None,admitted_stream_roles:Some((PdfIndexedDiff {added:vec![PdfIndexedItem {index:base.admitted_stream_roles.len(),value:added}],..Default::default()}).into())});
     let inserted=protocol::apply_diff_cold(insert.diff(&base).diff(),&base).unwrap();
     let mut restored=inserted.clone();
     for inverse in insert.inverse(&base).unwrap() {restored=protocol::apply_diff_cold(inverse.diff(&restored).diff(),&restored).unwrap();}
@@ -184,7 +184,7 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
     let metadata=payload("metadataText")["text"].as_str().unwrap().to_string();
     let mut document=text_document(&[(100.0,100.0,"roles")]);
     let program=synthesize_truetype(1000,&[(65,600,vec![vec![(0,0),(0,700),(500,700)]])]);
-    let reference=admit_pdf_artifact(&mut document,"s.stdio.font.truetype",PdfObject::Stream {dict:Vec::new(),data:program.clone(),filters:Vec::new()}).unwrap();
+    let reference=admit_pdf_artifact(&mut document,"s.stdio.font.truetype",PdfObject::Stream {dict:Vec::new(),data:stream_bytes(&(program.clone())),filters:Vec::new()}).unwrap();
     let cmap=PdfEmbeddedCMap {name:"Fixture".into(),vertical:false,codespace:vec![PdfCodespaceRange {byte_width:4,low:0,high:u32::MAX}],mappings:vec![PdfCidMapping::Char {code:u32::MAX,cid:513}],use_cmap:None};
     let unicode=PdfToUnicode {byte_width:4,mappings:vec![PdfToUnicodeMapping::Char {code:u32::MAX,text:"Ω😀".into()}]};
     document.fonts.push(PdfFont {id:"RoleFont".into(),kind:PdfFontKind::Type0 {base_font:"Synth".into(),cmap:PdfCMap::Embedded {cmap:cmap.clone()},descendant:PdfCidFont {true_type:true,base_font:"Synth".into(),system_info:Default::default(),descriptor:PdfFontDescriptor {font_name:"Synth".into(),..Default::default()},default_width:1000.0,widths:Vec::new(),default_vertical:None,vertical_metrics:Vec::new(),cid_to_gid:Some(PdfCidToGid::Map {glyphs:glyphs.clone()}),program:Some(PdfFontProgram::TrueType {reference}),extra:Vec::new()}},to_unicode:Some(unicode.clone()),extra:Vec::new()});
@@ -222,7 +222,7 @@ fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     let roles: Vec<PdfAdmittedStreamRole> = owners.iter().zip(&texts).map(|(owner, text)| PdfAdmittedStreamRole { identity: identity(*owner), dependencies: vec![identity(*owner)], value: PdfStreamRoleValue::MetadataText { text: text.clone() } }).collect();
     let mut base = decode_pdf(&encode_pdf(&text_document(&[(200.0, 300.0, "role")])).unwrap()).unwrap();
     let (first_object, first_role) = (base.objects.len(), base.admitted_stream_roles.len());
-    base.objects.extend(owners.iter().zip(&texts).map(|(id, text)| PdfIndirectObject { id: *id, value: PdfObject::Stream { dict: Vec::new(), data: text.clone().into_bytes(), filters: Vec::new() } }));
+    base.objects.extend(owners.iter().zip(&texts).map(|(id, text)| PdfIndirectObject { id: *id, value: PdfObject::Stream { dict: Vec::new(), data: stream_bytes(&(text.clone().into_bytes())), filters: Vec::new() } }));
     base.admitted_stream_roles.extend(roles.iter().cloned());
     assert!(validate_role_inputs(&base.objects, &base.objects, &[], &base.admitted_stream_roles).is_ok());
 
@@ -249,7 +249,7 @@ fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
     assert_eq!(replay["physicalByteEditRefused"], true);
     let mut physical = base.clone();
     let PdfObject::Stream { data, .. } = &mut physical.objects[first_object].value else { unreachable!() };
-    data.push(0);
+    { let mut bytes = data.to_vec_owner(); bytes.push(0); *data = stream_bytes(&bytes); }
     assert!(validate_role_transition(&base.objects, &physical.objects, &base.admitted_stream_roles, &base.admitted_stream_roles[..first_role], &[]).is_err());
 
     let mut pathed = roles[1].clone();

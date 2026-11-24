@@ -1,27 +1,27 @@
 semio norm.en1998.dsl v1
-annex=de site=s-ap-r=1.5m/s2 a-gr=0.6m/s2 de-ground-combo=B-R en-ground-type=a en-spectrum-type=type1 importance-class=ii below-alluvium-v-s-m-s=0 alluvium-v-s-m-s=0 alluvium-thickness-m=0 liquefiable-layer=false soft-clay-pi=0 soft-clay-thickness-m=0 c-u-kpa=0 n-spt=0 v-s30-m-s=0
+annex=de site=s-ap-r=1.5m/s2 a-gr=0.6m/s2 de-ground-combo=B-R en-ground-type=a en-spectrum-type=type1 importance-class=ii v-s30-m-s=0 n-spt=0 c-u-kpa=0 soft-clay-thickness-m=0 soft-clay-pi=0 liquefiable-layer=false alluvium-thickness-m=0 alluvium-v-s-m-s=0 below-alluvium-v-s-m-s=0
 buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE storeys:TABLE members:TABLE plan-regular:BOOL elevation-regular:BOOL t1-method:ENUM t1-given-s:NUM ct:NUM drift-limit-class:ENUM nu:NUM multiple-resisting-systems:BOOL claims-simple-masonry:BOOL masonry-wall-area-ratio:NUM accidental-eccentricity-ratio:NUM setback-ratio:NUM plan-envelope-gap-ratio:NUM joint-gap-m:NUM nonstructural-weight-n:NUM nonstructural-height-m:NUM nonstructural-period-s:NUM nonstructural-q:NUM nonstructural-resistance-n:NUM column-moment-sum-nm:NUM beam-moment-sum-nm:NUM overturning-base-x-m:NUM overturning-base-y-m:NUM tie-down-moment-nm:NUM storey-stiffness-basis:ENUM storey-stiffness-ratio:NUM] {
   bldg-office "Office RC frame" 24m 16m [ {id=sys-x direction=x system-type=frame material=rc ductility-class=dch q0=4.5 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=1200000N} {id=sys-y direction=y system-type=frame material=rc ductility-class=dch q0=4.5 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=1200000N} ] [ {id=s1 height-m=3.5m permanent-gk-n=2334780N correlated-occupancy=true stiffness-x=180000000 stiffness-y=180000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.008m drift-y-m=0.008m shear-resistance-n=400000N
-  variables [id:TEXT category:TEXT qk-n:QTY] {
+  variables [id:TEXT category:ENUM qk-n:QTY] {
     s1-q b 1716750N
   }
   } {id=s2 height-m=3.5m permanent-gk-n=2251395N correlated-occupancy=true stiffness-x=170000000 stiffness-y=170000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.009m drift-y-m=0.009m shear-resistance-n=400000N
-  variables [id:TEXT category:TEXT qk-n:QTY] {
+  variables [id:TEXT category:ENUM qk-n:QTY] {
     s2-q b 1655437.5N
   }
   } {id=s3 height-m=3.5m permanent-gk-n=2168010N correlated-occupancy=true stiffness-x=160000000 stiffness-y=160000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.01m drift-y-m=0.01m shear-resistance-n=400000N
-  variables [id:TEXT category:TEXT qk-n:QTY] {
+  variables [id:TEXT category:ENUM qk-n:QTY] {
     s3-q b 1594125N
   }
   } {id=s4 height-m=3.5m permanent-gk-n=2001240N correlated-occupancy=true stiffness-x=150000000 stiffness-y=150000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.011m drift-y-m=0.011m shear-resistance-n=400000N
-  variables [id:TEXT category:TEXT qk-n:QTY] {
+  variables [id:TEXT category:ENUM qk-n:QTY] {
     s4-q b 1177200N
   }
   } ] [ {id=col-c1 material=rc role=column detailing-compatible-with-q=true min-dimension-m=0.35m rho=0.012 rho-prime=0 omega-wd=0.12 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} {id=beam-b1 material=rc role=beam detailing-compatible-with-q=true min-dimension-m=0.3m rho=0.01 rho-prime=0.005 omega-wd=0.08 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} ] true true ct 0 0.075 ductile 0.5 false false 0 0.05 0 0 0 0 0 0 2 0 0 0 0 0 0 declared 1
 }
 bridges [id:TEXT period-ratio:NUM fundamental-period-s:QTY v-rd-n:QTY bearing-d-rd-m:QTY permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE pier-height-m:NUM pier-moment-rd-nm:NUM pier-shear-rd-n:NUM deck-length-m:NUM deck-ei-nm2:NUM importance-class:NUM vertical-period-s:NUM pier-cracked-inertia-ratio:NUM] {
 }
-assessments [id:TEXT knowledge-level:ENUM limit-state:ENUM supported-building-id:TEXT r-k-n:QTY gamma-el:NUM chord-rotation-demand-rad:NUM chord-rotation-yield-rad:NUM chord-rotation-ultimate-rad:NUM section-depth-m:NUM section-width-m:NUM effective-depth-m:NUM shear-span-m:NUM axial-force-n:NUM tension-steel-area-m2:NUM compression-steel-area-m2:NUM bar-diameter-mm:NUM steel-yield-mpa:NUM concrete-strength-mpa:NUM stirrup-leg-area-m2:NUM stirrup-spacing-m:NUM stirrup-yield-mpa:NUM core-width-m:NUM core-depth-m:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM diagonal-reinforcement-ratio:NUM shear-cracking-before-yield:NUM shear-force-demand-n:NUM intermediate-steel-area-m2:QTY analysis-method:TEXT] {
+assessments [id:TEXT knowledge-level:ENUM limit-state:ENUM supported-building-id:TEXT r-k-n:QTY gamma-el:NUM chord-rotation-demand-rad:NUM chord-rotation-yield-rad:NUM chord-rotation-ultimate-rad:NUM section-depth-m:NUM section-width-m:NUM effective-depth-m:NUM shear-span-m:NUM axial-force-n:NUM tension-steel-area-m2:NUM compression-steel-area-m2:NUM bar-diameter-mm:NUM steel-yield-mpa:NUM concrete-strength-mpa:NUM stirrup-leg-area-m2:NUM stirrup-spacing-m:NUM stirrup-yield-mpa:NUM core-width-m:NUM core-depth-m:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM diagonal-reinforcement-ratio:NUM shear-cracking-before-yield:NUM shear-force-demand-n:NUM intermediate-steel-area-m2:QTY analysis-method:ENUM] {
 }
 silos [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:ENUM filling-ratio:NUM n-rd-n:QTY v-rd-n:QTY q-nominal:NUM] {
 }

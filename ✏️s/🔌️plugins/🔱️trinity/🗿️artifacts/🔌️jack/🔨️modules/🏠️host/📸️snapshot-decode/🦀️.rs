@@ -188,7 +188,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
 
 impl Drop for JackSnapshotDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self), "Jack snapshot decode reached Drop before publication or bounded retirement");
+        assert!(std::thread::panicking()||(store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self)), "Jack snapshot decode reached Drop before publication or bounded retirement");
     }
 }
 //#endregion 🔖️OwnedSprCatalog

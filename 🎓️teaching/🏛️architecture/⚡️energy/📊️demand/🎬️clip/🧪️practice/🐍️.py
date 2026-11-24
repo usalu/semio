@@ -26,6 +26,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -109,11 +110,18 @@ CHAIN_END = round(CHAIN_NUTZ * float(np.prod(CHAIN_E_FACTORS)))
 CHAIN_PRIM = int(CHAIN_END * CHAIN_FP_GAS + 0.5)
 CHAIN_END_WP = round(CHAIN_NUTZ * float(np.prod(CHAIN_E_FACTORS_WP)))
 CHAIN_PRIM_WP = int(CHAIN_END_WP * CHAIN_FP_STROM + 0.5)
+CHAIN_E_E = CHAIN_END / CHAIN_NUTZ
 CHAIN_CLASSES = (
     ("A+", 30, "#1D7A3E"), ("A", 50, "#3FA34D"), ("B", 75, "#8DC63F"),
     ("C", 100, "#C7D93A"), ("D", 130, "#F9E547"), ("E", 160, "#F5A623"),
     ("F", 200, "#E8622C"), ("G", 250, "#D0342C"), ("H", None, "#A61C1C"),
 )
+
+
+def _num(value: float, digits: int = 0, language: str = "en") -> str:
+    """🔢 Number for narration TeX: decimal point in en, braced decimal comma in de."""
+    text = f"{value:.{digits}f}"
+    return text.replace(".", "{,}") if language == "de" else text
 
 
 def _class_of(end_energy: float):
@@ -126,29 +134,6 @@ def _class_of(end_energy: float):
 
 CHAIN_CLASS = _class_of(CHAIN_END)[0]
 CHAIN_CLASS_WP = _class_of(CHAIN_END_WP)[0]
-#endregion
-
-
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
 #endregion
 
 
@@ -323,7 +308,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         morph_stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Why calculation and billing diverge", "Warum Rechnung und Abrechnung auseinanderlaufen"))
-        din = _din_ref(_references.cite(("din-ts-18599-10", "nutzungsprofile")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-10", "nutzungsprofile")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -580,7 +565,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         pre_card = stat_card(tr("poorly insulated · on average", "schlecht gedämmt · im Mittel"), tr("consumption < demand", "Verbrauch < Bedarf"), color=GOOD_GREEN,
                              caption_size=LABEL_FONT_SIZE - 2, value_size=LABEL_FONT_SIZE).move_to(CARD_AT)
         pre_dot = axes["pt"](0.85, 0.70)
-        din_pre = _din_ref(_references.cite("sunikka-galvin-2012"))
+        din_pre = reference_chip(_references.cite("sunikka-galvin-2012"))
         self.play(FadeOut(x_seg), FadeOut(y_seg), FadeOut(proj), FadeIn(pre_zone), Create(trend), FadeIn(pre_card),
                   FadeOut(din), FadeIn(din_pre), me_dot.animate.move_to(pre_dot), run_time=1.6)
         ring = Circle(radius=0.17, color=P_WHITE, stroke_width=2.5).move_to(me_dot.get_center())
@@ -717,7 +702,7 @@ class Beat2_HydraulischerAbgleich(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Hydraulic balancing", "Hydraulischer Abgleich"))
-        din = _din_ref(_references.cite(("gmodg", "p60c"), ("din-18380", "abgleich")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p60c"), ("din-18380", "abgleich")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -894,7 +879,7 @@ class Beat2_HydraulischerAbgleich(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gewinn_jaz"))
         jaz = ValueTracker(0.25)
-        jaz_meter = meter("JAZ", length=1.8, thickness=0.40, color=GOOD_GREEN)
+        jaz_meter = meter(tr("SPF", "JAZ"), length=1.8, thickness=0.40, color=GOOD_GREEN)
         jaz_meter["group"].move_to(np.array([6.25, 0.10, 0.0]))
         bind_meter(jaz_meter, jaz)
         panel, box, items = math_panel([
@@ -1046,23 +1031,23 @@ class Beat3_SerienAbschluss(Scene):
          "And finally onto the certificate, which prints the class of the final energy.",
          "Und schließlich auf den Ausweis, der die Klasse der Endenergie ausweist."),
         ("zahlen_nutz",
-         r"We start with $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ of useful energy in the room.",
-         r"Wir starten mit $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ Nutzenergie im Raum."),
+         rf"We start with $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ of useful energy in the room.",
+         rf"Wir starten mit $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ Nutzenergie im Raum."),
         ("zahlen_zaehler",
-         r"On the gas path the meter reads $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, with the dimensionless factor $e_{E}=1.40$.",
-         r"Auf dem Gasweg zeigt der Zähler $Q_{E}=140\,\mathrm{kWh/(m^2\,a)}$, mit dem einheitenlosen Faktor $e_{E}=1{,}40$."),
+         rf"On the gas path the meter reads $Q_{{E}}={CHAIN_END}\,\mathrm{{kWh/(m^2\,a)}}$, with the dimensionless factor $e_{{E}}={_num(CHAIN_E_E, 2)}$.",
+         rf"Auf dem Gasweg zeigt der Zähler $Q_{{E}}={CHAIN_END}\,\mathrm{{kWh/(m^2\,a)}}$, mit dem einheitenlosen Faktor $e_{{E}}={_num(CHAIN_E_E, 2, 'de')}$."),
         ("zahlen_quelle",
-         r"At the source the primary energy is $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$, with the dimensionless factor $f_{P}=1.1$.",
-         r"An der Quelle sind es $Q_{P}=154\,\mathrm{kWh/(m^2\,a)}$ Primärenergie, mit dem einheitenlosen Faktor $f_{P}=1{,}1$."),
+         rf"At the source the primary energy is $Q_{{P}}={CHAIN_PRIM}\,\mathrm{{kWh/(m^2\,a)}}$, with the dimensionless factor $f_{{P}}={_num(CHAIN_FP_GAS, 1)}$.",
+         rf"An der Quelle sind es $Q_{{P}}={CHAIN_PRIM}\,\mathrm{{kWh/(m^2\,a)}}$ Primärenergie, mit dem einheitenlosen Faktor $f_{{P}}={_num(CHAIN_FP_GAS, 1, 'de')}$."),
         ("zahlen_buchstabe",
          r"And from the final energy $Q_{E}$ alone follows one letter on the certificate.",
          r"Und allein aus der Endenergie $Q_{E}$ folgt ein Buchstabe auf dem Ausweis."),
         ("zahlen_wp",
-         r"The heat pump delivers the same useful energy $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ as heat, but buys only $Q_{E}=31\,\mathrm{kWh/(m^2\,a)}$ of electricity.",
-         r"Die Wärmepumpe liefert dieselbe Nutzenergie $Q_{h}=100\,\mathrm{kWh/(m^2\,a)}$ als Wärme, kauft aber nur $Q_{E}=31\,\mathrm{kWh/(m^2\,a)}$ Strom."),
+         rf"The heat pump delivers the same useful energy $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ as heat, but buys only $Q_{{E}}={CHAIN_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ of electricity.",
+         rf"Die Wärmepumpe liefert dieselbe Nutzenergie $Q_{{h}}={CHAIN_NUTZ}\,\mathrm{{kWh/(m^2\,a)}}$ als Wärme, kauft aber nur $Q_{{E}}={CHAIN_END_WP}\,\mathrm{{kWh/(m^2\,a)}}$ Strom."),
         ("zahlen_wp_quelle",
-         r"At the source that is $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, with $f_{P}=1.8$ for electricity.",
-         r"An der Quelle sind das $Q_{P}=56\,\mathrm{kWh/(m^2\,a)}$, mit $f_{P}=1{,}8$ für Strom."),
+         rf"At the source that is $Q_{{P}}={CHAIN_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, with $f_{{P}}={_num(CHAIN_FP_STROM, 1)}$ for electricity.",
+         rf"An der Quelle sind das $Q_{{P}}={CHAIN_PRIM_WP}\,\mathrm{{kWh/(m^2\,a)}}$, mit $f_{{P}}={_num(CHAIN_FP_STROM, 1, 'de')}$ für Strom."),
         ("zahlen_wp_buchstabe",
          "So the heat pump writes a different letter.",
          "Die Wärmepumpe schreibt deshalb einen anderen Buchstaben."),
@@ -1079,7 +1064,7 @@ class Beat3_SerienAbschluss(Scene):
         morph_stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The series in review", "Die Serie im Rückblick"))
-        din = _din_ref(_references.cite(("din-ts-18599-1", "primaerenergie"), ("gmodg", "p22")), subtitle)
+        din = reference_chip(_references.cite(("din-ts-18599-1", "primaerenergie"), ("gmodg", "p22")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))

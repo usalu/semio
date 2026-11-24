@@ -958,3 +958,11 @@ Not run: a real `repo` build command (forbidden graph commands on this machine).
 ## R52 2026-11-15 18:32: `🔁️replica/🧪️tests/⏱️turns.ts` only (test file, outside the import closure; no restart)
 - the drift-repair turn-length test and the forced-collection rate-limit test now run on a logical clock (performance.now replaced for the test body; one tick per manifest entry named) instead of wall time, so host load cannot fail them; sha256 after da708868a27c
 - test: `⏱️turns.ts` 3 pass (run twice); the other test files of the module were not re-run (no source change)
+
+## RP1 2026-11-23 20:06: bootstrap archive retirement (code lane RP1; takes effect at the next natural daemon restart, nothing restarted)
+- `🔁️replica/🥾️bootstrap/🟦️.ts` f770b675f675 -> 7acd44edac65: `retireSupersededV1` (grace from the later of file mtime and manifest switch, sweeps every unnamed worktree-*.tar/.entries at the start of every build round and at each grace end, even when the fold fails), pressure grace 10 min when the volume is short, `.cache/f/bootstrap.json` record, space refusal recorded
+- `🔁️replica/🟦️.ts` ed2b62ffbb62 -> e8fc02163f7c: optional `bootstrap` field in the status report (reads .cache/f/bootstrap.json)
+- `🔁️replica/🧬️schema/🔣️.json` 587ec77596aa -> 812079550b97: `bootstrap` status property
+- new `🔁️replica/🥾️bootstrap/🧬️schema/🔣️.json` 9901cd669480: Retention and BootstrapRecord
+- tests `🥾️bootstrap/🧪️tests/🟦️.ts` (+6 retention tests, 28 pass) and `🐍️.py` (retention oracle command)
+- all 61 test files of the module run one at a time: all pass except launcher-first (2 fail, shim bun not called), topology service (2 fail, real launchd), race.ts flaked once and passed on rerun; none touch the changed files

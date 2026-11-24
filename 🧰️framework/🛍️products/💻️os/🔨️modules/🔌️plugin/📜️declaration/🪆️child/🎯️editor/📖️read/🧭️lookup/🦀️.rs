@@ -53,7 +53,7 @@ impl OriginalChildMemberLookup{
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.source.is_none()&&self.root==0&&self.entry==0}
 }
 
-impl Drop for OriginalChildMemberLookup{fn drop(&mut self){assert!(self.terminal_is_empty(),"original member lookup requires terminal closure")}}
+impl Drop for OriginalChildMemberLookup{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original member lookup requires terminal closure")}}
 
 #[doc(hidden)]pub struct LookupRetirement{cursor:Option<OriginalChildMemberLookup>}
 impl semio_framework_value::retirement::RetireOwned for OriginalChildMemberLookup{type RetirementCursor=LookupRetirement;fn retirement_seed(self)->LookupRetirement{LookupRetirement{cursor:Some(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<LookupRetirement>())}fn controlled_retirement_supported()->bool{true}}

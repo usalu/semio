@@ -615,7 +615,7 @@ pub fn handles_with<C: CaseCatalogue>(row: &CaseRow, pose: &CasePose, collection
         let write = handle_kit::field_binding(format!("placements[id={}].{field}", row.id), Affine { base, k: 1.0 }, "m", handle_kit::round(GRID));
         out.push(handle_kit::handle(HandleSpec { entity: &entity, tag, kind: HandleKind::Translate { axis }, anchor: pose.at(0.0, 0.0, top), grip: GripStyle::Ring, writes: vec![write], snap: handle_kit::grid(GRID), limits: (-1.0e4, 1.0e4), name: named(en, de, &row.id) }));
     }
-    out
+    out.into_iter().map(handle_kit::with_rest_in_limits).collect()
 }
 
 /// 🎬️ Everything a scene needs to show one case: its scene entities (the body carries the grip ids), the points that bound it and its label.

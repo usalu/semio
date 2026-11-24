@@ -32,6 +32,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 P_TEAL = _manim_module.P_TEAL
 section_material = _manim_module.section_material
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -96,20 +97,6 @@ PEOPLE = 4
 LATENT_PER_PERSON_W = 30.0
 THETA_WINTER = (20.0, 0.0)
 THETA_SUMMER = (26.0, 32.0)
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in every other tutorial chapter. This chapter cites
-    DIN EN 16798-1 (indoor air quality, CO₂ categories) and DIN 1946-6 (ventilation of dwellings).
-    """
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
 
 
 #region Shared visual motifs
@@ -244,7 +231,7 @@ class Beat1_Lueftungsbedarf(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("What ventilation has to achieve", "Was Lüftung leisten muss"))
-        din = _din_ref(_references.cite("pettenkofer-1858", "adhoc-ag-2008"))
+        din = reference_chip(_references.cite("pettenkofer-1858", "adhoc-ag-2008"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -276,12 +263,12 @@ class Beat1_Lueftungsbedarf(Scene):
 
         tick_out, tick_pk = tick(g_co2, gx["co2"], 0.42), tick(g_co2, gx["co2"], 1.0)
         def tag(name: str, value: str, y: float):
-            lines = VGroup(math_label(rf"\text{{{name}}}", size=LABEL_FONT_SIZE), math_label(value, size=LABEL_FONT_SIZE, color=P_WHITE))
+            lines = VGroup(*[math_label(rf"\text{{{part}}}", size=LABEL_FONT_SIZE) for part in name.split("|")], math_label(value, size=LABEL_FONT_SIZE, color=P_WHITE))
             lines.arrange(DOWN, buff=0.08, aligned_edge=LEFT)
             return lines.move_to(np.array([gx["co2"] + 0.45 + lines.width / 2, y, 0.0]))
 
         tag_out = tag(tr("Outdoor air", "Außenluft"), r"420\,\mathrm{ppm}", tick_out.get_y())
-        tag_pk = tag(tr("Limit after Pettenkofer (1858)", "Grenzwert nach Pettenkofer (1858)"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
+        tag_pk = tag(tr("Limit after|Pettenkofer (1858)", "Grenzwert nach|Pettenkofer (1858)"), r"1000\,\mathrm{ppm}", tick_pk.get_y())
         read_co2 = math_readout(lambda: rf"c = {label_number(co2.get_value() * 1000)}\,\mathrm{{ppm}}", np.array([gx["co2"], -1.35, 0.0]),
                                 color=CO2_COLOR, edge="center")
         read_lat = math_readout(lambda: rf"\dot{{Q}}_{{\mathrm{{i,lat}}}} = {label_number(moist.get_value() * PEOPLE * LATENT_PER_PERSON_W)}\,\mathrm{{W}}",
@@ -435,7 +422,7 @@ class Beat2_Lueftungsweg(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The ventilation path through the house", "Der Lüftungsweg durchs Haus"))
-        din = _din_ref(_references.cite("din-en-12831-1"))
+        din = reference_chip(_references.cite("din-en-12831-1"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))

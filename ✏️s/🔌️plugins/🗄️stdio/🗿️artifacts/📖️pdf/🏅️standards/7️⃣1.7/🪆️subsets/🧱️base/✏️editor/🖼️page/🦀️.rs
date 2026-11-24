@@ -72,7 +72,7 @@ pub use semio_s_artifact_stdio_pdf_page_editor_view::*;
 mod labels;
 pub use self::labels::*;
 
-pub use semio_s_artifact_stdio_pdf_editor_document::{cancelled, pdf_fault_notices, refuse, PdfFault};
+pub use semio_s_artifact_stdio_pdf_editor_document::{cancelled, page_fault, page_of, pdf_fault_notices, refuse, resolve_page, PdfFault};
 
 #[path = "♿️text-layer/🦀️.rs"]
 mod text_layer;

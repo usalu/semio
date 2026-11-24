@@ -14,7 +14,7 @@ use combinations::{column_for_check, Column};
 use kit::COMBINATION_ENTITY;
 use model::{En1990Snapshot, Member, ReliabilityAnalysis, TestSeries};
 use norm::CheckReport;
-use scene::projection_kit::diagram_parts::{column, stroke};
+use scene::projection_kit::diagram_parts::{checked_marker_id, column, stroke};
 use scene::projection_kit::diagram_parts;
 use scene::*;
 
@@ -106,7 +106,7 @@ fn matrix(document: &En1990Snapshot, report: &CheckReport, columns: &[Column], a
         let worst = worst_of_column(report, columns, col);
         let is_active = active.is_some_and(|a| a.id == col.id);
         markers.push(Marker {
-            id: format!("combination-{}", col.id),
+            id: checked_marker_id(&format!("combination-{}", col.id), &worst.map(|w| w.id.clone())),
             at: p(c as f64 + 0.5, rows as f64 + 0.5),
             shape: MarkerShape::Square,
             tone: if is_active { Tone::Error } else { worst.map_or(Tone::Neutral, |w| utilisation_tone(w.utilization)) },
@@ -475,7 +475,7 @@ fn sls_limits(report: &CheckReport, member: &Member) -> Option<Diagram2d> {
     }
     let mid = member.span / 2.0;
     let marker = Marker {
-        id: "midspan".into(),
+        id: checked_marker_id("midspan", &check.map(|c| c.id.clone())),
         at: p(mid, net * 1000.0 * sls_line(0.5)),
         shape: MarkerShape::Circle,
         tone: check.map_or(Tone::Neutral, |c| utilisation_tone(c.utilization)),

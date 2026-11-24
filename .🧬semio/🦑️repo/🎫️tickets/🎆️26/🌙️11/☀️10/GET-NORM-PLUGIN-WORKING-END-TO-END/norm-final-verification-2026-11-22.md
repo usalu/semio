@@ -161,4 +161,208 @@ Remaining in other agents' in-flight framework work:
 
 Details: `en1997-editor-test-2026-11-23.md`.
 
+### EN 1994 examples, 2026-11-23 13:10
+
+3 passed and 0 failed, with no `[DEBUG]` tests left, verified in `🗑️generated/en1994-assert.log`. Both compliant examples genuinely failed checks, so their assets were redesigned:
+
+- **Floor beam:** the composite column is now 400 mm with a 20 mm wall and concrete fill. The old column exceeded the Table 6.6 load-introduction shear limit of 0.40 MPa.
+- **Bridge girder:** HEB400 over 20 m failed under LM1 traffic, at up to 2.35 utilisation. The girder is now HEB500 over 12 m, continuous over two spans. It uses 25 mm studs, 0.14 m high, at 0.13 m spacing with two per row.
+
+Both pack twins were regenerated. The editor, compliance-report and TS example tests that read these assets run later in `norm-js:test` and the official plugin test.
+
+### EN 1998 examples, 2026-11-23 15:20
+
+10 passed and 0 failed, verified in `🗑️generated/en1998-assert.log`. The compliant `seismic-multipart` example failed the silo wall axial check: a design force of about 4.7 MN against a declared resistance of 2.0 MN. The wall resistance is now 8 MN, in the DSL asset and in `seismic_multipart::snapshot()`. No `[DEBUG]` text remains in any family's example tree. Details: `norm-example-test-mounting-2026-11-22.md`.
+
+### Chain 6 replaces chains 4 and 5, 2026-11-23 15:00
+
+From 09:40 to 14:30 the replay crate gate stayed red. The interim diagnosis in `store-replay-receipt-regression-2026-11-23.md` shows that those tests mix three separate defects:
+- a duplicated block in the catalog test, now removed
+- step funding in the replacement caller
+- supersession
+
+So the crate is only an indirect signal for the Play refusal.
+
+`chain-6.sh` now gates on the real symptom instead. Every round it:
+1. rebuilds `norm-energy`
+2. probes din18599
+3. waits 10 minutes before the next round
+
+Once din18599 passes, it does the following:
+1. Rebuilds `norm-eurocode-structural`, `norm-eurocode`, `norm-eurocode-materials` and `norm`. This picks up the EN 1991, 1994, 1997, 1998 and 1999 assets and the VDI 3805 fail assets.
+2. Sweeps all 15 routes.
+3. Runs `norm-plugin:test` and `norm-js:test`.
+
+### Chain 6 round 1, 2026-11-23 16:24
+
+- **Build:** the first `norm-energy` attempt hit another writer's in-flight compile error (`NativeReceivingFailure::primary` in `semio-framework-pack-json`). The second attempt published.
+- **Probe:** din18599 no longer refuses. The shell reaches its ready state, and the `native-return-refused: semantic` fault is gone.
+- **Remaining failure:** the strict probe still fails, on three `[DEBUG] scope body RetainedCloneProgress` prints compiled into the guest. The print is no longer in the source, so round 2 is rebuilding without it.
+
+### Chain 6 round 2 and chain 7, 2026-11-23 17:43
+
+Round 2 failed the same way as round 1: din18599 loads and draws, and all 14 faults are `[DEBUG] close-phase` prints from another agent's temporary instrumentation, which has since been removed from the source. Each round picks up a different agent's in-flight prints.
+
+`chain-7.sh` takes over after the round 3 probe:
+- If din18599 is clean, chain 6 continues on its own.
+- If din18599 fails only on `[DEBUG]` prints (`route-debug-only.py`), chain 7 stops chain 6 and rebuilds all five components. The rebuild includes `norm-energy`, so the sweep runs on one fresh snapshot. Chain 7 then sweeps all 15 routes and runs the plugin and JS tests.
+- If din18599 still fails with a real fault, chain 6 keeps going.
+
+### Chain 6 round 3, 2026-11-23 19:09
+
+The din18599 route passes the strict Play probe with outcome 0: no faults, no `[DEBUG]` prints, ready state published, picker round trip and draw observed. The `norm-energy` core was published by attempt 1, which exited 75 after publishing. Chain 7 saw the clean result and handed control back to chain 6.
+
+Chain 6 now rebuilds `norm-eurocode-structural`, `norm-eurocode`, `norm-eurocode-materials` and `norm`. It then sweeps all 15 routes and runs `norm-plugin:test` and `norm-js:test`.
+
+### Editors, 2026-11-23 23:30
+
+**EN 1997 editor:** lib 30/30 and integration 48/51. Report: `en1997-editor-test-2026-11-23.md`.
+- **Changes:**
+  - Schema labels and remedy law are fixed.
+  - The touch law now uses arena and paging.
+  - Topology runs over the settled report.
+  - Grips and gauges are fixed.
+  - Thirteen catalogue entries that only design cases produce are marked `Realisation::DesignCase`.
+  - GI-11 is now realised by a triaxial lab test.
+- **Remaining:** three framework-side failures in history and undo, the scene crate at 51/60 at last count, and Python oracle tests that wait for the Python environment sync.
+
+**EN 1999 editor:** integration 38/40 and lib 29/30. The debug `latency_bench` is ignored through the new opt-in `release_only` arm. Report: `en1999-mutations-compile-2026-11-23.md`.
+- **Changes:**
+  - Remedy law findings drop from 438 to 0, fixed in the engine.
+  - The diagram-law id mismatch is fixed.
+  - `noncompliant-multi-fail` and `aluminium-showcase` are regenerated.
+  - Typed-entry units are added.
+  - Lateral-torsional, flexural and deflection solves are memoised. The debug latency bench now takes 455 s; before, it had not finished after more than 40 min.
+- **Remaining:** two framework-side history failures, and the shared load-grip kit's relative map against the framework's absolute `rest_parameter`. That kit issue spans en1993, en1997, en1998 and en1999; see `load-grip-kit-2026-11-23.md`.
+
+If those EN 1999 asset regenerations landed after the chain-6 materials build started, `norm-eurocode-materials` needs one more rebuild.
+
+### Sweep 6, 2026-11-24 01:00
+
+Rebuild results:
+- `norm-eurocode-structural`, `norm-eurocode`, `norm-eurocode-materials` (second attempt) and `norm` were all published.
+- The materials first attempt stopped because another writer was editing `Cargo.lock` during the build.
+
+The strict 15-route probe log is `🗑️generated/routes-sweep6.log`.
+
+**Pass (6):** iso16757, vdi3805, din18599, en1992, en1996 and en1999.
+
+**Fail:**
+
+| Routes | Cause | Owner |
+|---|---|---|
+| din4108, din16798 | `ui.fixed-capacity: fixed UI admission failed at scene-surface.description`: the Norm scene description overflows the fixed UI list, so `setActiveExample` is refused | ours; see `norm-scene-surface-capacity-2026-11-24.md` |
+| en1991, en1997, en1998 | `scalar close changed Source or Work` from `close_dispatch` in `🌱️value/🛬️decode/🧳️owned/🧩️record/🌳️source/🦀️.rs:150`, which carries another agent's live `[DEBUG]` print | framework, in flight |
+| en1993, en1994 | only another agent's `[DEBUG] rel-total` prints | framework instrumentation |
+| en1995 | activation failed with `Original artifact bytes or identity changed`, which is transient | re-probed |
+| en1990 | outcome 1, and no route log was written | re-probed |
+
+The official `norm-plugin:test` is running now.
+
+### Re-probe and official plugin test, 2026-11-24 01:30
+
+**Re-probe on port 6037, run from the repo root.** The probe takes `cwd` as the repo root. An earlier re-probe launched from the ticket folder failed with `posix_spawn 'repo'` ENOENT; that was a launch mistake, not a product fault.
+- **en1995:** works. Its only faults are another agent's `[DEBUG] ui patches` prints.
+- **en1990:** fails in its viewport probe (`norm-published-eurocode-viewport-en1990.log`) with the same `scalar close changed Source or Work` as en1991, en1997 and en1998.
+
+**Route status:**
+- **Pass, clean (6):** iso16757, vdi3805, din18599, en1992, en1996, en1999.
+- **Working, only other agents' `[DEBUG]` prints (3):** en1993, en1994, en1995.
+- **Framework close regression (4):** en1990, en1991, en1997, en1998. See `scalar-close-source-work-2026-11-24.md`.
+- **Our scene description capacity (2):** din4108, din16798. See `norm-scene-surface-capacity-2026-11-24.md`.
+
+**`norm-plugin:test`:** 14 of 15 pass, the first time the official test has completed. The one failure is `surface_render norm_public_surfaces_render_all_declared_bodies`, which panics with `controlled retirement abandoned before terminal-empty` in `semio-framework-value-retirement` (`🎮️controlled/🦀️.rs:389`). It is the same retirement and close family as the route regression.
+
+`norm-js:test` is running.
+
+### Store replay crate green, 2026-11-24 02:00
+
+`semio-os-store-initialization-replay --lib` passes 4 of 4 (`🗑️generated/replay-gate-9.log`). Three defects were fixed, and none of them weakened an assertion:
+
+- **Catalog test:** a nested duplicate block was removed.
+- **Replacement test:** the close loop now uses `quoted_turn` with `owner.close_demands`, as the advance path already did. The JSON receiving shell is 38832 B, and the framework already quotes its full release.
+- **Supersession:** `advance_input` now validates the caller (`admission.validate(cx)?`) before it ends a source-less stream. Before this, a foreign caller could end it.
+
+Two related problems are not covered by this fix and remain open:
+- `scalar close changed Source or Work` (see `scalar-close-source-work-2026-11-24.md`)
+- the en1997 history and undo failures
+
+Details are in `store-replay-receipt-regression-2026-11-23.md`.
+
+Some of the other agents' work in flight is also blocking builds and tests:
+- `semio-framework-pack-json` is over its source boundary (268140 of 262144 bytes), and so is `semio-plugin-decl-app` at times.
+- `semio-os-store-operation-wire` test code does not compile.
+
+### Scalar close and `norm-js:test`, 2026-11-24 03:15
+
+**Scalar close (`scalar-close-source-work-2026-11-24.md`).**
+- **Build blocker cleared:** another agent's `close_chained` method had pushed `semio-plugin-decl-app` over its source boundary, which blocked every Rust build. The method moved to its only caller.
+- **Retirement panic:** `surface_render` now passes 2/2. The `Drop` assertion was a consequence of the refused scalar close, not a separate defect.
+- **Not reproduced in-process:** the scalar close refusal itself. The real test is a fresh `norm-eurocode` guest. `chain-8.sh` rebuilds it, probes en1990, en1991, en1997 and en1998, and then reruns `norm-plugin:test` and `norm-js:test`.
+
+**`norm-js:test` (chain 6).** It exited 1 without running any test. Nx gave up while it was reading the project graph slice: for 1700 s it restarted over and over because one path kept changing during the read. The slice-pool restart budget fix in `python-env-provisioning-2026-11-24.md` addresses this.
+
+### EN 1997 editor, checks and scene, 2026-11-24 03:40
+
+| Target | Result |
+|---|---|
+| Editor lib | 30 passed; `latency_bench` is `release_only` in debug |
+| Editor integration | 48 of 51; the 3 failures are framework history, conflict archive and undo settlement |
+| Checks crate | 24 of 24; it did not compile before |
+| Scene crate | 55 of 60 |
+
+The scene golden is re-blessed. The only difference is "4 document-level checks", because the filed report now produces it.
+
+Three scene items are still open, now in `en1997-scene-incremental-2026-11-24.md`:
+- the incremental-vs-full divergence at step 7 of seed `0x9e37_79b9_7f4a_7c15`, under the filed report
+- 31 misses on an unrelated edit, against a limit of 8
+- drag p95 of 993 ms in debug, against a 240 ms budget
+
+The Python oracle tests have not run yet; they wait on the new environment provisioning.
+
+Details are in `en1997-editor-test-2026-11-23.md`, section "Follow-up: green sweep of editor, checks and scene".
+
+### Norm scene description capacity, 2026-11-24 05:00
+
+The cause on din4108 and din16798 was the diagrams window. It passed the full marker enumeration as the canvas's accessible description, and that string overflowed the 512-byte fixed `UiText`.
+
+- **Fix:** the canvas now carries a bounded summary through `surface_description`. The full enumeration stays in the chunked sibling text node, the screen-reader node and the table twin. A new test covers 40 markers in en and de.
+- **Rebuild:** `norm` was rebuilt and published.
+- **Probe:** `ui.fixed-capacity` is gone. din4108 and din16798 now complete the picker round trip and draw.
+- **Still failing the strict probe:** all four `norm` routes, on 13 `[DEBUG] ui install` console errors. These come from another agent's uncommitted `console.error` in the renderer's `handle-ui-intake/🟦️.ts`.
+- **visual-chrome lib:** two failures remain, a stale layer-format golden and the shapely oracle. See `norm-visual-chrome-tests-2026-11-24.md`.
+
+Report: `norm-scene-surface-capacity-2026-11-24.md`.
+
+### visual-chrome and EN 1997 scene, 2026-11-24 06:30
+
+**visual-chrome:** `--lib` 62 of 62, see `norm-visual-chrome-tests-2026-11-24.md`.
+- The layer-wire golden was re-blessed for the intended flat format from commit 5db034ffe53.
+- `repo cargo` now injects `SEMIO_PYTHON` in `withRepositoryCommandEnvironmentV1`, backed by a 4-case test.
+
+**EN 1997 scene:** 60 of 60, see `en1997-scene-incremental-2026-11-24.md`.
+
+| Fix | Change |
+|---|---|
+| Incremental vs full | The sole-row ownership flag is now part of the layout stamp, applied to en1997, en1990 and en1993 |
+| Unrelated-edit misses | The new `SceneKit::site_stamps` hook removes the layer dependency cycle |
+| Drag latency | The fragment seal check runs once, at build time; drag p95 fell from 993 ms to 148 ms against a 240 ms budget |
+| Flow-net oracle | The constant is re-solved with scipy |
+
+These fixes touched the shared scene code, so every kit family has to be rerun.
+- **en1990:** the scene tests do not compile.
+- **en1993:** the scene crate is over its source boundary at 396338 B.
+
+Both are being fixed, see `norm-scene-crates-2026-11-24.md`.
+
+### Chain 9, 2026-11-24 07:30
+
+`norm-eurocode` rebuilt and published on the first attempt.
+
+**Probe:**
+- **en1991, en1997, en1998:** the `scalar close changed Source or Work` refusal is gone. The only faults left are another agent's `[DEBUG] ui install` console prints, so these routes now work.
+- **en1990:** the shell loads, but the viewport probe timed out after 180 s. It needs a re-probe.
+
+**`norm-plugin:test`:** cargo preparation failed before running any test. The new en1993 `✏️editor/🏷️field-meta` crate from the in-flight split inherits `workspace.package.edition` from a workspace root that does not exist. The splitting agent has been told. `norm-js:test` is running.
+
 RESULTS_PENDING

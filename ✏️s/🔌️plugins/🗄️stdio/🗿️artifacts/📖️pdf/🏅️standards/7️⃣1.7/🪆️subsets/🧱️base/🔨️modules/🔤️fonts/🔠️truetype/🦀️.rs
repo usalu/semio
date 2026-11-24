@@ -310,7 +310,8 @@ impl TrueTypeFont {
         value as f64 * 1000.0 / self.units_per_em as f64
     }
 
-    pub(crate) fn glyph_location(&self, glyph: u16) -> Option<(usize, usize)> {
+    /// 🧷 The `glyf` byte range of one glyph, empty when the glyph has no outline.
+    pub fn glyph_location(&self, glyph: u16) -> Option<(usize, usize)> {
         let loca = self.table("loca")?;
         let index = glyph as usize;
         let (start, end) = if self.index_to_loc_long { (u32_at(loca, index * 4)? as usize, u32_at(loca, index * 4 + 4)? as usize) } else { (u16_at(loca, index * 2)? as usize * 2, u16_at(loca, index * 2 + 2)? as usize * 2) };

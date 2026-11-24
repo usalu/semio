@@ -59,7 +59,7 @@ fn panel_resize_hits_match_reacts_edge_count_and_single_spacing_width() {
         let mut input = InputState::<ActionDescriptor>::default();
         let mut resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..32).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx))), "{anchor_id} panel walk completes");
+        assert!((0..32).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, &mut input, &theme, body, &mut resources, cx))), "{anchor_id} panel walk completes");
         input.publish_hits();
         let actual: Vec<&HitTarget<ActionDescriptor>> = input.hits().iter().filter(|hit| hit.kind == HitKind::PanelResize).collect();
         let expected = case["handles"].as_array().expect("handles");
@@ -133,7 +133,7 @@ fn fixture_dock_shell() -> ShellState {
 #[test]
 fn default_dock_matches_the_shared_react_fixture() {
     let fixture = default_dock_fixture();
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let skeleton = dock_skeleton_of(&SessionCtx::of(&mut shell).default_dock());
     let expected: DockSkeleton = serde_json::from_value(fixture["expected"].clone()).expect("fixture skeleton");
     assert_eq!(skeleton.version, 3);
@@ -150,7 +150,7 @@ fn default_dock_matches_the_shared_react_fixture() {
 /// headline gap. Its branch id and category leaf ids are React's.
 #[test]
 fn default_dock_puts_the_command_branch_on_bottom_middle() {
-    let shell = fixture_dock_shell();
+    let mut shell = fixture_dock_shell();
     let dock = SessionCtx::of(&mut shell).default_dock();
     let branch = dock.tabs(PanelAnchor::BottomMiddle).first().expect("bottom-middle carries the Command branch");
     assert_eq!(branch.id, FRAMEWORK_CATEGORY_COMMAND_ID);

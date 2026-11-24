@@ -9,10 +9,13 @@ import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export const OWNER_POOL_POLICY_V1=schema.definitions.Policy.const;
 const P=OWNER_POOL_POLICY_V1,ZERO="0".repeat(64),sha=(text:string)=>createHash("sha256").update(text).digest("hex");
 
-/** 🏷️ One owner of the pool as every machine reads it: the name, the kind it is filed under, how long it is expected to run (the claim lives that long) and its project JSON. */
-export type OwnerPoolUnitV1=Readonly<{name:string;kind:string;expectedMilliseconds:number;megabytes?:number;admission?:Readonly<{targets?:readonly string[];inputs:readonly string[];generated?:unknown}>;json:Readonly<Record<string,unknown>>}>;
+/** 🏷️ One owner of the pool as every machine reads it: the name, the kind it is filed under, how long it is expected to run (the claim lives that long), its `tier` (0 or none: the reading machine waits for it now, selection and priority owners first; 1: it is one of the next owners of the same read, inferred ahead while no tier 0 owner is open) and its project JSON. */
+export type OwnerPoolUnitV1=Readonly<{name:string;kind:string;expectedMilliseconds:number;megabytes?:number;tier?:number;admission?:Readonly<{targets?:readonly string[];inputs:readonly string[];generated?:unknown}>;json:Readonly<Record<string,unknown>>}>;
 /** 🧾️ What a puller needs besides the units: see the schema definition `Head`. */
-export type OwnerPoolHeadV1=Readonly<{version:1;revision?:string;id:string;createdMs:number;publisher:string;identity:string;globals:Readonly<{registryDigest:string;commandRevision:string;late:boolean}>}>;
+export type OwnerPoolHeadV1=Readonly<{version:1;revision?:string;priority?:number;id:string;createdMs:number;publisher:string;identity:string;globals:Readonly<{registryDigest:string;commandRevision:string;late:boolean}>}>;
+/** 🥇️ The order in which a machine serves the open waves of the fleet: the wave of the lowest `priority` first (a read a command waits for before a background read of the whole graph), then the wave with the fewest children of this machine, then the newest.
+ * @see ./🧪️tests/🧭️fleet-schedule/🟦️.ts */
+export const ownerPoolWaveOrderV1=(a:Readonly<{priority?:number;children:number;createdMs:number}>,b:Readonly<{priority?:number;children:number;createdMs:number}>):number=>(a.priority??0)-(b.priority??0)||a.children-b.children||b.createdMs-a.createdMs;
 /** 📦️ The published pool of one wave: the head, the session the units are inferred in (opaque bytes of the publisher's runtime) and the units in the order the publisher infers them. */
 export type OwnerPoolManifestV1=Readonly<{head:OwnerPoolHeadV1;session:Uint8Array;units:readonly OwnerPoolUnitV1[]}>;
 /** 📍️ One open wave as the pointer lists it. */
@@ -276,10 +279,10 @@ export type OwnerPoolStatsV1={claimed:number;published:number;stored:number;held
 
 const defaultSleep=(milliseconds:number,signal?:AbortSignal)=>new Promise<void>(done=>{const timer=setTimeout(done,milliseconds);signal?.addEventListener("abort",()=>{clearTimeout(timer);done();},{once:true});});
 
-/** 🌐️ Pulls owners of the pool until every one is stored by someone, the signal aborts or `stop` says the wave is over. One puller walks the list from a start that is its own (a digest of its name, so fifteen pullers start apart and never meet before the end), claiming a window of `claimWindow` neighbours in one round trip (neighbours share their imports, so a walk keeps the programs of its process warm), runs as many as `slots()` allows and keeps `prefetchClaims` granted ahead so a finished owner is followed at once; a run of `gallopRun` owners that others hold or stored ends in a jump to another place of the list, and `doneStoredMinimum` stored owners in a row end the pull (the wave is done as far as this puller can tell; the supervisor looks again later: with 3 percent of a wave open the old twelve were enough to end 7 of 10 pulls while 1100 owners were open), so no puller has to look at every owner of a wave, and while the run of stored owners is long (`2 x claimWindow`) and nothing is waiting, one round claims `claimWindowMaximum` owners instead of the window. Heavy owners that fit this puller are taken first, in the order of its rendezvous scores ({@link ownerPoolRendezvousV1}), so no two pullers meet on the same heavy owner first. Each owner is claimed by the digest of its record state before it is computed (a lapsed claim returns the owner to the pool, a stored record is never computed again), published when finished and given back when it fails. Nothing here waits for another machine and nothing schedules for one. */
+/** 🌐️ Pulls owners of the pool until every one is stored by someone, the signal aborts or `stop` says the wave is over. One puller walks the list from a start that is its own (a digest of its name, so fifteen pullers start apart and never meet before the end), claiming a window of `claimWindow` neighbours in one round trip (neighbours share their imports, so a walk keeps the programs of its process warm), runs as many as `slots()` allows and keeps `prefetchClaims` granted ahead so a finished owner is followed at once; a run of `gallopRun` owners that others hold or stored ends in a jump to another place of the list, and `doneStoredMinimum` stored owners in a row end the pull (the wave is done as far as this puller can tell; the supervisor looks again later: with 3 percent of a wave open the old twelve were enough to end 7 of 10 pulls while 1100 owners were open), so no puller has to look at every owner of a wave, and while the run of stored owners is long (`2 x claimWindow`) and nothing is waiting, one round claims `claimWindowMaximum` owners instead of the window. Owners are taken tier by tier (`tier` of the unit, none is 0): no owner of a later tier is claimed while one of an earlier tier is open for this puller, so the owners a read waits for (selection and priority owners) go before the owners it only looks ahead to. Within a tier heavy owners that fit this puller are taken first, in the order of its rendezvous scores ({@link ownerPoolRendezvousV1}), so no two pullers meet on the same heavy owner first. Each owner is claimed by the digest of its record state before it is computed (a lapsed claim returns the owner to the pool, a stored record is never computed again), published when finished and given back when it fails. Nothing here waits for another machine and nothing schedules for one. */
 export async function pullOwnerPoolV1<U extends Readonly<{name:string;megabytes?:number}>>(input:Readonly<{units:()=>readonly U[];fits?(unit:U):boolean;turn?(unit:U):number;claim(unit:U):Promise<ProjectClaimV1>;run(unit:U):Promise<boolean>;slots():number;puller:string;signal?:AbortSignal;stop?():boolean;busy?(running:number):void;progress?(stats:Readonly<OwnerPoolStatsV1>,running:number):void;done?(unit:U,ok:boolean,milliseconds:number):void;stored?(unit:U):void;known?:Set<string>;fail?(name:string,message:string,deterministic:boolean,code?:string):void;now?():number;sleep?(milliseconds:number,signal?:AbortSignal):Promise<void>;policy?:typeof P}>):Promise<OwnerPoolStatsV1>{
  const policy=input.policy??P,now=input.now??Date.now,sleep=input.sleep??defaultSleep,finished=input.known??new Set<string>(),retryAt=new Map<string,number>(),running=new Map<string,Promise<void>>(),ready:{unit:U;claim:Extract<ProjectClaimV1,{state:"granted"}>}[]=[],stats:OwnerPoolStatsV1={claimed:0,published:0,stored:0,held:0,faulted:0,failed:0,refused:0,attempts:0};
- let random=ownerPoolSeedV1(input.puller),cursor=-1,streak=0,storedRun=0,placed=false;
+ let random=ownerPoolSeedV1(input.puller),streak=0,storedRun=0;
  const over=()=>input.signal?.aborted===true||input.stop?.()===true,draw=()=>{const next=ownerPoolRandomV1(random);random=next.state;return next.value;};
  const execute=async(unit:U,claim:Extract<ProjectClaimV1,{state:"granted"}>)=>{
   const began=now();let ok=false,held=claim;
@@ -294,22 +297,31 @@ export async function pullOwnerPoolV1<U extends Readonly<{name:string;megabytes?
  };
  const seen=new Map<string,number>(),turnOf=input.turn,waiting=(unit:U)=>{const wait=turnOf?.(unit)??0;if(wait<=0)return false;const first=seen.get(unit.name)??(seen.set(unit.name,now()),now());return now()-first<wait;};
  const fits=input.fits??(()=>true),usable=():readonly U[]=>input.fits===undefined?input.units():input.units().filter(unit=>fits(unit));
- const pick=(count:number):U[]=>{
-  const list=usable(),picked:U[]=[];if(list.length===0)return picked;
-  const queuedHeavy=new Set(ready.map(row=>row.unit.name));
+ const tierOf=(unit:U)=>(unit as {tier?:number}).tier??0,places=new Map<number,{cursor:number;placed:boolean}>(),replace=()=>{for(const place of places.values())place.placed=false;};
+ const pickIn=(list:readonly U[],tier:number,count:number):U[]=>{
+  const picked:U[]=[];if(list.length===0||count<=0)return picked;
+  const place=places.get(tier)??(places.set(tier,{cursor:-1,placed:false}),places.get(tier)!),queuedHeavy=new Set(ready.map(row=>row.unit.name));
   const heavy:{unit:U;score:number}[]=[];
   for(const unit of list)if(ownerPoolHeavyV1(unit,policy)&&!finished.has(unit.name)&&!running.has(unit.name)&&!queuedHeavy.has(unit.name)&&(retryAt.get(unit.name)??0)<=now()&&!waiting(unit))heavy.push({unit,score:ownerPoolRendezvousV1(input.puller,unit.name)});
   heavy.sort((a,b)=>a.score-b.score);
   for(const row of heavy){if(picked.length>=count)break;picked.push(row.unit);}
   if(picked.length>=count)return picked;
-  if(!placed||cursor>=list.length){cursor=Math.floor(draw()*list.length);placed=true;}
+  if(!place.placed||place.cursor>=list.length){place.cursor=Math.floor(draw()*list.length);place.placed=true;}
   const queued=new Set(ready.map(row=>row.unit.name));
   for(let step=0;step<list.length&&picked.length<count;step++){
-   if(cursor<0)cursor=list.length-1;
-   const unit=list[cursor--]!;
+   if(place.cursor<0)place.cursor=list.length-1;
+   const unit=list[place.cursor--]!;
    if(finished.has(unit.name)||running.has(unit.name)||queued.has(unit.name)||(retryAt.get(unit.name)??0)>now()||ownerPoolHeavyV1(unit,policy)&&waiting(unit))continue;
    if(picked.includes(unit))continue;
    picked.push(unit);
+  }
+  return picked;
+ };
+ const pick=(count:number):U[]=>{
+  const list=usable(),picked:U[]=[];
+  for(const tier of[...new Set(list.map(tierOf))].sort((a,b)=>a-b)){
+   if(picked.length>=count)break;
+   picked.push(...pickIn(list.filter(unit=>tierOf(unit)===tier),tier,count-picked.length));
   }
   return picked;
  };
@@ -330,7 +342,7 @@ export async function pullOwnerPoolV1<U extends Readonly<{name:string;megabytes?
     else if(searching&&ready.length+running.size>=slots+policy.prefetchClaims){await claim.abandon().catch(()=>undefined);}
     else{ready.push({unit,claim});stats.claimed++;streak=0;storedRun=0;progressed=true;}
    }
-   if(streak>=policy.gallopRun){cursor=Math.floor(draw()*Math.max(1,total()));streak=0;}
+   if(streak>=policy.gallopRun){replace();streak=0;}
   }
   while(ready.length>0&&running.size<slots&&!over()){const row=ready.shift()!;running.set(row.unit.name,execute(row.unit,row.claim));progressed=true;}
   input.busy?.(running.size);input.progress?.(stats,running.size);

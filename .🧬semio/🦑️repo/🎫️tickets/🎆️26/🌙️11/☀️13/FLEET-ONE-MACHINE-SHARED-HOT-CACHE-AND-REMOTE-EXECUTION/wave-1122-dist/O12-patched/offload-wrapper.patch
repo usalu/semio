@@ -1,0 +1,10 @@
+--- a/🚀️offload/🟦️.ts	2026-11-23 19:01:51
++++ b/🚀️offload/🟦️.ts	2026-11-23 19:01:51
+@@ -151,6 +151,7 @@
+    }
+    return settle({kind:"done",status:outputs.exitCode,stdout,stderr,origin:execution.origin,milliseconds:Date.now()-started,cached:execution.cached});
+   }
++  if(outputs.peakMegabytes!==undefined)writeUnitPeakV1(input.root,input.crate,outputs.peakMegabytes);
+   const outDir=resolve(cwd,plan.outDir),marker=root_===undefined?undefined:Buffer.from(root_);
+   let written:readonly string[]=[];
+   try{

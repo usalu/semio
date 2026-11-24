@@ -70,4 +70,4 @@ impl<T:RetireOwned> ScratchRowsWork<T>{
  pub fn step_progress(&self)->RetainedCloneProgress{self.progress}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.original.is_none()&&self.original_close.is_none()&&self.displaced.is_none()&&self.output_close.is_none()&&self.pending.is_none()&&self.payload.is_none()&&self.output.is_empty()&&self.output.capacity().saturating_mul(size_of::<T>())==0}
 }
-impl<T:RetireOwned> Drop for ScratchRowsWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"scratch row edit retains original rows or output backing");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.payload);ManuallyDrop::drop(&mut self.output)}}}}
+impl<T:RetireOwned> Drop for ScratchRowsWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"scratch row edit retains original rows or output backing");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.payload);ManuallyDrop::drop(&mut self.output)}}}}

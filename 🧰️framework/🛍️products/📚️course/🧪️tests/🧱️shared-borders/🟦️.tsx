@@ -123,7 +123,7 @@ describe("🧱️ shared borders", () => {
   it("gives a row button and a cell note no outline of their own", () => {
     render(
       <>
-        <BodyButton row onClick={() => undefined}>
+        <BodyButton row icon="arrow-right" onClick={() => undefined}>
           Show now
         </BodyButton>
         <ProblemNote cell problem={{ message: "Broken" }} text={text} />
@@ -143,9 +143,9 @@ describe("🔲️ controls outside a row are boxes of the compositor", () => {
   it("makes a plain body button a framed box, a tile a shared cell, and links and details borderless boxes", () => {
     render(
       <>
-        <BodyButton onClick={() => undefined}>Plain</BodyButton>
-        <div {...GROUP} className="course-tiles"><BodyButton row onClick={() => undefined}>Tile</BodyButton></div>
-        <CardLink href="#x">Link</CardLink>
+        <BodyButton icon="arrow-right" onClick={() => undefined}>Plain</BodyButton>
+        <div {...GROUP} className="course-tiles"><BodyButton row icon="arrow-right" onClick={() => undefined}>Tile</BodyButton></div>
+        <CardLink icon="arrow-right" href="#x">Link</CardLink>
         <ProblemNote problem={{ message: "Broken", detail: "why" }} text={text} />
       </>,
     );
@@ -164,8 +164,8 @@ describe("🔲️ controls outside a row are boxes of the compositor", () => {
   it("gives no control a focus ring, outline, underline or border of its own in a class", () => {
     render(
       <>
-        <BodyButton onClick={() => undefined}>Plain</BodyButton>
-        <CardLink href="#x">Link</CardLink>
+        <BodyButton icon="arrow-right" onClick={() => undefined}>Plain</BodyButton>
+        <CardLink icon="arrow-right" href="#x">Link</CardLink>
         <Segments label="choice" options={[{ value: "a", label: "A" }]} value="a" onChange={() => undefined} />
       </>,
     );
@@ -281,7 +281,7 @@ describe("🎨️ the stylesheet and the shared borders", () => {
     expect(stylesheet).toMatch(/\.course-field > input\.course-input \{[^}]*border: 0;/u);
     expect(/\.course-guess \{[^}]*border-inline-start/u.test(stylesheet.slice(0, stylesheet.indexOf("@container")))).toBe(false);
     expect(stylesheet).toMatch(/"grip guess guess up down"/u);
-    expect(stylesheet).toMatch(/\[data-card-stack\] > \[data-overview-card\]:last-child \{\s*flex: 1 1 auto;/u);
+    expect(stylesheet).toMatch(/\[data-card-stack\] > \[data-overview-card\]:last-child \{[^}]*flex: 1 1 auto;/u);
   });
 
   it("uses the hairline for every divider of a table, never a heavier line", () => {

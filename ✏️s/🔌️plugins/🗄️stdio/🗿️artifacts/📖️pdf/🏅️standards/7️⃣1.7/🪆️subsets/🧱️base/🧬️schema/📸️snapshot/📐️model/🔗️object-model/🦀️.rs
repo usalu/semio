@@ -189,6 +189,17 @@ impl fmt::Display for PdfDecimal {
     }
 }
 
+/// 📏️ Logical ceiling of one decoded stream; physical backing is always admitted one page at a time.
+pub const PDF_STREAM_MAXIMUM_BYTES: usize = isize::MAX as usize;
+
+/// 🧩️ Decoded stream octets retained in separately admitted fixed-size pages, never one contiguous allocation.
+pub type PdfStreamBytes = semio_framework_value::paged::PagedBytes<PDF_STREAM_MAXIMUM_BYTES>;
+
+/// 🧱️ Builds paged stream octets from a contiguous slice (a cold, uncontrolled admission for fixtures and small authored streams).
+pub fn stream_bytes(bytes: &[u8]) -> PdfStreamBytes {
+    PdfStreamBytes::try_from_slice(bytes).expect("a cold stream fits its logical ceiling")
+}
+
 /// 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including
 /// streams. Stream `data` is the logical byte sequence after applying every filter that has a
 /// logical decoder (@see [`PdfStreamFilter`]); `/Filter`, `/F`, `/DecodeParms`, and `/DP` are
@@ -219,7 +230,7 @@ pub enum PdfObject {
     Ref(ObjRef),
     Stream {
         dict: Vec<PdfDictEntry>,
-        data: Vec<u8>,
+        data: PdfStreamBytes,
         filters: Vec<PdfStreamFilter>,
     },
 }

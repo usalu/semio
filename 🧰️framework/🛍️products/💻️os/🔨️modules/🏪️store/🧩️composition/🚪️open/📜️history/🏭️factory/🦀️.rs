@@ -190,7 +190,7 @@ impl<M: MemberFactory> MemberFactorySelection<M> {
 }
 impl<M: MemberFactory + 'static> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "factory selection requires retained close or handoff");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "factory selection requires retained close or handoff");
     }
 }
 
@@ -255,7 +255,7 @@ impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
 }
 impl<M: MemberFactory + 'static> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "selected input requires retained close or semantic handoff");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "selected input requires retained close or semantic handoff");
     }
 }
 
@@ -296,7 +296,7 @@ impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
 }
 impl<M: MemberFactory + 'static> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "selected dictionary requires bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "selected dictionary requires bounded retirement");
     }
 }
 
@@ -357,7 +357,7 @@ impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
 }
 impl<M: MemberFactory + 'static> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "selected semantic input requires bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "selected semantic input requires bounded retirement");
     }
 }
 

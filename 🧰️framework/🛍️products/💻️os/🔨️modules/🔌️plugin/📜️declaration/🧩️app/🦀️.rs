@@ -154,9 +154,7 @@ use semio_plugin_interaction::UiAssemblyResult;
 mod artifact_app_trait;
 pub use artifact_app_trait::*;
 
-#[path = "🗂️natural-file-and-media-artifacts/🦀️.rs"]
-mod natural_file_and_media_artifacts;
-pub use natural_file_and_media_artifacts::*;
+pub use semio_plugin_decl_natural_file_media::*;
 
 #[path = "🛡️viewer-actions-and-transaction-outcomes/🦀️.rs"]
 mod viewer_actions_and_transaction_outcomes;

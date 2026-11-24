@@ -262,6 +262,17 @@ pub fn cancel_js_plugin_install(plugin_id: &str) -> bool {
     door.call1(&JsValue::NULL, &JsValue::from_str(plugin_id)).ok().and_then(|value| value.as_bool()).unwrap_or(false)
 }
 
+/// 🧭️ Hands one guest-published activation request (`$defs.onDemandRequest` JSON, topic `os.on-demand.request`) to the frame
+/// Worker's on-demand activator and returns at once: the activator loads the deferred extension with its own progress and
+/// cancellation (`semioWgpuCancelOnDemand`) and never rejects, so the shell neither awaits nor owns the outcome. The
+/// activated extension's contributions push moves the registry generation and resumes the parked document. A page-hosted
+/// boot installs no door and answers an error the caller only logs.
+#[cfg(target_arch = "wasm32")]
+pub fn request_on_demand_activation(request_json: &str) -> Result<(), String> {
+    let door = js_plugin_install_door("semioWgpuActivateOnDemand").ok_or_else(|| "this isolate installs no semioWgpuActivateOnDemand door".to_string())?;
+    door.call1(&JsValue::NULL, &JsValue::from_str(request_json)).map(|_| ()).map_err(|error| describe_js_rejection(&error))
+}
+
 //#region 🏠️🧳️PluginHostConfig
 /// 🎬️ Resolves an artifact activation from the caller's exact declared capability rows.
 pub fn resolve_artifact_kind_activation_owner<'a>(artifact_kind: &str, declarations: &'a [(&str, &'a str)]) -> Option<&'a str> {

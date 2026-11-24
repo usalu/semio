@@ -188,5 +188,5 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationOutput {
 }
 
 impl Drop for ArtifactPreparedOperationOutput {
-    fn drop(&mut self){assert!(self.bytes.terminal_is_empty()&&self.contiguous.is_none(),"operation output original backings require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.bytes);ManuallyDrop::drop(&mut self.contiguous)};}
+    fn drop(&mut self){assert!(std::thread::panicking()||(self.bytes.terminal_is_empty()&&self.contiguous.is_none()),"operation output original backings require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.bytes);ManuallyDrop::drop(&mut self.contiguous)};}
 }

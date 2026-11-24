@@ -17,6 +17,9 @@ use std::collections::HashMap;
 pub mod retained_graph;
 use retained_graph::{PdfByteGraph, PdfByteGraphCursor, PdfByteGraphEvent};
 
+#[path = "🗃️original-custody/🦀️.rs"]
+pub mod original_custody;
+
 #[path = "🔁️controlled/🦀️.rs"]
 mod controlled;
 pub use controlled::{admit_pdf_natural_decode, admit_pdf_paged_natural_decode, build_pdf_natural_decode, PDF_PAGED_NATURAL_SOURCE_MAXIMUM_BYTES};

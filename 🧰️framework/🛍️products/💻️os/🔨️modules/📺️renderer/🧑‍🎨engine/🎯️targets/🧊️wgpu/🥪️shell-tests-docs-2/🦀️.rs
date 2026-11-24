@@ -52,7 +52,7 @@ use semio_renderer_wgpu_shell_doc_open::{ShellDocumentOpenPhase, ShellDocumentOp
 use semio_renderer_wgpu_shell_dock::{MEDIA_ACTION_INBOX_CAPACITY, parse_media_action, push_media_action, shell_sync_pill_text, take_media_actions};
 use semio_renderer_wgpu_shell_plugins::{RelayOpenPlan, pinned_app_for, relay_open_plan};
 use semio_framework::kernel::HistoryEntry;
-use semio_renderer_wgpu_shell_docs::{BackboneFolderVerb, FRAMEWORK_SYNC_PANEL_TAB_ID, LocalFolderIdentity, TEST_BACKBONE_FOLDER_HOST, backbone_folder_request, backbone_folder_write_answer, local_folder_reconnect_offer};
+use semio_renderer_wgpu_shell_docs::{BackboneFolderVerb, FRAMEWORK_SYNC_PANEL_TAB_ID, LocalFolderIdentity, TEST_BACKBONE_FOLDER_HOST, backbone_folder_request, backbone_folder_write_answer, local_folder_reconnect_offer, sync_attach_document_id};
 use semio_renderer_wgpu_shell_history::{TEST_LOCAL_FOLDERS_LOG, local_folder_events_of_log, local_folders_log_after, local_folders_mutation_of_value, replay_local_folder_events};
 use semio_renderer_wgpu_shell_plugins::ShellPluginFault;
 use semio_renderer_wgpu_shell_pointer::PointerCtx;

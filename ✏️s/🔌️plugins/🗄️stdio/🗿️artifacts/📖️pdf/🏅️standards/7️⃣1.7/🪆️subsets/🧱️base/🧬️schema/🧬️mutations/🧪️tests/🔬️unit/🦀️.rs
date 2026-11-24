@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule
 use crate::standards::v1_7::subsets::base::schema::mutations::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
 use crate::standards::v1_7::subsets::base::io::export::text_document;
-use crate::standards::v1_7::subsets::base::io::{binary::mutations as binary, text::mutations as text};
+use crate::standards::v1_7::subsets::base::io::text::mutations as text;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{OpBinary, OpText, SemanticMutation};
 
@@ -40,10 +40,9 @@ fn samples() -> Vec<PdfMutation> {
 fn every_kind_is_declared_once_in_declaration_order() {
     let kinds = pdf_mutation_kinds();
     assert_eq!(kinds.len(), 61);
-    assert_eq!(kinds.len(), binary::BINARY_TAG_REGISTRY.len());
     assert_eq!(kinds.len(), text::TEXT_OPCODE_REGISTRY.len());
     let mut seen = std::collections::HashSet::new();
-    for (descriptor, (pascal, _, _)) in kinds.iter().zip(binary::BINARY_TAG_REGISTRY) {
+    for (descriptor, (pascal, _)) in kinds.iter().zip(text::TEXT_OPCODE_REGISTRY) {
         assert!(seen.insert(descriptor.kind), "duplicate kind {}", descriptor.kind);
         let expected = pascal.chars().fold(String::new(), |mut out, c| {
             if c.is_ascii_uppercase() && !out.is_empty() {
@@ -64,9 +63,41 @@ fn samples_round_trip_through_both_op_codecs() {
         assert!(!line.contains('\n'));
         assert_eq!(PdfMutation::parse_op(&line).unwrap(), mutation, "text codec");
         let bytes = mutation.encode_op().unwrap();
-        assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT);
-        assert_eq!(PdfMutation::decode_op(&bytes).unwrap(), mutation, "binary codec");
+        assert_eq!(PdfMutation::decode_op(&bytes).unwrap(), mutation, "pack codec");
     }
+}
+
+#[test]
+fn pdf17_operations_round_trip_through_the_pack_document_with_exact_float_words() {
+    let words = [0x8000_0000_0000_0000_u64, 0x0000_0000_0000_0001, 1.0_f64.to_bits(), 612.0_f64.to_bits(), 0x7fef_ffff_ffff_ffff, 0.1_f64.to_bits()];
+    let mut count = 0;
+    for word in words {
+        let value = f64::from_bits(word);
+        let operations = vec![
+            PdfMutation::InsertPage(InsertPage { index: 0, page: PdfPage::new(value, 792.0) }),
+            PdfMutation::SetPageBox(set_page_box::SetPageBox { index: 0, kind: crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox::Trim, rect: Some([value, value, 612.0, 792.0]) }),
+            PdfMutation::AppendPageContent(AppendPageContent { index: 0, content: vec![PdfOp::Rectangle { x: value, y: 0.0, width: 5.0, height: value }] }),
+        ];
+        for operation in operations {
+            let bytes = operation.encode_op().unwrap();
+            assert_eq!(&bytes[..8], &[0x89, 0x53, 0x50, 0x4B, 0x0D, 0x0A, 0x1A, 0x0A]);
+            let decoded = PdfMutation::decode_op(&bytes).unwrap();
+            assert_eq!(decoded.encode_op().unwrap(), bytes);
+            match (&operation, &decoded) {
+                (PdfMutation::SetPageBox(left), PdfMutation::SetPageBox(right)) => {
+                    let (left, right) = (left.rect.unwrap(), right.rect.unwrap());
+                    assert_eq!(left.map(f64::to_bits), right.map(f64::to_bits));
+                }
+                (PdfMutation::AppendPageContent(left), PdfMutation::AppendPageContent(right)) => {
+                    let (PdfOp::Rectangle { x: left_x, height: left_height, .. }, PdfOp::Rectangle { x: right_x, height: right_height, .. }) = (&left.content[0], &right.content[0]) else { panic!("rectangle expected") };
+                    assert_eq!((left_x.to_bits(), left_height.to_bits()), (right_x.to_bits(), right_height.to_bits()));
+                }
+                _ => assert_eq!(operation, decoded),
+            }
+            count += 1;
+        }
+    }
+    assert_eq!(count, 18);
 }
 
 #[test]

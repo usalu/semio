@@ -19,10 +19,12 @@ pub enum PdfFault {
     ImagePlacementInvalid,
     PngImportJob,
     ListNeedsNumbers,
+    PageNumberOutOfRange,
+    SaveDeclined,
 }
 
 impl PdfFault {
-    pub const ALL: [PdfFault; 13] = [
+    pub const ALL: [PdfFault; 15] = [
         PdfFault::PageEdit,
         PdfFault::UnhandledAction,
         PdfFault::ArgumentMissing,
@@ -36,6 +38,8 @@ impl PdfFault {
         PdfFault::ImagePlacementInvalid,
         PdfFault::PngImportJob,
         PdfFault::ListNeedsNumbers,
+        PdfFault::PageNumberOutOfRange,
+        PdfFault::SaveDeclined,
     ];
 
     pub const fn code(self) -> &'static str {
@@ -53,6 +57,8 @@ impl PdfFault {
             PdfFault::ImagePlacementInvalid => "stdio.pdf.image-placement-invalid",
             PdfFault::PngImportJob => "stdio.pdf.png-import-job",
             PdfFault::ListNeedsNumbers => "stdio.pdf.list-needs-numbers",
+            PdfFault::PageNumberOutOfRange => "stdio.pdf.page-number-out-of-range",
+            PdfFault::SaveDeclined => "stdio.pdf.save-declined",
         }
     }
 
@@ -71,6 +77,8 @@ impl PdfFault {
             PdfFault::ImagePlacementInvalid => "The image placement coordinates are not valid numbers.",
             PdfFault::PngImportJob => "The PNG import needs its running import job.",
             PdfFault::ListNeedsNumbers => "The list may only contain numbers.",
+            PdfFault::PageNumberOutOfRange => "Page {page} does not exist. Enter a page number from 1 to {last}.",
+            PdfFault::SaveDeclined => "This document cannot be saved with the available memory. Encrypted documents and documents whose edits reach beyond the pages and the document information need more memory to save. Nothing was written.",
         }
     }
 
@@ -89,6 +97,8 @@ impl PdfFault {
             PdfFault::ImagePlacementInvalid => "Die Koordinaten der Bildplatzierung sind keine gültigen Zahlen.",
             PdfFault::PngImportJob => "Der PNG-Import braucht seinen laufenden Importauftrag.",
             PdfFault::ListNeedsNumbers => "Die Liste darf nur Zahlen enthalten.",
+            PdfFault::PageNumberOutOfRange => "Seite {page} existiert nicht. Geben Sie eine Seitenzahl von 1 bis {last} ein.",
+            PdfFault::SaveDeclined => "Dieses Dokument kann mit dem verfügbaren Speicher nicht gespeichert werden. Verschlüsselte Dokumente und Dokumente, deren Änderungen über die Seiten und die Dokumentinformationen hinausgehen, brauchen zum Speichern mehr Speicher. Es wurde nichts geschrieben.",
         }
     }
 }

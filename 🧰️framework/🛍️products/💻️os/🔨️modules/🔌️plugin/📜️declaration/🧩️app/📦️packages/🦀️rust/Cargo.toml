@@ -38,6 +38,7 @@ semio-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packa
 semio-plugin-decl-views = { path = "../../../👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-tool-contract = { path = "../../../👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
 semio-plugin-decl-media = { path = "../../../🎞️media/📦️packages/🦀️rust" }
+semio-plugin-decl-natural-file-media = { path = "../../🗂️natural-file-and-media-artifacts/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../📨️emission/📦️packages/🦀️rust" }
 replication = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }

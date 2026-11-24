@@ -556,7 +556,7 @@ async function setAside(replica:ReplicaV1,stamp:string,moves:readonly Move[],sig
  }
 }
 
-const GIT_FLEET_WINS=(path:string):boolean=>path===".git/HEAD"||path===".git/packed-refs"||path===".git/shallow"||path.startsWith(".git/refs/")&&!path.startsWith(".git/refs/heads/")&&!path.startsWith(".git/refs/adopt/");
+const GIT_FLEET_WINS=(path:string):boolean=>path===".git/HEAD"||path===".git/packed-refs"||path.startsWith(".git/refs/")&&!path.startsWith(".git/refs/heads/")&&!path.startsWith(".git/refs/adopt/");
 
 async function setAsideGit(replica:ReplicaV1,stamp:string,signal?:AbortSignal):Promise<void>{
  const {worktree}=replica.settings,{manifest,book}=replica;

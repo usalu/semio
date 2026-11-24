@@ -27,9 +27,8 @@ describe("🎨️ stylesheet tree", () => {
     expect(quizStylesheet).toBe(IMPORTS.map((entry) => SECTIONS[TARGET + entry]).join("\n"));
   });
 
-  it("keeps a free strip above the footer for the pets while they are shown, except in forced colours", () => {
-    const rule = /@media not \(forced-colors: active\) \{\s*\.course-app:not\(\[data-pets="off"\]\) > #course-main \{\s*padding-bottom: 48px;/u;
-    expect(strip(quizStylesheet)).toMatch(rule);
+  it("reserves no strip above the footer for the pets: they live on the border lines and in the open room of the cards", () => {
+    for (const rule of strip(quizStylesheet).split("}")) if (rule.includes("data-pets") && rule.includes("#course-main")) expect(rule, "no rule gives the main area room for the pets").not.toContain("padding");
   });
 
   it("makes each section a self-contained run of rules named by its folder's emoji", () => {

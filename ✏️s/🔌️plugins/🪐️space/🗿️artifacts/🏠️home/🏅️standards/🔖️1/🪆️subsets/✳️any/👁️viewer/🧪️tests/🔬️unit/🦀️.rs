@@ -36,6 +36,7 @@ async fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn renders_the_main_body_key_for_the_default_snapshot() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let snapshot = SHomeSnapshot::default();
     let history = semio_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -96,7 +97,7 @@ fn feed_page(fixture: &semio_framework_pack_json::Value, row: &semio_framework_p
 fn page_context<A: semio_plugin::ArtifactApp<Transient = HomeTransient>>(transient: &HomeTransient) -> std::sync::Arc<semio_plugin::app::ArtifactOwnedToolJobContext<A>> {
     std::sync::Arc::new(semio_plugin::app::ArtifactOwnedToolJobContext::new(
         1,
-        Some(home_view()),
+        Some(std::sync::Arc::new(home_view())),
         [0; 32],
         0,
         0,
@@ -121,9 +122,13 @@ where
     let state = protocol::InteractionState::default();
     let hover = semio_plugin::app::InteractionHoverState::new();
     let context = page_context::<A>(transient);
-    let operation = AppOperationContext { retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 }, app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
-    let inputs = ArtifactCommandInputs { snapshot_owner: None, command, snapshot, config, history: &history, interaction: &state, hover: &hover, context: Some(context.as_ref()), operation: &operation };
-    match work.step(&inputs, &mut semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(256, u64::MAX,semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 }), semio_framework_job::root_cancel_token(), || Some(0), &mut 0,&mut Default::default()))? {
+    let operation = AppOperationContext { retained: semio_plugin::artifact_app_laws::OriginalWorkFixture::stock(), app_instance_id: 1, parent_document_id: "s.home".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
+    let inputs = ArtifactCommandInputs { snapshot_owner: None, snapshot_read: semio_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation), command, snapshot, config, history: &history, interaction: &state, hover: &hover, context: Some(context.as_ref()), operation: &operation };
+    let mut caller = semio_plugin::artifact_app_laws::OriginalWorkFixture::new();
+    let step = caller.work_turn(semio_plugin::artifact_app_laws::OriginalWorkFixture::stock(), 256, |cx| work.step(&inputs, cx));
+    caller.finish();
+    let step = step.map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| panic!("the page route failed without a fault: {:?}", failure.primary)))?;
+    match step {
         ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral } => {
             assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.draft_mutations.is_empty(), "a directory page writes neither the document nor the config history");
             assert!(ephemeral.presence.is_empty() && ephemeral.window_transient.is_empty());
@@ -141,7 +146,7 @@ fn editor_page_json(command: &crate::editor::home::HomeCommand) -> Option<&str> 
 }
 
 fn viewer_feed(transient: &HomeTransient, page_json: &str) -> Result<(Vec<semio_plugin::AppEvent>, Vec<HomeTransientMutation>), Fault> {
-    let command = <HomeViewer as ArtifactViewer>::command_from_action("applyDirectoryEventPage", Some((DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json.into()))])).clone()), None)?;
+    let command = <HomeViewer as ArtifactViewer>::command_from_action("applyDirectoryEventPage", &mut Some(DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json.into()))])), &mut None)?;
     assert!(home_view_retained_extent(&command, &SHomeSnapshot::default(), &protocol::InteractionState::default()).is_some(), "an ordinary page fits the retained wire budget");
     page_step::<ViewerApp<HomeViewer>>(&mut HomeDirectoryPageWork::new("applyDirectoryEventPage", home_view_page_json), &command, &SHomeSnapshot::default(), &HomeConfig::default(), transient)
 }
@@ -153,7 +158,7 @@ fn editor_feed(transient: &HomeTransient, page_json: &str) -> Result<(Vec<semio_
 
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_folds_every_sealed_page_exactly_as_the_editor_does() {
-    use protocol::Mutation as _;
+    use protocol::ColdMutation as _;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../🧪️tests/🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let mut viewer = HomeTransient::default();
     let mut editor = HomeTransient::default();
@@ -164,8 +169,8 @@ async fn the_viewer_folds_every_sealed_page_exactly_as_the_editor_does() {
         assert_eq!(viewer_items, editor_items, "one page, one transient item on both surfaces");
         assert_eq!(viewer_items.len(), 1, "every page that moves the frontier is exactly one bounded item");
         assert_eq!((viewer_events.len(), editor_events.len()), (1, 1), "every accepted page answers its terminal receipt");
-        viewer = viewer_items[0].diff(&viewer).diff().clone();
-        editor = editor_items[0].diff(&editor).diff().clone();
+        viewer = protocol::apply_diff_cold(viewer_items[0].diff(&viewer).diff(), &viewer).expect("the viewer page applies");
+        editor = protocol::apply_diff_cold(editor_items[0].diff(&editor).diff(), &editor).expect("the editor page applies");
         let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&viewer)).expect("third-party JSON reading of the projection");
         assert_eq!(oracle["directory"]["cursor"].as_u64(), row["expected"]["cursor"].as_u64());
         let ids: Vec<&str> = oracle["directory"]["spaces"].as_object().expect("spaces map").keys().map(String::as_str).collect();
@@ -209,7 +214,7 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
     app.bind_instance_id(1).await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../🧪️tests/🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");
-    let meta = semio_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
+    let meta = semio_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(std::sync::Arc::new(home_view())) };
     for page in pages {
         let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(semio_framework_pack_json::to_json_string(&feed_page(&fixture, page))))]);
         semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "applyDirectoryEventPage", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the viewer admits a sealed page");

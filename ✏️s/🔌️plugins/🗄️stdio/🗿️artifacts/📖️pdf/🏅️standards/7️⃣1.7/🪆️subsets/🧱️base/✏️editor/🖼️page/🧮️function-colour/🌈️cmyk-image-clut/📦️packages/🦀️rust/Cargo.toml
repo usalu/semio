@@ -1,0 +1,13 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-pdf-cmyk-image-clut"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "MuPDF DeviceCMYK image conversion grid"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

@@ -125,7 +125,7 @@ fn page_lists_text_vector_and_image() {
 fn set_text_replaces_the_run_and_keeps_the_rectangle() {
     let mut snapshot = sample();
     let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
-    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("text", semio_framework_value::DslValue::String("World".into()))]))).expect("edit");
+    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("text", semio_framework_value::DslValue::String("World".into()))]))).expect("edit");
     apply(&mut snapshot, edit);
     assert_eq!(snapshot.pages[0].text(), "World");
     assert!(snapshot.pages[0].content.iter().any(|op| matches!(op, PdfOp::Rectangle { .. })));
@@ -138,9 +138,9 @@ fn move_resize_and_delete_address_text_vectors_and_images() {
     let text = found.iter().find(|object| object.kind == ObjectKind::Text).unwrap().clone();
     let vector = found.iter().find(|object| object.kind == ObjectKind::Vector).unwrap().clone();
     let image = found.iter().find(|object| object.kind == ObjectKind::Image).unwrap().clone();
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("x", semio_framework_value::DslValue::float(20.0)), ("y", semio_framework_value::DslValue::float(240.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(vector.id.clone())), ("x", semio_framework_value::DslValue::float(12.0)), ("y", semio_framework_value::DslValue::float(22.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("x", semio_framework_value::DslValue::float(62.0)), ("y", semio_framework_value::DslValue::float(72.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("x", semio_framework_value::DslValue::float(20.0)), ("y", semio_framework_value::DslValue::float(240.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(vector.id.clone())), ("x", semio_framework_value::DslValue::float(12.0)), ("y", semio_framework_value::DslValue::float(22.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("x", semio_framework_value::DslValue::float(62.0)), ("y", semio_framework_value::DslValue::float(72.0))]))).unwrap());
     let moved = objects(&snapshot);
     let text = moved.iter().find(|object| object.kind == ObjectKind::Text).unwrap();
     let vector = moved.iter().find(|object| object.kind == ObjectKind::Vector).unwrap();
@@ -149,7 +149,7 @@ fn move_resize_and_delete_address_text_vectors_and_images() {
     assert!((vector.x - 12.0).abs() < 0.01 && (vector.y - 22.0).abs() < 0.01);
     assert!((image.x - 62.0).abs() < 0.01 && (image.y - 72.0).abs() < 0.01);
     let vector_id = vector.id.clone();
-    apply(&mut snapshot, edit_from_action("delete", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(vector_id))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("delete", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(vector_id))]))).unwrap());
     assert!(objects(&snapshot).iter().all(|object| object.kind != ObjectKind::Vector));
     assert!(snapshot.pages[0].content.iter().any(|op| matches!(op, PdfOp::ShowText { .. })));
     assert!(snapshot.pages[0].content.iter().any(|op| matches!(op, PdfOp::PaintXObject { .. })));
@@ -158,9 +158,9 @@ fn move_resize_and_delete_address_text_vectors_and_images() {
 #[test]
 fn insert_text_rectangle_and_image_round_trip_onto_the_page() {
     let mut snapshot = sample();
-    apply(&mut snapshot, edit_from_action("insert-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(4.0)), ("y", semio_framework_value::DslValue::float(8.0)), ("text", semio_framework_value::DslValue::String("Added".into())), ("height", semio_framework_value::DslValue::float(14.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("insert-rectangle", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(3.0)), ("height", semio_framework_value::DslValue::float(4.0)), ("red", semio_framework_value::DslValue::float(1.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("insert-image", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(5.0)), ("y", semio_framework_value::DslValue::float(6.0)), ("width", semio_framework_value::DslValue::float(7.0)), ("height", semio_framework_value::DslValue::float(8.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("insert-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(4.0)), ("y", semio_framework_value::DslValue::float(8.0)), ("text", semio_framework_value::DslValue::String("Added".into())), ("height", semio_framework_value::DslValue::float(14.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("insert-rectangle", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(3.0)), ("height", semio_framework_value::DslValue::float(4.0)), ("red", semio_framework_value::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("insert-image", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(5.0)), ("y", semio_framework_value::DslValue::float(6.0)), ("width", semio_framework_value::DslValue::float(7.0)), ("height", semio_framework_value::DslValue::float(8.0))]))).unwrap());
     let found = objects(&snapshot);
     assert!(found.iter().any(|object| object.text == "Added"));
     assert!(found.iter().any(|object| object.kind == ObjectKind::Vector && (object.width - 3.0).abs() < 0.01));
@@ -176,16 +176,16 @@ fn document_info_pages_and_annotations_are_editable() {
     assert_eq!(snapshot.info.title.as_deref(), Some("Title"));
     assert_eq!(snapshot.info.author.as_deref(), Some("Author"));
     assert_eq!(snapshot.info.subject.as_deref(), Some("Subject"));
-    apply(&mut snapshot, edit_from_action("insert-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("width", semio_framework_value::DslValue::float(100.0)), ("height", semio_framework_value::DslValue::float(120.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("insert-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(100.0)), ("height", semio_framework_value::DslValue::float(120.0))]))).unwrap());
     assert_eq!(snapshot.pages.len(), 2);
     assert!((snapshot.pages[1].width() - 100.0).abs() < 0.01);
     let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation");
-    apply(&mut snapshot, edit_from_action("set-annotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("Note".into())), ("x", semio_framework_value::DslValue::float(3.0)), ("y", semio_framework_value::DslValue::float(4.0)), ("width", semio_framework_value::DslValue::float(5.0)), ("height", semio_framework_value::DslValue::float(6.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("Note".into())), ("x", semio_framework_value::DslValue::float(3.0)), ("y", semio_framework_value::DslValue::float(4.0)), ("width", semio_framework_value::DslValue::float(5.0)), ("height", semio_framework_value::DslValue::float(6.0))]))).unwrap());
     assert_eq!(snapshot.pages[0].annotations[0].contents.as_deref(), Some("Note"));
     assert_eq!(snapshot.pages[0].annotations[0].rect, [3.0, 4.0, 8.0, 10.0]);
-    apply(&mut snapshot, edit_from_action("set-page-size", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("width", semio_framework_value::DslValue::float(90.0)), ("height", semio_framework_value::DslValue::float(80.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-size", Some(&args(vec![("page", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(90.0)), ("height", semio_framework_value::DslValue::float(80.0))]))).unwrap());
     assert!((snapshot.pages[1].width() - 90.0).abs() < 0.01);
-    apply(&mut snapshot, edit_from_action("move-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(2.0)), ("x", semio_framework_value::DslValue::float(1.0))]))).unwrap());
     assert!((snapshot.pages[0].width() - 90.0).abs() < 0.01);
 }
 
@@ -195,7 +195,7 @@ fn set_image_replaces_samples_and_keeps_the_placement() {
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
     let edit = edit_from_action(
         "set-image",
-        Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("width", semio_framework_value::DslValue::float(2.0)), ("height", semio_framework_value::DslValue::float(2.0)), ("text", semio_framework_value::DslValue::String("255,0,0,0,255,0,0,0,255,255,0,0".into()))])),
+        Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(image.id)), ("width", semio_framework_value::DslValue::float(2.0)), ("height", semio_framework_value::DslValue::float(2.0)), ("text", semio_framework_value::DslValue::String("255,0,0,0,255,0,0,0,255,255,0,0".into()))])),
     )
     .expect("edit");
     apply(&mut snapshot, edit);
@@ -226,12 +226,12 @@ fn form_move_and_shading_move_change_their_geometry() {
         extra: Vec::new(),
     });
     let form = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Form).expect("form");
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(form.id)), ("x", semio_framework_value::DslValue::float(10.0)), ("y", semio_framework_value::DslValue::float(11.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(form.id)), ("x", semio_framework_value::DslValue::float(10.0)), ("y", semio_framework_value::DslValue::float(11.0))]))).unwrap());
     let form = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Form).expect("form");
     assert!((form.x - 10.0).abs() < 0.01 && (form.y - 11.0).abs() < 0.01);
     let shading = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Shading).expect("shading");
     assert!((shading.x - 10.0).abs() < 0.01 && (shading.y - 10.0).abs() < 0.01);
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(12.0)), ("y", semio_framework_value::DslValue::float(14.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(12.0)), ("y", semio_framework_value::DslValue::float(14.0))]))).unwrap());
     let PdfShadingKind::Axial { coords, .. } = &snapshot.shadings[0].kind else { panic!("axial shading") };
     assert!((coords[0] - 12.0).abs() < 0.01 && (coords[1] - 24.0).abs() < 0.01);
     assert_eq!(snapshot.shadings[0].bbox, Some([12.0, 14.0, 42.0, 34.0]));
@@ -241,16 +241,16 @@ fn form_move_and_shading_move_change_their_geometry() {
 fn set_font_and_set_outline_publish_onto_the_document() {
     let mut snapshot = sample();
     let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
-    apply(&mut snapshot, edit_from_action("set-font", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("text", semio_framework_value::DslValue::String("Times-Roman".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-font", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id)), ("text", semio_framework_value::DslValue::String("Times-Roman".into()))]))).unwrap());
     assert!(snapshot.fonts.iter().any(|font| font.base_font() == "Times-Roman"));
     let show = snapshot.pages[0].content.iter().position(|op| matches!(op, PdfOp::ShowText { .. })).expect("show");
     let PdfOp::SetFont { name, size } = &snapshot.pages[0].content[show - 1] else { panic!("font before the run") };
     assert_eq!(snapshot.fonts.iter().find(|font| font.id == *name).expect("font").base_font(), "Times-Roman");
     assert!((*size - 12.0).abs() < 0.01);
     assert_eq!(snapshot.pages[0].text(), "Hello");
-    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("Start".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("text", semio_framework_value::DslValue::String("Start".into()))]))).unwrap());
     assert_eq!(snapshot.outlines[0].title, "Start");
-    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("Begin".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("Begin".into()))]))).unwrap());
     assert_eq!(snapshot.outlines.len(), 1);
     assert_eq!(snapshot.outlines[0].title, "Begin");
 }
@@ -258,11 +258,11 @@ fn set_font_and_set_outline_publish_onto_the_document() {
 #[test]
 fn page_viewing_settings_publish_onto_the_document() {
     let mut snapshot = sample();
-    apply(&mut snapshot, edit_from_action("set-page-rotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(90.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-rotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(90.0))]))).unwrap());
     assert_eq!(snapshot.pages[0].rotate, 90);
-    apply(&mut snapshot, edit_from_action("set-page-box", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("crop".into())), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(30.0)), ("height", semio_framework_value::DslValue::float(40.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-box", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("text", semio_framework_value::DslValue::String("crop".into())), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(30.0)), ("height", semio_framework_value::DslValue::float(40.0))]))).unwrap());
     assert_eq!(snapshot.pages[0].crop_box, Some([1.0, 2.0, 31.0, 42.0]));
-    apply(&mut snapshot, edit_from_action("set-page-user-unit", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(2.5))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-user-unit", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(2.5))]))).unwrap());
     assert_eq!(snapshot.pages[0].user_unit, Some(2.5));
     apply(&mut snapshot, edit_from_action("set-language", Some(&args(vec![("text", semio_framework_value::DslValue::String("de".into()))]))).unwrap());
     assert_eq!(snapshot.language.as_deref(), Some("de"));
@@ -286,9 +286,9 @@ fn catalog_collections_publish_onto_the_document() {
     assert_eq!(snapshot.embedded_files[0].data, b"hello");
     apply(&mut snapshot, edit_from_action("remove-embedded-file", Some(&args(vec![("object", semio_framework_value::DslValue::String("note".into()))]))).unwrap());
     assert!(snapshot.embedded_files.is_empty());
-    apply(&mut snapshot, edit_from_action("set-named-destination", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("Start".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-named-destination", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("Start".into()))]))).unwrap());
     assert!(matches!(snapshot.named_destinations[0].destination, PdfDestination::Page { page: 0, .. }));
-    apply(&mut snapshot, edit_from_action("set-page-label", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("decimal".into())), ("extra", semio_framework_value::DslValue::String("A-".into())), ("x", semio_framework_value::DslValue::float(1.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-label", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("text", semio_framework_value::DslValue::String("decimal".into())), ("extra", semio_framework_value::DslValue::String("A-".into())), ("x", semio_framework_value::DslValue::float(1.0))]))).unwrap());
     assert_eq!(snapshot.page_labels[0].style, Some(PdfPageLabelStyle::Decimal));
     assert_eq!(snapshot.page_labels[0].prefix.as_deref(), Some("A-"));
     apply(&mut snapshot, edit_from_action("set-mark-info", Some(&args(vec![("x", semio_framework_value::DslValue::float(1.0))]))).unwrap());
@@ -313,7 +313,7 @@ fn mesh_move_shifts_the_decode_range() {
     snapshot.pages[0].content.push(PdfOp::PaintShading { name: "ShM".into() });
     snapshot.shadings.push(PdfShading { id: "ShM".into(), color_space: PdfColorSpace::DeviceRgb, kind: PdfShadingKind::Mesh { shading_type: 4, bits_per_coordinate: 8, bits_per_component: 8, bits_per_flag: None, vertices_per_row: None, decode: vec![0.0, 10.0, 0.0, 10.0], function: None, reference: semio_framework_artifact_reference::ArtifactRef { artifact_id: "fixture:mesh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into() } } }, background: None, bbox: Some([0.0, 0.0, 10.0, 10.0]), anti_alias: false, extra: Vec::new() });
     let shading = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Shading).expect("mesh");
-    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(2.0)), ("y", semio_framework_value::DslValue::float(3.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(shading.id)), ("x", semio_framework_value::DslValue::float(2.0)), ("y", semio_framework_value::DslValue::float(3.0))]))).unwrap());
     let PdfShadingKind::Mesh { decode, reference, .. } = &snapshot.shadings[0].kind else { panic!("mesh") };
     assert_eq!(decode, &vec![2.0, 12.0, 3.0, 13.0]);
     assert_eq!(reference.artifact_id, "fixture:mesh");
@@ -332,7 +332,7 @@ fn conformance_form_identity_and_font_program_publish() {
     assert!(form.need_appearances);
     let PdfFormFieldKind::Text { value, .. } = &form.fields[0].kind else { panic!("text field") };
     assert_eq!(value.as_deref(), Some("Ada"));
-    apply(&mut snapshot, edit_from_action("set-open-action", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("uri".into())), ("text", semio_framework_value::DslValue::String("https://semio.example".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-open-action", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("uri".into())), ("text", semio_framework_value::DslValue::String("https://semio.example".into()))]))).unwrap());
     let PdfOpenAction::Action { action } = snapshot.open_action.as_ref().expect("open") else { panic!("uri action") };
     assert!(matches!(action.kind, crate::standards::v1_7::subsets::base::schema::snapshot::PdfActionKind::Uri { ref uri, .. } if uri == "https://semio.example"));
     apply(&mut snapshot, edit_from_action("set-document-id", Some(&args(vec![("text", semio_framework_value::DslValue::String("abc".into())), ("extra", semio_framework_value::DslValue::String("def".into()))]))).unwrap());
@@ -375,7 +375,7 @@ fn masks_forms_transitions_and_dictionary_entries_publish() {
     assert_eq!(ranges, &vec![0, 255]);
     apply(&mut snapshot, edit_from_action("set-form-content", Some(&args(vec![("object", semio_framework_value::DslValue::String("Fm1".into())), ("text", semio_framework_value::DslValue::String("Inside".into())), ("x", semio_framework_value::DslValue::float(4.0)), ("y", semio_framework_value::DslValue::float(6.0)), ("width", semio_framework_value::DslValue::float(20.0)), ("height", semio_framework_value::DslValue::float(12.0))]))).unwrap());
     assert!(snapshot.forms[0].content.iter().any(|op| matches!(op, PdfOp::ShowText { text: PdfTextString::Text { text } } if text == "Inside")));
-    apply(&mut snapshot, edit_from_action("set-page-transition", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("text", semio_framework_value::DslValue::String("Wipe".into())), ("extra", semio_framework_value::DslValue::String("None".into())), ("x", semio_framework_value::DslValue::float(2.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-transition", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("text", semio_framework_value::DslValue::String("Wipe".into())), ("extra", semio_framework_value::DslValue::String("None".into())), ("x", semio_framework_value::DslValue::float(2.0))]))).unwrap());
     let transition = snapshot.pages[0].transition.as_ref().expect("transition");
     assert!(matches!(&transition[0].value, PdfObject::Name(name) if name == "Wipe"));
     assert_eq!(snapshot.pages[0].duration, Some(2.0));
@@ -393,7 +393,7 @@ fn appearances_glyphs_objects_and_mesh_bytes_publish() {
     let mut snapshot = sample();
     snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
     let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation");
-    apply(&mut snapshot, edit_from_action("set-annotation-appearance", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("Fm1".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-appearance", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("Fm1".into()))]))).unwrap());
     let PdfAppearanceEntry::Single { form } = &snapshot.pages[0].annotations[0].appearance.as_ref().expect("appearance").normal else { panic!("single appearance") };
     assert_eq!(form, "Fm1");
     snapshot.fonts[0].kind = PdfFontKind::Type3 { font_matrix: [0.001, 0.0, 0.0, 0.001, 0.0, 0.0], font_bbox: [0.0, 0.0, 1000.0, 1000.0], encoding: PdfSimpleEncoding::default(), first_char: 0, widths: Vec::new(), char_procs: Vec::new(), descriptor: None };
@@ -450,11 +450,11 @@ fn info_page_extras_annotation_style_and_viewer_details_publish() {
     apply(&mut snapshot, edit_from_action("set-info-field", Some(&args(vec![("object", semio_framework_value::DslValue::String("creationDate".into())), ("text", semio_framework_value::DslValue::String("D:20200102".into()))]))).unwrap());
     assert_eq!(snapshot.info.keywords.as_deref(), Some("paper"));
     assert_eq!(snapshot.info.creation_date.as_ref().expect("date").year, 2020);
-    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("thumbnail".into())), ("text", semio_framework_value::DslValue::String("Im1".into()))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("metadata".into())), ("text", semio_framework_value::DslValue::String("<xmp/>".into()))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("group".into())), ("text", semio_framework_value::DslValue::String("deviceRgb".into())), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(0.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("structParents".into())), ("x", semio_framework_value::DslValue::float(4.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String("action".into())), ("extra", semio_framework_value::DslValue::String("O".into())), ("text", semio_framework_value::DslValue::String("Next".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("thumbnail".into())), ("text", semio_framework_value::DslValue::String("Im1".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("metadata".into())), ("text", semio_framework_value::DslValue::String("<xmp/>".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("group".into())), ("text", semio_framework_value::DslValue::String("deviceRgb".into())), ("x", semio_framework_value::DslValue::float(1.0)), ("y", semio_framework_value::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("structParents".into())), ("x", semio_framework_value::DslValue::float(4.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-page-extra", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String("action".into())), ("extra", semio_framework_value::DslValue::String("O".into())), ("text", semio_framework_value::DslValue::String("Next".into()))]))).unwrap());
     assert_eq!(snapshot.pages[0].thumbnail.as_deref(), Some("Im1"));
     assert_eq!(snapshot.pages[0].metadata.as_deref(), Some("<xmp/>"));
     let group = snapshot.pages[0].group.as_ref().expect("group");
@@ -462,9 +462,9 @@ fn info_page_extras_annotation_style_and_viewer_details_publish() {
     assert!(group.isolated && !group.knockout);
     assert_eq!(snapshot.pages[0].struct_parents, Some(4));
     assert_eq!(snapshot.pages[0].additional_actions[0].key, "O");
-    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(annotation.id.clone())), ("text", semio_framework_value::DslValue::String("color".into())), ("red", semio_framework_value::DslValue::float(1.0)), ("green", semio_framework_value::DslValue::float(0.0)), ("blue", semio_framework_value::DslValue::float(0.0))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(annotation.id.clone())), ("text", semio_framework_value::DslValue::String("name".into())), ("extra", semio_framework_value::DslValue::String("Note".into()))]))).unwrap());
-    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("flags".into())), ("x", semio_framework_value::DslValue::float(4.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(annotation.id.clone())), ("text", semio_framework_value::DslValue::String("color".into())), ("red", semio_framework_value::DslValue::float(1.0)), ("green", semio_framework_value::DslValue::float(0.0)), ("blue", semio_framework_value::DslValue::float(0.0))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(annotation.id.clone())), ("text", semio_framework_value::DslValue::String("name".into())), ("extra", semio_framework_value::DslValue::String("Note".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-annotation-style", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(annotation.id)), ("text", semio_framework_value::DslValue::String("flags".into())), ("x", semio_framework_value::DslValue::float(4.0))]))).unwrap());
     assert_eq!(snapshot.pages[0].annotations[0].color, vec![1.0, 0.0, 0.0]);
     assert_eq!(snapshot.pages[0].annotations[0].name.as_deref(), Some("Note"));
     assert_eq!(snapshot.pages[0].annotations[0].flags, 4);
@@ -483,7 +483,7 @@ fn annotation_markup_form_settings_and_extra_entries_publish() {
     let mut snapshot = sample();
     snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
     let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation").id;
-    let page = semio_framework_value::DslValue::float(0.0);
+    let page = semio_framework_value::DslValue::float(1.0);
     let object = semio_framework_value::DslValue::String(annotation);
     apply(&mut snapshot, edit_from_action("set-annotation-border", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", semio_framework_value::DslValue::String("D".into())), ("extra", semio_framework_value::DslValue::String("3,1".into())), ("x", semio_framework_value::DslValue::float(2.0)), ("y", semio_framework_value::DslValue::float(1.0)), ("width", semio_framework_value::DslValue::float(2.0))]))).unwrap());
     apply(&mut snapshot, edit_from_action("set-annotation-markup", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", semio_framework_value::DslValue::String("title".into())), ("extra", semio_framework_value::DslValue::String("Reviewer".into()))]))).unwrap());
@@ -522,7 +522,7 @@ fn annotation_kinds_and_choice_options_publish() {
     let mut snapshot = sample();
     snapshot.pages[0].annotations.push(PdfAnnotation::new([0.0, 0.0, 10.0, 10.0], PdfAnnotationKind::Text { open: false, icon: None, state: None, state_model: None }));
     let annotation = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Annotation).expect("annotation").id;
-    let page = semio_framework_value::DslValue::float(0.0);
+    let page = semio_framework_value::DslValue::float(1.0);
     let object = semio_framework_value::DslValue::String(annotation);
     apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", semio_framework_value::DslValue::String("kind".into())), ("extra", semio_framework_value::DslValue::String("link".into()))]))).unwrap());
     apply(&mut snapshot, edit_from_action("set-annotation-kind", Some(&args(vec![("page", page.clone()), ("object", object.clone()), ("text", semio_framework_value::DslValue::String("uri".into())), ("extra", semio_framework_value::DslValue::String("https://example.test".into()))]))).unwrap());
@@ -560,7 +560,7 @@ fn annotation_kinds_and_choice_options_publish() {
 #[test]
 fn resource_details_publish_onto_the_document() {
     let mut snapshot = sample();
-    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("x", semio_framework_value::DslValue::float(-1.0)), ("text", semio_framework_value::DslValue::String("Chapter".into()))]))).unwrap());
+    apply(&mut snapshot, edit_from_action("set-outline", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(-1.0)), ("text", semio_framework_value::DslValue::String("Chapter".into()))]))).unwrap());
     apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", semio_framework_value::DslValue::String("0".into())), ("text", semio_framework_value::DslValue::String("outline.bold".into())), ("x", semio_framework_value::DslValue::float(1.0))]))).unwrap());
     apply(&mut snapshot, edit_from_action("set-resource-detail", Some(&args(vec![("object", semio_framework_value::DslValue::String("0".into())), ("text", semio_framework_value::DslValue::String("outline.color".into())), ("red", semio_framework_value::DslValue::float(1.0)), ("green", semio_framework_value::DslValue::float(0.0)), ("blue", semio_framework_value::DslValue::float(0.0))]))).unwrap());
     assert!(snapshot.outlines[0].bold);
@@ -599,9 +599,9 @@ fn selected_object_fields_commit_through_the_value_argument() {
     let text = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text).expect("text");
     let vector = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Vector).expect("vector");
     let mut edited = snapshot.clone();
-    apply(&mut edited, edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("World".into()))]))).unwrap());
+    apply(&mut edited, edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("World".into()))]))).unwrap());
     assert_eq!(edited.pages[0].text(), "World");
-    apply(&mut edited, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(vector.id.clone())), ("field", semio_framework_value::DslValue::String("x".into())), ("y", semio_framework_value::DslValue::float(20.0)), ("value", semio_framework_value::DslValue::float(44.0))]))).unwrap());
+    apply(&mut edited, edit_from_action("move", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(vector.id.clone())), ("field", semio_framework_value::DslValue::String("x".into())), ("y", semio_framework_value::DslValue::float(20.0)), ("value", semio_framework_value::DslValue::float(44.0))]))).unwrap());
     let moved = objects(&edited).into_iter().find(|object| object.id == vector.id).expect("vector");
     assert!((moved.x - 44.0).abs() < 0.01);
     let node = render_inspector(&snapshot, Some(&text.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("inspector");
@@ -613,7 +613,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     assert!(names.iter().any(|name| name == "delete"));
     assert!(shown.iter().any(|value| value == "Hello"));
     assert!(shown.iter().any(|value| value == "Helvetica"));
-    apply(&mut edited, edit_from_action("set-font", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("Times-Roman".into()))]))).unwrap());
+    apply(&mut edited, edit_from_action("set-font", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(text.id.clone())), ("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("Times-Roman".into()))]))).unwrap());
     assert!(edited.fonts.iter().any(|font| font.base_font() == "Times-Roman"));
     let image = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Image).expect("image");
     let image_panel = render_inspector(&snapshot, Some(&image.id), "s.stdio.pdf@1.7/*#editor", semio_plugin::UiPublicationRevision(17), semio_ui_locale::Locale::En).expect("image inspector");
@@ -631,7 +631,7 @@ fn selected_object_fields_commit_through_the_value_argument() {
     assert!(empty_names.iter().any(|name| name == "set-page-size"));
     assert!(empty_names.iter().any(|name| name == "set-info-field"));
     assert!(empty_shown.iter().any(|value| value == "200"));
-    apply(&mut edited, edit_from_action("set-page-size", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("field", semio_framework_value::DslValue::String("width".into())), ("height", semio_framework_value::DslValue::float(300.0)), ("value", semio_framework_value::DslValue::float(180.0))]))).unwrap());
+    apply(&mut edited, edit_from_action("set-page-size", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("field", semio_framework_value::DslValue::String("width".into())), ("height", semio_framework_value::DslValue::float(300.0)), ("value", semio_framework_value::DslValue::float(180.0))]))).unwrap());
     assert!((edited.pages[0].width() - 180.0).abs() < 0.01);
     apply(&mut edited, edit_from_action("set-info", Some(&args(vec![("field", semio_framework_value::DslValue::String("text".into())), ("value", semio_framework_value::DslValue::String("Title".into()))]))).unwrap());
     assert_eq!(edited.info.title.as_deref(), Some("Title"));
@@ -799,7 +799,7 @@ fn canvas_repaints_image_samples_after_replacement() {
     }
     let samples = bytes("after").iter().map(u8::to_string).collect::<Vec<_>>().join(",");
     apply(&mut snapshot, edit_from_action("set-image", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(object.id.clone())),
         ("width", semio_framework_value::DslValue::float(f64::from(width))),
         ("height", semio_framework_value::DslValue::float(f64::from(height))),
@@ -847,7 +847,7 @@ fn moving_resizing_and_deleting_an_annotation_preserves_its_note_until_removal()
     let original = doc.pages[0].annotations[0].clone();
     for (action, rect) in [("move", [5.0, 8.0, 25.0, 28.0]), ("resize", [5.0, 8.0, 65.0, 78.0])] {
         let edit = edit_from_action(action, Some(&args(vec![
-            ("page", semio_framework_value::DslValue::float(0.0)),
+            ("page", semio_framework_value::DslValue::float(1.0)),
             ("object", semio_framework_value::DslValue::String("p0:a0".into())),
             ("x", semio_framework_value::DslValue::float(5.0)), ("y", semio_framework_value::DslValue::float(8.0)),
             ("width", semio_framework_value::DslValue::float(60.0)), ("height", semio_framework_value::DslValue::float(70.0)),
@@ -857,7 +857,7 @@ fn moving_resizing_and_deleting_an_annotation_preserves_its_note_until_removal()
         assert_eq!(doc.pages[0].annotations[0].contents, original.contents);
     }
     let removal = edit_from_action("delete", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String("p0:a0".into())),
     ]))).unwrap();
     apply(&mut doc, removal);
@@ -975,7 +975,7 @@ fn deleting_a_path_retains_the_graphics_state_used_by_the_next_path() {
     let pdf = pdf_with_content(50, 50, case["before"].as_str().unwrap());
     let mut snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(pdf.as_bytes()).unwrap();
     let removal = edit_from_action("delete", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String("p0:v0".into())),
     ]))).unwrap();
     apply(&mut snapshot, removal);
@@ -1053,7 +1053,7 @@ fn restyling_one_path_preserves_its_neighbors() {
     let original = objects(&doc);
     let target = &original[1].id;
     let edit = edit_from_action("set-fill", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(target.clone())),
         ("red", semio_framework_value::DslValue::float(0.0)), ("green", semio_framework_value::DslValue::float(1.0)),
         ("blue", semio_framework_value::DslValue::float(0.0)),
@@ -1071,7 +1071,7 @@ fn restyling_one_path_preserves_its_neighbors() {
     assert_eq!(&edited[1].id, target, "editing paint preserves the inspector selection");
     let selected = target.clone();
     let stroke = edit_from_action("set-stroke", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(selected)),
         ("red", semio_framework_value::DslValue::float(0.0)), ("green", semio_framework_value::DslValue::float(0.0)),
         ("blue", semio_framework_value::DslValue::float(1.0)), ("width", semio_framework_value::DslValue::float(3.0)),
@@ -1119,7 +1119,7 @@ fn resizing_a_transformed_curve_moves_its_control_points() {
     let mut doc = open(&case["before"]);
     let original = objects(&doc);
     let edit = edit_from_action("resize", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
         ("x", semio_framework_value::DslValue::float(30.0)), ("y", semio_framework_value::DslValue::float(40.0)),
         ("width", semio_framework_value::DslValue::float(80.0)), ("height", semio_framework_value::DslValue::float(20.0)),
@@ -1140,7 +1140,7 @@ fn moving_one_image_preserves_another_painted_in_the_same_transform() {
     ];
     let images = objects(&doc);
     let edit = edit_from_action("move", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(images[0].id.clone())),
         ("x", semio_framework_value::DslValue::float(case["target"][0].as_f64().unwrap())),
         ("y", semio_framework_value::DslValue::float(case["target"][1].as_f64().unwrap())),
@@ -1163,7 +1163,7 @@ fn font_edits_preserve_following_text_and_existing_resources() {
     let following = objects(&doc).into_iter().find(|object| object.text == "Following").unwrap();
     let selected = objects(&doc).into_iter().find(|object| object.kind == ObjectKind::Text).unwrap();
     let edit = edit_from_action("set-font", Some(&args(vec![
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("object", semio_framework_value::DslValue::String(selected.id)),
         ("text", semio_framework_value::DslValue::String(case["replacement"].as_str().unwrap().into())),
     ]))).unwrap();
@@ -1193,7 +1193,7 @@ fn moving_a_show_operator_preserves_the_following_text_position() {
     let mut deleted = doc.clone();
     apply(&mut deleted, edit_from_action("delete", Some(&args(vec![
         ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
     ]))).unwrap());
     let remaining = objects(&deleted);
     assert_eq!(remaining.len(), 1);
@@ -1203,7 +1203,7 @@ fn moving_a_show_operator_preserves_the_following_text_position() {
     let target = &fixture["resize"];
     apply(&mut resized, edit_from_action("resize", Some(&args(vec![
         ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("x", semio_framework_value::DslValue::float(target["x"].as_f64().unwrap())),
         ("y", semio_framework_value::DslValue::float(target["y"].as_f64().unwrap())),
         ("width", semio_framework_value::DslValue::float(target["width"].as_f64().unwrap())),
@@ -1219,7 +1219,7 @@ fn moving_a_show_operator_preserves_the_following_text_position() {
     let y = original[0].y + fixture["offset"][1].as_f64().unwrap();
     apply(&mut doc, edit_from_action("move", Some(&args(vec![
         ("object", semio_framework_value::DslValue::String(original[0].id.clone())),
-        ("page", semio_framework_value::DslValue::float(0.0)),
+        ("page", semio_framework_value::DslValue::float(1.0)),
         ("x", semio_framework_value::DslValue::float(x)), ("y", semio_framework_value::DslValue::float(y)),
     ]))).unwrap());
     let moved = objects(&doc);
@@ -1304,7 +1304,7 @@ fn blank_second_page_selects_its_own_inspector_and_rotation() {
     assert!(shown.iter().any(|value| value == "140"));
     assert!(shown.iter().any(|value| value == "Subject of the PDF"));
     for name in ["insert-page", "move-page", "remove-page"] { assert!(bindings.iter().any(|value| value == name)); }
-    let edit = edit_from_action("set-page-rotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(90.0))]))).unwrap();
+    let edit = edit_from_action("set-page-rotation", Some(&args(vec![("page", semio_framework_value::DslValue::float(2.0)), ("x", semio_framework_value::DslValue::float(90.0))]))).unwrap();
     apply(&mut snapshot, edit);
     assert_eq!(snapshot.pages[1].rotate, 90);
     assert_eq!(snapshot.pages[0].rotate, 0);
@@ -1319,7 +1319,7 @@ fn replacing_a_text_run_keeps_the_following_run_at_its_original_baseline() {
         PdfOp::ShowText { text: PdfTextString::text("A") }, PdfOp::ShowText { text: PdfTextString::text("B") }, PdfOp::EndText,
     ];
     let original = objects(&doc);
-    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(0.0)), ("object", semio_framework_value::DslValue::String(original[0].id.clone())), ("text", semio_framework_value::DslValue::String("Longer replacement".into()))]))).unwrap();
+    let edit = edit_from_action("set-text", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("object", semio_framework_value::DslValue::String(original[0].id.clone())), ("text", semio_framework_value::DslValue::String("Longer replacement".into()))]))).unwrap();
     apply(&mut doc, edit);
     let edited = objects(&doc);
     assert_eq!(edited[0].text, "Longer replacement");
@@ -1683,7 +1683,7 @@ fn view_actions_are_page_actions_that_carry_their_arguments() {
 
 fn typed_move(value: &str, locale: &str) -> Result<PdfPageEdit, Fault> {
     use semio_framework_value::DslValue;
-    edit_from_action("move", Some(&args(vec![("page", DslValue::float(0.0)), ("object", DslValue::String("p0:o0".into())), ("field", DslValue::String("x".into())), ("value", DslValue::String(value.into())), ("y", DslValue::float(2.0)), ("locale", DslValue::String(locale.into()))])))
+    edit_from_action("move", Some(&args(vec![("page", DslValue::float(1.0)), ("object", DslValue::String("p0:o0".into())), ("field", DslValue::String("x".into())), ("value", DslValue::String(value.into())), ("y", DslValue::float(2.0)), ("locale", DslValue::String(locale.into()))])))
 }
 
 #[test]
@@ -1777,4 +1777,64 @@ fn layouts_leave_titles_to_the_localized_window_labels_and_the_canvas_has_a_name
     assert_eq!(pdf_editor_labels(Locale::De).untitled.as_str(), "Ohne Titel");
     let surface = render_window(&sample(), Locale::De).expect("canvas");
     assert_eq!(surface.accessibility.label.as_ref().map(|label| label.0.as_str()), Some("Seitenfläche"));
+}
+
+fn insert_text_args(page: f64, locale: Option<&str>) -> semio_framework_value::DslValue {
+    use semio_framework_value::DslValue;
+    let mut entries = vec![("page", DslValue::float(page)), ("y", DslValue::float(8.0)), ("text", DslValue::String("Added".into())), ("height", DslValue::float(14.0))];
+    match locale {
+        Some(locale) => entries.extend([("field", DslValue::String("x".into())), ("value", DslValue::String(if locale == "de" { "4,5" } else { "4.5" }.into())), ("locale", DslValue::String(locale.into()))]),
+        None => entries.push(("x", DslValue::float(4.5))),
+    }
+    args(entries)
+}
+
+fn range_notice(fault: &Fault, locale: Locale) -> String {
+    let notices = pdf_fault_notices();
+    let (_, label) = notices.iter().find(|(code, _)| *code == fault.code.as_str()).expect("a notice for the fault code");
+    label.resolve(semio_ui_locale::Terminology::Native, locale).replace("{page}", fault.param("page").expect("page param")).replace("{last}", fault.param("last").expect("last param"))
+}
+
+#[test]
+fn insert_text_on_page_one_of_a_one_page_document_succeeds_in_every_language() {
+    for locale in [None, Some("en"), Some("de")] {
+        let mut snapshot = sample();
+        let before = snapshot.pages[0].text();
+        apply(&mut snapshot, edit_from_action("insert-text", Some(&insert_text_args(1.0, locale))).expect("page 1 is one-based"));
+        assert!(snapshot.pages[0].text().contains("Added") && !before.contains("Added"), "{locale:?}");
+        let added = objects(&snapshot).into_iter().find(|object| object.kind == ObjectKind::Text && object.text == "Added").expect("the inserted text is a page object");
+        assert!((added.x - 4.5).abs() < 1e-9, "{locale:?}");
+        assert!(canvas_layers(&snapshot, None).contains(&added.id), "the canvas scene shows the inserted text right after the edit");
+    }
+}
+
+#[test]
+fn page_numbers_outside_the_document_are_refused_with_the_localized_valid_range() {
+    for (page, locale, expected) in [
+        (0.0, Locale::En, "Page 0 does not exist. Enter a page number from 1 to 1."),
+        (2.0, Locale::En, "Page 2 does not exist. Enter a page number from 1 to 1."),
+        (0.0, Locale::De, "Seite 0 existiert nicht. Geben Sie eine Seitenzahl von 1 bis 1 ein."),
+        (2.0, Locale::De, "Seite 2 existiert nicht. Geben Sie eine Seitenzahl von 1 bis 1 ein."),
+    ] {
+        let snapshot = sample();
+        let tag = if locale == Locale::De { "de" } else { "en" };
+        let edit = edit_from_action("insert-text", Some(&insert_text_args(page, Some(tag)))).expect("the number parses; the range is the document's");
+        let fault = apply_payload(&snapshot, &edit.action, &edit.payload).expect_err("outside 1..=1");
+        assert_eq!(fault.code.as_str(), "stdio.pdf.page-number-out-of-range");
+        assert_eq!(range_notice(&fault, locale), expected);
+        assert!(emit_page_edit(&snapshot, &edit.action, &edit.payload).is_err());
+    }
+}
+
+#[test]
+fn page_number_conversion_is_one_based_and_total_over_every_page_action() {
+    assert_eq!((page_index(3, 1), page_index(3, 3), page_index(3, 4), page_index(3, 0)), (Ok(0), Ok(2), Err(PageNumberRange { number: 4, last: 3 }), Err(PageNumberRange { number: 0, last: 3 })));
+    assert_eq!(page_number(0), 1);
+    let mut snapshot = sample();
+    apply(&mut snapshot, edit_from_action("insert-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(2.0)), ("width", semio_framework_value::DslValue::float(50.0)), ("height", semio_framework_value::DslValue::float(60.0))]))).unwrap());
+    assert_eq!(snapshot.pages.len(), 2);
+    let beyond = edit_from_action("insert-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(4.0)), ("width", semio_framework_value::DslValue::float(50.0)), ("height", semio_framework_value::DslValue::float(60.0))]))).unwrap();
+    assert_eq!(apply_payload(&snapshot, &beyond.action, &beyond.payload).expect_err("only 1..=3 slots").param("last"), Some("3"));
+    let moved = edit_from_action("move-page", Some(&args(vec![("page", semio_framework_value::DslValue::float(1.0)), ("x", semio_framework_value::DslValue::float(3.0))]))).unwrap();
+    assert_eq!(apply_payload(&snapshot, &moved.action, &moved.payload).expect_err("target 3 of 2").code.as_str(), "stdio.pdf.page-number-out-of-range");
 }

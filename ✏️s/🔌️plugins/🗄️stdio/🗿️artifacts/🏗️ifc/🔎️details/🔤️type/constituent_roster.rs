@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use super::source_loan::{advance_cursor, close_cursor, take_cursor};
+use super::source_loan::{advance_cursor, close_cursor, close_quote, take_cursor};
 use std::mem::size_of;
 type PartsCursor = <Vec<IfcComplexType> as RetainedClone>::Cursor;
 type ValueCursor = <IfcValue as RetainedClone>::Cursor;
@@ -319,7 +319,7 @@ impl ConstituentRoster {
                 } else if value_cursor.terminal_is_empty() {
                     RetirementDemand { copy_bytes: size_of::<ValueCursor>(), depth: 1, ..Default::default() }
                 } else {
-                    value_cursor.close_demands(body.min(4096).saturating_sub(Self::base().copy_bytes))?
+                    close_quote(&*value_cursor, body.min(4096).saturating_sub(Self::base().copy_bytes))?
                 };
                 demand.copy_bytes = demand.copy_bytes.checked_add(child.copy_bytes).ok_or_else(|| invalid("IFC primary value copy overflow"))?;
                 demand.capacity_bytes = child.capacity_bytes;
@@ -642,7 +642,7 @@ impl ConstituentRoster {
                             } else {
                                 part.name.as_str()
                             },
-                            if self.state.mapping && self.state.guard_part == self.state.origin + 1 { self.retyped_args.as_deref().ok_or_else(|| invalid("IFC retype prepared tuple missing"))? } else { part.args.as_slice() },
+                            if self.state.mapping && !self.state.primary && self.state.guard_part == self.state.origin + 1 { self.retyped_args.as_deref().ok_or_else(|| invalid("IFC retype prepared tuple missing"))? } else { part.args.as_slice() },
                         )
                     };
                     let mapped = self.state.primary && self.state.mapping && self.state.guard_part == 0;

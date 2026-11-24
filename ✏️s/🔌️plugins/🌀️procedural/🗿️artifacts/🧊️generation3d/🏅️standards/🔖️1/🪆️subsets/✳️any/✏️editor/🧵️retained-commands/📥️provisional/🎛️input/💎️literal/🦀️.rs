@@ -192,7 +192,7 @@ impl<'a> super::retained_scratch_driver::OriginalScratchWork<&'a WidgetInputValu
  fn advance(&mut self,input:&mut &'a WidgetInputValue,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{self.advance(input,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.step_progress()}
 }
-impl Drop for TypedLiteralWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"typed literal must close every original map, text, AVL cursor and pending value");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
+impl Drop for TypedLiteralWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"typed literal must close every original map, text, AVL cursor and pending value");unsafe{ManuallyDrop::drop(&mut self.owners)}}}
 
 #[cfg(test)]
 #[path="🧪️.rs"]mod laws;

@@ -33,8 +33,8 @@ impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageMediaBox
 where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageMediaBox>,
 {
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_media_box(self.index, self.media_box))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        diff::outcome_over(base, diff::diff_set_page_media_box(self.index, self.media_box))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

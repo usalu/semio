@@ -6,6 +6,7 @@
 /// filtered out of the list section below it (React's `buildCommandCategoryTree`).
 #[test]
 fn the_command_dock_opens_the_expanded_commands_staged_form() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = fresh_state();
     let entry = shell.docs.resolved_commands(&shell.chrome, &shell.plugins).into_iter().find(|entry| entry.definition.in_palette && !entry.definition.args.is_empty()).expect("an arg-carrying os command");
     let key = command_address_stable_key(&entry.address);
@@ -54,8 +55,8 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
         return;
     };
     shell.commands.expanded_command_id = Some(key.clone());
-    let disabled = |shell: &ShellState| {
-        let UiNode::Tree(panel) = SessionCtx::of(&mut shell).build_command_category_ui(&category) else { panic!("Tree root") };
+    let disabled = |shell: &mut ShellState| {
+        let UiNode::Tree(panel) = SessionCtx::of(shell).build_command_category_ui(&category) else { panic!("Tree root") };
         let form = panel.sections.first().expect("form section");
         form.header_toolbar
             .as_ref()
@@ -64,9 +65,9 @@ fn execute_is_disabled_until_every_required_argument_is_staged() {
             .iter()
             .any(|node| matches!(node, UiNode::Button(button) if button.id.as_deref().is_some_and(|id| id.ends_with("-execute")) && matches!(button.presence.state, semio_ui_layout::layout::UiState::Disabled)))
     };
-    assert!(disabled(&shell), "🎛️ unstaged required argument blocks Execute");
+    assert!(disabled(&mut shell), "🎛️ unstaged required argument blocks Execute");
     shell.commands.staged_command_args.entry(key).or_default().insert(arg_id, value);
-    assert!(!disabled(&shell), "🎛️ staging it enables Execute");
+    assert!(!disabled(&mut shell), "🎛️ staging it enables Execute");
 }
 //#endregion 🎛️StagedCommandForm
 
@@ -119,6 +120,7 @@ fn chat_button_action(root: &UiNode, id: &str) -> Option<ActionDescriptor> {
 /// renderer owed React's `💬️AgentChatPanel` feed; nothing here is generated locally.
 #[test]
 fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = welcomed_shell();
     assert!(chat_entry_ids(&shell.directory.build_agent_chat_ui(&shell.chrome, &shell.prefs)).is_empty(), "💬️ no bridge activity, no rows");
 

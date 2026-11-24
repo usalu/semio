@@ -6,7 +6,7 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 #[derive(semio_framework_value::RetireOwned)]
 struct Authority{actor:Text}
 impl ArtifactCanonicalEditAuthority for Authority{fn sequence_number(&self)->i32{1}fn clock(&self)->HybridLogicalTimestamp{HybridLogicalTimestamp{actor:1,physical_ms:1,logical:1}}fn actor(&self)->&(dyn Utf8Text+Sync){&self.actor}fn line(&self)->Option<&(dyn Utf8Text+Sync)>{None}fn group(&self)->Option<&(dyn Utf8Text+Sync)>{None}}
-fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes+demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes<=32_768&&demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 #[test]
 fn canonical_native_identity_assembly_preserves_original_unicode_fields_and_exact_granted_cancellation(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🪪️identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

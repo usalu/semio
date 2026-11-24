@@ -1,0 +1,11 @@
+--- a/offload-policy.ts
++++ b/offload-policy.ts
+@@ -89,7 +89,7 @@
+ /** 🎛️ How a build treats offloading: `distribute` places every unit worth a round trip on any ready machine of the fleet (this machine's slots are one more worker), `pin` places every unit on the one named machine, `never` stays local. */
+ export type OffloadModeV1="distribute"|"pin"|"never";
+ /** 🧭️ Why a unit stays here or its offload failed. */
+-export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"crate-type"|"source-kind"|"cheap"|"pin-failed"|"cancelled";
++export type OffloadReasonV1="not-portable"|"no-endpoint"|"no-credential"|"unmapped-path"|"inputs-too-large"|"unreadable-input"|"no-idle-machine"|"queue-timeout"|"infrastructure"|"toolchain-missing"|"path-dependent-output"|"worker-policy"|"incomplete-inputs"|"crate-type"|"source-kind"|"cheap"|"local-slot"|"unmeasured"|"pin-failed"|"cancelled";
+ 
+ type Environment=Readonly<Record<string,string|undefined>>;
+ 

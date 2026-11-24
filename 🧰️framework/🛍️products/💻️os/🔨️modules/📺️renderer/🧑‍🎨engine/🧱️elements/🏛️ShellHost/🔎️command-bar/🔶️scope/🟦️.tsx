@@ -1,6 +1,6 @@
 /** 🔶️ The scope phase of useCommandBar. */
-import { useCallback, useLayoutEffect, useMemo, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
-import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, resolveWindowActions } from "@semio-tech/framework";
+import { useCallback, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "../../../⚛️react-port/🟦️.ts";
+import { type AppDefinition, type AppRole, examplesForApp, type LocalizedLabel, openExampleAfterActivation, resolveWindowActions } from "@semio-tech/framework";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, surfaceRoleAppsV1 } from "../../🔀️surface-switch/🟦️.ts";
 import { spawnedProgramWindowInstancesV1 } from "../../🪟️spawned-program/🟦️.ts";
 import { ButtonGroup, ButtonGroupItem, cn, ariaKeyshortcutsText, type IconName, interactiveActiveFillClass, NavbarExampleSelect } from "@semio-tech/ui-react";
@@ -30,7 +30,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
     directBrowserActorForSession, dispatchDirectBrowserActorCommand, applyHostEffects, onAction, noteShellCommand,
     onActionStable, applyModeChange, switchToSessionRole, showTransientNotice, isViewerReadOnlyFault,
     isMutationRejectedFault, showMutationRejectedNotice, controlKeybindings, osCommands, commitUiPreference,
-    selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef
+    selectedSpaceArtifactCreationCatalog, selectedSpaceArtifactKinds, artifactCreationChoiceRevisionRef, activateOnDemand
   } = core;
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
@@ -48,14 +48,21 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
   }, [focusedPluginManifest, focusedApp, appLabelsOverlay, uiTerminology, uiLocale]);
   exampleOptionsRef.current = exampleOptions;
 
+  const exampleActivationRef = useRef<AbortController | null>(null);
   const dispatchActiveExample = useCallback(
     (exampleId: string) => {
       if (!session || !focusedApp || !focusedProgram) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === focusedProgram.pluginId)?.handle;
       if (!plugin) return;
-      return onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId));
+      exampleActivationRef.current?.abort();
+      const activation = exampleActivationRef.current = new AbortController();
+      return openExampleAfterActivation({
+        examples: focusedPluginManifest?.examples ?? [], exampleId, activator: { request: activateOnDemand }, locale: uiLocale, signal: activation.signal,
+        notify: (notice) => showTransientNotice(notice.text, notice.announcement.role === "alert" ? "error" : "info", `on-demand.example.${exampleId}`),
+        handoff: () => onAction(buildActiveExampleAction(focusedApp.controllerId, exampleId)),
+      });
     },
-    [loadedPlugins, onAction, session, focusedApp, focusedProgram],
+    [loadedPlugins, onAction, session, focusedApp, focusedProgram, focusedPluginManifest, activateOnDemand, uiLocale, showTransientNotice],
   );
 
   /** 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
@@ -67,6 +74,7 @@ export function useScopeState({ core }: { readonly core: ShellCoreAfterCheckInAn
         id="playground.navbar.fixture"
         value={activeExampleId}
         options={exampleOptions}
+        includeNoExample
         onValueChange={(exampleId) => { void dispatchActiveExample(exampleId); }}
       />
     );

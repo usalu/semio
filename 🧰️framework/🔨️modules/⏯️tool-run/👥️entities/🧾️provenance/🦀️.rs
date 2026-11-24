@@ -130,4 +130,4 @@ impl ToolRunEntityProvenanceEdit {
  }
 }
 impl RetireOwned for ToolRunEntityProvenanceEdit {type RetirementCursor=<State as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
-impl Drop for ToolRunEntityProvenanceEdit{fn drop(&mut self){assert!(self.transferred,"original provenance producer requires controlled retirement")}}
+impl Drop for ToolRunEntityProvenanceEdit{fn drop(&mut self){assert!(std::thread::panicking()||(self.transferred),"original provenance producer requires controlled retirement")}}

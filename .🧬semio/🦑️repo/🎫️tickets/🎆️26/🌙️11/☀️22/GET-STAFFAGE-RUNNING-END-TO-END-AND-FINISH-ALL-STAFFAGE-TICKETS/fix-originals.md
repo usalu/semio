@@ -107,3 +107,43 @@ Manifest: the rows carry `heightM`, `widthM`, `powerW`, pose and clip ids; none 
 - The `requests.md` sections on `unionPolygons` (edge-on prisms; 11-22 21:07, humans b, `person-pushing-bicycle`) have the same root as the fixed defect; I did not re-measure those three inputs, and the asset workarounds they describe are still in place. I did not edit `requests.md`.
 - The catalog-wide suites, the site build, `catalog-silhouette` and a full-catalog check run after the solver change remain for the coordinator.
 - The `Write` and `Read` tools stopped answering at about 04:20 (hook timeouts); files after that were written through the shell. The ticket tools of the repo MCP server were not used by me (no ticket opened or closed, as the brief reserves).
+
+## Follow-up 2026-11-23 13:20 to 13:45: union at the limit of its resolution (`sleeping-person`, `person-in-rain-poncho`)
+
+Order of the coordinator: `sleeping-person` clip `turn-over` at 6.4 s does not evaluate (edges 0.2 to 0.6 µm apart), `person-in-rain-poncho` 1:200 `walk-in-rain` at 0.24 s reportedly failed.
+
+### Measured before
+
+- `sleeping-person`, `turn-over` at 6.4, 6.405 and 6.49 s: `PolygonUnionError`, 2 polygons, at all four scales (12 of 12), with the module as it stood after my first fix.
+- `person-in-rain-poncho`, `walk-in-rain` at 0.24 s: evaluates at all four scales today. With the union module of commit `508f457ff1e` (before my first fix) substituted, 1:200 throws with 5 polygons (stacked strips, edges nanometres apart). So the first fix had already cured it; its input is now a fixture case.
+
+### Cause
+
+Two faces of one skinned quilt prism share one edge; their opposite edges are nearly parallel and 0.22 to 0.55 µm apart. Two things failed, one on each side of `SAME_M` (0.3 µm, the declared resolution of the union):
+
+1. Above 0.3 µm (6.4 s, 6.405 s): the 0.7 µm piece of boundary between a corner of one face and the crossing next to it was taken for a doubled edge, because only its **middle** was tested against the other polygon's edge (0.25 µm away, at 48 degrees to it). It was dropped and the boundary stayed open.
+2. Below 0.3 µm (6.49 s): the corner counts as lying on the other edge, but the chain joins nodes only within 0.1 µm, so corner and crossing (0.33 µm apart) stayed two nodes.
+
+The exact slab fallback failed in both cases on slabs a few nanometres wide.
+
+### Fix in `🔨️modules/🔺️polygon/🟦️.ts`
+
+- `onEdge` takes the whole piece: both ends and the middle must lie within `SAME_M` of one edge. This is stricter than before, not looser.
+- New `snapped`: every vertex within `SAME_M` of another polygon is moved onto its nearest vertex, else onto the nearest point of its edge, one vertex after the other in two rounds. A vertex moves less than 0.3 µm per round; the union keeps no polygon thinner than 1 µm.
+- `unionPolygons` now tries, in this order: edge splitting as given; edge splitting on the joined polygons; slab union as given; slab union on the joined polygons. The acceptance checks are unchanged (area between the largest polygon and the sum; slab rings equal to the slab area within 1e-4). No tolerance was widened. `SAME_M` stays the absolute resolution of the module; I did not make it relative to the size of the input.
+
+### Proof
+
+- All 15 earlier fixture cases give the identical rings and areas as before this change (compared digit for digit with a copy of the module).
+- Six new cases in `🧫️fixtures/🔺️polygon-union/🔣️.json` (`slivers`, 17 now) and one scenario in `🧪️tests/🔺️polygon-union/🥒️.feature`: the three sleeping-person inputs (1:50), two variants of the 6.4 s input with the second face moved by +0.15 µm and -0.41 µm (corners nearly meeting; a corner poking 0.3 µm through an edge), and the poncho input. The test compares ring count and area with polygon-clipping: `🔺️polygon-union` 24 of 24 passed (includes the shapely case). The three sleeping-person inputs and the two variants throw with the module before this change.
+- Sweep (temporary script, deleted): the 6.4 s input with the second face moved from -1 to +1 µm in steps of 5 nm, at three rotations, 1203 cases: 75 threw before, 0 throw now, one ring each, largest relative area difference to polygon-clipping 4.2e-6.
+- `sleeping-person` `turn-over` from 6.370 to 6.510 s every 2 ms at 1:50 and 1:500: 142 evaluations, 0 failures (10 of 71 instants threw before, per `requests.md`).
+- Test files re-run in one call: `⚖️equilibrium 🏗️cantilever 🏗️rigid-trees-3d 🏗️structure-oracle 🏗️structure-projection 🌉️simply-supported 🦶️centre-of-pressure 🧍️two-foot-stance 🏃️inertial-consistency 🦶️foot-plant 🎨️structure-legend 🧊️lateral-spread 🧊️solid-sweep 🔺️polygon-union 🥇️force-first 🪢️tied-canopy`: 15 files, 301 tests passed (16 names given; as before one name matches no file, I did not find out which).
+- Check CLI, run to the end: `✓ sleeping-person`, `✓ person-in-rain-poncho`, `✓ kneeling-gardener`, `✓ parent-with-stroller`; sample `✓ standing-adult`, `✓ walking-commuter`, `✓ dancer`, `✓ playground-swing`, `✓ english-oak`, `✓ agave`, `✓ herring-gull`, `✓ labrador-dog`, `✓ city-bicycle`, `✓ tower-crane` (ten).
+
+### Stated plainly
+
+- While patching, a script of mine cut the function `chainPieces` out of the live module; every union threw for about one minute (around 13:31) until I put it back from my copy. The file was compared with the copy afterwards: the only differences are the ones listed above. Any agent that ran staffage code in that minute saw union errors that were mine.
+- The check CLI does not sample 6.4 s of `turn-over`; `✓ sleeping-person` proves no regression, the evaluations above prove the fix. `🧊️three-views` for `sleeping-person` was not re-run by me.
+- The sweep covers one pair of faces. Other near-coincidences (a crossing point, not a vertex, within the resolution of a third edge) can still exist; the slab union on the joined polygons is the last resort for them, and a `PolygonUnionError` is still thrown rather than a wrong area returned.
+- Files changed in this follow-up: `🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🔺️polygon/🟦️.ts`, `…/🧪️tests/🔺️polygon-union/🥒️.feature`, `…/🧫️fixtures/🔺️polygon-union/🔣️.json`, this report. `requests.md` not edited; its section "three-views part 2 — `unionPolygons` …" is answered by this change.

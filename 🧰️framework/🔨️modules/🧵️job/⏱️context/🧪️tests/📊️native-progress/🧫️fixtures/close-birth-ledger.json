@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"id": "births cover the whole free", "born": 65536, "releases": [4096, 4096, 4096], "business": [0, 0, 0], "outstanding": 53248},
+    {"id": "births cover only the first part of the free", "born": 6144, "releases": [4096, 4096, 4096], "business": [0, 2048, 4096], "outstanding": 0},
+    {"id": "an unrecorded birth is charged to the closing caller", "born": 0, "releases": [4096, 1024], "business": [4096, 1024], "outstanding": 0}
+  ]
+}

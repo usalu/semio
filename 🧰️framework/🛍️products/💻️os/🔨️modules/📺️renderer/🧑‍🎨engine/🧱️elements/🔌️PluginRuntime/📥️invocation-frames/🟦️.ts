@@ -48,18 +48,18 @@ import { admitCrossingViewContext } from "../🖼️surface-refresh/🟦️.ts";
 //#region 🔖️plugin-runtime
 //#region 🔖️ActorAdapter
 //#region 🔖️GenericThunkQueue
-export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background"; mediaIn?: true } {
+export function inspectEncodedAppCommand(events: readonly Uint8Array[]): { actionId: string | null; seq: number | null; lane: "Interactive" | "Background"; mediaIn?: true; operation: string } {
   try {
     const command = decodeAppCommand(events[0]!);
-    if (events.length === 1 && "MediaIn" in command) return { actionId: null, seq: null, lane: "Interactive", mediaIn: true };
+    if (events.length === 1 && "MediaIn" in command) return { actionId: null, seq: null, lane: "Interactive", mediaIn: true, operation: "media-in" };
     const seq = "Command" in command ? command.Command.seq : "ConfigCommand" in command ? command.ConfigCommand.seq : null;
-    if (!("Command" in command)) return { actionId: null, seq, lane: "Interactive" };
+    if (!("Command" in command)) return { actionId: null, seq, lane: "Interactive", operation: "ConfigCommand" in command ? "config-command" : Object.keys(command)[0] ?? "unknown" };
     const invocation = decodePackValue(new Uint8Array(command.Command.command)) as { readonly address?: { readonly actionId?: unknown; readonly commandId?: unknown } } | null;
     const id = invocation?.address?.actionId ?? invocation?.address?.commandId;
     const actionId = typeof id === "string" ? id : null;
-    return { actionId, seq, lane: actionId === null ? "Interactive" : commandIngressLaneForActionV1(actionId) };
+    return { actionId, seq, lane: actionId === null ? "Interactive" : commandIngressLaneForActionV1(actionId), operation: actionId ?? "command" };
   } catch {
-    return { actionId: null, seq: null, lane: "Interactive" };
+    return { actionId: null, seq: null, lane: "Interactive", operation: "undecodable" };
   }
 }
 

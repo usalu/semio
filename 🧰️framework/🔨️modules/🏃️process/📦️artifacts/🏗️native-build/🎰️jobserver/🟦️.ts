@@ -264,3 +264,9 @@ export async function createJobserverV1(value: unknown, directory: string): Prom
   });
   issuedJobservers.add(server);return server;
 }
+
+/** 🧮 The job count a Cargo process gets: the local grant plus the light slots the environment names (`SEMIO_UNIT_CACHE_LIGHT_SLOTS`, the units that run on a worker), so Cargo keeps every local slot and every remote slot busy. The wrapper's own slots (`SEMIO_UNIT_CACHE_SLOTS`) still bound the compilers that run here and the light slots those that run elsewhere. */
+export function cargoJobsV1(local: number, environment: Readonly<Record<string, string | undefined>>): number {
+  const light = Number(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS ?? 0);
+  return Math.max(1, Math.floor(local)) + (Number.isSafeInteger(light) && light > 0 ? light : 0);
+}

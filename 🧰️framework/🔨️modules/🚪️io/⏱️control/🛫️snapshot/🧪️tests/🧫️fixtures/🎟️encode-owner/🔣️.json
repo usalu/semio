@@ -160,7 +160,9 @@
         "nativeWordBytes": 8,
         "stringHeaderBytes": 24,
         "headerBytes": 32,
-        "childBirthBytes": 32
+        "childBirthBytes": 32,
+        "replyHandoffCopyBytes": 64,
+        "childRetirementCopyBytes": 33
       }
     ],
     "grant": {

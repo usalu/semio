@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1993-editor-field-meta"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1993 editor field metadata: SI display units and en/de labels of every editable field"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1993-mutations = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-norm-en1993-model = { workspace = true, features = ["test-support"] }
+semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
+serde_json = { workspace = true }

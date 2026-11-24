@@ -50,7 +50,7 @@ import {
 // #endregion 🔌️Adapters
 import { retireSkippedWindowBodies } from "../🪟️mounted-window-refresh/🟦️.ts";
 import { createContributionsPublisher, type ContributionsPublishOutcome, type ContributionsSessionKey } from "../../🛠️ShellHelpers/🧩️contributions/🟦️.ts";
-import { guestIngressGenerationV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
+import { guestIngressGenerationV1, isPluginInstanceRetiredV1, pluginInstanceWasRetiredV1 } from "../../🔌️PluginRuntime/🟦️.tsx";
 import { hopTrace } from "@semio-tech/framework-trace";
 import { seededActiveWindowId } from "../🎚️shell-model/🟦️.tsx";
 import { appCommandTakesPageRun, appOwnsCommand, encodeAppCommandInvocation } from "../📨️window-invocation/🟦️.ts";
@@ -143,6 +143,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
             const skipped = !targetApp || !appOwnsCommand(targetApp, "setContributions") ? "app-owns-no-setContributions" : !pluginEntry.handle.handleCommand ? "handle-cannot-command" : instanceId == null ? "no-bound-instance" : undefined;
             const takesPageRun = targetApp !== undefined && appCommandTakesPageRun(targetApp, "setContributions");
             if (!targetApp || !pluginEntry.handle.handleCommand || instanceId == null || skipped !== undefined) continue;
+            if (pluginInstanceWasRetiredV1(pluginEntry.handle.pluginId, instanceId)) continue;
             const args = takesPageRun ? { json, page: 0, pageCount: 1 } : { json };
             try {
               const wire = encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args);
@@ -151,7 +152,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
                 environment.dispatchDeferredEffects(isActive ? environment.session : { pluginId: pluginEntry.handle.pluginId, instanceId, app: targetApp, viewState: environment.session.viewState }, contributionResponse.requestedEffects);
               }
             } catch (error) {
-              console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
+              if (!isPluginInstanceRetiredV1(error)) console.error("setContributions command failed", pluginEntry.handle.pluginId, error instanceof Error ? error.message : String(error));
             }
           }
         }
@@ -366,7 +367,7 @@ export function useContributionsAndRefresh(core: ShellCoreAfterFocusAndInput) {
               const wire = encodeAppCommandInvocation(nextSession.pluginId, nextSession.app, "setAppRegistrations", { json: appRegistrationsJson });
               await pluginEntry.handle.handleCommand(nextSession.instanceId, wire, resolvedTargetViewState(nextSession));
             } catch (error) {
-              console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
+              if (!isPluginInstanceRetiredV1(error)) console.error("setAppRegistrations command failed", error instanceof Error ? error.message : String(error));
             }
           }
         }

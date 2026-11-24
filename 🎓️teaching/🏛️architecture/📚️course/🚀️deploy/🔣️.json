@@ -2,6 +2,7 @@
   "$schema": "./🧬️schema/🔣️.json",
   "site": {
     "host": "architektur-und-technologie.de",
+    "language": "de",
     "legal": {}
   },
   "proctor": {

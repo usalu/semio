@@ -22,7 +22,7 @@ use crate::editor::puzzle5d::view::{puzzle5d_scene_mode, puzzle5d_transform_hand
 #[allow(unused_imports)]
 use semio_s_artifact_puzzle_3d_precompute_brush::BrushSuggestionsFound;
 #[allow(unused_imports)]
-use semio_plugin::{world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, SurfaceKind, ToolRunView, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
+use semio_plugin::{world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_fit_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_selection_json, SurfaceKind, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowOptions};
 #[allow(unused_imports)]
 use semio_ui_contract::BuiltNode;
 use crate::editor::puzzle5d::modes::edit::windows::world3d::{world_fasteners_json};

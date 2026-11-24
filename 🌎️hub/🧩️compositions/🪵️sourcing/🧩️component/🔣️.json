@@ -2816,7 +2816,9 @@
               }
             ],
             "utilities": [],
-            "interactions": [],
+            "interactions": [
+              "rows"
+            ],
             "capabilities": []
           },
           {

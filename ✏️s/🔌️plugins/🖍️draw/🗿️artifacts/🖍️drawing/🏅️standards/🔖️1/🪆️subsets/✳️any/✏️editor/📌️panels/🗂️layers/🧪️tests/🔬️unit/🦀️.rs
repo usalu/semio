@@ -10,7 +10,7 @@ use semio_framework_test_fixtures::fixture_text;
 
 //#region 🪟️WindowLaws
 
-use semio_s_artifact_draw_drawing_model::{DrawingGroupBody, DrawingLayerBase, DrawingShapeBody};
+use semio_s_artifact_draw_drawing_model::{default_layer_base, DrawingGroupBody, DrawingLayerBase, DrawingShapeBody};
 use semio_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn shape_layer(id: &str, name: &str) -> DrawingLayerNode {
@@ -48,6 +48,7 @@ fn nested_path(keys: &[&str]) -> String {
 /// viewport between them, and never grow a `+N` continuation row.
 #[test]
 fn oversized_document_stamps_totals_and_never_a_continuation_row() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = window_body(&oversized_document(300, 40), Vec::new());
     assert!(json.contains("\"total\":310"), "the section stamps ten add rows plus every layer: {json}");
     assert!(json.contains("\"total\":40"), "the nested group stamps its own full extent: {json}");
@@ -59,6 +60,7 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
 /// 🪟️ Law (b): a container the host closed stamps its total and materialises nothing — at both levels.
 #[test]
 fn closed_containers_stamp_totals_and_materialise_no_children() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document(300, 40);
     let json = window_body(&document, vec![TreeWindowRequest { body_key: DRAWING_PLAY_BODY_LAYERS.into(), node_key: "drawing-play-layers".into(), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":310"), "a closed section still stamps its extent: {json}");
@@ -73,6 +75,7 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
 /// asserted on the section and, independently, on the nested group container.
 #[test]
 fn host_windows_materialise_exactly_their_slice() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let document = oversized_document(300, 40);
     let json = window_body(&document, vec![open("drawing-play-layers", 110, 10)]);
     assert!(json.contains("\"offset\":110"), "the section reports its offset: {json}");
@@ -96,6 +99,7 @@ fn host_windows_materialise_exactly_their_slice() {
 /// fixed "add" rows keep their own `addLayer` action.
 #[test]
 fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = window_body(&oversized_document(3, 2), Vec::new());
     assert!(json.contains("\"interactionDomain\":\"strokes\""), "the tree binds the strokes domain: {json}");
     assert_eq!(json.matches("interactionSelect").count(), 1, "exactly one tree-level pick binding exists: {json}");
@@ -106,6 +110,7 @@ fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
 
 #[test]
 fn creation_choices_match_language_neutral_contract() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🗂️layers/🧪️tests/🧫️fixtures/➕️creation/🔣️.json")).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
         let document=DrawingSnapshot::default();

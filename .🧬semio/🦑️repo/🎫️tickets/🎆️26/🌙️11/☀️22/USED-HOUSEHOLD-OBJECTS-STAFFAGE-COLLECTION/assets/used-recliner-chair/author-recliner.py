@@ -25,6 +25,8 @@ LEVER_PIVOT = (0.60, 0.36)
 LEVER_ANGLE = 80.0
 BACK_FRONT_TOP = 0.58
 BACK_HALF = {50: 0.25, 100: 0.245, 200: 0.2575, 500: 0.2575}
+SEAT_HALF = {50: 0.258, 100: 0.258, 200: ARM_IN, 500: ARM_IN}
+PAD_HALF = {50: 0.257, 100: 0.257, 200: ARM_IN, 500: ARM_IN}
 GLIDES = [(0.06, ARM_MID), (0.06, -ARM_MID), (0.86, ARM_MID), (0.86, -ARM_MID)]
 LINK_LEN = math.hypot(BOARD_TOP[0] - LINK_PIVOT[0], BOARD_TOP[1] - LINK_PIVOT[1])
 LINK_ANGLE = math.degrees(math.atan2(BOARD_TOP[1] - LINK_PIVOT[1], BOARD_TOP[0] - LINK_PIVOT[0]))
@@ -132,8 +134,8 @@ def back_profile(scale):
 
 
 def back_front_outline(scale, half):
-    """🛋 Front outline of the back cushion in (u, w) of the back bone, rounded at the top corners."""
-    r = 0.09 if scale <= 200 else 0.0
+    """🛋 Front outline of the back cushion in (u, w) of the back bone, rounded at the top corners. The body of the cushion is the prism of its side profile, square in the front elevation, so the drawn corner softens it only by what the scale tolerates (the corner of the prism lies 0.41 r outside the arc: 10 mm at 1:50, 21 mm at 1:100, 37 mm at 1:200, against two smallest features of 15, 30 and 60 mm; with 90 mm at every scale it lay 37 mm outside, silhouette repair SF of 2026-11-23)."""
+    r = {50: 0.025, 100: 0.05, 200: 0.09}.get(scale, 0.0)
     n = 6 if scale <= 100 else 3
     top = BACK_FRONT_TOP
     if r == 0:
@@ -280,7 +282,7 @@ def body_solids(scale):
         outer = 0.2595 if scale == 50 else ARM_IN
         for side, (z0, z1) in (("left", (inner, outer)), ("right", (-outer, -inner))):
             out.append(box(f"hinge-bracket-{side}", "frame", "steel-black", 0.25, 0.09, 0.36, z0, 0.21, 0.46, z1))
-    out.append(ext("seat-cushion", "seat", "pvc-faux-leather", 0.42, seat_profile(scale), -0.258, 0.258))
+    out.append(ext("seat-cushion", "seat", "pvc-faux-leather", 0.42, seat_profile(scale), -SEAT_HALF[scale], SEAT_HALF[scale]))
     half = BACK_HALF[scale]
     out.append(ext("back-cushion", "back", "pvc-faux-leather", 0.44, back_profile(scale), -half, half))
     if scale <= 100:
@@ -290,7 +292,7 @@ def body_solids(scale):
         out.append(solid("link-plates", "link", "steel-black", 0.25, "extrude", profile=pts(link_bar(0.036)), plane="xy", **{"from": lz[0], "to": lz[1]}, repeat={"count": 2, "translation": [0.0, 0.0, r5(-(lz[0] + lz[1]))]}))
         out.append(ext("lever-handle", "lever", "polypropylene", 0.18, lever_handle(scale), -0.445, -0.43))
     else:
-        out.append(ext("footrest-pad", "footrest", "pvc-faux-leather", 0.42, footrest_pad(scale), -0.257, 0.257))
+        out.append(ext("footrest-pad", "footrest", "pvc-faux-leather", 0.42, footrest_pad(scale), -PAD_HALF[scale], PAD_HALF[scale]))
     if scale == 50:
         out.append(solid("lever-boss", "lever", "steel-black", 0.25, "extrude", profile=pts(arc(0.0, 0.0, 0.02, 0, 360, 16)[:-1]), plane="xy", **{"from": -0.45, "to": -0.43}))
     if scale <= 100:
@@ -471,6 +473,8 @@ def geometry(scale):
         if x > 0.5:
             front.append(shape(f"glide-{'left' if z > 0 else 'right'}", "glides", "body", 2, poly([(z - 0.025, BLANKET), (z + 0.025, BLANKET), (z + 0.021, BLANKET + 0.03), (z - 0.021, BLANKET + 0.03)]), 0.15, region="plastic-trim", material="polypropylene"))
     front.append(shape("seat-frame", "frame", "body", 2.5, rect_poly(-ARM_IN, 0.24, ARM_IN, 0.38), 0.2, region="base-frame", material="chipboard-p2"))
+    if scale <= 100:
+        front.append(shape("rear-rail", "frame", "body", 2.3, rect_poly(-ARM_IN, 0.08, ARM_IN, 0.22), 0.22, region="base-frame", material="spruce-c24"))
     if fine:
         front.append(shape("pivot-tube", "frame", "body", 2.6, rect_poly(-ARM_IN, LINK_PIVOT[1] + BLANKET - 0.0125, ARM_IN, LINK_PIVOT[1] + BLANKET + 0.0125), 0.25, region="mechanism", material="steel-black"))
     half = BACK_HALF[scale]
@@ -488,7 +492,7 @@ def geometry(scale):
         for side, (z0, z1) in (("left", (0.245, 0.26)), ("right", (-0.26, -0.245))):
             front.append(shape(f"link-{side}", "link", "body", 4.6, poly(link_bar(0.036)), 0.25, region="mechanism", material="steel-black", solid=sweep_w(z0, z1)))
     else:
-        front.append(shape("footrest-pad", "footrest", "body", 4.5, rect_poly(0.0, -0.257, BOARD_LEN, 0.257), 0.42, region="footrest", material="pvc-faux-leather", solid=sweep_v(0.0, 0.09)))
+        front.append(shape("footrest-pad", "footrest", "body", 4.5, rect_poly(0.0, -PAD_HALF[scale], BOARD_LEN, PAD_HALF[scale]), 0.42, region="footrest", material="pvc-faux-leather", solid=sweep_v(0.0, 0.09)))
     for side, (z0, z1) in (("right", (-ARM_OUT, -ARM_IN)), ("left", (ARM_IN, ARM_OUT))):
         zc = (z0 + z1) / 2
         bottom = BLANKET if scale >= 200 else BLANKET + 0.03
@@ -513,7 +517,7 @@ def geometry(scale):
         for side, (z0, z1) in (("left", (0.246, 0.254)), ("right", (-0.254, -0.246))):
             plan.append(shape(f"link-{side}", "link", "body", 2.2, poly(link_bar(0.036)), 0.25, region="mechanism", material="steel-black", solid=sweep_w(z0, z1)))
     else:
-        plan.append(shape("footrest-pad", "footrest", "body", 2.1, poly(footrest_pad(scale)), 0.42, region="footrest", material="pvc-faux-leather", solid=sweep_w(-0.257, 0.257)))
+        plan.append(shape("footrest-pad", "footrest", "body", 2.1, poly(footrest_pad(scale)), 0.42, region="footrest", material="pvc-faux-leather", solid=sweep_w(-PAD_HALF[scale], PAD_HALF[scale])))
     plan.append(shape("seat-cushion", "seat", "body", 3, poly([(SEAT_X, -ARM_IN)] + arc(0.905 - 0.03, -ARM_IN + 0.03, 0.03, -90, 0, 4) + arc(0.905 - 0.03, ARM_IN - 0.03, 0.03, 0, 90, 4) + [(SEAT_X, ARM_IN)]) if fine else rect_poly(SEAT_X, -ARM_IN, 0.905, ARM_IN), 0.42, region="seat-cushion", material="pvc-faux-leather"))
     if scale <= 200:
         plan.append(shape("seat-piping", "seat", "detail", 3.1, poly([(0.88, -0.24), (0.88, 0.24)], False), 0.3, filled=False, region="seat-cushion"))

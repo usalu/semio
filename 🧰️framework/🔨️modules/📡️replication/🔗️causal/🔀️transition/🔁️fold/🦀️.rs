@@ -196,7 +196,7 @@ pub struct HistoryFoldOwned<T: RetireOwned> { owner: Option<Box<ControlledRetire
 impl<T: RetireOwned> HistoryFoldOwned<T> { pub fn take(mut self) -> T { self.owner.as_mut().expect("fold local retains admitted frame").take_original().expect("fold local remains original") } }
 impl<T: RetireOwned> Deref for HistoryFoldOwned<T> { type Target = T; fn deref(&self) -> &T { self.owner.as_ref().and_then(|owner| owner.original()).expect("fold local remains original") } }
 impl<T: RetireOwned> DerefMut for HistoryFoldOwned<T> { fn deref_mut(&mut self) -> &mut T { self.owner.as_mut().and_then(|owner| owner.original_mut()).expect("fold local remains original") } }
-impl<T: RetireOwned> Drop for HistoryFoldOwned<T> { fn drop(&mut self) { if let Some(owner) = self.owner.take() { let mut queue = self.control.0.retirements.lock(); assert!(queue.len() < queue.capacity(), "fold local requires a reserved queue slot"); queue.push_back(owner); } } }
+impl<T: RetireOwned> Drop for HistoryFoldOwned<T> { fn drop(&mut self) { if let Some(owner) = self.owner.take() { let mut queue = self.control.0.retirements.lock(); assert!(std::thread::panicking()||(queue.len() < queue.capacity()), "fold local requires a reserved queue slot"); queue.push_back(owner); } } }
 
 /// 📏️ The exact copy credit one typed retirement frame needs: the moved original plus its defining cursor header.
 fn admission_copy<T: RetireOwned>() -> usize { size_of::<Option<T>>() + size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<T>>() }

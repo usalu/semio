@@ -300,7 +300,7 @@ impl AppPresenter {
         if !interaction.shell.opening.close_icon_export_step(cx)? || !interaction.shell.opening.close_video_render_step() {
             return Ok(false);
         }
-        if interaction.shell.surfaces.advance_world3d_retirement_step() {
+        if interaction.shell.surfaces.advance_world3d_retirement_step_in(cx) {
             if let Some(fault)=interaction.shell.surfaces.world3d_retirement_fault() {{ semio_renderer_wgpu_host_base::log_debug(&format!("[TRACE] retired terrain owner refused: {fault:?}")); mailbox.record_frame_fault("retired terrain owner refused"); };}
             return Ok(false);
         }

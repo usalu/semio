@@ -1,9 +1,10 @@
 use super::*;
-use semio_renderer_wgpu_fixtures::shell::paint_tree_pointer_documents;
+use semio_renderer_wgpu_fixtures::shell::{paint_tree_pointer_documents_in, PointerFixtureTurns};
 
 /// 📐️ The retained tree paints the same insertion edge that its drop action uses.
 #[test]
 fn retained_tree_reorder_marker_follows_the_physical_pointer_and_clears() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "tree-reorder-marker-boundary";
     let body = Rect::new(17.0, 31.0, 360.0, 240.0);
@@ -33,7 +34,8 @@ fn retained_tree_reorder_marker_follows_the_physical_pointer_and_clears() {
         row(4, "second"),
     ];
     let mut document = shell.windows.publish_surface_records(surface, records).expect("row reorder document publishes");
-    let mut input = paint_tree_pointer_documents(&mut shell, &[(surface, &document, body)]);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_documents_in(&mut turns, &mut shell, &[(surface, &document, body)]);
     let hit = |key: &str| input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(key)).expect("presented row hit").rect;
     let handle = hit("tree.drag.transfer.first");
     let target = hit("tree.label.second");
@@ -74,4 +76,5 @@ fn retained_tree_reorder_marker_follows_the_physical_pointer_and_clears() {
     assert!(paint(&mut shell, &input).is_empty());
     assert!(semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     while !document.close_step() {}
+    turns.finish();
 }

@@ -424,13 +424,13 @@ export const step13 = async (ctx: Ctx) => {
   const shown = await waitUntil(() => presentKey(lockKey), (id) => id !== null, 10000);
   const lockText = await textOfKey(lockKey);
   const lockPress = await pressAuthored(lockKey);
-  const locked = await waitUntil(() => textOfKey(lockKey), (text) => /\btrue\b/.test(text), 10000);
+  const locked = await waitUntil(() => textOfKey(lockKey), (text) => copy.flagOn.test(text), 10000);
   const lockMutation = await newMutation(newestBefore, (row) => row.label.startsWith(copy.changeLocked(p.id)));
   verdict("g4-lock-in-the-inspector-is-a-history-row", shown.ok && locked.ok && Boolean(lockMutation.mutation), { node: p.id, before: lockText, after: locked.value, press: lockPress, mutation: lockMutation.mutation?.label, expected: copy.changeLocked(p.id), via: `${INSPECTION_TAB} → ${lockKey}` });
   const newestAfterLock = newestEntrySeq(await allHistoryRows());
   await openTab(INSPECTION_TAB);
   await pressAuthored(lockKey);
-  const unlocked = await waitUntil(() => textOfKey(lockKey), (text) => /\bfalse\b/.test(text), 10000);
+  const unlocked = await waitUntil(() => textOfKey(lockKey), (text) => copy.flagOff.test(text), 10000);
   const unlockMutation = await newMutation(newestAfterLock, (row) => row.label.startsWith(copy.changeLocked(p.id)) && row.key !== lockMutation.mutation?.key);
   verdict("g4-unlock-in-the-inspector-is-a-history-row", unlocked.ok && Boolean(unlockMutation.mutation), { after: unlocked.value, mutation: unlockMutation.mutation?.key });
   if (!unlockMutation.mutation) return;

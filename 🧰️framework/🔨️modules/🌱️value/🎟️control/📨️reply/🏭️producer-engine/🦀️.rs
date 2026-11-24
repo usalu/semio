@@ -80,6 +80,8 @@ impl<T,E> OriginalEffectAction<T,E>{
  /// 📏️ Observes the same action resident forwarding metadata.
  pub fn forward_progress(&self)->crate::RetainedCloneProgress{self.forward_progress}
  /// 📤️ Transfers the exact producer reply directly into its empty resident slot.
+ /// ↩️ Returns a transferred reply to its resident action when the transfer cannot finish, so the exact reply stays owned.
+ pub fn restore_reply(&mut self,reply:Result<T,E>){assert!(self.reply.is_none(),"an action restores only a reply it transferred");self.reply=Some(reply)}
  pub fn transfer_reply(&mut self,output:&mut Option<Result<T,E>>)->Result<bool,ValueError>{if output.is_some(){return Err(invalid())}if !self.settled{return Ok(false)}let Some(reply)=self.reply.take()else{return Err(invalid())};*output=Some(reply);Ok(true)}
 }
 impl<T,E> Drop for OriginalEffectAction<T,E>{fn drop(&mut self){assert!(std::thread::panicking()||self.finished,"original effect producer action remains live")}}

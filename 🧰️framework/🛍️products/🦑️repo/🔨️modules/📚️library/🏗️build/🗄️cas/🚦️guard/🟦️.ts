@@ -91,7 +91,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  const collect=async(request:Parameters<NonNullable<CasGuardPortsV1["collect"]>>[0],automatic:boolean,completedAutomatic:(hint:CasUsageHintV1)=>void)=>{
   if(options.collect!==undefined)return options.collect(request);
   const {areas,known}=await hostAreasV1(home);
-  return collectCasV1({root,policy:request.policy,incremental:automatic,areas,partition:request.partition,signal:request.signal,now,
+  return collectCasV1({root,policy:request.policy,incremental:automatic,role:automatic?"guard-background":"guard-admission",areas,partition:request.partition,signal:request.signal,now,
    ...automatic&&known&&request.policy.minAgeMs>0?{automaticScope:()=>automaticScopeV1(root,request.policy,request.partition,areas),completedAutomatic}:{}});
  };
  const run=(quote:ReturnType<typeof decide>,signal?:AbortSignal,automatic=true):FlightV1=>{
@@ -180,7 +180,7 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
  });
  const guard:CasGuardV1={
   async admit(incomingBytes,signal){
-   let triedCap=false,triedCritical=false,waitedForOtherScope=false;
+   let triedCap=false,triedCritical=false,waitedForOtherScope=false,fullTried=false,attempts=0;
    for(;;){
     signal?.throwIfAborted();
     let quote=decide(await storeBytes(),incomingBytes),covered=false;
@@ -189,9 +189,10 @@ export function createCasGuardV1(options:Readonly<{root:string;policy?:CasPolicy
      ({quote,covered}=await verifyCompletion(quote,incomingBytes,signal));
     const {decision,partition}=quote;
     if(options.refuseOverCap===true&&decision.reason==="cap-exceeded"){
-     if(triedCap||usableCompletion(quote,state.hint))throw new CasCapRefusalV1((bytes()??0)+incomingBytes,quote.effective.capBytes);
-     triedCap=true;
-     const task=run(quote).task,budget=delay(quote.effective.admissionBudgetMs);
+     if(fullTried||attempts>=3||usableCompletion(quote,state.hint))throw new CasCapRefusalV1((bytes()??0)+incomingBytes,quote.effective.capBytes);
+     triedCap=true;attempts++;
+     const flight=run(quote,undefined,false);fullTried=!flight.automatic;
+     const task=flight.task,budget=delay(quote.effective.admissionBudgetMs);
      try{await within(Promise.race([task,budget.done]),signal);}finally{budget.stop();}
      continue;
     }

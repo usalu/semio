@@ -44,7 +44,21 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "Unreinforced": {
+            "en": "Unreinforced masonry",
+            "de": "Unbewehrtes Mauerwerk"
+          },
+          "Confined": {
+            "en": "Confined masonry",
+            "de": "Eingefasstes Mauerwerk"
+          },
+          "Reinforced": {
+            "en": "Reinforced masonry",
+            "de": "Bewehrtes Mauerwerk"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1996_model::BracingSystem"

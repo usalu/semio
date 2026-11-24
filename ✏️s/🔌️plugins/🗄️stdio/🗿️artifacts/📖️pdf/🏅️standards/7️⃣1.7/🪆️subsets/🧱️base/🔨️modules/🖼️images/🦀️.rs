@@ -1,7 +1,7 @@
 //! 🖼️ Image XObjects (ISO 32000-1 §8.9.5): lifting a stream into [`PdfImage`] — packed samples
 //! or a retained image codec — and lowering it back, masks and soft masks included.
 
-use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
+use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt};
 use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
 use crate::standards::v1_7::subsets::base::modules::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
@@ -53,7 +53,7 @@ pub fn lift_image(id: &str, dict: &[PdfDictEntry], data: &[u8], filters: &[PdfSt
         extra: extra_entries(dict, IMAGE_KEYS),
     };
     image.body=match codec {
-        Some(filter)=>{let kind=match filter {PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};let reference=NativePdfArtifactResources::default().admit(kind,PdfObject::Stream {dict:dict.to_vec(),data:data.to_vec(),filters:filters.to_vec()})?;PdfImageBody::Artifact {reference}},
+        Some(filter)=>{let kind=match filter {PdfStreamFilter::Dct {..}=>"s.stdio.jpeg",PdfStreamFilter::Jpx=>"s.stdio.jpeg2000",PdfStreamFilter::Ccitt {..}=>"s.stdio.ccitt",PdfStreamFilter::Jbig2 {..}=>"s.stdio.jbig2",_=>unreachable!()};let reference=NativePdfArtifactResources::default().admit(kind,PdfObject::Stream {dict:dict.to_vec(),data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(data),filters:filters.to_vec()})?;PdfImageBody::Artifact {reference}},
         None=>if let Some(reference)=sampled_artifact_reference(dict,data,filters)? {PdfImageBody::Artifact {reference}} else {PdfImageBody::Samples {values:unpack_image_samples(image.width,image.height,image_components(&image),image.bits_per_component,data)?}},
     };Ok(image)
 
@@ -119,7 +119,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     push_opt(&mut dict, "StructParent", image.struct_parent.map(|v| PdfObject::Int(v as i64)));
     dict.extend(image.extra.iter().cloned());
     let (data,filters)=match &image.body {
-        PdfImageBody::Samples {values}=>(pack_image_samples(image.width,image.height,image_components(image),image.bits_per_component,values)?,vec![PdfStreamFilter::Flate {predictor:None}]),
+        PdfImageBody::Samples {values}=>(crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&pack_image_samples(image.width,image.height,image_components(image),image.bits_per_component,values)?),vec![PdfStreamFilter::Flate {predictor:None}]),
         PdfImageBody::Artifact {reference}=>{
             use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
                 png_source::PngPlane, require_pdf_artifact_kind, SAMPLED_IMAGE_KIND,
@@ -149,9 +149,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
             (data,filters)
         },
     };
-    let mut object=raw_stream(dict,data);if let PdfObject::Stream {filters:slot,..}=&mut object {*slot=filters;}
-
-    Ok(object)
+    Ok(PdfObject::Stream {dict,data,filters})
 }
 
 fn image_components(image:&PdfImage)->u32 {if image.image_mask{1}else{image.color_space.as_ref().and_then(|color|color.components()).unwrap_or(1)}}
@@ -201,7 +199,7 @@ impl PdfImageSampleCursor {
         Ok(Self { row_samples, row_bytes, packed_length, sample_count: row_samples * height, bits: bits as usize, output: Vec::new(), stage: SampleStage::Active })
     }
 
-    pub fn advance(&mut self, data: &[u8], grant: CosGrant, cancelled: bool) -> CosReceipt {
+    pub fn advance(&mut self, data: &(impl semio_framework_value::ByteReadSource + ?Sized), grant: CosGrant, cancelled: bool) -> CosReceipt {
         if cancelled && matches!(self.stage, SampleStage::Active | SampleStage::Complete) { self.stage = SampleStage::Cancelled; }
         match self.stage {
             SampleStage::Complete => return sample_receipt(Ok(CosStatus::Complete { end: self.sample_count }), 0),
@@ -211,7 +209,7 @@ impl PdfImageSampleCursor {
             _ if grant.work == 0 => return sample_receipt(Ok(CosStatus::More), 0),
             _ => {}
         }
-        if data.len() != self.packed_length {
+        if data.byte_len() != self.packed_length {
             return sample_receipt(Err("image packed body does not match its declared geometry"), 1);
         }
         if self.sample_count != 0 && self.output.capacity() == 0 {
@@ -233,12 +231,16 @@ impl PdfImageSampleCursor {
         for _ in 0..count {
             let bit = x * self.bits;
             let byte = y * self.row_bytes + bit / 8;
+            let Some(first) = data.byte_at(byte) else { return sample_receipt(Err("image sample source lost a byte"), 1); };
             let value = match self.bits {
-                16 => u32::from(u16::from_be_bytes([data[byte], data[byte + 1]])),
-                8 => u32::from(data[byte]),
+                16 => {
+                    let Some(second) = data.byte_at(byte + 1) else { return sample_receipt(Err("image sample source lost a byte"), 1); };
+                    u32::from(u16::from_be_bytes([first, second]))
+                }
+                8 => u32::from(first),
                 bits => {
                     let shift = 8 - (bit % 8) - bits;
-                    u32::from((data[byte] >> shift) & ((1u8 << bits) - 1))
+                    u32::from((first >> shift) & ((1u8 << bits) - 1))
                 }
             };
             self.output.push(value);
@@ -316,7 +318,7 @@ mod sample_tests {
             vec![PdfStreamFilter::Flate { predictor: None }],
             vec![PdfStreamFilter::Flate { predictor: Some(predictor) }],
         ] {
-            let stream = PdfObject::Stream { dict: Vec::new(), data: data.to_vec(), filters: filters.clone() };
+            let stream = PdfObject::Stream { dict: Vec::new(), data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&data), filters: filters.clone() };
             let reference = NativePdfArtifactResources::default().admit(SAMPLED_IMAGE_KIND, stream).unwrap();
             let mut incremental = PdfSampledResourceIdentity::new(&filters).unwrap();
             assert_eq!(incremental.advance(&data, 1), 1);
@@ -337,7 +339,7 @@ mod sample_tests {
         let data = b"physical DCT custody";
         for color_transform in [None, Some(0), Some(1)] {
             let stream = PdfObject::Stream {
-                dict: Vec::new(), data: data.to_vec(), filters: vec![PdfStreamFilter::Dct { color_transform }],
+                dict: Vec::new(), data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(data), filters: vec![PdfStreamFilter::Dct { color_transform }],
             };
             let reference = NativePdfArtifactResources::default().admit("s.stdio.jpeg", stream).unwrap();
             let mut incremental = PdfDctResourceIdentity::new(color_transform).unwrap();
@@ -384,7 +386,7 @@ mod sample_tests {
                 PdfDictEntry::new("BitsPerComponent", PdfObject::Int(8)),
                 PdfDictEntry::new("ImageMask", PdfObject::Bool(false)), PdfDictEntry::new("Interpolate", PdfObject::Bool(true)),
             ],
-            data: vec![255, 0, 4, 0, 128, 5], filters: Vec::new(),
+            data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&[255, 0, 4, 0, 128, 5]), filters: Vec::new(),
         };
         let mut image = ControlledImageCursor::new(&stream).unwrap().unwrap();
         let PdfObject::Stream { data, .. } = &stream else { unreachable!() };
@@ -414,7 +416,7 @@ mod sample_tests {
         assert_eq!(partial.close_step(ONE).status, Ok(CosStatus::Closed));
 
         let PdfObject::Stream { data, .. } = &mut stream else { unreachable!() };
-        data.pop();
+        { let mut bytes = data.to_vec_owner(); bytes.pop(); *data = crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&bytes); }
         assert!(ControlledImageCursor::new(&stream).is_err());
         let PdfObject::Stream { dict, .. } = &mut stream else { unreachable!() };
         dict.push(PdfDictEntry::new("SMask", PdfObject::Null));

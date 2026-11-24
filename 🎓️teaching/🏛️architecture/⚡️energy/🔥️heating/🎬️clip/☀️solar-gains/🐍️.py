@@ -34,6 +34,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
@@ -139,21 +140,6 @@ RHO_BETON, C_BETON, DT_SLAB = 2400.0, 1000.0, 2.0
 
 
 #region Shared
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
-    modules. Module 5's solar-gain chain — Q̇_S = I_s · A · g_⊥ · F_F · F_W · F_S · F_C —
-    is the DIN V 4108-6 method (6.4 Solare Wärmegewinne, Anhang B.4 for F_C); the g-value beat
-    cites DIN EN 410 next to it. Added in absolute frame coordinates.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Physical Fundamentals glyphs
 # Sun, rays, light pulses and heat ripples come from the Physical Fundamentals
 # vocabulary in ``manim_visuals``; these wrappers only fix the module's size,
@@ -391,7 +377,7 @@ class Beat1_VerlustZuGewinn(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("From heat loss to solar gain", "Von Wärmeverlust zu solarem Gewinn"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "loss"))
@@ -515,7 +501,7 @@ class Beat2_BestrahlungUndFlaeche(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Irradiance and window area", "Strahlungsintensität und Fensterfläche"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "aperture"))
@@ -641,7 +627,7 @@ class Beat3_GWert(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Total solar energy transmittance g⊥", "Gesamtenergiedurchlassgrad g⊥"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar"), ("din-en-410", "g")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar"), ("din-en-410", "g")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "section"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -755,7 +741,7 @@ class Beat4_SaisonaleWinkel(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Seasonal sun angles", "Saisonale Sonnenwinkel"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "path"))
@@ -890,7 +876,7 @@ class Beat5_Verschattung(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Sun protection and shading", "Sonnenschutz und Verschattung"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1120,7 +1106,7 @@ class Beat8_Hauptgleichung(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Main equation of solar gains", "Hauptgleichung der solaren Gewinne"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "solar")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "solar")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "assemble"))
@@ -1128,21 +1114,10 @@ class Beat8_Hauptgleichung(Scene):
 
         token_src = [("g", SYM_IS, COLOR_G), ("a", "A", COLOR_A), ("gval", SYM_G, COLOR_GVAL), ("ff", SYM_FF, COLOR_FF),
                      ("fw", SYM_FW, COLOR_FW), ("fs", SYM_FS, COLOR_FSH), ("fsh", SYM_FC, COLOR_FC)]
-        unit_src = [r"\frac{\mathrm{W}}{\mathrm{m^{2}}}", r"\mathrm{m^{2}}", r"\text{–}", r"\text{–}", r"\text{–}", r"\text{–}", r"\text{–}"]
         tokens = VGroup(*[math_text(src, font_size=FORMULA_FONT_SIZE, color=col) for _k, src, col in token_src])
-        tokens.arrange(RIGHT, buff=0.6).move_to(ORIGIN)
-        labs = VGroup(*[math_text(src, font_size=BODY_FONT_SIZE, color=col)
-                        for src, (_k, _s, col) in zip(unit_src, token_src)])
-        for lab, tok in zip(labs, tokens):
-            lab.next_to(tok, DOWN, buff=0.2)
-        VGroup(tokens, labs).move_to(DOWN * 0.2)
-        unit_head = Text(tr("unit", "Einheit"), font_size=LABEL_FONT_SIZE, color=GREY_B).next_to(labs[0], LEFT, buff=0.5)
+        tokens.arrange(RIGHT, buff=0.6).move_to(DOWN * 0.2)
 
-        self.play(
-            LaggedStart(*[FadeIn(t, shift=DOWN * 0.15) for t in tokens], lag_ratio=0.12),
-            LaggedStart(*[FadeIn(l) for l in labs], lag_ratio=0.12), FadeIn(unit_head),
-            run_time=1.4,
-        )
+        self.play(LaggedStart(*[FadeIn(t, shift=DOWN * 0.15) for t in tokens], lag_ratio=0.12), run_time=1.4)
 
         row, items = math_row([
             ("phi", SYM_QS, PASTEL_WHITE), (None, "=", PASTEL_WHITE),
@@ -1160,12 +1135,11 @@ class Beat8_Hauptgleichung(Scene):
         slots = [items[key] for key, _s, _c in token_src]
         rest = VGroup(*[m for m in row.submobjects if all(m is not slot for slot in slots)])
         self.play(
-            FadeOut(labs), FadeOut(unit_head),
             stage.transition("heating.solar-gains.main.tokens-into-formula", source=tokens, target=slots),
             FadeIn(rest), Create(box),
             run_time=1.6,
         )
-        self.remove(*slots, rest)
+        self.remove(*tokens, *slots, rest)
         self.add(row)
         hold_for(self, N, "assemble", used=1.4 + 1.6 + 0.3)
 
@@ -1179,16 +1153,22 @@ class Beat8_Hauptgleichung(Scene):
         def opening():
             return fac["g"].get_value() * fac["a"].get_value()
 
+        reducers = (("ff", SYM_FF, COLOR_FF), ("fw", SYM_FW, COLOR_FW), ("fs", SYM_FS, COLOR_FSH), ("fsh", SYM_FC, COLOR_FC))
+
+        def reduction():
+            return float(np.prod([fac[key].get_value() for key, _s, _c in reducers]))
+
         def chain_src():
-            v = {key: t.get_value() for key, t in fac.items()}
-            return rf"{SYM_QS} = {label_number(opening())}\,\mathrm{{W}} \cdot " + r" \cdot ".join(
-                rf"\textcolor{{{col}}}{{{label_number(v[key], 2)}}}" for key, col in (
-                    ("gval", COLOR_GVAL), ("ff", COLOR_FF), ("fw", COLOR_FW), ("fs", COLOR_FSH), ("fsh", COLOR_FC))
-            ) + rf" \approx {label_number(phi())}\,\mathrm{{W}}"
+            return (rf"{SYM_QS} = {label_number(opening())}\,\mathrm{{W}} \cdot "
+                    rf"\textcolor{{{COLOR_GVAL}}}{{{label_number(fac['gval'].get_value(), 2)}}} \cdot "
+                    rf"\textcolor{{{COLOR_FC}}}{{{label_number(reduction(), 2)}}}"
+                    rf" \approx {label_number(phi())}\,\mathrm{{W}}")
 
         def detail_src():
             return (rf"\textcolor{{{COLOR_G}}}{{{label_number(fac['g'].get_value())}}}\,\frac{{\mathrm{{W}}}}{{\mathrm{{m^{{2}}}}}} \cdot "
-                    rf"\textcolor{{{COLOR_A}}}{{{label_number(fac['a'].get_value(), 2)}}}\,\mathrm{{m^{{2}}}} = {label_number(opening())}\,\mathrm{{W}}")
+                    rf"\textcolor{{{COLOR_A}}}{{{label_number(fac['a'].get_value(), 2)}}}\,\mathrm{{m^{{2}}}} = {label_number(opening())}\,\mathrm{{W}}"
+                    r"\quad\quad " +r" \cdot ".join(rf"\textcolor{{{col}}}{{{sym}}}" for _k, sym, col in reducers)
+                    + rf" \approx \textcolor{{{COLOR_FC}}}{{{label_number(reduction(), 2)}}}")
 
         chain = math_readout(chain_src, lambda: box.get_bottom() + DOWN * 0.72, size=BODY_FONT_SIZE,
                              color=PASTEL_WHITE, edge="center")

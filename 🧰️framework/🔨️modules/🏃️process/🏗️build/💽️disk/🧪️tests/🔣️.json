@@ -1,33 +1,69 @@
 {
   "$comment": "💽️ Authored disk refusals: the failure, what the volume holds and the exact English and German text. Read by the TypeScript test and by the independent Python oracle (which formats the bytes).",
   "bytes": [
-    {"bytes": 0, "text": "0 B"},
-    {"bytes": 1023, "text": "1023 B"},
-    {"bytes": 1024, "text": "1 KiB"},
-    {"bytes": 1572864, "text": "1.5 MiB"},
-    {"bytes": 1342177280, "text": "1.25 GiB"},
-    {"bytes": 1099511627776, "text": "1 TiB"},
-    {"bytes": 2199023255552000, "text": "2000 TiB"}
+    {
+      "bytes": 0,
+      "text": "0 B"
+    },
+    {
+      "bytes": 1023,
+      "text": "1023 B"
+    },
+    {
+      "bytes": 1024,
+      "text": "1 KiB"
+    },
+    {
+      "bytes": 1572864,
+      "text": "1.5 MiB"
+    },
+    {
+      "bytes": 1342177280,
+      "text": "1.25 GiB"
+    },
+    {
+      "bytes": 1099511627776,
+      "text": "1 TiB"
+    },
+    {
+      "bytes": 2199023255552000,
+      "text": "2000 TiB"
+    }
   ],
   "full": [
     {
       "name": "errno ENOSPC with a path",
-      "error": {"code": "ENOSPC", "message": "ENOSPC: no space left on device, write", "path": "/home/dev/.cache/semio/cas/v1/t/x"},
-      "partition": "/home", "availableBytes": 0, "totalBytes": 499963174912,
+      "error": {
+        "code": "ENOSPC",
+        "message": "ENOSPC: no space left on device, write",
+        "path": "/home/dev/.cache/semio/cas/v1/t/x"
+      },
+      "partition": "/home",
+      "availableBytes": 0,
+      "totalBytes": 499963174912,
       "en": "The disk is full: partition /home has 0 B free. Nothing was lost, but the write could not finish. Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition /home hat noch 0 B frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
     },
     {
       "name": "sqlite text without a path",
-      "error": {"message": "SQLiteError: database or disk is full"},
-      "partition": "/data", "availableBytes": 1572864, "totalBytes": 107374182400,
+      "error": {
+        "message": "SQLiteError: database or disk is full"
+      },
+      "partition": "/data",
+      "availableBytes": 1572864,
+      "totalBytes": 107374182400,
       "en": "The disk is full: partition /data has 1.5 MiB free. Nothing was lost, but the write could not finish. Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition /data hat noch 1.5 MiB frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
     },
     {
       "name": "a volume whose free space cannot be read",
-      "error": {"code": "ENOSPC", "message": "write failed"},
-      "partition": "D:\\", "availableBytes": null, "totalBytes": null,
+      "error": {
+        "code": "ENOSPC",
+        "message": "write failed"
+      },
+      "partition": "D:\\",
+      "availableBytes": null,
+      "totalBytes": null,
       "en": "The disk is full: partition D:\\ cannot take the write (its free space cannot be read). Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
       "de": "Der Datenträger ist voll: Partition D:\\ kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
     }
@@ -35,9 +71,118 @@
   "low": [
     {
       "name": "a partition above its used share",
-      "partition": "/home", "availableBytes": 16106127360, "totalBytes": 499963174912, "limitFraction": 0.97,
+      "partition": "/home",
+      "availableBytes": 16106127360,
+      "totalBytes": 499963174912,
+      "limitFraction": 0.97,
       "en": "Partition /home has only 15 GiB free (96.8% used, limit 97%), so no build or cache write starts before space is freed. Free space with `repo cache cas gc`, then run the command again.",
       "de": "Partition /home hat nur noch 15 GiB frei (96.8 % belegt, Grenze 97 %), daher startet kein Build und kein Cache-Schreiben, bevor Platz frei ist. Schaffe Platz mit `repo cache cas gc` und führe den Befehl erneut aus."
     }
-  ]
+  ],
+  "admission": [
+    {
+      "name": "the failing live case: 11 GiB free for a 30 GiB plan with 4 GiB of image slack",
+      "hostFreeBytes": 11811160064,
+      "plannedBytes": 32212254720,
+      "slackBytes": 4294967296,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 16106127360,
+      "creditBytes": 2147483648,
+      "needBytes": 13958643712,
+      "missingBytes": 4294967296,
+      "minimumBytes": 0
+    },
+    {
+      "name": "a roomy partition admits",
+      "hostFreeBytes": 107374182400,
+      "plannedBytes": 32212254720,
+      "slackBytes": 0,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 16106127360,
+      "creditBytes": 0,
+      "needBytes": 16106127360,
+      "missingBytes": 0,
+      "minimumBytes": 0
+    },
+    {
+      "name": "exactly the need plus the reserve fits",
+      "hostFreeBytes": 16106127360,
+      "plannedBytes": 32212254720,
+      "slackBytes": 4294967296,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 16106127360,
+      "creditBytes": 2147483648,
+      "needBytes": 13958643712,
+      "missingBytes": 0,
+      "minimumBytes": 0
+    },
+    {
+      "name": "the slack credit never exceeds the plan",
+      "hostFreeBytes": 1073741824,
+      "plannedBytes": 2147483648,
+      "slackBytes": 107374182400,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 1073741824,
+      "creditBytes": 1073741824,
+      "needBytes": 0,
+      "missingBytes": 1073741824,
+      "minimumBytes": 0
+    },
+    {
+      "name": "a plan that must fit whole needs the full share",
+      "hostFreeBytes": 4294967296,
+      "plannedBytes": 3221225472,
+      "slackBytes": 0,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 10000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 3221225472,
+      "creditBytes": 0,
+      "needBytes": 3221225472,
+      "missingBytes": 1073741824,
+      "minimumBytes": 0
+    },
+    {
+      "name": "rounding: the plan rounds up and the credit rounds down",
+      "hostFreeBytes": 1,
+      "plannedBytes": 3,
+      "slackBytes": 1,
+      "reserveBytes": 0,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 2,
+      "creditBytes": 0,
+      "needBytes": 2,
+      "missingBytes": 1,
+      "minimumBytes": 0
+    },
+    {
+      "name": "the largest single batch dominates a small plan share",
+      "hostFreeBytes": 9663676416,
+      "plannedBytes": 10737418240,
+      "minimumBytes": 8589934592,
+      "slackBytes": 0,
+      "reserveBytes": 2147483648,
+      "planShareBasisPoints": 5000,
+      "slackCreditBasisPoints": 5000,
+      "planBytes": 8589934592,
+      "creditBytes": 0,
+      "needBytes": 8589934592,
+      "missingBytes": 1073741824
+    }
+  ],
+  "admissionText": {
+    "name": "the live case refused in both languages",
+    "case": 0,
+    "en": "Not enough disk space for this build: partition /System/Volumes/Data has 11 GiB free, the build needs about 13 GiB of new space (15 GiB planned, 2 GiB of it assumed to reuse space the cache image already holds) plus a 2 GiB reserve, so 4 GiB are missing. Nothing was started, so no hour of work is lost. Free at least 4 GiB with `repo cache cas gc` (it works on a full disk) or wait for other builds to finish, then run the command again.",
+    "de": "Nicht genug Speicherplatz für diesen Build: Partition /System/Volumes/Data hat noch 11 GiB frei, der Build braucht etwa 13 GiB neuen Platz (15 GiB geplant, davon 2 GiB als bereits im Cache-Image gehaltener Platz angenommen) plus 2 GiB Reserve, es fehlen also 4 GiB. Nichts wurde gestartet, es geht also keine Arbeitsstunde verloren. Schaffe mindestens 4 GiB frei mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) oder warte, bis andere Builds enden, und führe den Befehl erneut aus."
+  }
 }

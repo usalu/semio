@@ -35,6 +35,15 @@ export function implementationPathShownV1(root,path){
  return inside!==""&&inside!==".."&&!inside.startsWith(".."+sep)&&!isAbsolute(inside)?inside.split(sep).join("/"):path;
 }
 
+/** 💰️ The quiet policy of the next restart of one load, given the quiet it already waited: while the load's total budget (`totalMaximumMilliseconds`) lasts the full policy applies with its maximum cut to what is left; afterwards only the short floor (`floorMilliseconds`) is waited. Under edits that never stop, the waits of a load therefore sum to the budget instead of growing with every restart. A slice is never mixed by this: each worker pins the implementation it loaded and ends with a drift restart when it changes later, so only a worker whose pin held answers.
+ * @see ./🟨️.d.mts */
+export function quietBudgetV1(policy,spentMilliseconds){
+ const total=policy.totalMaximumMilliseconds??Infinity,left=total-spentMilliseconds;
+ if(left>0)return left>=policy.maximumMilliseconds?policy:{...policy,maximumMilliseconds:left};
+ const floor=Math.min(policy.floorMilliseconds??policy.milliseconds,policy.milliseconds);
+ return{milliseconds:floor,maximumMilliseconds:floor};
+}
+
 /** ⏳️ Waits until the code at `paths` has been quiet for `policy.milliseconds`, at most `policy.maximumMilliseconds`, checking every `heartbeatMilliseconds` and announcing each check through `announce(verdict,waitedMilliseconds)`; resolves the time waited, ends early when `signal` aborts. */
 export async function awaitImplementationQuietV1({paths,policy,heartbeatMilliseconds,signal,announce=()=>undefined,stamps=implementationStampsV1,now=()=>Date.now()}){
  const began=now();

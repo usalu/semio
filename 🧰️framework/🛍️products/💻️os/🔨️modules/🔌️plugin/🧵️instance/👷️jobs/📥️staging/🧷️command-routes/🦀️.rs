@@ -23,6 +23,23 @@ use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_ui_contract::*;
 
 impl<A: ArtifactApp> PendingReserved<A> {
+    /// 🔁️ The pending interaction a new `action` supersedes in place: the same verb from the same actor, instance,
+    /// window and expected revision, admitted at the store `generation` the new one sees. Reusing its permit keeps
+    /// a pointer storm at one lease and one residue class however many gestures arrive before the host finishes.
+    pub fn superseded_reserved_interaction(&self, action: &str, meta: &semio_plugin_decl_emission::ActionMeta, generation: u64) -> Option<u64> {
+        if !INTERACTION_ACTION_IDS.contains(&action) {
+            return None;
+        }
+        let window = |meta: &semio_plugin_decl_emission::ActionMeta| meta.view_state.as_ref().and_then(|view| view.window_id.clone());
+        let mut found = None;
+        self.pending_reserved.each_id(|id| {
+            if found.is_none() && self.pending_reserved.get(id).is_some_and(|pending| pending.action == action && pending.meta.instance_id == meta.instance_id && pending.meta.actor == meta.actor && pending.meta.expected_document_revision == meta.expected_document_revision && window(&pending.meta) == window(meta) && pending.permit.operation.generation.0 == generation) {
+                found = Some(id);
+            }
+        });
+        found
+    }
+
     /// 🖱️ Vortex pointermove is a storm of `interactionHover` (then a click `interactionSelect`)
     /// before the host finishes any Isolated reserved job. Exclusive `job % 64` slots made that
     /// storm `interactive-job.reserved-spawn-capacity`. Latest-wins: retire the same verb, and
@@ -46,12 +63,12 @@ impl<A: ArtifactApp> PendingReserved<A> {
     /// 🏁️ Queues a refused or superseded pending route behind the commits: its lease retires through the paid cursor, never by drop.
     pub fn retire_pending_reserved(&mut self, pending: PendingFrameworkReserved) {
         let PendingFrameworkReserved { action, args, meta, permit } = pending;
-        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
+        semio_plugin_ownership::bounded_ownership::deque_push_back_born(&mut self.reserved_commits, FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
     }
 
     /// 🏁️ Queues a producer permit that ended without a commit so its lease retires through the paid cursor.
     pub fn retire_reserved_permit(&mut self, permit: semio_plugin_job::reserved_jobs::FrameworkReservedCommitPermit) {
-        self.reserved_commits.push_back(FrameworkReservedCommit { action: String::new(), args: None, meta: ReservedCommitMetadata::new(semio_plugin_decl_emission::ActionMeta::default()), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
+        semio_plugin_ownership::bounded_ownership::deque_push_back_born(&mut self.reserved_commits, FrameworkReservedCommit { action: String::new(), args: None, meta: ReservedCommitMetadata::new(semio_plugin_decl_emission::ActionMeta::default()), permit, log_generation_before: 0, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: Some(None) });
     }
 
     /// 🕰️ Hands one finished framework-reserved spawn-job to the app's commit queue. Nothing here
@@ -71,7 +88,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
             return Err(fault);
         }
         let PendingFrameworkReserved { action, args, meta, permit } = pending;
-        self.reserved_commits.push_back(FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: None });
+        semio_plugin_ownership::bounded_ownership::deque_push_back_born(&mut self.reserved_commits, FrameworkReservedCommit { action, args, meta: ReservedCommitMetadata::new(meta), permit, log_generation_before: history.log_generation, stage: FrameworkReservedCommitStage::Validate, applied: 0, total: 1, sealed: None });
         Ok(true)
     }
 

@@ -1,4 +1,4 @@
-import { bootAbort, closed, closing, consumedTopics, diagnosticsStamp, explicitPluginModules, failed, scope, suspensionLedger, typedMediaPlugins, workerCatalog } from "./🧵️state/🟦️.ts";
+import { bootAbort, closed, closing, consumedTopics, diagnosticsStamp, explicitPluginModules, failed, onDemandActivator, onDemandModules, scope, suspensionLedger, typedMediaPlugins, workerCatalog } from "./🧵️state/🟦️.ts";
 import type { BrowserFrameUiMessage } from "../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { receive } from "./📨️receive/🟦️.ts";
 import { requestFault } from "./🧯️close-and-fault/🟦️.ts";
@@ -9,6 +9,7 @@ import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { loadPluginModule } from "../🐚️plugin-bridge/🔌️plugin-module-loader/🟦️.ts";
 import { pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
 import { primeContributionManifest } from "../🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts";
+import { admitOnDemandRequest, onDemandStatusAnnouncement, onDemandStatusLabel } from "@semio-tech/framework";
 import { installWgpuDynamicExtensionDoor } from "../🧩️dynamic-extension/🟦️.ts";
 
 scope.onmessage = (event: MessageEvent<BrowserFrameUiMessage>) => void receive(event.data);
@@ -44,7 +45,11 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
   moduleUrl: (pluginId) => explicitPluginModules?.find(row => row.pluginId === pluginId)?.moduleUrl ?? workerCatalog?.moduleUrl(pluginId) ?? workerCatalog?.extensionModuleUrl(pluginId),
   mount: async (pluginId, moduleUrl) => {
     if (closed || closing || failed) throw new Error("plugin-install.closing: the frame Worker is closing");
-    const module = await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl, bootAbort.signal, undefined, consumedTopics(pluginId)), suspensionLedger);
+    if (!onDemandModules.has(pluginId)) {
+      const outcome = await onDemandActivator?.request({ kind: "plugin", pluginId });
+      if (outcome !== undefined && outcome.requested.length > 0 && !outcome.active.includes(pluginId)) throw new Error(`plugin-install.unavailable: ${pluginId}`);
+    }
+    const module = onDemandModules.get(pluginId) ?? await monitoredSuspension(`plugin-install:${pluginId}`, () => loadPluginModule(pluginId, moduleUrl, bootAbort.signal, undefined, consumedTopics(pluginId)), suspensionLedger);
     typedMediaPlugins.set(pluginId, module);
     const handle = pluginHandleForBridge(module);
     void primeContributionManifest(pluginId, moduleUrl).catch(() => {});
@@ -58,6 +63,15 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
 (globalThis as { semioWgpuInstallPlugin?: (pluginId: string) => Promise<unknown> }).semioWgpuInstallPlugin = (pluginId) => lazyPluginInstalls.install(pluginId);
 
 (globalThis as { semioWgpuCancelPluginInstall?: (pluginId: string) => boolean }).semioWgpuCancelPluginInstall = (pluginId) => lazyPluginInstalls.cancel(pluginId);
+
+/** ⏳️ The doors the shell and a host call to activate a deferred plugin by node kind, tag, event or id (`🧬️schema/🧩️plugin-modules/🔣️.json` `$defs.onDemandRequest`): the answer is the outcome JSON and never a rejection for a missing optional plugin; `semioWgpuCancelOnDemand` withdraws one plugin or, without an id, every activation in flight. */
+(globalThis as { semioWgpuActivateOnDemand?: (requestJson: string) => Promise<string> }).semioWgpuActivateOnDemand = async (requestJson) =>
+  JSON.stringify(await (onDemandActivator?.request(admitOnDemandRequest(JSON.parse(requestJson) as unknown)) ?? { requested: [], active: [], unavailable: [], cancelled: [] }));
+
+(globalThis as { semioWgpuOnDemandStatuses?: (locale: string) => string }).semioWgpuOnDemandStatuses = (locale) =>
+  JSON.stringify((onDemandActivator?.statuses() ?? []).map((status) => ({ ...status, label: onDemandStatusLabel(status, locale), announcement: onDemandStatusAnnouncement(status) })));
+
+(globalThis as { semioWgpuCancelOnDemand?: (pluginId?: string) => number }).semioWgpuCancelOnDemand = (pluginId) => onDemandActivator?.cancel(pluginId) ?? 0;
 
 const dynamicExtensionModules = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();
 

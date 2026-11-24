@@ -213,7 +213,7 @@ fn the_published_control_ids_are_reacts_own() {
     for (id, chord) in [(UI_INTRODUCTION_SKIP_CONTROL_ID, "escape"), (UI_INTRODUCTION_NEXT_CONTROL_ID, "enter,arrowright"), (UI_INTRODUCTION_BACK_CONTROL_ID, "arrowleft")] {
         assert!(keybindings.contains(&format!("\"{id}\": \"{chord}\"")), "🆔️ React binds {id} to {chord}");
     }
-    let platform = std::fs::read_to_string(framework_root().join("🔨️modules/🖥️platform/🟦️.ts")).expect("React's element-id helpers");
+    let platform = std::fs::read_to_string(framework_root().join("🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts")).expect("React's element-id helpers");
     assert!(platform.contains("return `framework.panelTab.${tabId}`;"), "🆔️ React's panel-tab element id appends the dotted tab id verbatim");
     assert_eq!(panel_tab_introduction_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
 
@@ -240,7 +240,7 @@ fn a_panel_toggle_journals_reacts_own_shell_commands() {
     assert_eq!(shell_chrome_string("shellCommand.panelTab", false), "Switch Panel Tab");
     assert_eq!(shell_chrome_string("shellCommand.panelTab", true), "Panel-Tab wechseln");
 
-    let host = std::fs::read_to_string(engine_root().join("🧱️elements/🏛️ShellHost/🟦️.tsx")).expect("React's shell host");
+    let host = std::fs::read_to_string(engine_root().join("🧱️elements/🏛️ShellHost/📋️panel-hosting/🔶️brand/🟦️.tsx")).expect("React's shell host");
     assert!(host.contains("noteShellCommand(\"shell.panelToggle\", shellLabelTextV1(\"ui.shellCommand.panelToggle\"), { anchor, visible: value })"), "🕒️ React journals a visibility flip");
     assert!(host.contains("noteShellCommand(\"shell.panelTab\", shellLabelTextV1(\"ui.shellCommand.panelTab\"), { anchor, tabId })"), "🕒️ and a path move");
 
@@ -248,7 +248,7 @@ fn a_panel_toggle_journals_reacts_own_shell_commands() {
     let journal = source.split("async fn journal_panel_selection").nth(1).expect("the panel journal exists");
     let journal = &journal[..journal.find("async fn select_panel_tab").unwrap_or(journal.len())];
     assert!(journal.contains("\"shell.panelToggle\"") && journal.contains("\"shell.panelTab\""), "🕒️ and so does this shell");
-    assert!(source.contains("self.journal_panel_selection(anchor, tab_id, was_visible, was_path).await?"), "🕒️ every panel selection runs through it");
+    assert!(source.contains("self.as_actions().journal_panel_selection(anchor, tab_id, was_visible, was_path).await?"), "🕒️ every panel selection runs through it");
 }
 
 //#endregion 🆔️ControlIdParityLaw
@@ -306,19 +306,20 @@ fn the_chord_formatter_answers_the_shared_platform_fixture() {
 fn the_platform_door_is_wired_end_to_end() {
     let renderer = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs")).expect("the renderer source");
     assert!(renderer.contains("js_name = semioWgpuSetHostPlatform"), "⌨️ the browser hook is exported");
-    assert!(renderer.contains("const { std::cell::Cell::new(cfg!(target_os = \"macos\")) }"), "⌨️ and a native process answers from its own OS with no door call at all");
+    let host_base = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs")).expect("the host-base source");
+    assert!(host_base.contains("const { std::cell::Cell::new(cfg!(target_os = \"macos\")) }"), "⌨️ and a native process answers from its own OS with no door call at all");
 
     let shell = semio_renderer_wgpu_test_support::shell_source().to_string();
     let formatter = shell.split("fn format_keybinding_shortcut").nth(1).expect("the formatter exists");
     let formatter = &formatter[..formatter.find("\n}\n").unwrap_or(formatter.len())];
-    assert!(formatter.contains("crate::host_platform_uses_meta()"), "⌨️ the formatter reads the published platform");
+    assert!(formatter.contains("host_platform_uses_meta()"), "⌨️ the formatter reads the published platform");
     assert!(!formatter.contains("cfg!(target_os"), "⌨️ and never a compile-time one");
 
     let descriptor = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts")).expect("the boot descriptor module");
     assert!(descriptor.contains("export function resolveWgpuHostPlatform"), "⌨️ the page-realm read lives beside the appearance one");
     assert!(descriptor.contains("userAgentData"), "⌨️ and prefers `userAgentData.platform`, as React's own predicate does");
 
-    let worker = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts")).expect("the frame worker");
+    let worker = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎞️frame-worker/🔌️boot-and-plugins/🟦️.ts")).expect("the frame worker");
     assert!(worker.contains("loaded.semioWgpuSetHostPlatform?.(message.platform)"), "⌨️ the frame Worker applies the boot value");
     let page = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts")).expect("the page boot");
     assert!(page.contains("mountWgpuBrowserHost(root,"), "⌨️ the page enters the browser host");
@@ -423,6 +424,7 @@ fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scri
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.chrome.chrome_build.open_dialog(ChromeDialogRequest::confirm("confirm-1", "Delete?", "delete"));
     let mut overlay = DrawList::default();
+    overlay.set_reduced_motion(true);
     let mut atlas = FontAtlas::builtin();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
@@ -430,7 +432,7 @@ fn a_confirm_dialogs_sheet_is_encoded_in_the_foreground_pass_over_a_blurred_scri
     assert!(complete, "🗨️ the dialog walk terminates");
 
     let sheet = overlay.layers.iter().find_map(|layer| layer.foreground_of).expect("🫧 the dialog opens a glass-content layer");
-    let scrim: Vec<&semio_ui_draw_contract::GlassRegion> = overlay.glass_regions.iter().enumerate().filter(|(index, _)| *index != sheet).map(|(_, region)| region).collect();
+    let scrim: Vec<&semio_ui_draw_contract::GlassRegion> = overlay.glass_regions.iter().enumerate().filter(|(index, region)| *index != sheet && region.rect == [0.0, 0.0, 1440.0, 900.0]).map(|(_, region)| region).collect();
     assert_eq!(scrim.len(), 1, "🌫️ exactly one scrim");
     assert_eq!(scrim[0].blur_px, Theme::veil_blur_px(), "🌫️ which blurs at `--veil-blur` like React's `ui-veil`");
     assert_eq!(scrim[0].rect, [0.0, 0.0, 1440.0, 900.0], "🌫️ over the whole viewport");

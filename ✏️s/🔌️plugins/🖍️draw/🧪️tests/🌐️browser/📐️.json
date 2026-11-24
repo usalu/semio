@@ -7,6 +7,7 @@
     "ready",
     "minimumBootLayers",
     "example",
+    "exampleLayer",
     "blankExample",
     "utility",
     "utilityPressStates",
@@ -39,6 +40,9 @@
         "id": "demo",
         "label": "Demo"
       }
+    },
+    "exampleLayer": {
+      "const": "emblem-orange"
     },
     "blankExample": {
       "const": {

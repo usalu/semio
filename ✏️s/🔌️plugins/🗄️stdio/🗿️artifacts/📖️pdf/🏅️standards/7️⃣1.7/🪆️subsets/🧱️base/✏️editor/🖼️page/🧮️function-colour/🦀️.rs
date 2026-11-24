@@ -99,12 +99,23 @@ fn limited(mut values: Vec<f64>, range: Option<&[f64]>) -> Vec<f64> {
     values
 }
 
-/// 🌈️ Converts components of `space` to sRGB, resolving named spaces, tint transforms and palettes.
-pub fn rgb(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64]) -> Option<[f64; 3]> {
-    rgb_at(snapshot, space, components, 0)
+#[derive(Clone, Copy)]
+enum CmykModel {
+    Fill,
+    Image,
 }
 
-fn rgb_at(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64], depth: usize) -> Option<[f64; 3]> {
+/// 🌈️ Converts components of `space` to sRGB, resolving named spaces, tint transforms and palettes.
+pub fn rgb(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64]) -> Option<[f64; 3]> {
+    rgb_at(snapshot, space, components, 0, CmykModel::Fill)
+}
+
+/// 🖼️ Converts image sample components to sRGB; DeviceCMYK follows MuPDF's image conversion instead of its fill-colour corners.
+pub fn image_rgb(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64]) -> Option<[f64; 3]> {
+    rgb_at(snapshot, space, components, 0, CmykModel::Image)
+}
+
+fn rgb_at(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64], depth: usize, model: CmykModel) -> Option<[f64; 3]> {
     if depth > MAX_FUNCTION_DEPTH { return None; }
     let unit = |index: usize| components.get(index).map(|value| value.clamp(0.0, 1.0));
     Some(match space {
@@ -117,17 +128,20 @@ fn rgb_at(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64], dep
             let m = matrix.unwrap_or([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
             xyz_to_srgb([m[0] * a + m[3] * b + m[6] * c, m[1] * a + m[4] * b + m[7] * c, m[2] * a + m[5] * b + m[8] * c], *white_point)
         }
-        PdfColorSpace::DeviceCmyk => cmyk(unit(0)?, unit(1)?, unit(2)?, unit(3)?),
+        PdfColorSpace::DeviceCmyk => match model {
+            CmykModel::Fill => cmyk(unit(0)?, unit(1)?, unit(2)?, unit(3)?),
+            CmykModel::Image => cmyk_image(unit(0)?, unit(1)?, unit(2)?, unit(3)?),
+        },
         PdfColorSpace::Lab { white_point, range, .. } => lab(*white_point, range.unwrap_or([-100.0, 100.0, -100.0, 100.0]), components.get(..3)?),
         PdfColorSpace::IccBased { components: count, alternate, .. } => {
             let device = match (alternate, count) {
-                (Some(alternate), _) => return rgb_at(snapshot, alternate, components, depth + 1),
+                (Some(alternate), _) => return rgb_at(snapshot, alternate, components, depth + 1, model),
                 (None, 1) => PdfColorSpace::DeviceGray,
                 (None, 3) => PdfColorSpace::DeviceRgb,
                 (None, 4) => PdfColorSpace::DeviceCmyk,
                 _ => return None,
             };
-            rgb_at(snapshot, &device, components, depth + 1)?
+            rgb_at(snapshot, &device, components, depth + 1, model)?
         }
         PdfColorSpace::Indexed { base, hival, palette } => {
             let width = base.components()? as usize;
@@ -140,14 +154,36 @@ fn rgb_at(snapshot: &PdfSnapshot, space: &PdfColorSpace, components: &[f64], dep
                 }
                 _ => entry.iter().map(|&byte| f64::from(byte) / 255.0).collect(),
             };
-            rgb_at(snapshot, base, &values, depth + 1)?
+            rgb_at(snapshot, base, &values, depth + 1, model)?
         }
         PdfColorSpace::Separation { alternate, tint_transform, .. } | PdfColorSpace::DeviceN { alternate, tint_transform, .. } => {
-            rgb_at(snapshot, alternate, &evaluate(tint_transform, components)?, depth + 1)?
+            rgb_at(snapshot, alternate, &evaluate(tint_transform, components)?, depth + 1, model)?
         }
-        PdfColorSpace::Named { name } => rgb_at(snapshot, &snapshot.color_spaces.iter().find(|named| &named.name == name)?.color_space, components, depth + 1)?,
+        PdfColorSpace::Named { name } => rgb_at(snapshot, &snapshot.color_spaces.iter().find(|named| &named.name == name)?.color_space, components, depth + 1, model)?,
         PdfColorSpace::Pattern { .. } => return None,
     })
+}
+
+use semio_s_artifact_stdio_pdf_cmyk_image_clut::{GRID as CMYK_IMAGE_GRID, TABLE as CMYK_IMAGE_CLUT};
+
+/// 🖼️ DeviceCMYK image samples to sRGB by multilinear interpolation of the 17-node grid MuPDF 1.26.7's image conversion yields (see `🌈️cmyk-image-clut/📜️cmyk-image-clut.py`).
+fn cmyk_image(c: f64, m: f64, y: f64, k: f64) -> [f64; 3] {
+    let last = (CMYK_IMAGE_GRID - 1) as f64;
+    let position = [c, m, y, k].map(|value| value.clamp(0.0, 1.0) * last);
+    let base = position.map(|value| (value.floor() as usize).min(CMYK_IMAGE_GRID - 2));
+    let fraction = [0, 1, 2, 3].map(|axis| position[axis] - base[axis] as f64);
+    let mut out = [0.0; 3];
+    for corner in 0..16usize {
+        let (mut weight, mut index) = (1.0, 0usize);
+        for axis in 0..4 {
+            let upper = corner >> (3 - axis) & 1;
+            weight *= if upper == 1 { fraction[axis] } else { 1.0 - fraction[axis] };
+            index = index * CMYK_IMAGE_GRID + base[axis] + upper;
+        }
+        if weight == 0.0 { continue; }
+        for channel in 0..3 { out[channel] += weight * f64::from(CMYK_IMAGE_CLUT[index * 3 + channel]) / 255.0; }
+    }
+    out
 }
 
 /// 🖨️ DeviceCMYK to sRGB by multilinear interpolation of the 16 hypercube corners MuPDF 1.26.7 renders (index `c << 3 | m << 2 | y << 1 | k`).

@@ -1,0 +1,4 @@
+[
+{"op":"shape-add","scale":"50","view":"elevation","after":"cable-coil","shape":{"id":"cable-lead","bone":"cabinet","role":"detail","z":2.95,"filled":false,"tone":0.2,"kind":"path","d":"M 0.172 0.274 L 0.092 0.205"}},
+{"op":"shape-add","scale":"50","view":"elevation","after":"cable-lead","shape":{"id":"pipe","bone":"cabinet","role":"body","z":2.9,"tone":0.4,"material":"copper-pipe","filled":true,"kind":"poly","points":[[0.313,0.289],[0.1815,0.2771],[0.0996,0.2384],[0.098,0.2362],[0.098,0.2337],[0.1005,0.2312],[0.1037,0.2312],[0.1824,0.269],[0.3124,0.2809],[0.3158,0.2834],[0.3158,0.2865]],"closed":true}}
+]

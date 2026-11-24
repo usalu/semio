@@ -4,6 +4,8 @@ import{readFreeSpaceV1,type FreeSpaceOptionsV1,type FreeSpaceUnknownReasonV1}fro
 import{nativeShardConsumerV1,nativeShardTextV1,readNativeShardsV1,relieveNativeShardsV1,type NativeShardConsumerV1}from"../../../🌡️host-capacity/🧹️disk-recovery/🧱️native-shards/🟦️.ts";
 import{volumeFactsTextV1}from"../../../🌡️host-capacity/🧹️disk-recovery/📊️volume-facts/🟦️.ts";
 import{nativeShardHoldV1}from"../../../🌡️host-capacity/🧹️disk-recovery/🧱️native-shards/🔒️hold/🟦️.ts";
+import{currentHostWardenMirrorV1,ensureHostWardenV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts";
+import type{HostWardenMirrorV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import{createHash}from"node:crypto";
 import{spawn,spawnSync}from"node:child_process";
 import{closeSync,constants,existsSync,fstatSync,mkdirSync,openSync,readFileSync,readSync,realpathSync,renameSync,rmSync,statSync,writeFileSync,writeSync,type BigIntStats}from"node:fs";
@@ -701,6 +703,23 @@ export function readyWriteStoreFileV1(file:string,text:string,rename:(from:strin
  try{rename(temporary,file);}catch{try{writeFileSync(file,text);}catch{}try{rmSync(temporary,{force:true});}catch{}}
 }
 
+/** 🪞️ Keeps the host warden alive and mirrors its state to the group store as `v1/origins/<origin>/memory.json` (schema `Mirror` of the warden: the state as written, or `{"version":1,"atMs":<now>,"absent":true}` when no fresh state exists), so the coordinator sees available memory, swap, level and interventions per worker without the scheduler. `tick` runs the cheap warden ensure, then writes at most every `memoryMirrorMilliseconds` and at once when the level or an intervention counter changed; it answers whether it wrote.
+ * @see ../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🧬️schema/🔣️.json */
+export function createReadyMemoryMirrorV1(input:Readonly<{store:string|undefined;origin:string;now?:()=>number;ensure?:()=>unknown;current?:(nowMs:number)=>HostWardenMirrorV1;write?:(file:string,text:string)=>void}>):Readonly<{tick():boolean}>{
+ const now=input.now??Date.now,ensure=input.ensure??(()=>ensureHostWardenV1()),current=input.current??(at=>currentHostWardenMirrorV1(undefined,at)),write=input.write??((file,text)=>{mkdirSync(dirname(file),{recursive:true});readyWriteStoreFileV1(file,text);});
+ let lastKey:string|undefined,lastAt=-Infinity;
+ return Object.freeze({tick():boolean{
+  try{ensure();}catch{}
+  if(input.store===undefined||input.store==="")return false;
+  try{
+   const at=now(),record=current(at),key="absent"in record?"absent":`${record.level}|${record.counters.suspended}|${record.counters.resumed}|${record.counters.cancelled}`;
+   if(key===lastKey&&at-lastAt<P.memoryMirrorMilliseconds)return false;
+   write(join(input.store,"v1","origins",input.origin,P.memoryMirrorName),JSON.stringify(record));
+   lastKey=key;lastAt=at;return true;
+  }catch{return false;}
+ }});
+}
+
 /** 🧾️ The schema names refusal and plan-guard lines whose diagnostic fields need the larger log tail budget. */
 const longRefusalPatternsV1=P.longRefusalPatterns.map(pattern=>new RegExp(pattern,"u")),errorLinesV1=P.mirrorErrorPatterns.map(pattern=>new RegExp(pattern,"u"));
 
@@ -1034,7 +1053,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
       if(sample!==undefined){
        windowsBefore=sample.checkpoint;
        if(sample.progress)moved();
-       if(sample.megabytes!==null)stageClaim?.observe(sample.megabytes);
+       if(sample.megabytes!==null)stageClaim?.observe(sample.megabytes,holder.snapshot()!==null);
        const peakChanged=sample.megabytes!==null&&sample.megabytes>peak;
        if(peakChanged)peak=sample.megabytes!;
        dirty||=sample.changed||peakChanged;
@@ -1073,7 +1092,7 @@ async function runOwnedReadyStageV1(input:ReadyStageInputV1,directory:string,wat
     }if(!killed&&watching&&!reaping&&input.orphans!==undefined&&Date.now()-reapedAt>=contain.holderReapMilliseconds&&recent.some(line=>holderLines.some(expression=>expression.test(line)))&&owns()){reaping=true;reapedAt=Date.now();void reapRegistry({root:rootOf(),known},"holder",inflight.stage).then(swept=>{reaped.push(...swept.reaped);for(const row of swept.reaped)left.delete(row.pid);for(const row of swept.survivors)left.set(row.pid,row);}).finally(()=>{reaping=false;});}const codeVerdict=():ReturnType<typeof readyCodeStopV1>=>readyCodeStopV1({holderWaitMs:waiting,phase,phaseAgeMs:Date.now()-phaseAt,quietMs:Date.now()-progressAt,policy:treePolicy});if(!killed&&codeVerdict()!==null&&Date.now()-codeCheckedAt>=treePolicy.codeCheckMilliseconds){codeCheckedAt=Date.now();const why=codeVerdict(),file=readySemanticsChangedV1(input.root,semanticsAtStart,treePolicy,sha);if(file!==null&&why!==null){codeFile=file;codeStale=why==="stale";stalled=true;kill("restart");}}}
    if(Date.now()>=nextSample&&!sampling&&!killed)sampleTree();
    let peakChanged=false;
-   if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}stageClaim?.observe(observedPeak);const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
+   if(!windows&&(tick%sampleEvery===0||!fresh&&tick===1)){const rows=spawnSync("ps",["-A","-o","pid=,ppid=,rss=,time="],{encoding:"utf8"});if(rows.status===0){const observedPeak=readyTreeMegabytesV1(rows.stdout,inflight.pid);if(observedPeak>peak){peak=observedPeak;peakChanged=dirty=true;}stageClaim?.observe(observedPeak,holder.snapshot()!==null);const cpu=readyTreeCpuV1(rows.stdout,inflight.pid,known.map(member=>member.pid));if(!killed&&readyLivenessV1(cpuBefore,cpu,treePolicy))moved();if(cpu.size!==cpuBefore.size||[...cpu].some(([pid,spent])=>cpuBefore.get(pid)!==spent))dirty=true;cpuBefore=cpu;}}
    checkpoint(peakChanged);
    const liveRead=readyReadingLiveV1({phase,record:phase==="reading"?readRecord():undefined,alive});
    if(!killed&&Date.now()>=armedAt&&readyStalledV1(Date.now()-stallAt,treePolicy,liveRead)){stalled=true;kill("stall");}
@@ -1288,5 +1307,7 @@ export async function runReady(context:RemoteExecutionSidecarContextV1):Promise<
  if(group===undefined||group==="")try{group=(JSON.parse(readFileSync(machinePathV1(context.root,".cache","f","machine.json"),"utf8")) as {groupId?:string}).groupId;}catch{}
  const ports=createReadyPortsV1({root:context.root,environment:context.environment,origin,group,...context.environment.HOME===undefined?{}:{home:context.environment.HOME},...context.work===undefined?{}:{work:context.work},say:context.write});
  if(ports.server){context.write("the group server is never set up by this service / der Gruppenserver wird von diesem Dienst nie eingerichtet");return;}
- await runReadyV1(ports,context.signal);
+ const mirror=createReadyMemoryMirrorV1({store:context.environment.SEMIO_FLEET_STORE_ROOT,origin}),timer=setInterval(()=>{mirror.tick();},P.memoryMirrorPollMilliseconds);
+ timer.unref?.();mirror.tick();
+ try{await runReadyV1(ports,context.signal);}finally{clearInterval(timer);}
 }

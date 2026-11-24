@@ -116,4 +116,4 @@ impl RetireOwned for ToolRunEntityVersionEdit {
  fn controlled_retirement_supported()->bool{true}
  fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
 }
-impl Drop for ToolRunEntityVersionEdit{fn drop(&mut self){assert!(self.transferred,"original entity version publisher requires controlled retirement");}}
+impl Drop for ToolRunEntityVersionEdit{fn drop(&mut self){assert!(std::thread::panicking()||(self.transferred),"original entity version publisher requires controlled retirement");}}

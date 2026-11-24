@@ -36,6 +36,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
@@ -98,16 +99,6 @@ COL_DT, COL_DX, COL_ETA = P_YELLOW, P_BLUE, semio_color("info")
 COL_HEAT, COL_COOL, COL_REC = P_ORANGE, P_CYAN, P_TEAL
 COL_RHO, COL_R0 = P_WHITE, P_RED
 CARD_W, CARD_H = 1.42, 1.40
-#endregion
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
 #endregion
 
 
@@ -276,7 +267,7 @@ class Beat1_Zusammenfassung(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Nine quantities, one chain", "Neun Größen, eine Kette"))
-        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+        din = reference_chip(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -452,7 +443,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("What heating and cooling technology take over", "Was Heizung und Kühltechnik übernehmen"))
-        din = _din_ref(_references.cite("din-en-12831-1", "vdi-2078"))
+        din = reference_chip(_references.cite("din-en-12831-1", "vdi-2078"))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -499,7 +490,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         w_dt = row(r"\Delta\theta=20\,\mathrm{K}", ROW_Y[0], X_COL_W, COL_DT)
         w_flow = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value() + w1.get_value())}\,\mathrm{{W}}",
                       ROW_Y[1], X_COL_W, COL_HEAT)
-        w_term = row(tr(r"\text{Ventilation term }\dot{Q}_{\mathrm{V}}\text{ of the load}", r"\text{Lüftungsterm }\dot{Q}_{\mathrm{V}}\text{ der Heizlast}"), ROW_Y[2], X_COL_W, P_WHITE)
+        w_term = row(tr(r"\text{Ventilation term}\;\dot{Q}_{\mathrm{V}}\;\text{of the load}", r"\text{Lüftungsterm}\;\dot{Q}_{\mathrm{V}}\;\text{der Heizlast}"), ROW_Y[2], X_COL_W, P_WHITE)
         w_wrg = live(lambda: tr(rf"\text{{with HRV:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value())}\,\mathrm{{W}}", rf"\text{{mit WRG:}}\;\dot{{Q}}_{{\mathrm{{V,sens}}}}={label_number(w0.get_value())}\,\mathrm{{W}}"), ROW_Y[3], X_COL_W, COL_ETA)
         w_lat = live(lambda: rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}={label_number(w2.get_value())}\,\mathrm{{W}}", ROW_Y[4], X_COL_W, COL_DX)
         w_lat_note = row(tr(r"\text{not in the load}", r"\text{nicht in der Heizlast}"), ROW_Y[5], X_COL_W, COL_DX, size=17)

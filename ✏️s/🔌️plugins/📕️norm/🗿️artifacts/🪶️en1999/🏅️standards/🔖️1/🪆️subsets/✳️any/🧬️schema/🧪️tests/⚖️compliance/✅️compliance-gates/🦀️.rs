@@ -2,15 +2,20 @@
 
 use super::*;
 
+/// 🧾️ The verdict law of a compliant document: no failing check, every utilisation within 1, and the report complies exactly when no check rests on an NDP that was not double-keyed from the print (the registry marks none of the EN 1999 rows verified; verification is a human double-key), so each `UnverifiedBasis` check cites at least one such NDP.
+fn assert_compliant_up_to_the_basis(report: &semio_s_plugin_norm_compliance::CheckReport) {
+    let failing: Vec<_> = report.failing().map(|c| c.id.clone()).collect();
+    assert!(failing.is_empty(), "failing checks: {failing:?}");
+    assert!(report.worst_utilization() <= 1.0, "worst utilisation {}", report.worst_utilization());
+    assert_eq!(report.complies(), report.unverified().next().is_none(), "complies exactly without an unverified basis");
+    for check in report.unverified() {
+        assert!(check.ndps.iter().any(|id| !semio_s_plugin_norm_compliance::ndp_is_verified_for(id, check.annex)), "{} is unverified without an unverified NDP: {:?}", check.id, check.ndps);
+    }
+}
+
 #[test]
 fn compliant_example_passes() {
-    let report = evaluate_structure(&En1999Snapshot::compliant_roof_purlin());
-    assert!(
-        report.complies(),
-        "worst={} fails={:?}",
-        report.worst_utilization(),
-        report.failing().map(|c| c.id.clone()).collect::<Vec<_>>()
-    );
+    assert_compliant_up_to_the_basis(&evaluate_structure(&En1999Snapshot::compliant_roof_purlin()));
 }
 
 #[test]
@@ -118,12 +123,8 @@ fn chi_never_read_from_snapshot() {
 fn bundled_dsl_parses_and_evaluates_compliant() {
     let dsl = include_str!("../../../../🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio");
     let snap = decode_en1999_dsl(dsl).expect("bundled DSL must parse");
-    let report = evaluate_structure(&snap);
-    assert!(
-        report.complies(),
-        "bundled DSL must evaluate Pass, fails={:?}",
-        report.failing().map(|c| c.id.clone()).collect::<Vec<_>>()
-    );
+    assert_compliant_up_to_the_basis(&evaluate_structure(&snap));
+    assert_eq!(snap, En1999Snapshot::compliant_roof_purlin());
     let _ = encode_en1999_dsl(&snap);
 }
 
@@ -134,7 +135,7 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
         ("noncompliant", En1999Snapshot::noncompliant_multi_fail()),
     ] {
         let rust = evaluate_structure(&snap);
-        let input = serde_json::to_string(&snap).expect("json");
+        let input = semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&snap);
         let mut child = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(oracle_script())
             .arg("--json")

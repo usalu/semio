@@ -169,6 +169,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let Some(owner)=self.pending.reserved_preparation.as_mut(){owner.validate(self.stores.store.content_revision(),cx)?;if owner.job.is_some(){return Ok(true)}if owner.request.is_some()||owner.body.is_some(){return owner.advance_builder(cx)}}
         if !self.prepare_reserved_header(verb,meta,cx)?{return Ok(false)}
         let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("paged reserved input requires its preparation"))?;
+        if !owner.stage_header(1,cx)?{return Ok(false)}
         if owner.input.is_none()&&!donate(owner,cx)?{return Ok(false)}
         if !self.prepare_reserved_snapshot_read(cx)?||!self.prepare_reserved_wire_admission(cx)?{return Ok(false)}
         let mut no_external_admission=None;self.assemble_reserved_request(verb,meta,&mut no_external_admission,1,cx)?;Ok(false)

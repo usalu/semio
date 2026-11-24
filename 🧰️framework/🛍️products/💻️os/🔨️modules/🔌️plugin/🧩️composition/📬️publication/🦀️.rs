@@ -47,6 +47,18 @@ pub enum PendingArtifactStorePublication<A: ArtifactApp> {
     WindowTransient(Box<dyn semio_plugin_window_transient::window_transient::ErasedWindowTransientPublication>),
 }
 
+impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
+    /// 🔭️ The digest step a blocked batch publication waits on: state bits, work quote, next copy demand.
+    pub fn digest_witness(&self) -> Option<[u64; 3]> {
+        match self {
+            Self::Artifact(publication) => publication.digest_witness(),
+            Self::Config(publication) => publication.digest_witness(),
+            Self::Draft(publication) => publication.digest_witness(),
+            _ => None,
+        }
+    }
+}
+
 #[doc(hidden)]
 #[derive(Clone, Debug, PartialEq, Eq, ToValue,semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
@@ -290,7 +302,21 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    pub fn begin_close(&mut self) {
+    /// 🛑️ Abandons the pending publication; every abandon carries the cause that ends it and the owner retains it.
+    pub fn begin_close(&mut self, cause: ValueError) {
+        match self {
+            Self::Artifact(publication) => publication.abandon(cause),
+            Self::Config(publication) => publication.abandon(cause),
+            Self::Draft(publication) => publication.abandon(cause),
+            Self::Presence(publication) => publication.abandon(cause),
+            Self::Transient(publication) => publication.abandon(cause),
+            Self::WindowConfig(publication) => publication.abandon(cause),
+            Self::WindowTransient(publication) => publication.abandon(cause),
+        }
+    }
+
+    /// ♻️ Starts or continues the retirement of a publication that already ended (acknowledged or abandoned with its retained cause); it records no new cause, so an acknowledged publication never reads as abandoned.
+    pub fn continue_close(&mut self) {
         match self {
             Self::Artifact(publication) => publication.begin_close(),
             Self::Config(publication) => publication.begin_close(),
@@ -363,9 +389,8 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
         }
     }
 
-    /// ♻️ Whether the owning store already moved this publication into its retirement phase.
-    pub fn is_closing(&self) -> bool {
-        let phase = match self {
+    fn one_item_phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase {
+        match self {
             Self::Artifact(publication) => publication.phase(),
             Self::Config(publication) => publication.phase(),
             Self::Draft(publication) => publication.phase(),
@@ -373,8 +398,17 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
             Self::Transient(publication) => publication.phase(),
             Self::WindowConfig(publication) => publication.phase(),
             Self::WindowTransient(publication) => publication.phase(),
-        };
-        matches!(phase, store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing | store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Complete)
+        }
+    }
+
+    /// ♻️ Whether the owning store already moved this publication into its retirement phase.
+    pub fn is_closing(&self) -> bool {
+        matches!(self.one_item_phase(), store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing | store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Complete)
+    }
+
+    /// 🛑️ Whether the owning store abandoned this publication with a retained cause and now only retires it: it never prepares again, so the operation has to terminate with that cause. An acknowledged publication also retires in `Closing` but retains no cause, which is why the cause decides.
+    pub fn is_abandoned(&self) -> bool {
+        matches!(self.one_item_phase(), store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing) && (self.preparation_refusal().is_some() || self.fault().is_some())
     }
 
     /// 💥️ The owning store's own rejection reason, for as long as the retirement still retains it.

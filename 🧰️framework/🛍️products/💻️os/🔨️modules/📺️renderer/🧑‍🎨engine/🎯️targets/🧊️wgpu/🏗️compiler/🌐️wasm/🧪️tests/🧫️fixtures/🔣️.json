@@ -1553,6 +1553,10 @@
       "name": "semio-plugin-decl-app"
     },
     {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-plugin-decl-natural-file-media"
+    },
+    {
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust/Cargo.toml",
       "name": "semio-plugin-decl-surface"
     },

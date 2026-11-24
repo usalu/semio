@@ -13,7 +13,7 @@ export type FleetHolderFactV1=Readonly<{pid:number;resource:string;mode:FleetMod
 export type FleetWaiterFactV1=Readonly<{pid:number;resource:string;mode:FleetModeV1;class:string;waitedSeconds:number;blockers:readonly string[];position?:number;command?:string;session?:string;agent?:string;priority?:FleetPriorityV1;historyKey?:string}>;
 export type FleetGrantFactV1=Readonly<{id:string;operation:string;pid:number;jobs:number;reservedMegabytes:number;observedMegabytes:number|null;heldSeconds:number;phase?:string;lent?:boolean;session?:string;agent?:string}>;
 export type FleetCapacityWaiterFactV1=Readonly<{id:string;operation:string;pid:number;needMegabytes:number;waitedSeconds:number;reason:string;reasonText:string;position:number;session?:string;agent?:string}>;
-export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet"|"workers"|"cas"|"offload";ok:boolean;milliseconds:number;error?:string}>;
+export type FleetSourceV1=Readonly<{id:"leases"|"capacity"|"bazel"|"storage"|"sealed"|"generation"|"scheduler"|"fleet"|"workers"|"memory"|"cas"|"offload";ok:boolean;milliseconds:number;error?:string}>;
 export type FleetImageFactV1=Readonly<{id:string;kind:"partition"|"control";state:"mounted"|"detached"|"directory"|"absent";usedBytes:number|null;capacityBytes:number|null;budgetBytes:number|null;source:"statfs"|"recorded"|"walked"|"unknown"}>;
 export type FleetMachineV1=Readonly<{totalBytes:number;effectiveTotalBytes:number;usedBytes:number;footprintBytes:number;overBytes:number;evictBytes:number;blockedBytes:number;source:"argument"|"environment"|"file"|"default"}>;
 export type FleetSealedEntryFactV1=Readonly<{entry:string;digest:string;files:number;bytes:number;promotedAtMs:number;fresh:boolean|null;changed:number;blocked?:Readonly<{atMs:number;rows:number;first?:string}>;last?:Readonly<{atMs:number;added:number;removed:number;changed:number}>}>;
@@ -33,6 +33,7 @@ export type FleetFactsV1=Readonly<{
  scheduler?:FleetSchedulerFactV1;
  fleet?:FleetLoadFactV1;
  workers?:FleetWorkersFactV1;
+ memory?:FleetMemoryFactV1;
  cas?:FleetCasFactV1;
  offload?:FleetOffloadFactV1;
  sources:readonly FleetSourceV1[];
@@ -50,6 +51,10 @@ export type FleetOffloadFactV1=Readonly<{local:number;fleet:number;builds:readon
 /** 🩺️ One worker of the fleet: what its readiness record claims (`recorded`) next to what is really known (`liveness`, from the age of the record and of the heartbeats of its machine). */
 export type FleetWorkerFactV1=Readonly<{origin:string;platform:string|null;liveness:"absent"|"offline"|"silent"|"working"|"ready"|"idle";recorded:string|null;stage:string|null;stageIndex:number;stageCount:number;attempts:number;recordAgeSeconds:number|null;heartbeatAgeSeconds:number|null;refusal:Readonly<{code:string;en:string;de:string}>|null}>;
 export type FleetWorkersFactV1=Readonly<{offlineSeconds:number;rows:readonly FleetWorkerFactV1[]}>;
+/** 🛡️ What one host warden published as `memory.json` (read from the group store, never from the scheduler): host numbers, level and mode, interventions so far and the last alarm with its own EN and DE text; an absent record has every number null. */
+export type FleetWorkerMemoryV1=Readonly<{origin:string;ageSeconds:number;absent:boolean;mode:"observe"|"enforce"|null;level:"calm"|"guard"|"danger"|null;hold:boolean|null;guardMegabytes:number|null;dangerMegabytes:number|null;availableMegabytes:number|null;totalMegabytes:number|null;swapUsedMegabytes:number|null;swapOutMegabytesPerSecond:number|null;compressedMegabytes:number|null;pressure:"normal"|"warn"|"critical"|null;subjects:number|null;subjectMegabytes:number|null;suspended:number|null;counters:Readonly<{suspended:number;resumed:number;cancelled:number}>|null;lastAlarm:Readonly<{atMs:number;action:"suspend"|"resume"|"cancel";kind:string;pid:number;owner:string;megabytes:number;text:Readonly<{en:string;de:string}>}>|null;overhead:Readonly<{tickMillisecondsP95:number;cpuBasisPoints:number;residentMegabytes:number}>|null}>;
+/** 🗂️ The memory records by worker origin (null: nothing readable) and the record of the warden of this machine. */
+export type FleetMemoryFactV1=Readonly<{local:FleetWorkerMemoryV1|null;origins:Readonly<Record<string,FleetWorkerMemoryV1|null>>}>;
 export type FleetFindingV1=Readonly<{id:string;severity:"alert"|"warn"|"info";subject:string;values:Readonly<Record<string,string|number>>;text:string}>;
 export type FleetReportV1=Readonly<{version:1;atMs:number;workspace:string;summary:Row;memory:Row;runs:readonly Row[];queues:Row;bazel:Row;storage:Row;sealed:Row;generation:Row|null;scheduler?:Row;fleet?:Row;workers?:Row;cas?:Row;retention?:Row|null;offload?:Row;findings:readonly FleetFindingV1[];sources:readonly FleetSourceV1[]}>;
 type Row=Record<string,any>;
@@ -174,7 +179,7 @@ const fleetSection=(fact:FleetLoadFactV1):Row=>({scheduler:fact.scheduler,machin
 const casSection=(fact:FleetCasFactV1,atMs:number):Row=>{const used=fact.lastCollection?.bytes??null;return{root:fact.root,usedBytes:used,usedBasisPoints:used===null||fact.effectiveCapBytes===0?null:Math.floor(used*10000/fact.effectiveCapBytes),capBytes:fact.capBytes,effectiveCapBytes:fact.effectiveCapBytes,highWatermarkBytes:fact.highWatermarkBytes,lowWatermarkBytes:fact.lowWatermarkBytes,incrementBytes:fact.incrementBytes,leases:fact.leases,lastCollection:fact.lastCollection===null?null:{atMs:fact.lastCollection.atMs,ageSeconds:Math.max(0,Math.floor((atMs-fact.lastCollection.atMs)/1000)),bytes:fact.lastCollection.bytes}};};
 const retentionSection=(fact:FleetRetentionFactV1,atMs:number):Row=>({mode:fact.mode,sweptAt:fact.sweptAt,ageSeconds:fact.sweptAt===0?null:Math.max(0,Math.floor((atMs-fact.sweptAt)/1000)),entries:fact.entries,judged:fact.declared,live:fact.live,grace:fact.grace,stale:Object.values(fact.stale).reduce((sum,count)=>sum+count,0),staleByReason:fact.stale,unreached:fact.unreached,undeclared:Math.max(0,fact.entries-fact.declared),retired:fact.retired,refused:fact.refused});
 const offloadSection=(fact:FleetOffloadFactV1):Row=>({local:fact.local,fleet:fact.fleet,builds:[...fact.builds].sort((left,right)=>left.pid-right.pid),out:fact.out,refused:fact.refused,fellBack:fact.fellBack,deadline:fact.reasons.deadline??0,lost:fact.reasons["operation-lost"]??0,silent:fact.reasons.silent??0,reasons:fact.reasons});
-const workersSection=(fact:FleetWorkersFactV1):Row=>{const rows=[...fact.rows].sort((left,right)=>compare(left.origin,right.origin)),count=(state:string)=>rows.filter(row=>row.liveness===state).length;return{offlineSeconds:fact.offlineSeconds,counts:{ready:count("ready"),working:count("working"),idle:count("idle"),silent:count("silent"),offline:count("offline"),absent:count("absent")},rows};};
+const workersSection=(fact:FleetWorkersFactV1,memory:FleetMemoryFactV1|undefined):Row=>{const rows=[...fact.rows].sort((left,right)=>compare(left.origin,right.origin)).map(row=>({...row,memory:memory?.origins[row.origin]??null})),count=(state:string)=>rows.filter(row=>row.liveness===state).length;return{offlineSeconds:fact.offlineSeconds,counts:{ready:count("ready"),working:count("working"),idle:count("idle"),silent:count("silent"),offline:count("offline"),absent:count("absent")},rows};};
 
 const natural=(left:string,right:string):number=>{const a=/^([a-z]*)(\d+)$/u.exec(left),b=/^([a-z]*)(\d+)$/u.exec(right);return a&&b?compare(a[1]!,b[1]!)||Number(a[2])-Number(b[2]):compare(left,right);};
 
@@ -184,7 +189,7 @@ const schedulerSection=(fact:FleetSchedulerFactV1):Row=>({budgetMegabytes:fact.b
 export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):FleetReportV1{
  const leaseWait=leaseEstimates(facts),capacityWait=capacityEstimates(facts),runs=buildRuns(facts,leaseWait,capacityWait,language),leases=facts.leases,capacity=facts.capacity,atMs=facts.atMs;
  const grants=capacity?.grants??[],observedGrants=grants.filter(row=>row.observedMegabytes!==null);
- const memory:Row={totalMegabytes:facts.host?.totalMegabytes??0,availableMegabytes:facts.host?.availableMegabytes??0,floorMegabytes:capacity?.floorMegabytes??0,spareMegabytes:capacity?.headroomMegabytes??0,pressure:facts.host?.pressure??"normal",swapUsedMegabytes:facts.host?.swapUsedMegabytes??null,load:facts.host?.load??null,sampleAgeSeconds:facts.host?.ageSeconds??null,cores:facts.host?.cores??null,admittedMegabytes:grants.reduce((sum,row)=>sum+row.reservedMegabytes,0),observedMegabytes:observedGrants.reduce((sum,row)=>sum+row.observedMegabytes!,0),unobservedGrants:grants.length-observedGrants.length,overReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.reservedMegabytes-row.observedMegabytes!),0),underReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.observedMegabytes!-row.reservedMegabytes),0),grants:grants.length,waiters:capacity?.waiters.length??0};
+ const memory:Row={totalMegabytes:facts.host?.totalMegabytes??0,availableMegabytes:facts.host?.availableMegabytes??0,floorMegabytes:capacity?.floorMegabytes??0,spareMegabytes:capacity?.headroomMegabytes??0,pressure:facts.host?.pressure??"normal",swapUsedMegabytes:facts.host?.swapUsedMegabytes??null,load:facts.host?.load??null,sampleAgeSeconds:facts.host?.ageSeconds??null,cores:facts.host?.cores??null,admittedMegabytes:grants.reduce((sum,row)=>sum+row.reservedMegabytes,0),observedMegabytes:observedGrants.reduce((sum,row)=>sum+row.observedMegabytes!,0),unobservedGrants:grants.length-observedGrants.length,overReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.reservedMegabytes-row.observedMegabytes!),0),underReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.observedMegabytes!-row.reservedMegabytes),0),grants:grants.length,waiters:capacity?.waiters.length??0,...facts.memory===undefined?{}:{warden:facts.memory.local}};
  const byResource=new Map<string,{waiters:FleetWaiterFactV1[]}>();
  for(const waiter of leases?.waiters??[]){const row=byResource.get(waiter.resource)??{waiters:[]};row.waiters.push(waiter);byResource.set(waiter.resource,row);}
  const queues=[...byResource].map(([resource,row])=>({resource,longest:Math.max(...row.waiters.map(waiter=>waiter.waitedSeconds)),waiters:[...row.waiters].sort((left,right)=>(left.position??Infinity)-(right.position??Infinity)||right.waitedSeconds-left.waitedSeconds||left.pid-right.pid)})).sort((left,right)=>right.longest-left.longest||compare(left.resource,right.resource));
@@ -233,6 +238,24 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   else if(worker.liveness==="silent")say("worker-silent","warn",worker.origin,{...values,age:fleetDurationV1(language,worker.recordAgeSeconds??0)});
   else if(worker.liveness==="absent"&&(worker.heartbeatAgeSeconds===null||worker.heartbeatAgeSeconds>=facts.workers!.offlineSeconds))say("worker-absent","info",worker.origin,{origin:worker.origin});
  }
+ const wardens=new Map<string,FleetWorkerMemoryV1>(),staleSeconds=policy.findings.workerMemoryStaleSeconds,local=facts.memory?.local??null;
+ for(const [origin,row] of Object.entries(facts.memory?.origins??{}))if(row!==null)wardens.set(origin,row);
+ if(local!==null&&!wardens.has(local.origin))wardens.set(local.origin,local);
+ for(const [origin,row] of [...wardens].sort((left,right)=>compare(left[0],right[0]))){
+  if(row.absent||row.ageSeconds>staleSeconds)continue;
+  const level=fleetTextV1(language,`workers.level.${row.level}`);
+  if(row.level==="guard"||row.level==="danger")say("worker-memory-tight",row.level==="danger"?"alert":"warn",origin,{origin,level,available:row.availableMegabytes!,guard:row.guardMegabytes!,danger:row.dangerMegabytes!,swap:row.swapUsedMegabytes??"?",pressure:row.pressure!});
+  const counters=row.counters!;
+  if(counters.suspended+counters.cancelled>0)say("worker-warden-intervened",counters.cancelled>0?"alert":"warn",origin,{origin,suspended:counters.suspended,resumed:counters.resumed,cancelled:counters.cancelled,alarm:row.lastAlarm===null?"-":row.lastAlarm.text[language]});
+  if(row.mode==="observe")say("worker-warden-observing","info",origin,{origin,level});
+  if(row.swapUsedMegabytes!==null&&row.totalMegabytes!==null&&row.swapUsedMegabytes*10000>row.totalMegabytes*policy.findings.workerSwapWarnBasisPoints)say("worker-swap-high","warn",origin,{origin,swap:row.swapUsedMegabytes,percent:Math.floor(row.swapUsedMegabytes*100/row.totalMegabytes),total:row.totalMegabytes});
+  if(row.overhead!==null&&row.overhead.cpuBasisPoints>policy.findings.wardenOverheadBasisPoints)say("worker-warden-overhead","warn",origin,{origin,percent:Math.floor(row.overhead.cpuBasisPoints/100),tick:Math.floor(row.overhead.tickMillisecondsP95+0.5),resident:Math.floor(row.overhead.residentMegabytes+0.5)});
+ }
+ if(facts.memory!==undefined)for(const worker of facts.workers?.rows??[]){
+  if(worker.liveness!=="working"&&worker.liveness!=="ready"&&worker.liveness!=="idle")continue;
+  const row=wardens.get(worker.origin),reason=row===undefined?fleetTextV1(language,"workers.warden.missing"):row.absent?fleetTextV1(language,"workers.warden.absent"):row.ageSeconds>staleSeconds?fleetTextV1(language,"workers.warden.stale",{age:fleetDurationV1(language,row.ageSeconds)}):null;
+  if(reason!==null)say("worker-warden-absent","warn",worker.origin,{origin:worker.origin,reason});
+ }
  for(const source of facts.sources)if(!source.ok)say("source-failed","warn",source.id,{section:source.id,reason:source.error??"?"});
  findings.sort((left,right)=>SEVERITY[left.severity]!-SEVERITY[right.severity]!||compare(left.id,right.id)||compare(left.subject,right.subject));
  const kept=findings.slice(0,policy.findings.maximum);
@@ -245,7 +268,7 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
   bazel:{slots:servers.length,live:servers.filter(row=>row.live).length,held:servers.filter(row=>row.held).length,rssMegabytes:servers.reduce((sum,row)=>sum+(row.treeMegabytes??0),0),servers},
   storage:{hostFreeBytes:storage?.hostFreeBytes??null,hostFreeFloorBytes:storage?.hostFreeFloorBytes??0,machine:storage?.machine??{totalBytes:0,effectiveTotalBytes:0,usedBytes:0,footprintBytes:0,overBytes:0,evictBytes:0,blockedBytes:0,source:"default"},overAreas:[...storage?.overAreas??[]].sort(compare),images},
   sealed:{mode:facts.sealed?.mode??"live",drifted:sealedEntries.filter(row=>row.fresh===false).length,blocked:sealedEntries.filter(row=>row.blocked!==undefined).length,entries:sealedEntries},
-  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},...facts.workers===undefined?{}:{workers:workersSection(facts.workers)},...facts.cas===undefined?{}:{cas:casSection(facts.cas,atMs)},...facts.fleet===undefined?{}:{retention:facts.fleet.retention===undefined?null:retentionSection(facts.fleet.retention,atMs)},...facts.offload===undefined?{}:{offload:offloadSection(facts.offload)},findings:kept,sources:facts.sources,
+  generation,...facts.scheduler===undefined?{}:{scheduler:schedulerSection(facts.scheduler)},...facts.fleet===undefined?{}:{fleet:fleetSection(facts.fleet)},...facts.workers===undefined?{}:{workers:workersSection(facts.workers,facts.memory)},...facts.cas===undefined?{}:{cas:casSection(facts.cas,atMs)},...facts.fleet===undefined?{}:{retention:facts.fleet.retention===undefined?null:retentionSection(facts.fleet.retention,atMs)},...facts.offload===undefined?{}:{offload:offloadSection(facts.offload)},findings:kept,sources:facts.sources,
  }) as FleetReportV1;
 }
 
@@ -269,6 +292,8 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
  const estimate=(seconds:number|null|undefined):string=>seconds===null||seconds===undefined?"":say("estimate",{estimate:duration(seconds)});
  lines.push(say("header",{time:clock(report.atMs),running:summary.running,blocked:summary.blocked,waiting:summary.waiting,alerts:summary.alerts,warnings:summary.warnings}));
  lines.push(memory.sampleAgeSeconds===null?say("memoryNone",{admitted:memory.admittedMegabytes,observed:memory.observedMegabytes,grants:memory.grants}):say("memory",{age:duration(memory.sampleAgeSeconds),admitted:memory.admittedMegabytes,observed:memory.observedMegabytes,grants:memory.grants,available:memory.availableMegabytes,total:memory.totalMegabytes,spare:memory.spareMegabytes,floor:memory.floorMegabytes,pressure:memory.pressure,swap:memory.swapUsedMegabytes??"n/a",load:memory.load??"n/a"}));
+ const warden=memory.warden as FleetWorkerMemoryV1|null|undefined;
+ if(warden!==undefined&&warden!==null&&!warden.absent)lines.push(say("memory.warden",{origin:warden.origin,level:say(`workers.level.${warden.level}`),mode:say(`workers.mode.${warden.mode}`),available:warden.availableMegabytes!,swap:warden.swapUsedMegabytes??"?",swapOut:warden.swapOutMegabytesPerSecond??"?",compressed:warden.compressedMegabytes??"?",pressure:warden.pressure!,suspended:warden.counters!.suspended,resumed:warden.counters!.resumed,cancelled:warden.counters!.cancelled}));
  if(report.runs.length===0)lines.push(say("runsNone"));
  else{
   lines.push(say("runsHeader",{count:report.runs.length,shown:Math.min(limit,report.runs.length)}));
@@ -319,7 +344,8 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
  if(workers!==undefined){
   const counts=workers.counts as Record<string,number>;
   lines.push(say("workers",counts));
-  for(const row of workers.rows as Row[])lines.push(say("workers.row",{origin:row.origin,platform:row.platform??"-",state:say(`workers.state.${row.liveness}`),stage:row.stage??"-",index:row.stageIndex,count:row.stageCount,attempts:row.attempts,record:row.recordAgeSeconds===null?"-":duration(row.recordAgeSeconds),machine:row.heartbeatAgeSeconds===null?"-":duration(row.heartbeatAgeSeconds),refusal:row.refusal===null?"":say("workers.refusal",{reason:row.refusal[language]})}));
+  const wardenText=(row:Row):string=>{const warden=row.memory as FleetWorkerMemoryV1|null;return warden===null?say("workers.memory.none"):warden.absent?say("workers.memory.nowarden"):warden.ageSeconds>policy.findings.workerMemoryStaleSeconds?say("workers.warden.stale",{age:duration(warden.ageSeconds)}):say("workers.memory",{available:warden.availableMegabytes!,swap:warden.swapUsedMegabytes??"?",compressed:warden.compressedMegabytes??"?",level:say(`workers.level.${warden.level}`),mode:say(`workers.mode.${warden.mode}`),suspended:warden.counters!.suspended,resumed:warden.counters!.resumed,cancelled:warden.counters!.cancelled});};
+  for(const row of workers.rows as Row[])lines.push(say("workers.row",{memory:wardenText(row),origin:row.origin,platform:row.platform??"-",state:say(`workers.state.${row.liveness}`),stage:row.stage??"-",index:row.stageIndex,count:row.stageCount,attempts:row.attempts,record:row.recordAgeSeconds===null?"-":duration(row.recordAgeSeconds),machine:row.heartbeatAgeSeconds===null?"-":duration(row.heartbeatAgeSeconds),refusal:row.refusal===null?"":say("workers.refusal",{reason:row.refusal[language]})}));
  }
  const cas=report.cas;
  if(cas!==undefined){

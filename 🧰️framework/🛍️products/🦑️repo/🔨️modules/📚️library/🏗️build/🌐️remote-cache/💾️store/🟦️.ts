@@ -28,10 +28,10 @@ export type RemoteCacheStoreEventV1=Readonly<{stage:"scan";entries:number;bytes:
 export type RemoteCacheStalenessOptionsV1=Readonly<{mode:StalenessModeV1;tree:TreeDigestsV1;toolchains?:()=>ReadonlySet<string>|undefined;examples:number;recheckMilliseconds:number;manifestNames:readonly string[]}>;
 
 /** 🧱️ Authors the finite bounds of one store: total bytes, bytes per entry and the idle age after which an entry without a slot is dropped (0 keeps entries until space is needed), the grace in milliseconds that protects entries of builds in flight (default ten minutes), the staleness policy (absent judges nothing), the predicate of entries an active claim holds and a hook that tests use to simulate a crash between the steps of a removal. */
-export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;blobBoundBytes?():Promise<number|undefined>|number|undefined;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;staleness?:RemoteCacheStalenessOptionsV1;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
+export type RemoteCacheStoreOptionsV1=Readonly<{fileBudget?:number;scanRetryMilliseconds?:number;writeBudgetMilliseconds?:number;directory:string;startupScan?:"await"|"background";maximumBytes:number;maximumEntryBytes:number;maximumAgeMilliseconds:number;host?:CasStoreV1;pinBudgetBytes?():number|undefined;blobBoundBytes?():Promise<number|undefined>|number|undefined;graph?:Readonly<{sharePercent:number;supersedeGraceMilliseconds:number}>;graceMilliseconds?:number;claimed?:(namespace:string,kind:RemoteCacheKindV1,key:string)=>boolean;staleness?:RemoteCacheStalenessOptionsV1;onStep?:(point:RemoteCacheStepV1)=>void;signal?:AbortSignal;onEvent?:(event:RemoteCacheStoreEventV1)=>void}>;
 
 /** 📏️ Describes the current fill of one store. */
-export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;slotted:number;evictedEntries:number;evictedBytes:number;blobs:Readonly<{referencedBytes:number|null;boundBytes:number|null;evictedBytes:number}>}>;
+export type RemoteCacheStoreUsageV1=Readonly<{entries:number;bytes:number;reservedBytes:number;maximumBytes:number;maximumEntryBytes:number;slotted:number;evictedEntries:number;evictedBytes:number;blobs:Readonly<{referencedBytes:number|null;boundBytes:number|null;evictedBytes:number;graph:Readonly<{protectedEntries:number;protectedBytes:number;reservedBytes:number|null;evictedEntries:number;supersededBytes:number}>}>}>;
 
 /** 🪢️ What a write says about its entry: the slot id (a dedupe hint), for action results the blobs they reference (Nx entries reference their host store body) and what the entry declared it was built from. */
 export type RemoteCachePutSlotV1=Readonly<{slot:string;refs?:readonly string[];declaration?:DeclarationV1}>;
@@ -66,6 +66,9 @@ export class RemoteCacheStoreV1{
  private evictedBlobBytes=0;
  private referencedBlobBytes:number|null=null;
  private lastBound:number|null=null;
+ private graphProtected:Readonly<{keys:ReadonlySet<string>;bytes:number}>={keys:new Set(),bytes:0};
+ private graphEvicted=0;
+ private readonly superseded=new Map<string,number>();
  private admitted=0;
  private readonly born=new Map<string,number>();
  private lastTrigger=0;
@@ -150,7 +153,10 @@ export class RemoteCacheStoreV1{
  }
 
  /** 📊️ Reports the current fill. */
- usage():RemoteCacheStoreUsageV1{return Object.freeze({entries:this.index.size,bytes:this.bytes,reservedBytes:this.reserved,maximumBytes:this.options.maximumBytes,maximumEntryBytes:this.options.maximumEntryBytes,slotted:this.slots.size,evictedEntries:this.evictedEntries,evictedBytes:this.evictedBytes,blobs:{referencedBytes:this.referencedBlobBytes,boundBytes:this.lastBound,evictedBytes:this.evictedBlobBytes}});}
+ usage():RemoteCacheStoreUsageV1{return Object.freeze({entries:this.index.size,bytes:this.bytes,reservedBytes:this.reserved,maximumBytes:this.options.maximumBytes,maximumEntryBytes:this.options.maximumEntryBytes,slotted:this.slots.size,evictedEntries:this.evictedEntries,evictedBytes:this.evictedBytes,blobs:{referencedBytes:this.referencedBlobBytes,boundBytes:this.lastBound,evictedBytes:this.evictedBlobBytes,graph:{protectedEntries:this.graphProtected.keys.size,protectedBytes:this.graphProtected.bytes,reservedBytes:this.graphReserve(this.lastBound),evictedEntries:this.graphEvicted,supersededBytes:this.supersededBytes()}}});}
+ private graphReserve(bound:number|null):number|null{const graph=this.options.graph;return bound===null||graph===undefined?null:Math.floor(bound*graph.sharePercent/100);}
+ private supersededBytes():number{let bytes=0;const now=Date.now();for(const [hash,until] of this.superseded)if(until>now)bytes+=this.blobSizes.get(hash)??0;return bytes;}
+ private isGraph(relative:string):boolean{return this.slots.get(relative)?.declaration?.kind==="graph";}
 
  /** 🔍️ Looks one value up on disk and marks it recently used; a value another process removed is forgotten. */
  async read(namespace:string,kind:RemoteCacheKindV1,key:string):Promise<RemoteCacheEntryV1|undefined>{
@@ -210,21 +216,24 @@ export class RemoteCacheStoreV1{
     const [namespace,kind,,key]=relative.split("/");return this.options.claimed(namespace!,kind as RemoteCacheKindV1,key!);
    };
    const now=Date.now(),judged=await this.judge(now),staleness=this.options.staleness;
-   const plan=planRemoteCacheCollectionV1([...this.index].map(([key,row])=>({key,...row})),{maximumBytes:this.options.maximumBytes,maximumAgeMilliseconds:this.options.maximumAgeMilliseconds,now,need,reserved:this.reserved},new Set(),{metas:this.slots,graceMilliseconds:this.grace,claimed,...judged&&staleness?.mode==="enforce"?{verdicts:judged}:{}});
+   const plan=planRemoteCacheCollectionV1([...this.index].map(([key,row])=>({key,...row})),{maximumBytes:this.options.maximumBytes,maximumAgeMilliseconds:this.options.maximumAgeMilliseconds,now,need,reserved:this.reserved},new Set(),{metas:this.slots,graceMilliseconds:this.grace,claimed:relative=>claimed(relative)||this.isGraph(relative),...judged&&staleness?.mode==="enforce"?{verdicts:judged}:{}});
    const blobDrops=await this.planBlobBound(plan,judged,claimed);
-   let removedEntries=0,removedBytes=0,retiredNow=0;const gone:string[]=[],refs=new Set<string>(),tombstones=new Set<string>();
+   let removedEntries=0,removedBytes=0,retiredNow=0;const gone:string[]=[],refs=new Set<string>(),tombstones=new Set<string>(),graphRows:Record<string,unknown>[]=[],reasons:Record<string,number>={};
    for(const drop of [...plan,...blobDrops]){
     this.checkpoint();
     const meta=this.slots.get(drop.key),own=meta?.refs??this.refCache.get(drop.key);let outcome;
     try{outcome=await removeRemoteCacheEntryV1(this.root,drop,{...this.options.onStep?{onStep:this.options.onStep}:{},claimed,graceMilliseconds:this.grace});}catch(error){if(/^E[A-Z]+$/u.test(String((error as NodeJS.ErrnoException).code)))continue;throw error;}
     if(outcome==="kept")continue;
-    const row=this.index.get(drop.key);
+    const row=this.index.get(drop.key),graph=meta?.declaration?.kind==="graph";
+    if(graph){this.graphEvicted++;graphRows.push({version:1,atMs:now,kind:"graph-entry",key:drop.key,reason:drop.reason,tier:meta?.declaration===undefined?1:2,bytes:drop.size,accessed:row?.accessed??null,storedAt:meta?.storedAt??null,slot:meta?.slot??null});}
+    reasons[drop.reason]=(reasons[drop.reason]??0)+1;
     if(row){this.index.delete(drop.key);this.bytes-=row.size;}
     this.slots.delete(drop.key);this.refCache.delete(drop.key);gone.push(drop.key);if(own)for(const hash of own){refs.add(hash);if(drop.reason==="stale")tombstones.add(hash);}
     if(drop.reason==="stale")retiredNow++;
     removedEntries++;removedBytes+=drop.size;
    }
    if(judged&&staleness)await this.record(now,judged,retiredNow,tombstones);
+   if(removedEntries>0)await this.journal([{version:1,atMs:now,kind:"collection",entries:removedEntries,bytes:removedBytes,reasons,graphEntries:graphRows.length,remaining:this.index.size,referencedBlobBytes:this.referencedBlobBytes,boundBytes:this.lastBound},...graphRows]);
    if(removedEntries){this.evictedEntries+=removedEntries;this.evictedBytes+=removedBytes;this.options.onEvent?.({stage:"evict",entries:removedEntries,bytes:removedBytes});}
    if(this.options.host&&refs.size>0){
     const live=await liveRemoteCacheReferencesV1(this.root,this.index.keys(),this.slots,this.options.signal,(namespace,tree)=>this.readBytes(namespace,"cas",tree.hash,Math.min(tree.size,16*1048576))),orphaned=[...refs].filter(hash=>!live.has(hash));
@@ -236,6 +245,15 @@ export class RemoteCacheStoreV1{
    await this.pinLive().catch(()=>undefined);
   };
   this.collecting=this.collecting.then(run,run);return this.collecting;
+ }
+
+ private async journal(rows:readonly Record<string,unknown>[]):Promise<void>{
+  try{
+   const directory=join(this.root,".retention");await mkdir(directory,{recursive:true});
+   const log=join(directory,"evictions.jsonl");
+   if((await stat(log).catch(()=>undefined))?.size!>5*1048576)await rename(log,log+".1");
+   await appendFile(log,rows.map(row=>JSON.stringify(row)).join("\n")+"\n");
+  }catch{}
  }
 
  private sizeTrigger():void{
@@ -265,9 +283,11 @@ export class RemoteCacheStoreV1{
    if(leaving.has(relative)||relative.split("/")[1]==="cas")continue;
    const refs=await this.entryRefs(relative),state=judged?.get(relative)?.state,stored=this.slots.get(relative)?.storedAt;
    for(const hash of refs)if(!sizes.has(hash))sizes.set(hash,await this.blobSize(hash));
-   rows.push({key:relative,accessed:row.accessed,refs,tier:state==="unreached"||(state==="stale"&&enforcing)?0:state===undefined||state==="undeclared"?1:2,guarded:claimed(relative)||now-(stored??this.born.get(relative)??0)<this.grace});
+   const meta=this.slots.get(relative),slotted=meta?.declaration?.kind==="graph"&&meta.slot!==undefined&&meta.storedAt!==undefined;
+   rows.push({key:relative,accessed:row.accessed,refs,tier:state==="unreached"||(state==="stale"&&enforcing)?0:state===undefined||state==="undeclared"?1:2,guarded:claimed(relative)||now-(stored??this.born.get(relative)??0)<this.grace,...slotted?{graph:{slot:meta!.slot,storedAt:meta!.storedAt}}:{}});
   }
-  const result=planRemoteCacheBlobBoundV1(rows,hash=>sizes.get(hash)??0,bound);
+  const reserve=this.graphReserve(bound),result=planRemoteCacheBlobBoundV1(rows,hash=>sizes.get(hash)??0,bound,reserve===null?undefined:{budgetBytes:reserve,now,graceMilliseconds:this.options.graph!.supersedeGraceMilliseconds});
+  this.graphProtected={keys:new Set(result.protectedKeys),bytes:result.protectedBytes};
   this.referencedBlobBytes=result.after;
   const sizeOf=new Map(rows.map(row=>[row.key,this.index.get(row.key)!.size]));
   const drops=result.keys.map(key=>({key,size:sizeOf.get(key)!,reason:"budget" as const,...this.slots.get(key)===undefined?{}:{storedAt:this.slots.get(key)!.storedAt}}));
@@ -278,8 +298,10 @@ export class RemoteCacheStoreV1{
  /** 📌️ Pins the blobs of the synchronized state (the newest entries with a sidecar that are not stale or unreached, until `pinBudgetBytes` of blobs are pinned: the older ones stay unpinned, so the host store's own eviction can take them before the partition is ever critical and the entry then misses) in the host store under this process's holder, so the host store's own eviction by age, cap or partition pressure, which knows no entries, cannot take a blob a live entry needs; the pin lives one hour at most and is renewed by every collection (the maintenance timer), and a dead process loses it at once. Answers the number of pinned blobs. */
  async pinLive():Promise<number>{
   const host=this.options.host;if(!host)return 0;
-  const hashes=new Set<string>(),declared=this.options.pinBudgetBytes?.(),budget=declared===undefined?this.lastBound??undefined:this.lastBound===null?declared:Math.min(declared,this.lastBound),live=[...this.slots].filter(([key])=>{const state=this.verdicts?.get(key)?.state;return state!=="stale"&&state!=="unreached";}).sort((left,right)=>right[1].storedAt-left[1].storedAt);
+  const hashes=new Set<string>(),now=Date.now(),declared=this.options.pinBudgetBytes?.(),budget=declared===undefined?this.lastBound??undefined:this.lastBound===null?declared:Math.min(declared,this.lastBound),live=[...this.slots].filter(([key])=>{const state=this.verdicts?.get(key)?.state;return state!=="stale"&&state!=="unreached";}).sort((left,right)=>right[1].storedAt-left[1].storedAt);
   let pinned=0;
+  for(const [hash,until] of this.superseded){if(until>now)hashes.add(hash);else this.superseded.delete(hash);}
+  for(const [key,meta] of this.slots)if(meta.declaration?.kind==="graph"&&(this.graphProtected.keys.has(key)||this.graphProtected.keys.size===0))for(const hash of meta.refs)hashes.add(hash);
   for(const[,meta]of live){
    if(budget!==undefined&&pinned>=budget)break;
    for(const hash of meta.refs){
@@ -323,7 +345,8 @@ export class RemoteCacheStoreV1{
  }
 
  private async publish(relative:string,slot:RemoteCachePutSlotV1,kind:RemoteCacheKindV1,refs:readonly string[]):Promise<void>{
-  const declaration=slot.declaration??this.slots.get(relative)?.declaration,meta:RemoteCacheMetaV1={version:1,slot:slot.slot,storedAt:this.stamp(),refs:slot.refs??refs,...declaration===undefined?{}:{declaration}};
+  const previous=this.slots.get(relative),declaration=slot.declaration??previous?.declaration,meta:RemoteCacheMetaV1={version:1,slot:slot.slot,storedAt:this.stamp(),refs:slot.refs??refs,...declaration===undefined?{}:{declaration}};
+  if(previous?.declaration?.kind==="graph"&&this.options.graph!==undefined){const until=Date.now()+this.options.graph.supersedeGraceMilliseconds,next=new Set(meta.refs);for(const hash of previous.refs)if(!next.has(hash))this.superseded.set(hash,until);}
   try{await writeRemoteCacheMetaV1(this.root,this.temporary,relative,meta);this.slots.set(relative,meta);}
   catch(error){if(this.options.signal?.aborted)throw error;}
  }

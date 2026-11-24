@@ -80,6 +80,18 @@ test("below the soft threshold the reclaim runs once for the demand up to the ta
  }finally{rmSync(join(root,".."),{recursive:true,force:true});}
 });
 
+test("the collection is followed by one in-place kick that returns its freed blocks to the host, and a failing kick never fails the reclaim",async()=>{
+ const root=join(scratch(),"u");mkdirSync(root,{recursive:true});
+ try{
+  const order:string[]=[];let free=2*GIB;
+  const result=await requestRustImageReclaimV1(base(root,[],{measure:()=>volume(free),collect:async()=>{order.push("collect");},kick:async()=>{order.push("kick");free=25*GIB;}}));
+  expect(order).toEqual(["collect","kick"]);expect(result).toEqual({outcome:"reclaimed",availableBytes:25*GIB,freedBytes:23*GIB});
+  free=2*GIB;const failed=await requestRustImageReclaimV1(base(root,[],{measure:()=>volume(free),collect:async()=>{free=5*GIB;},kick:async()=>{throw Error("kick failed");}}));
+  expect(failed).toEqual({outcome:"reclaimed",availableBytes:5*GIB,freedBytes:3*GIB});
+  free=2*GIB;const stop=new AbortController();
+  await expect(requestRustImageReclaimV1(base(root,[],{signal:stop.signal,measure:()=>volume(free),collect:async()=>{},kick:async()=>{stop.abort();throw Error("cancelled");}}))).rejects.toBeDefined();
+ }finally{rmSync(join(root,".."),{recursive:true,force:true});}
+});
 test("concurrent requests of many agents in this process share one reclaim",async()=>{
  const root=join(scratch(),"u");mkdirSync(root,{recursive:true});
  try{

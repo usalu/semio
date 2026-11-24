@@ -91,7 +91,7 @@ pub use semio_os_flow_host_session::{
     FlowPreviewCompletedIntakeSource, FlowPreviewCompletedReceiver, FlowPreviewLedgerFold, FlowPreviewMesh, FlowSnapshotIntakeFailure, io, merge_unanswered_eval_entries,
     NodeEvalStatus, preview_tessellate_node_hash, PreviewChainStatus, PreviewEvalOutcome, PreviewEvalPhase, PreviewEvalProgress,
     PreviewEvalStatus, PreviewTessellateOutcome, PreviewTessellatePhase, PreviewTessellateProgress, PreviewTessellateStatus, record_flow_eval_step,
-    reset_flow_eval_publication_ledger, reset_flow_eval_step_ledger, retire_invocation_reply_cold, unserved_flow_operator_kinds, initial_flow_status_json,
+    reset_flow_eval_publication_ledger, reset_flow_eval_step_ledger, retire_invocation_reply_cold, unserved_flow_operator_kinds, on_demand_node_kind_requests, ON_DEMAND_REQUEST_TOPIC, initial_flow_status_json,
 };
 
 pub use semio_os_flow_host::{FlowPendingDispatchWork,FlowPendingDispatchStep,FlowOriginLookupWork,FlowOriginLookupOutcome,FlowAuthoringWork,FlowAuthoringRequest,FlowAuthoringOutcome,FlowAuthoringSerials,FlowTextCopyWork,FlowSynapseFieldsWork};

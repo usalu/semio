@@ -236,7 +236,7 @@ pub fn check_fire_insulation(insulation: &semio_s_artifact_norm_en1999_model::Fi
     let mut check = CheckResult::assess(format!("en1999.1-2.insulation.{}", insulation.id), part, cl, subject("thickness"), loc("Insulation properties are positive", "Bekleidungskennwerte sind positiv"))
         .utilization(q_dim(if fields.iter().any(|f| invalid(f.0, f.1)) { 2.0 } else { 0.0 }), q_dim(1.0))
         .annex(annex)
-        .explanation(loc(&text, &text));
+        .explanation(loc(&format!("Insulation: {text}"), &format!("Bekleidung: {text}")));
     for (path, value, en, de) in fields {
         if invalid(path, value) {
             let (now, wanted) = if path == "thickness" { (q_length(value), q_length(0.0)) } else { (Quantity::new(QuantityKind::Dimensionless, value), Quantity::new(QuantityKind::Dimensionless, 1.0)) };

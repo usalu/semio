@@ -40,7 +40,7 @@ def git_shared(path):
     if not rest: return True
     name=rest[-1]
     if name.endswith(".lock"): return False
-    if len(rest)==1 and name in ("HEAD","packed-refs","shallow"): return True
+    if len(rest)==1 and name in ("HEAD","packed-refs"): return True
     if rest[0] not in ("refs","objects"): return False
     if rest[0]=="objects": return not name.startswith("tmp_") and "/".join(rest)!="objects/info/alternates"
     return True

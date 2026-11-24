@@ -30,7 +30,7 @@ pub use scene_memo::{memo_diagrams, SceneMemo};
 pub use fragment_cache::{fnv64, FragmentCache};
 pub use report_index::ReportIndex;
 pub use scene_kit::{canonical_order, project_parts, project_whole, Kit, SITE_ENTITY, KitDoc, Part, SceneKit, ViewKey, ViewOptions, ViewValue};
-pub use scene_builder::{apply_visibility, assemble, assemble_with, merge, EntityDraft, Fragment, SceneBuilder};
+pub use scene_builder::{apply_visibility, assemble, assemble_sealed_with, assemble_with, merge, EntityDraft, Fragment, SceneBuilder};
 
 use crate::diff::diff;
 use crate::tessellation::Lod;
@@ -150,6 +150,10 @@ pub trait StructuralProjection {
     fn entities(&self, doc: &Self::Document<'_>) -> Vec<EntityRef>;
     /// #️⃣ One content fingerprint per entity of `entities`, in order: everything the entity's fragment reads of the document.
     fn fingerprints(&self, doc: &Self::Document<'_>, entities: &[EntityRef]) -> Vec<String>;
+    /// 🌐️ One stamp per entity of `entities`, in order: what only the entity's own fragment reads of the whole site. It joins the entity's fragment key but not the fingerprint its dependents read, so a site-wide change rebuilds only the fragments that draw the site.
+    fn site_stamps(&self, _doc: &Self::Document<'_>, entities: &[EntityRef]) -> Vec<String> {
+        vec![String::new(); entities.len()]
+    }
     /// 🔗️ The ids of the entities `entity` reads besides itself.
     fn entity_dependencies(&self, doc: &Self::Document<'_>, entity: &EntityRef) -> Vec<String>;
     /// 🧩️ The fragment of one entity; `rows` holds only the check rows of the entity, the entities it reads and the global ones, in report order.
@@ -173,6 +177,7 @@ pub struct SceneProjector<P: StructuralProjection> {
     cache: FragmentCache,
     index: DependencyIndex,
     fingerprints: BTreeMap<String, String>,
+    sites: BTreeMap<String, String>,
     previous: Option<StructuralScene>,
 }
 
@@ -186,7 +191,7 @@ fn hex(n: u64) -> String {
 
 impl<P: StructuralProjection> SceneProjector<P> {
     pub fn new(projection: P) -> Self {
-        Self { projection, cache: FragmentCache::new(), index: DependencyIndex::new(), fingerprints: BTreeMap::new(), previous: None }
+        Self { projection, cache: FragmentCache::new(), index: DependencyIndex::new(), fingerprints: BTreeMap::new(), sites: BTreeMap::new(), previous: None }
     }
 
     pub fn projection(&self) -> &P {
@@ -211,6 +216,7 @@ impl<P: StructuralProjection> SceneProjector<P> {
         let gone: Vec<String> = self.fingerprints.keys().filter(|id| !live.contains(*id)).cloned().collect();
         for id in &gone {
             self.fingerprints.remove(id);
+            self.sites.remove(id);
             self.index.remove(id);
         }
         let mut keep = live.clone();
@@ -222,6 +228,9 @@ impl<P: StructuralProjection> SceneProjector<P> {
             d
         };
         let todo: Vec<EntityRef> = refs.iter().filter(|r| dirty.contains(&r.id)).cloned().collect();
+        for (r, site) in refs.iter().zip(self.projection.site_stamps(doc, &refs)) {
+            self.sites.insert(r.id.clone(), site);
+        }
         for (r, print) in todo.iter().zip(self.projection.fingerprints(doc, &todo)) {
             if self.fingerprints.insert(r.id.clone(), print.clone()).is_none_or(|old| old != print) {
                 self.index.set(&r.id, self.projection.entity_dependencies(doc, r));
@@ -234,6 +243,7 @@ impl<P: StructuralProjection> SceneProjector<P> {
         let mut keys: Vec<u64> = Vec::with_capacity(refs.len());
         let mut fragments = Vec::with_capacity(refs.len() + 1);
         let mut parts: Vec<std::sync::Arc<Fragment>> = Vec::new();
+        let sealed = std::cell::RefCell::new(Vec::<Violation>::new());
         for r in &refs {
             let mut subjects: Vec<String> = vec![r.id.clone(), String::new()];
             let mut dependencies: Vec<String> = Vec::new();
@@ -242,14 +252,16 @@ impl<P: StructuralProjection> SceneProjector<P> {
                 subjects.push(dep);
             }
             let reports = hex(eval.reports.stamp(&subjects));
-            let key = fnv64([self.fingerprints[&r.id].as_str(), eval_key(&r.id), ctx_key.as_str()].into_iter().chain(dependencies.iter().map(String::as_str)).chain([reports.as_str()]));
+            let key = fnv64([self.fingerprints[&r.id].as_str(), self.sites.get(&r.id).map_or("", String::as_str), eval_key(&r.id), ctx_key.as_str()].into_iter().chain(dependencies.iter().map(String::as_str)).chain([reports.as_str()]));
             keys.push(key);
             let projection = &self.projection;
             fragments.push(self.cache.get_or_build(&r.id, key, || {
                 let mut b = SceneBuilder::new();
                 b.owned_by(Some(r.clone()));
                 projection.project_entity(doc, r, &eval.of(&r.id), &eval.reports.slice(&subjects), ctx, &mut b);
-                b.into_fragment()
+                let fragment = b.into_fragment();
+                sealed.borrow_mut().extend(fragment.seal_violations());
+                fragment
             }));
         }
         let global_text: Vec<String> = keys.iter().map(|k| hex(*k)).chain(eval_keys.iter().map(|(id, key)| format!("{id}={key}"))).chain([canonical_json(&eval.global), hex(eval.reports.version()), ctx_key]).collect();
@@ -258,11 +270,17 @@ impl<P: StructuralProjection> SceneProjector<P> {
         parts.push(self.cache.get_or_build(GLOBAL, global_key, || {
             let mut b = SceneBuilder::new();
             projection.project_global(doc, eval, ctx, &mut b);
-            b.into_fragment()
+            let fragment = b.into_fragment();
+            sealed.borrow_mut().extend(fragment.seal_violations());
+            fragment
         }));
+        let sealed = sealed.into_inner();
+        if !sealed.is_empty() {
+            return Err(sealed);
+        }
         parts.extend(fragments);
         let projection = &self.projection;
-        assemble_with(&parts, SceneRevision { document_seq: ctx.document_seq, report_seq: eval.report_seq }, ctx, |scene| {
+        assemble_sealed_with(&parts, SceneRevision { document_seq: ctx.document_seq, report_seq: eval.report_seq }, ctx, |scene| {
             projection.finish(doc, eval, ctx, scene);
             if let Some(basis) = projection.basis(doc) {
                 basis.apply(scene);

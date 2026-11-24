@@ -16,7 +16,7 @@ fn image_edits_preserve_history_and_sparse_dimensions() {
     let outcome=mutation.diff(&before);assert!(outcome.messages().is_empty());
     let mut after=protocol::apply_diff_cold(outcome.diff(),&before).unwrap();
     let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Image(image)=&after.layers[0] else{panic!()};
-    assert_eq!(serde_json::json!({"imageKey":image.image_key.to_string_owner(),"width":image.width,"height":image.height}),*expected);
+    assert_eq!(serde_json::json!({"imageKey":image.image_key.to_string_owner(),"width":image.width,"height":image.height}),serde_json::json!({"imageKey":expected["imageKey"],"width":expected["width"].as_f64().unwrap(),"height":expected["height"].as_f64().unwrap()}));
     for inverse in mutation.inverse(&before).unwrap(){semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&inverse).unwrap();}assert_eq!(after,before);
     let only_width=semio_s_artifact_draw_drawing_style::update_image::mutation::update_image::<semio_s_artifact_draw_drawing_mutations::DrawingMutation>(id.clone(),"before".into(),64.0,128.0).diff(&before);let patch=&only_width.diff().layers.as_ref().unwrap().modified[0].patch;
     assert_eq!(patch.image_width,Some(64.0));assert!(patch.image_key.is_none()&&patch.image_height.is_none());

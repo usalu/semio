@@ -615,9 +615,8 @@ card or `#intro` page.
   control clears the glass over it, and releasing it or leaving the card restores the glass. The card's heading, its action or the page's hash opens the page.
 - **One active level** handles pointer, keyboard, and swipe input. Ancestor grids and previews remain live behind
   their glass without handling input. Escape and Up open the containing grid; Overview returns to the root.
-- **Whatever the device says about motion**: the pan and the glide are how the overview is read, and every browser in
-  a Remote Desktop session reports reduced motion without its learner having asked for it, so they run there too, as
-  they do on play and the demonstrator. Touch has no pointer to follow.
+- **A device that asks for reduced motion** gets neither the pan nor the glide: the strip rests, and a selected page
+  is centred and revealed at once. Touch has no pointer to follow.
 - **Narrow or short viewports** show the same grid one page at a time — three columns on a phone — with each card on
   its own page, as play and the demonstrator do on phones. A swipe along either axis (or the wheel) carries the strip
   to the neighbouring page and settles there, across the edges too: the grid wraps like an endless canvas (past the
@@ -918,7 +917,7 @@ below the site's size budget (`🎓️teaching/🏛️architecture/📚️course
 - the material — the course and its quizzes with their solutions — is a `CourseMaterialSource`: fetched while the client
   shows, after which the deputy joins the session (`CourseSession.attachDeputy`);
 - the chrome texts are one chunk per language (`loadCourseLocales`, `courseLocaleLoaded`): `mountCourse` fetches the
-  language the learner speaks (the stored choice, else the browser's preselection) before it first renders — the page's
+  language the learner speaks (the stored choice, else the site's own language of `CourseOptions.language`, else the browser's preselection) before it first renders — the page's
   own loading text stands meanwhile — and every offered language while none is known, because the language question is
   asked in all of them at once and assumes none. Choosing the other language fetches its chunk first; the language
   before stays on screen until it has arrived, and so does the language of a learner followed on another screen.

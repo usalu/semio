@@ -19,6 +19,12 @@ pub mod standards {
                         #[path = "../../🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[cfg(any(test, feature = "testing"))]
+                        #[path = "../../../../🚪️io/📝️text/📸️snapshot/🧪️serde-oracle/🦀️.rs"]
+                        mod serde_oracle;
+                        #[cfg(any(test, feature = "testing"))]
+                        #[path = "../../../../🚪️io/📝️text/📸️snapshot/🧪️semantic-cache-codec/🦀️.rs"]
+                        mod semantic_cache_codec;
                     }
                 }
                 #[path = "."]

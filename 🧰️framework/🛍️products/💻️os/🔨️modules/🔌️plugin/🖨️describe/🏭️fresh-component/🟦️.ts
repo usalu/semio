@@ -44,6 +44,7 @@ export function freshRun(command: string, args: string[], cwd: string, env: Node
 
 async function freshRunOnce(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshProcessControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
   const policy=parseFreshProcessPolicyV1(control.process),started=performance.now(),remaining=()=>Math.floor(Math.min(control.remainingMs(),policy.command.maximumElapsedMilliseconds-(performance.now()-started)));
+  const fixed = (): number => Math.max(1, Math.floor(policy.command.maximumElapsedMilliseconds - (performance.now() - started))), live = { remainingMilliseconds: (): number => control.remainingMs() };
   freshCheckpoint(control, stage, completed, total);
   const budgetMs = remaining();
   if (!Number.isSafeInteger(budgetMs) || budgetMs <= 0 || budgetMs > 86_400_000) throw new Error("fresh process budget must be 1..86400000ms");
@@ -83,7 +84,8 @@ async function freshRunOnce(command: string, args: string[], cwd: string, env: N
         invocation: control.invocation,
         cwd: preparation.cwd,
         env: scriptInvocationEnvironment(control.invocation, preparation.environment),
-        budgetMs: Math.min(budgetMs, remaining()),
+        budgetMs: fixed(),
+        deadline: live,
         maxOutputBytes: 64 * 1024 * 1024,
         stdoutPath: join(preparationTrace, "stdout.jsonl"),
         stderrPath: join(preparationTrace, "stderr.txt"),
@@ -101,7 +103,8 @@ async function freshRunOnce(command: string, args: string[], cwd: string, env: N
       invocation: control.invocation,
       cwd,
       env: observedEnv,
-      budgetMs: Math.min(budgetMs, remaining()),
+      budgetMs: fixed(),
+      deadline: live,
       maxOutputBytes: 64 * 1024 * 1024,
       stdoutPath: join(trace, "stdout.jsonl"),
       stderrPath: join(trace, "stderr.txt"),

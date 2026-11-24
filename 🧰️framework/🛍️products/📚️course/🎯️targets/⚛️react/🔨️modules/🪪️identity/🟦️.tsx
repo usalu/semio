@@ -13,12 +13,12 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from "react";
 import { HANDLE_INPUT_MAX, HANDLE_MAX, normalizeHandle, type Identity, type IdentityClaim, type Rejection } from "@semio-tech/course";
 import { REJECTION_LABELS, type CourseLabelKey, type CourseText } from "../🌐️i18n/🟦️.ts";
-import { BodyButton, CELL, CardAction, CardIcon, CardSection, Dialog, GROUP, ProblemNote, type Problem } from "../🪟️chrome/🟦️.tsx";
+import { BodyButton, CELL, CardAction, CardIcon, CardSection, Dialog, GROUP, ProblemNote, ROW, RadioChoice, type Problem } from "../🪟️chrome/🟦️.tsx";
+import type { IconName } from "@semio-tech/ui-react/chrome";
 import type { CourseNotice } from "../🧭️session/🧮️state/🟦️.ts";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
 import type { SessionFailure } from "../🧭️session/📋️session-model/🟦️.ts";
 
-import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
 /** 🏷️ How a learner is named in public: their handle, or the localized "Anonymous" with their tag — never with any
  * part of their id, which acts as their credential. */
 export function learnerName(identity: Identity | undefined, tag: string, text: CourseText): string {
@@ -107,10 +107,10 @@ export function handleFaultMessage(fault: HandleFault, text: CourseText): string
   }
 }
 
-const KINDS: readonly { readonly kind: Identity["kind"]; readonly label: CourseLabelKey; readonly hint: CourseLabelKey }[] = [
-  { kind: "anonymous", label: "course.identity.anonymous", hint: "course.identity.anonymousHint" },
-  { kind: "pseudonym", label: "course.identity.pseudonym", hint: "course.identity.pseudonymHint" },
-  { kind: "name", label: "course.identity.name", hint: "course.identity.nameHint" },
+const KINDS: readonly { readonly kind: Identity["kind"]; readonly icon: IconName; readonly label: CourseLabelKey; readonly hint: CourseLabelKey }[] = [
+  { kind: "anonymous", icon: "eye-off", label: "course.identity.anonymous", hint: "course.identity.anonymousHint" },
+  { kind: "pseudonym", icon: "smile", label: "course.identity.pseudonym", hint: "course.identity.pseudonymHint" },
+  { kind: "name", icon: "user", label: "course.identity.name", hint: "course.identity.nameHint" },
 ];
 
 /** 🖊️ The rejections that are about the handle a learner typed; every other failure leaves the field valid. */
@@ -172,9 +172,9 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
         onEscape={dismiss}
         icon={<CardIcon icon="user" />}
         title={text("course.identity.title")}
-        footerLeft={<CardAction data-autofocus="" onClick={dismiss}>{text("course.run.cancel")}</CardAction>}
+        footerLeft={<CardAction icon="x" data-autofocus="" onClick={dismiss}>{text("course.run.cancel")}</CardAction>}
         footerRight={
-          <CardAction primary type="submit" form={`${scope}-form`} disabled={working !== undefined}>
+          <CardAction icon="check" primary type="submit" form={`${scope}-form`} disabled={working !== undefined}>
             {text("course.identity.submit")}
           </CardAction>
         }
@@ -183,32 +183,12 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
         <CardSection>
           <p id={`${scope}-lead`} className="course-prose m-0 text-sm leading-normal">{text("course.identity.lead")}</p>
         </CardSection>
-        <fieldset {...CELL} className="course-kinds m-0 min-w-0 p-double">
-          <legend className="p-0 text-sm font-semibold">{text("course.identity.kind")}</legend>
+        <p id={`${scope}-kind`} {...CELL} className="m-0 px-double py-single text-sm font-semibold">{text("course.identity.kind")}</p>
+        <div role="radiogroup" aria-labelledby={`${scope}-kind`} {...ROW} className="course-kinds min-w-0">
           {KINDS.map((option) => (
-            <div key={option.kind} {...sharedBorderlessBoxProps} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
-              <input
-                id={`${scope}-${option.kind}`}
-                type="radio"
-                name={`${scope}-kind`}
-                value={option.kind}
-                checked={kind === option.kind}
-                onChange={() => {
-                  setKind(option.kind);
-                  say(undefined);
-                }}
-                aria-describedby={`${scope}-${option.kind}-hint`}
-                className="course-radio"
-              />
-              <label htmlFor={`${scope}-${option.kind}`} className="course-target flex cursor-pointer items-center text-sm font-semibold">
-                {text(option.label)}
-              </label>
-              <p id={`${scope}-${option.kind}-hint`} className="col-start-2 m-0 text-xs leading-normal text-muted-foreground">
-                {text(option.hint)}
-              </p>
-            </div>
+            <RadioChoice key={option.kind} id={`${scope}-${option.kind}`} icon={option.icon} name={`${scope}-kind`} value={option.kind} checked={kind === option.kind} onChange={() => { setKind(option.kind); say(undefined); }} label={text(option.label)} hint={text(option.hint)} />
           ))}
-        </fieldset>
+        </div>
         {kind === "anonymous" ? null : (
           <div {...GROUP} {...CELL} className="flex min-w-0 flex-col">
             <label {...CELL} htmlFor={`${scope}-handle`} className="p-double text-sm font-semibold">
@@ -245,7 +225,7 @@ export function IdentityScreen(props: { readonly session: CourseSession; readonl
             <p role="status" {...CELL} className="m-0 flex flex-wrap items-center gap-double p-double text-sm">
               {text("course.identity.working")}
             </p>
-            <BodyButton row onClick={() => working.abort()}>{text("course.run.cancel")}</BodyButton>
+            <BodyButton icon="x" row onClick={() => working.abort()}>{text("course.run.cancel")}</BodyButton>
           </>
         )}
         </form>

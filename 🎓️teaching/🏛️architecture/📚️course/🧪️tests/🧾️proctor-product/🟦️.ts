@@ -12,7 +12,7 @@ import picomatch from "picomatch";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import schema from "../../../../🛂️proctor/🏗️bootstrap/🧾️product/🧬️schema/🔣️.json" with { type: "json" };
@@ -106,7 +106,7 @@ describe("Cargo's output", () => {
   });
 
   it("points at the dep-info of every local unit and of no registry crate", () => {
-    expect(proctorDepInfoFiles(cargo.stdout.join("\n"))).toEqual(cargo.depInfoFiles);
+    expect(proctorDepInfoFiles(cargo.stdout.join("\n"))).toEqual(cargo.depInfoFiles.map(file => normalize(file)));
   });
 
   it("parses dep-info like a Makefile rule reader", () => {
@@ -192,7 +192,8 @@ describe("the capture of a cargo build", () => {
     write(join(target, "debug", "build", "dep-bb", "build_script_build-bb.d"), `x: ${source("🧰️framework/dep/build.rs")}\n`);
     write(join(target, "debug", "deps", "macro-dd.d"), `x: ${source("🧰️framework/macro/lib.rs")}\n`);
     write(join(target, "debug", "deps", "proctor-cc.d"), `x: ${source("🎓️teaching/proctor/main.rs")} ${source("🧰️framework/dep/lib.rs")} ${join(dirname(root), "registry", "serde.rs")}\n`);
-    const stdout = cargo.stdout.join("\n").replaceAll("/t/", `${target}/`).replaceAll("file:///w/", `file://${root}/`);
+    const quoted = (path: string): string => JSON.stringify(path).slice(1, -1);
+    const stdout = cargo.stdout.join("\n").replaceAll("/t/", `${quoted(target)}/`).replaceAll("file:///w/", `file://${quoted(root)}/`);
     return { root, target, stdout };
   };
 

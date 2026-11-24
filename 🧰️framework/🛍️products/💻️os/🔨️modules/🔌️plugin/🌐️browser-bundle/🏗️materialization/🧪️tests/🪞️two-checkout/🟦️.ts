@@ -98,7 +98,7 @@ async function stages(c:Checkout,cache:ReturnType<typeof sharedStageCacheV1>):Pr
  const tool=pluginWasmOptToolV1(context),version=runToolSyncV1("wasm-opt",["--version"],{encoding:"utf8",env:{...process.env,SEMIO_TOOL_WASM_OPT:binaryen}}).stdout.trim(),optimized=join(c.root,"optimized");mkdirSync(optimized,{recursive:true});
  for(const file of pluginCoreModuleFilesV1(transpiled,base)){
   const core=join(transpiled,file),stage=join(c.root,`optimize-${file}`);
-  await cache.run(optimizeStageRequestV1(sha(core),version,tool.args),stage,directory=>optimizePluginCoreModuleAsync(core,join(directory,"core.wasm"),{...context,cores:1}),undefined,`${base}/${file}`);
+  await cache.run(optimizeStageRequestV1(sha(core),version,tool.args,sha(binaryen)),stage,directory=>optimizePluginCoreModuleAsync(core,join(directory,"core.wasm"),{...context,cores:1}),undefined,`${base}/${file}`);
   writeFileSync(join(optimized,file),readFileSync(join(stage,"core.wasm")));
  }
  return {transpiled,optimized};
@@ -113,7 +113,7 @@ stagePhase("native transpile and wasm-opt give the same files at every checkout,
  if(binaryen){expect(tree(outputs[1]!.optimized!)).toEqual(tree(outputs[0]!.optimized!));expect(tree(outputs[2]!.optimized!)).toEqual(tree(outputs[0]!.optimized!));}
  expect(Object.keys(tree(outputs[0]!.transpiled)).length).toBeGreaterThan(3);
  const cores=binaryen?pluginCoreModuleFilesV1(outputs[0]!.transpiled,fixture.package.replaceAll("-","_")).length:0,count=1+cores;
- expect(caches[0]!.fleet()).toMatchObject({served:0,shared:count});expect(caches[2]!.fleet()).toMatchObject({served:count,shared:0});expect(caches[2]!.stats()).toMatchObject({hits:count,misses:0});
+ expect(caches[0]!.fleet()).toMatchObject({served:0,shared:count});expect(caches[2]!.fleet()).toMatchObject({served:count,shared:0});expect(caches[2]!.stats()).toMatchObject({hits:0,fleetHits:count,misses:0});
  const needles=[a!,b!,c!].flatMap(m=>[m.workspace,m.cargoHome,m.root]).concat([homedir(),sysroot,base]).filter(needle=>needle.length>3);
  for(const output of outputs)for(const dir of [output.transpiled,output.optimized])if(dir)expect(leaks(dir,needles)).toEqual([]);
  if(!binaryen)console.log("[two-checkout] no Binaryen found (SEMIO_WASM_OPT_BIN or node_modules/binaryen): the optimize step was not run");

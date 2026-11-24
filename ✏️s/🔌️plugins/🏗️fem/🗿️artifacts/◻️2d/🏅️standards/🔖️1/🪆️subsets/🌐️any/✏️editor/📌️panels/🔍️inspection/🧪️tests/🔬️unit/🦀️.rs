@@ -129,6 +129,7 @@ async fn a_node_section_carries_a_number_input_bound_to_patch_node_2d() {
     let control = node_at(&tree, "fem2d-play-inspection.node.x.input").unwrap_or_else(|| panic!("{json}"));
     assert_eq!(control["component"]["type"].as_str(), Some("input"), "the X row is an input, not a tree item: {control}");
     assert_eq!(control["component"]["kind"].as_str(), Some("number"), "{control}");
+    assert_eq!(control["accessibility"]["label"].as_str(), Some("X"), "the input carries its row label as its accessible name: {control}");
     let bindings = control["bindings"].to_string();
     assert!(bindings.contains("patchNode"), "{bindings}");
     assert!(bindings.contains("\"x\""), "the binding names the field it patches: {bindings}");

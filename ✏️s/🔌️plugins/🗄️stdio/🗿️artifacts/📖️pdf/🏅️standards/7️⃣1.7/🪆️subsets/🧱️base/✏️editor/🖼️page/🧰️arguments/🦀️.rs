@@ -35,12 +35,14 @@ fn committed_argument(args: Option<&semio_framework_value::DslValue>, key: &str)
 //#endregion 🧰️Arguments
 
 //#region 🧰️ArgumentsIndexed
-pub fn req_index(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, Fault> {
+/// 📃️ Reads the one-based page number a person typed; the zero-based index is only made by [`resolve_page`].
+pub fn req_page(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<u32, Fault> {
     semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, key).map_err(|error| fault(error.message))
 }
 
-pub fn opt_index(args: Option<&semio_framework_value::DslValue>, key: &str) -> u32 {
-    text_arg(args, key).parse::<u32>().unwrap_or(0)
+/// 📑️ The one-based page number when the action carries one, absent otherwise.
+pub fn opt_page(args: Option<&semio_framework_value::DslValue>, key: &str) -> Option<u32> {
+    text_arg(args, key).trim().parse::<u32>().ok()
 }
 
 pub fn req_num(args: Option<&semio_framework_value::DslValue>, key: &str) -> Result<f64, Fault> {

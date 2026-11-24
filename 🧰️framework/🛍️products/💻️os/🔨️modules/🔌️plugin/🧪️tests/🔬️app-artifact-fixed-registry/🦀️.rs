@@ -23,7 +23,7 @@ mod artifact_fixed_registry_tests {
     sentinel_drop!(SegmentedDownloadSentinel);
 
     #[test]
-    fn oversized_owner_construction_reserves_heap_slots_with_zero_occupancy() {
+    fn oversized_owner_construction_reserves_only_its_page_table_with_zero_occupancy() {
         type OversizedOwner = [u8; 128 * 1024];
 
         let registry = ArtifactFixedRegistry::<OversizedOwner>::new();
@@ -34,7 +34,7 @@ mod artifact_fixed_registry_tests {
         assert!(registry.is_empty());
         for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
             assert_eq!(registry.id_at(index), None);
-            assert!(registry.backing_slot_address(index).is_some());
+            assert!(registry.backing_slot_address(index).is_none(), "a vacant oversized slot owns no page until its first insert");
         }
     }
 

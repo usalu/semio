@@ -1,6 +1,8 @@
 //! 🧰️ Emits deterministic zlib stored blocks when the graph requests Flate without a predictor.
 use std::io::Write;
+use super::classic_graph_quote::GraphRefusal;
 use super::classic_graph_writer::{WriteRefusal, try_write};
+use semio_framework_value::ByteReadSource;
 
 const BLOCK: usize = u16::MAX as usize;
 const MODULUS: u32 = 65_521;
@@ -28,7 +30,7 @@ impl StoredFlate {
     }
 
     /// 🪜️ Emits one structural prefix or one body span. The body span is read again for Adler-32.
-    pub(crate) fn step(&mut self, data: &[u8], sink: &mut dyn Write, grant: usize, remaining: usize)
+    pub(crate) fn step(&mut self, data: &(impl ByteReadSource + ?Sized), sink: &mut dyn Write, grant: usize, remaining: usize)
         -> Result<(usize, usize, bool), WriteRefusal>
     {
         if self.lo != self.hi {
@@ -37,9 +39,11 @@ impl StoredFlate {
             return Ok((count, 0, false));
         }
         if self.block_remaining != 0 {
-            let body = &data[self.at..self.at + self.block_remaining];
-            let count = try_write(sink, body, grant / 2, remaining)?;
-            for byte in &body[..count] {
+            let mut page = [0u8; 4096];
+            let want = self.block_remaining.min(page.len());
+            if data.read_bytes(self.at, &mut page[..want]) != want { return Err(GraphRefusal::SourceChanged.into()); }
+            let count = try_write(sink, &page[..want], grant / 2, remaining)?;
+            for byte in &page[..count] {
                 self.first = (self.first + u32::from(*byte)) % MODULUS;
                 self.second = (self.second + self.first) % MODULUS;
             }
@@ -53,9 +57,9 @@ impl StoredFlate {
             self.hi = 4;
             self.checksum = true;
         } else {
-            let length = (data.len() - self.at).min(BLOCK);
+            let length = (data.byte_len() - self.at).min(BLOCK);
             self.block_remaining = length;
-            self.final_block = self.at + length == data.len();
+            self.final_block = self.at + length == data.byte_len();
             let length = length as u16;
             self.pending[0] = u8::from(self.final_block);
             self.pending[1..3].copy_from_slice(&length.to_le_bytes());

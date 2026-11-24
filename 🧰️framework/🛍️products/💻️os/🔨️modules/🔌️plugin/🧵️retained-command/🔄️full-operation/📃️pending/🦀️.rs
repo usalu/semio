@@ -72,6 +72,8 @@ impl PendingPublicationPage{
  pub fn plan(&self)->Option<PublicationPagePlan>{self.plan}
  pub fn written_bytes(&self)->usize{self.written}
  pub fn is_framed(&self)->bool{self.framed}
+ /// 🩺️ The ladder's monotone-by-state phase: accepted plan, backing capacity and initialized bytes, written bytes, framing, refusal and traversal custody. It changes whenever a ladder step moved anything, so a stall witness can tell a healthy multi-unit page from an owner that cannot advance.
+ pub fn phase_witness(&self)->u64{u64::from(self.plan.is_some())|u64::from(self.framed)<<1|u64::from(self.refused)<<2|u64::from(self.cursor.terminal_is_empty())<<3|u64::from(self.backing.terminal_is_empty())<<4|(self.written as u64&0xfff_ffff)<<8|(self.backing.initialized_len() as u64&0xfff_ffff)<<36}
  pub fn write_refused(&self)->bool{self.refused}
  pub fn ready_to_handoff(&self)->bool{self.framed&&!self.refused&&self.cursor.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.plan.is_none()&&self.backing.terminal_is_empty()&&self.cursor.terminal_is_empty()}

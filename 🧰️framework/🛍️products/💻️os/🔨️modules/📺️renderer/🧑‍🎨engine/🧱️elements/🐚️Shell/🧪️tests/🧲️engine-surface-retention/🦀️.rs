@@ -14,12 +14,13 @@
 //! Oracle: `🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`; its TypeScript twin is
 //! `🧑‍🎨engine/🧪️tests/🧲️engine-surface-retention/🟦️.ts`.
 
-use semio_renderer_wgpu_fixtures::shell::{paint_component_pointer_documents, tree_pointer_record};
+use semio_renderer_wgpu_fixtures::shell::{paint_component_pointer_documents_in, tree_pointer_record, PointerFixtureTurns};
 use super::*;
 use serde_json::Value;
 
 #[test]
 fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let fixture = law();
     let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["name"] == "every-composited-kind-is-retained-alike").expect("cross-kind retained-surface case");
@@ -56,7 +57,8 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
     }
     shell.dock.dock_window_plan = documents.iter().map(|(_, window, _, bounds, _)| (window.clone(), *bounds)).collect();
     let paint_rows: Vec<_> = documents.iter().map(|(_, window, controller, bounds, document)| (window.as_str(), controller.as_str(), document, *bounds)).collect();
-    let mut input = paint_component_pointer_documents(&mut shell, &paint_rows);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_component_pointer_documents_in(&mut turns, &mut shell, &paint_rows);
     SessionCtx::of(&mut shell).sync_engine_surface_states();
     let theme = Theme::default();
     for probe in case["expectedResolve"].as_array().unwrap() {
@@ -78,6 +80,12 @@ fn retained_engine_hit_provenance_reaches_each_dedicated_pointer_and_wheel_route
         shell.input.retained_hit_windows.insert(control, ("unrelated-window".into(), bounds));
         assert_eq!(shell.input.pointer_owner_at(x, y, &input, &theme), PointerHitOwner::Chrome, "{} forged owner {surface}", case["name"]);
     }
+    for (_, window, _, _, document) in documents {
+        shell.docs.window_ui.insert(window, document);
+    }
+    shell.docs.retire_documents_outside(&[], true, &mut shell.chrome).expect("the painted component documents retire");
+    shell.docs.drain_retained_document_arenas();
+    turns.finish();
 }
 
 fn law() -> Value {

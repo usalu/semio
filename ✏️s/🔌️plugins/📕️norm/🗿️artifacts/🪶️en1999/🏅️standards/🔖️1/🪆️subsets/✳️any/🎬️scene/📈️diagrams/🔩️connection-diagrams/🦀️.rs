@@ -36,7 +36,7 @@ pub(super) fn bolt_group(report: &CheckReport, conn: &AluminiumConnection) -> Op
     let d0 = joints::hole_diameter(b.diameter);
     let length = 2.0 * b.edge_distance + f64::from(b.rows - 1) * b.pitch + if b.bolts_per_row > 1 { conn.hole_stagger } else { 0.0 };
     let width = 2.0 * b.edge_distance + f64::from(b.bolts_per_row - 1) * b.gauge;
-    let shear = exact(report, &format!("en1999.8.5.bolt.{}", conn.id)).or_else(|| exact(report, &format!("en1999.8.5.pin.{}", conn.id)));
+    let shear = exact(report, &format!("en1999.8.5.bolt.{}", conn.id)).or_else(|| exact(report, &format!("en1999.8.5.pin.shear.{}", conn.id)));
     let tension = exact(report, &format!("en1999.8.5.tension.{}", conn.id));
     let u = shear.map(|c| c.utilization);
     let tone = u.map_or(Tone::Neutral, utilisation_tone);

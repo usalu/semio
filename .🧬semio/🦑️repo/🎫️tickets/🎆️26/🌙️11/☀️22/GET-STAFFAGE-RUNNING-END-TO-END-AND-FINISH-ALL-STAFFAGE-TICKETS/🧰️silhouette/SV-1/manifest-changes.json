@@ -1,0 +1,44 @@
+{
+  "agave": {
+    "widthM": 2.4916,
+    "heightM": 1.447,
+    "depthM": 2.3666
+  },
+  "apple-tree": {
+    "widthM": 6.8071,
+    "heightM": 6.3963,
+    "depthM": 6.1723
+  },
+  "bamboo-clump": {
+    "widthM": 2.974,
+    "heightM": 4.5418,
+    "depthM": 1.7192
+  },
+  "common-ash": {
+    "widthM": 15.7557
+  },
+  "english-oak": {
+    "widthM": 18.853,
+    "depthM": 15.878
+  },
+  "european-beech": {
+    "widthM": 21.2911,
+    "depthM": 20.8507
+  },
+  "fig-tree": {
+    "widthM": 7.0112,
+    "heightM": 5.0076,
+    "depthM": 7.2402
+  },
+  "hawthorn": {
+    "heightM": 6.015
+  },
+  "hornbeam-hedge": {
+    "widthM": 3.1882,
+    "heightM": 1.8654
+  },
+  "horse-chestnut": {
+    "widthM": 19.0432,
+    "depthM": 18.0616
+  }
+}

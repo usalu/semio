@@ -88,6 +88,8 @@
         "warmRunRetentionMs": 86400000,
         "randomSuffixUnits": 6,
         "storageReserveBytes": 2147483648,
+        "upfrontPlanShareBasisPoints": 5000,
+        "upfrontSlackCreditBasisPoints": 5000,
         "unitFootprintBoundsBytes": {
           "library": 16777216,
           "component": 2147483648,

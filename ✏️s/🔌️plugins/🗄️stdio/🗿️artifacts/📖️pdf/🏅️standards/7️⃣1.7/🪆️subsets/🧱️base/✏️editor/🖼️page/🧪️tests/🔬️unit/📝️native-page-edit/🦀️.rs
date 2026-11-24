@@ -70,13 +70,13 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
             apply_pdf_mutation(snapshot, &mutation);
         }
     };
-    let box_args = |definition: &Value| json!({"page": 0, "object": definition["object"], "field": "text", "value": definition["coordinates"]});
+    let box_args = |definition: &Value| json!({"page": 1, "object": definition["object"], "field": "text", "value": definition["coordinates"]});
     let after_edit = |snapshot: &PdfSnapshot| decode_pdf(&encode_pdf(snapshot).unwrap()).unwrap();
 
     for definition in case["edits"].as_array().unwrap() {
         apply(&mut snapshot, "set-page-extra", box_args(definition));
     }
-    apply(&mut snapshot, "set-page-user-unit", json!({"page": 0, "field": "x", "value": case["userUnit"]}));
+    apply(&mut snapshot, "set-page-user-unit", json!({"page": 1, "field": "x", "value": case["userUnit"]}));
     let mut snapshot = after_edit(&snapshot);
     let page = &snapshot.pages[0];
     let actual = [Some(page.media_box), page.crop_box, page.bleed_box, page.trim_box, page.art_box];
@@ -115,7 +115,7 @@ fn page_inspector_edits_and_clears_pdf_boundaries() {
     let moved = &after_edit(&snapshot).pages[0];
     let expected: [f64; 4] = serde_json::from_value(movement["value"].clone()).unwrap();
     assert_eq!(moved.trim_box, Some(expected));
-    let malformed = edit_from_action("set-page-extra", Some(&DslValue::from(json!({"page": 0, "object": "box.crop", "field": "text", "value": "0 1 NaN 4"}))));
+    let malformed = edit_from_action("set-page-extra", Some(&DslValue::from(json!({"page": 1, "object": "box.crop", "field": "text", "value": "0 1 NaN 4"}))));
     assert!(malformed.map_or(true, |edit| apply_payload(&snapshot, &edit.action, &edit.payload).is_err()));
     apply(&mut snapshot, "set-page-extra", box_args(&case["clear"]));
     let cleared = after_edit(&snapshot);

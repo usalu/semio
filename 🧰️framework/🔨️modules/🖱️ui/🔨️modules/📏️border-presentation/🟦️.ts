@@ -132,22 +132,36 @@ export interface OutlineBox {
 /** 🧭 A side of a box. */
 export type BorderSide = "top" | "right" | "bottom" | "left";
 
-/** 🫧 Sides of `box` that are drawn: a normal box keeps its declared sides except those flush with a side its parent leaves undrawn; a stated box closes all four. */
+/** 🖍️ Whether `state` closes the whole perimeter of its box. Hover does not: it emphasises the lines that lie on the perimeter without the hover and never adds one. */
+export const borderStateCloses = (state: BorderState): boolean => state !== "normal" && state !== "hover";
+
+/** 🫧 Sides of `box` that are drawn: a normal or hovered box keeps its declared sides except those flush with a side its parent leaves undrawn; a box in any other state closes all four. */
 export function boxDrawnSides(box: OutlineBox, parent: OutlineBox | undefined): readonly BorderSide[] {
-  if (box.state !== "normal") return ["top", "right", "bottom", "left"];
+  if (borderStateCloses(box.state)) return ["top", "right", "bottom", "left"];
   return box.edges.filter(side => !parent || parent.edges.includes(side) || Math.abs(box.rect[side] - parent.rect[side]) >= 0.5);
 }
 
-/** 🔳 Resolved paint spans of every box outline: each drawn side is one `${id}:${side}` edge in the box's owner, resolved by state priority on all collinear overlaps.
+/** 🧽 Resolved spans without those only emphasis contributes to: an emphasis segment recolours the lines it lies on and paints nothing where no other segment lies. */
+export function withoutLoneEmphasis<Segment extends ResolvedBorderSegment>(resolved: readonly Segment[], emphasis: (id: string) => boolean): Segment[] {
+  return resolved.filter(segment => !segment.contributors.every(emphasis));
+}
+
+/** 🔳 Resolved paint spans of every box outline: each drawn side is one `${id}:${side}` edge in the box's owner, resolved by state priority on all collinear overlaps. The sides a hovered box does not draw are emphasis: they take the hover state onto the lines of other boxes they lie on and add no line.
  *
  * @see ./outlines.cases.json */
 export function boxOutlineSegments(boxes: readonly OutlineBox[]): ResolvedBorderSegment[] {
   const byId = new Map(boxes.map(box => [box.id, box]));
-  return resolveBorderSegments(boxes.flatMap(box => boxDrawnSides(box, box.parent === null ? undefined : byId.get(box.parent)).map((side): BorderSegment => {
-    const { left, top, right, bottom } = box.rect;
-    const from = side === "right" ? { x: right, y: top } : side === "bottom" ? { x: left, y: bottom } : { x: left, y: top };
-    const to = side === "top" ? { x: right, y: top } : side === "left" ? { x: left, y: bottom } : { x: right, y: bottom };
-    return { id: `${box.id}:${side}`, owner: box.owner, from, to, state: box.state };
-  })));
+  const emphasis = new Set<string>();
+  const sides: readonly BorderSide[] = ["top", "right", "bottom", "left"];
+  return withoutLoneEmphasis(resolveBorderSegments(boxes.flatMap(box => {
+    const drawn = boxDrawnSides(box, box.parent === null ? undefined : byId.get(box.parent));
+    return (box.state === "hover" ? sides : drawn).map((side): BorderSegment => {
+      const { left, top, right, bottom } = box.rect;
+      const from = side === "right" ? { x: right, y: top } : side === "bottom" ? { x: left, y: bottom } : { x: left, y: top };
+      const to = side === "top" ? { x: right, y: top } : side === "left" ? { x: left, y: bottom } : { x: right, y: bottom };
+      if (!drawn.includes(side)) emphasis.add(`${box.id}:${side}`);
+      return { id: `${box.id}:${side}`, owner: box.owner, from, to, state: box.state };
+    });
+  })), id => emphasis.has(id));
 }
 // #endregion 📏️BorderPresentation

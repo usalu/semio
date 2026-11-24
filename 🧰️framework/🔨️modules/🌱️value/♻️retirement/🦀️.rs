@@ -16,6 +16,10 @@ mod retained_outcome;
 
 #[path="🧭️support/🦀️.rs"]
 pub mod support;
+
+#[path="🪞️shell/🦀️.rs"]
+pub mod shell;
+pub use shell::{RetirementShell,ShellCursor};
 pub use support::RetirementSupport;
 
 /// 🏠️ Proves a specific synchronous native cursor allocator for this exact original-owner type.
@@ -464,6 +468,7 @@ impl<T: RetireOwned> UnorderedSet<T> {
     fn new(rest:std::collections::hash_set::IntoIter<T>,table_bytes:usize)->Self {Self{head:ManuallyDrop::new(None),rest:ManuallyDrop::new(rest),table_bytes}}
 }
 impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
+    native_retirement_reply!();
     fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(value)=self.head.as_ref(){return retirement_cursor_birth_demand(value)}Ok(crate::RetirementDemand{copy_bytes:if self.rest.len()==0{0}else{size_of::<Self>()},depth:usize::from(self.rest.len()!=0),..Default::default()})}
 
@@ -494,6 +499,7 @@ impl<K: RetireOwned,V: RetireOwned> UnorderedMap<K,V> {
     fn new(rest:std::collections::hash_map::IntoIter<K,V>,table_bytes:usize)->Self {Self{head:ManuallyDrop::new(None),rest:ManuallyDrop::new(rest),table_bytes}}
 }
 impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
+    native_retirement_reply!();
     fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(value)=self.head.as_ref(){return retirement_cursor_birth_demand(value)}Ok(crate::RetirementDemand{copy_bytes:if self.rest.len()==0{0}else{size_of::<Self>()},depth:usize::from(self.rest.len()!=0),..Default::default()})}
 
@@ -521,12 +527,13 @@ impl<K: RetireOwned + std::hash::Hash + Eq,V: RetireOwned> RetireOwned for std::
 #[doc(hidden)]
 pub struct OrderedSet<T: RetireOwned + Ord>(ManuallyDrop<std::collections::BTreeSet<T>>,ManuallyDrop<Option<T>>);
 impl<T: RetireOwned + Ord> RetirementCursor for OrderedSet<T> {
+    native_retirement_reply!();
     fn next_computational_work(&self,_:usize)->Result<u64,crate::ValueError>{Ok(u64::from(!self.terminal_is_empty()))}
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(value)=self.1.as_ref(){return retirement_cursor_birth_demand(value)}Ok(crate::RetirementDemand{copy_bytes:if self.0.is_empty(){0}else{size_of::<Self>()},depth:usize::from(!self.0.is_empty()),..Default::default()})}
 
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     
-    fn terminal_is_empty(&self)->bool {self.0.is_empty()}
+    fn terminal_is_empty(&self)->bool {self.0.is_empty()&&self.1.is_none()}
     fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|d|d.capacity_bytes)}
     fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
 }

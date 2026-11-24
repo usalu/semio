@@ -117,7 +117,7 @@ impl semio_framework_value::ErasedSnapshotRetirement for TimeTravelDiscardCursor
     fn next_depth_demand(&self)->Result<usize,ValueError>{if self.done{return Ok(0)}if self.close_header_copy_bytes().is_some(){return Ok(1)}self.residue().map_or(Ok(1),|owner|owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Discard child depth overflow")))}
     fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
 }
-impl Drop for TimeTravelDiscardCursor{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Discard custody dropped before admitted terminal closure")}}
+impl Drop for TimeTravelDiscardCursor{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Discard custody dropped before admitted terminal closure")}}
 fn demand<T:semio_framework_value::retirement::RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"Discard child depth overflow"))?;Ok(demand)}
 fn admits(demand:RetirementDemand,grant:RetainedCloneGrant)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}

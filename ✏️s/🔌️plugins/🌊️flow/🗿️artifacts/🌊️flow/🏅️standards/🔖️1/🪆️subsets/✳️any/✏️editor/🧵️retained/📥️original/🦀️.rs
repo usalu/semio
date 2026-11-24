@@ -80,7 +80,7 @@ impl FlowOriginalIntake{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.command_admission.is_none()&&self.parent_admission.is_none()&&self.fields.is_none()&&self.retirement.is_empty()&&self.origin.is_none()&&self.parent_origin.is_none()}
 }
-impl Drop for FlowOriginalIntake{fn drop(&mut self){assert!(self.terminal_is_empty(),"Flow factory intake must close the exact donated command and issued snapshot");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowOriginalIntake{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"Flow factory intake must close the exact donated command and issued snapshot");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
 #[cfg(test)]
 #[path="🧪️donation.rs"]

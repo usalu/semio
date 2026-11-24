@@ -235,6 +235,7 @@ pub struct TypedOperationFixtureReceipt {
     pub effects: Vec<semio_framework::kernel::Effect>,
     pub events: Vec<semio_framework::kernel::AppEvent>,
     pub ui_scope: Option<semio_framework::kernel::UiDirtyScope>,
+    pub ui_scopes: Vec<semio_framework::kernel::UiDirtyScope>,
     pub completions: usize,
     pub completion_operations: Vec<u64>,
     pub revisions: Vec<u64>,
@@ -250,6 +251,11 @@ pub struct TypedOperationFixtureReceipt {
 pub async fn capture_fixture_window_config<O: semio_plugin_window_config::WindowConfigOwner, A: ArtifactApp, M: store::ReferenceSpaceMember + store::MemberFactory>(app: &mut VcsArtifactApp<A, M>, view: &semio_framework::ViewModel) -> Result<Option<O::State>, semio_framework::Fault> {
     Ok(app.stores.window_config_store.capture(Some(view)).await?.and_then(|authority| authority.snapshot.get::<O>().cloned()))
 }
+/// ⏱️ Settles every pending typed operation like [`settle_registered_typed_operation_within`] under the fixture's authored turn ceiling and returns only its receipt.
+pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    settle_registered_typed_operation_within(app, receiver, mounted_policy, identity, cx, OriginalFixtureCaller::maximum_turns()).await.map(|(receipt, _)| receipt)
+}
+
 
 /// 🔁️ Drives the same bounded continuation and exact ACK protocol as the plugin host.
 ///
@@ -272,9 +278,9 @@ pub async fn capture_fixture_window_config<O: semio_plugin_window_config::Window
 /// 📜️ A pending history patch (a time-travel stage change) rides a UI-progress frame the host takes every turn;
 /// left untaken it kept `has_pending_typed_operations` true until the deadline for the first operation after a
 /// history edit (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, forms frozen-press law).
-pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-    let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
-    let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), history_patches: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
+pub async fn settle_registered_typed_operation_within<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,maximum_turns:usize) -> Result<(TypedOperationFixtureReceipt, usize), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    let mut turns=0;
+    let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, ui_scopes: Vec::new(), completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), history_patches: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
     let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.retained_grant());let(mut idle,maximum_idle)=(0usize,OriginalFixtureCaller::maximum_idle_turns());
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
@@ -333,6 +339,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
             receipt.history_patches.extend(completion.history_patch);
         }
         while let Some(progress) = app.take_typed_operation_ui_progress() {
+            receipt.ui_scopes.push(progress.ui_scope.clone());
             receipt.ui_scope = Some(progress.ui_scope);
             receipt.history_patches.extend(progress.history_patch);
         }
@@ -351,7 +358,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         }
         if idle>0{std::thread::sleep(std::time::Duration::from_millis(1))}else{std::thread::yield_now()}
     }
-    Ok(receipt)
+    Ok((receipt, turns))
 }
 
 fn typed_operation_settlement_refusal<P: PluginApp>(app: &P, cx: &semio_framework_job::StepContext<'_>, maintenance: RetainedCloneGrant, turns: usize) -> semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure {
@@ -369,6 +376,11 @@ fn retain_registered_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio
     retain_original_ownership_receipts(app, policy, &mut recipient.ownership_receipts)
 }
 
+/// 🌐️ Whether a receipt's grant is the authority's own or a narrowing of it: a turn that already holds live retained capacity, such as the Pack pages of a large import, can only be granted the capacity that is left, and an armed host turn grant narrows every axis.
+fn receipt_grant_matches(grant: RetainedCloneGrant, authority: RetainedCloneGrant) -> bool {
+    grant.restricted_by(authority) == grant
+}
+
 /// 🧾️ Collects original producer receipts once before any subsequent semantic fixture callback.
 #[doc(hidden)]
 pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, recipient: &mut Vec<TypedOperationFixtureOwnershipReceipt>) -> Result<(), semio_framework::Fault> {
@@ -383,19 +395,19 @@ pub fn retain_original_ownership_receipts<P: PluginApp>(app: &mut P, policy: sem
         recipient.push(TypedOperationFixtureOwnershipReceipt::Preparation { operation, grant, progress });
     }
     if let Some((operation, grant, progress)) = app.take_typed_operation_retirement_receipt() {
-        if grant != policy.close || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture Close receipt differs from its original caller authority")); }
+        if !receipt_grant_matches(grant, policy.close) || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from(format!("registered fixture Close receipt differs from its original caller authority: grant {grant:?}, authority {:?}, progress {progress:?}", policy.close).as_str())); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::Retirement { operation, grant, progress });
     }
     if let Some((grant, progress)) = app.take_history_command_receipt() {
-        if grant != policy.maintenance || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture history receipt differs from its original caller authority")); }
+        if !receipt_grant_matches(grant, policy.maintenance) || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture history receipt differs from its original caller authority")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::History { grant, progress });
     }
     if let Some((grant, progress)) = app.take_tool_run_receipt() {
-        if grant != policy.maintenance || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture tool run receipt differs from its original caller authority")); }
+        if !receipt_grant_matches(grant, policy.maintenance) || !progress.fits(grant) || grant.maximum_depth == 0 && progress != RetainedCloneProgress::default() { return Err(semio_framework::Fault::from("registered fixture tool run receipt differs from its original caller authority")); }
         recipient.push(TypedOperationFixtureOwnershipReceipt::ToolRun { grant, progress });
     }
     if let Some((grant,progress))=app.take_local_interaction_query_receipt(){
-        if grant!=policy.preparation||!progress.fits(grant){return Err(semio_framework::Fault::from("registered fixture interaction receipt differs from its original caller authority"))}
+        if !receipt_grant_matches(grant, policy.preparation)||!progress.fits(grant){return Err(semio_framework::Fault::from("registered fixture interaction receipt differs from its original caller authority"))}
         recipient.push(TypedOperationFixtureOwnershipReceipt::LocalInteraction{grant,progress});
     }
     Ok(())

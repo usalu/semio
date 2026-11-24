@@ -505,6 +505,7 @@ fn os_arg_commands_are_single_staged_rows() {
 /// wgpu spelling of React's `SET_PANEL_VISIBLE` + `SET_PANEL_PATH` + `SET_COMMAND_EXPANDED` trio.
 #[test]
 fn picking_an_arg_carrying_command_opens_its_form() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = palette_shell();
     SessionCtx::of(&mut shell).sync_dock_tabs();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧪️tests/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
@@ -544,10 +545,18 @@ fn picking_an_arg_carrying_command_opens_its_form() {
     let unexpanded = staged["unexpandedRowId"].as_str().expect("unexpanded row id");
     assert!(!keys.iter().any(|key| key.ends_with(&format!("/{unexpanded}"))), "the expanded command is absent from the successor list: {keys:?}");
     assert!(shell.docs.closing_documents.terminal_is_empty(), "the exact replaced category owner retires after the retry");
+    drop(read);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
 }
 
 fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut turns = semio_renderer_wgpu_fixtures::shell::PointerFixtureTurns::default();
+    publish_palette_chrome_in(&mut turns, shell, input);
+    turns.finish();
+}
+
+fn publish_palette_chrome_in(turns: &mut semio_renderer_wgpu_fixtures::shell::PointerFixtureTurns, shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {
+    let caller = turns.turn();
     while input.retire_hit_step() {}
     shell.chrome.screen_w = 1280.0;
     shell.chrome.screen_h = 720.0;
@@ -559,10 +568,9 @@ fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionD
     let theme = Theme::light();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..65_536 {
-        if caller.turn(|cx|PanelsViewCtx::of(shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
+        if caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(shell).render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources, cx)).expect("original fixture caller turn") {
             PanelsViewCtx::of(shell).publish_retained_hit_registry(input);
             caller.retire_world(&mut world_resources);
-            caller.finish();
             return;
         }
     }
@@ -617,6 +625,8 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
 /// activates its existing selection funnel and retires the modal focus owner.
 #[test]
 fn find_publishes_filters_and_activates_with_a_physical_row_click() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let mut turns = semio_renderer_wgpu_fixtures::shell::PointerFixtureTurns::default();
     let mut shell = host_test_shell();
     shell.plugins.plugins.iter_mut().find(|program| program.plugin_id == "space").expect("host fixture guest program").install_fixture_action(accept_find_fixture_action);
     shell.dock.dock.root = semio_renderer_wgpu_dock::DockNode::Stack { windows: vec![DockStackTab::new("main")], active: "main".into() };
@@ -634,17 +644,18 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     let surface = semio_ui_scene_surface::encode(ui_contract::SurfaceKind::NodeGraph, &graph).expect("bounded NodeGraph find scene encodes");
     let records = vec![tree_pointer_record(1, "find-node-graph", ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(&window_id, records).expect("NodeGraph production ingress");
+    turns.turn().own_surface(&window_id);
     shell.docs.window_ui.insert(window_id, document);
     let mut input = InputState::<ActionDescriptor>::default();
     let (action, modifiers) = chord_event("mod+f");
     PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
-    publish_palette_chrome(&mut shell, &mut input);
+    publish_palette_chrome_in(&mut turns, &mut shell, &mut input);
     let input_node = PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.find.input").expect("Find textbox projects to accessibility");
     assert_eq!(input_node.role, "combobox");
     let target =
         ui_render::AccessibilityTarget { window_id: semio_renderer_wgpu_ui_engine_dump::chrome_ledger::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.chrome.presented_chrome_accessibility_generation, node_id: input_node.node_id, node_key: input_node.key };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Media".into()), &mut input)).expect("Find accessibility value"));
-    publish_palette_chrome(&mut shell, &mut input);
+    publish_palette_chrome_in(&mut turns, &mut shell, &mut input);
     let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.find.item.0")).expect("filtered Find row publishes a physical hit").rect;
     assert_eq!(PanelsViewCtx::of(&mut shell).chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "media.node").and_then(|node| node.label), Some("Media Node".into()));
     let x = row.x + row.w * 0.5;
@@ -654,6 +665,8 @@ fn find_publishes_filters_and_activates_with_a_physical_row_click() {
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, false, 0, &mut input, &Theme::light())).expect("Find physical row release");
     assert_eq!(shell.input.overlay_state, OverlayState::None);
     assert_eq!(input.focused_id, None);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
+    turns.finish();
 }
 
 fn fixture_staged_palette_id() -> String {

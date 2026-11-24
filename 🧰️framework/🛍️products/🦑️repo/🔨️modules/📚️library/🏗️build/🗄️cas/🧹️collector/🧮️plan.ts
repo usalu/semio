@@ -6,10 +6,10 @@ export type CasCutV1=Readonly<{access:number;tieBytes:number}>;
 export type CasReasonV1="age"|"area"|"host";
 /** 📐️ The declared bounds of one area: its own byte cap and idle age (null is unbounded). */
 export type CasAreaBoundsV1=Readonly<{capBytes:number|null;maxAgeMs:number|null}>;
-/** 📐️ What one planner needs: the policy, the bounds per area id (the area `store` is the host store), bytes held by tool-owned images, the clock, and the bytes the partition that holds the store is above its low watermark (`partitionNeedBytes`, 0 when it is not above its high watermark or unknown); `incremental` makes a collection above the high watermark of the cap free only `incrementBytes` below that watermark instead of everything down to the low one, so that collection runs continuously in small steps. */
-export type CasPlannerConfigV1=Readonly<{policy:Pick<CasPolicyV1,"capBytes"|"highWatermark"|"lowWatermark">&Partial<Pick<CasPolicyV1,"incrementBytes">>;incremental?:boolean;areas:readonly (CasAreaBoundsV1&Readonly<{id:string}>)[];externalBytes:number;nowMs:number;partitionNeedBytes?:number}>;
-/** 📊️ The planner's totals after the first pass. */
-export type CasPlanTotalsV1=Readonly<{totalBytes:number;protectedBytes:number;candidateBytes:number;plannedBytes:number;keptBytes:number;shortfallBytes:number;needBytes:number}>;
+/** 📐️ What one planner needs: the policy, the bounds per area id (the area `store` is the host store), bytes held by tool-owned images, the clock, and the bytes the partition that holds the store is above its low watermark (`partitionNeedBytes`, 0 when it is not above its high watermark or unknown); `unreferencedOnly` makes the host cut take every candidate (the objects nothing references and no grace protects) and nothing else; `incremental` makes a collection above the high watermark of the cap free only `incrementBytes` below that watermark instead of everything down to the low one, so that collection runs continuously in small steps. */
+export type CasPlannerConfigV1=Readonly<{policy:Pick<CasPolicyV1,"capBytes"|"highWatermark"|"lowWatermark">&Partial<Pick<CasPolicyV1,"incrementBytes">>;incremental?:boolean;areas:readonly (CasAreaBoundsV1&Readonly<{id:string}>)[];externalBytes:number;nowMs:number;partitionNeedBytes?:number;unreferencedOnly?:boolean}>;
+/** 📊️ The planner's totals after the first pass; `shortfallBytes` is what the candidates could not free of the larger need, split into what is still missing against the store's own cap (`capShortfallBytes`, the only part that may ever evict a held entry) and against the partition (`partitionShortfallBytes`, pressure from every consumer of the disk, never the store's to settle with held entries). */
+export type CasPlanTotalsV1=Readonly<{totalBytes:number;protectedBytes:number;candidateBytes:number;plannedBytes:number;keptBytes:number;shortfallBytes:number;capShortfallBytes:number;partitionShortfallBytes:number;needBytes:number}>;
 /** 🔎️ The evaluator of the second pass; call `decide` for every entry in the same scan order as `add`. */
 export type CasEvaluatorV1=Readonly<{decide(area:string,access:number,size:number,expired?:boolean):CasReasonV1|null}>;
 /** 🧮️ A streaming planner: `add` every entry in scan order (first pass), `finish` for totals and the evaluator. */
@@ -71,13 +71,13 @@ export function createCasPlannerV1(config:CasPlannerConfigV1):CasPlannerV1{
    }
    let after=config.externalBytes+protectedBytes;const survivors:number[]=[];
    for(let i=0;i<n;i++)if(live[i]){after+=size[i]!;survivors.push(i);}
-   const capNeed=after>capBytes*highWatermark?(config.incremental?Math.min(after-capBytes*lowWatermark,after-capBytes*highWatermark+(config.policy.incrementBytes??Infinity)):after-capBytes*lowWatermark):0,partitionNeed=Math.max(0,(config.partitionNeedBytes??0)-planned),need=Math.max(capNeed,partitionNeed),hostCut=casCutV1(access,size,Uint32Array.from(survivors),need);
-   let hostBytes=0,short=0;
-   if(hostCut){const rule=new Rule(hostCut);for(const i of survivors)if(rule.test(access[i]!,size[i]!))hostBytes+=size[i]!;short=Math.max(0,need-hostBytes);}
+   const capNeed=after>capBytes*highWatermark?(config.incremental?Math.min(after-capBytes*lowWatermark,after-capBytes*highWatermark+(config.policy.incrementBytes??Infinity)):after-capBytes*lowWatermark):0,partitionNeed=Math.max(0,(config.partitionNeedBytes??0)-planned),need=config.unreferencedOnly?Infinity:Math.max(capNeed,partitionNeed),hostCut=casCutV1(access,size,Uint32Array.from(survivors),need);
+   let hostBytes=0,short=0,capShort=0,partitionShort=0;
+   if(hostCut){const rule=new Rule(hostCut);for(const i of survivors)if(rule.test(access[i]!,size[i]!))hostBytes+=size[i]!;if(!config.unreferencedOnly){short=Math.max(0,need-hostBytes);capShort=Math.max(0,capNeed-hostBytes);partitionShort=Math.max(0,partitionNeed-hostBytes);}}
    let candidate=0;for(let i=0;i<n;i++)candidate+=size[i]!;
    const total=config.externalBytes+protectedBytes+candidate,removed=planned+hostBytes;
    return{
-    totals:Object.freeze({totalBytes:total,protectedBytes,candidateBytes:candidate,plannedBytes:removed,keptBytes:total-removed,shortfallBytes:short,needBytes:need}),
+    totals:Object.freeze({totalBytes:total,protectedBytes,candidateBytes:candidate,plannedBytes:removed,keptBytes:total-removed,shortfallBytes:short,capShortfallBytes:capShort,partitionShortfallBytes:partitionShort,needBytes:config.unreferencedOnly?hostBytes:need}),
     evaluator():CasEvaluatorV1{
      const rules=areaRules.map(cut=>cut?new Rule(cut):null),host=hostCut?new Rule(hostCut):null;
      return{decide(areaId,at,bytes,gone=false){

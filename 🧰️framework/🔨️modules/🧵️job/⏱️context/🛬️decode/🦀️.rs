@@ -58,11 +58,14 @@ struct ActualDecodeFrame<'slot,'control,'turn,'call,'source>{frame:NativeForward
 impl Drop for ActualDecodeFrame<'_,'_,'_,'_,'_>{fn drop(&mut self){if std::thread::panicking(){let work=self.frame.control().actual_work().saturating_sub(self.before);let work=u64::try_from(work).unwrap_or(u64::MAX);self.turn.with(|cx,_|cx.consume_fuel(work)).expect("original decoder work return requires its same unborrowed caller")}}}
 struct ActualWork;
 struct ActualWorkTurn<'a,'turn,'source>{turn:&'a ActualTurn<'turn,'source>,closing:bool}
-trait ActualWorkContext:Sync{fn work_turn(&self)->Option<OriginalSourceTurnIdentity>;fn validate_work(&self)->Result<(),ValueError>;fn admit_work(&self,observed:u64,additional:u64)->bool;fn allocate(&self,ledger:&mut AllocationLedger,event:NativeAllocationEvent)->Result<(),ValueError>;}
+trait ActualWorkContext:Sync{fn work_turn(&self)->Option<OriginalSourceTurnIdentity>;fn available(&self)->Option<u64>;fn validate_work(&self)->Result<(),ValueError>;fn admit_work(&self,observed:u64,additional:u64)->bool;fn allocate(&self,ledger:&mut AllocationLedger,event:NativeAllocationEvent)->Result<(),ValueError>;}
 impl ActualWorkContext for ActualWorkTurn<'_,'_,'_>{
+ fn available(&self)->Option<u64>{self.turn.with(|cx,_|cx.fuel_remaining()).ok()}
  fn work_turn(&self)->Option<OriginalSourceTurnIdentity>{self.turn.with(|cx,_|cx.original_source_turn_identity()).ok().flatten()}
  fn validate_work(&self)->Result<(),ValueError>{self.turn.with(|cx,_|cx.original_source_parent().and_then(|parent|parent.validate_borrowed_context(cx)))?}
- fn admit_work(&self,observed:u64,additional:u64)->bool{self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining())).unwrap_or(false)}
+ fn admit_work(&self,observed:u64,additional:u64)->bool{
+  self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining())).unwrap_or(false)
+ }
  fn allocate(&self,ledger:&mut AllocationLedger,event:NativeAllocationEvent)->Result<(),ValueError>{let closing=self.closing;self.turn.with(|actual,reserved|match event{
   NativeAllocationEvent::Admit(request)=>{if request.owned_bytes.checked_add(request.bytes)!=Some(request.next_owned_bytes)||request.next_owned_bytes>request.maximum_bytes{return Err(refusal("original native decoder allocation coordinates are invalid"))}Ok(())}
   NativeAllocationEvent::Quote(request)=>{
@@ -95,6 +98,7 @@ impl OriginalWorkRecipient for ActualWork{
  type Context<'turn,'source>=&'turn(dyn ActualWorkContext+'turn) where 'source:'turn;
  fn validate_context<'turn,'source>(&self,turn:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{turn.validate_work()}
  fn source_turn<'turn,'source>(&self,turn:&Self::Context<'turn,'source>)->Option<OriginalSourceTurnIdentity> where 'source:'turn{turn.work_turn()}
+ fn available_work<'turn,'source>(&self,turn:&Self::Context<'turn,'source>)->Option<u64> where 'source:'turn{turn.available()}
  fn admits<'reply,'turn,'source>(&mut self,turn:&mut Self::Context<'turn,'source>,quote:OriginalWorkQuote<'reply>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'reply> where 'source:'turn{let result=turn.validate_work().map(|()|turn.admit_work(observed,additional));quote.complete(result)}
  fn settle_partial<'reply,'turn,'source>(&mut self,turn:&mut Self::Context<'turn,'source>,check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.complete(turn.validate_work())}
  fn recover_partial<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,check:OriginalWorkPartialCheck<'reply>)->OriginalWorkPartialCheckComplete<'reply> where 'source:'turn{check.pending()}

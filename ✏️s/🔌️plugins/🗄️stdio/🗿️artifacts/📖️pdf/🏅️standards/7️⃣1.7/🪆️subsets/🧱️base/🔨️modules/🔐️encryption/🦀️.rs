@@ -560,9 +560,9 @@ impl Decryptor {
                 let data = if identity {
                     data
                 } else if decrypt {
-                    self.decrypt_bytes(&data, num, gen)
+                    crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&self.decrypt_bytes(&data.to_vec_owner(), num, gen))
                 } else {
-                    self.encrypt_bytes(&data, num, gen)
+                    crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&self.encrypt_bytes(&data.to_vec_owner(), num, gen))
                 };
                 PdfObject::Stream { dict: dict.into_iter().map(|entry| PdfDictEntry { key: entry.key, value: self.map_object(entry.value, num, gen, decrypt) }).collect(), data, filters }
             }

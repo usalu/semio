@@ -38,8 +38,8 @@ pub(super)fn receiving_fault<E:semio_framework_pack_json::native_decoding::Nativ
 /// 🫴️ One native receiving turn of a polled cursor under the context's receiving scope.
 pub(super)fn receive<E:semio_framework_pack_json::native_decoding::NativeReceivingEffectError>(cx:&mut StepContext<'_>,d:semio_framework_value::RetirementDemand,run:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>,u64,semio_framework_value::RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneStep,E>)->Result<(),OriginalTurnFailure>{
  if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(())}
- let maximum=cx.fuel_remaining();let mut out=None;let mut polled=None;
- cx.with_native_receiving(&mut out,|native,grant|{polled=Some(run(native,maximum,grant));Ok(())})?;
+ let mut out=None;let mut polled=None;
+ cx.with_native_receiving_work(&mut out,d,|native,grant,maximum|{polled=Some(run(native,maximum,grant));Ok(())})?;
  match polled{Some(RetainedWorkPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},Some(RetainedWorkPoll::Pending{work})=>{cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));Ok(())},None=>Ok(())}
 }
 /// ♻️ Pays the receiver close start once, then closes it through its reply-shaped retirement cursor.

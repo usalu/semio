@@ -30,9 +30,82 @@ impl<M> std::fmt::Debug for ChildMemberRegistrationError<M> {
     }
 }
 
+const CHILD_PAGE_SLOTS: usize = 16;
+const CHILD_PAGES: usize = CHILD_CONTENT_SLOTS / CHILD_PAGE_SLOTS;
+type ChildSlot<M> = std::mem::MaybeUninit<ChildMemberEntry<M>>;
+type ChildPage<M> = Box<[ChildSlot<M>]>;
+
+/// 🧱️ Child member slots in separately releasable pages: the page table is the only backing a registry is born with, a page is born when an admission first lands in it, and release walks only resident pages.
+struct ChildSlots<M> {
+    pages: Box<[Option<ChildPage<M>>]>,
+}
+
+impl<M> ChildSlots<M> {
+    fn released() -> Self {
+        Self { pages: Box::default() }
+    }
+
+    fn table_bytes() -> usize {
+        CHILD_PAGES * std::mem::size_of::<Option<ChildPage<M>>>()
+    }
+
+    fn page_bytes() -> usize {
+        CHILD_PAGE_SLOTS * std::mem::size_of::<ChildSlot<M>>()
+    }
+
+    fn allocate() -> Option<Self> {
+        let mut pages = Vec::new();
+        pages.try_reserve_exact(CHILD_PAGES).ok()?;
+        pages.resize_with(CHILD_PAGES, || None);
+        Some(Self { pages: pages.into_boxed_slice() })
+    }
+
+    fn birth_page(&mut self, index: usize) -> bool {
+        let Some(entry) = self.pages.get_mut(index / CHILD_PAGE_SLOTS) else { return false };
+        if entry.is_some() {
+            return true;
+        }
+        let mut page = Vec::new();
+        if page.try_reserve_exact(CHILD_PAGE_SLOTS).is_err() {
+            return false;
+        }
+        unsafe { page.set_len(CHILD_PAGE_SLOTS) };
+        semio_framework_value::birth_ledger::record_original_birth(Self::page_bytes());
+        *entry = Some(page.into_boxed_slice());
+        true
+    }
+
+    fn slot(&self, index: usize) -> &ChildSlot<M> {
+        &self.pages[index / CHILD_PAGE_SLOTS].as_ref().expect("an admitted child slot owns its page")[index % CHILD_PAGE_SLOTS]
+    }
+
+    fn slot_mut(&mut self, index: usize) -> &mut ChildSlot<M> {
+        &mut self.pages[index / CHILD_PAGE_SLOTS].as_mut().expect("an admitted child slot owns its page")[index % CHILD_PAGE_SLOTS]
+    }
+
+    fn resident(&self) -> impl Iterator<Item = (usize, &ChildSlot<M>)> {
+        self.pages.iter().enumerate().filter_map(|(number, page)| page.as_ref().map(|page| (number, page))).flat_map(|(number, page)| page.iter().enumerate().map(move |(offset, slot)| (number * CHILD_PAGE_SLOTS + offset, slot)))
+    }
+
+    fn resident_mut(&mut self) -> impl Iterator<Item = (usize, &mut ChildSlot<M>)> {
+        self.pages.iter_mut().enumerate().filter_map(|(number, page)| page.as_mut().map(|page| (number, page))).flat_map(|(number, page)| page.iter_mut().enumerate().map(move |(offset, slot)| (number * CHILD_PAGE_SLOTS + offset, slot)))
+    }
+
+    fn next_release(&self) -> usize {
+        if self.pages.iter().any(Option::is_some) { Self::page_bytes() } else { std::mem::size_of_val(&*self.pages) }
+    }
+
+    fn release_one(&mut self) {
+        match self.pages.iter().rposition(Option::is_some) {
+            Some(position) => drop(self.pages[position].take()),
+            None => self.pages = Box::default(),
+        }
+    }
+}
+
 #[doc(hidden)]
 pub struct ChildMemberRegistry<M> {
-    pub slots: Box<[std::mem::MaybeUninit<ChildMemberEntry<M>>]>,
+    slots: ChildSlots<M>,
     pub occupied: [u64; CHILD_CONTENT_SLOTS / 64],
     pub reserved: [u64; CHILD_CONTENT_SLOTS / 64],
     pub nested: [u64; CHILD_CONTENT_SLOTS / 64],
@@ -46,24 +119,23 @@ pub struct ChildMemberRegistry<M> {
 
 impl<M:store::SpaceMember> EmptyBacking for ChildMemberRegistry<M>{
     fn release_bytes(&self)->Option<usize>{
-        (self.is_empty()&&self.reserved.iter().all(|bits|*bits==0)).then(||std::mem::size_of_val(self.slots.as_ref()))
+        (self.is_empty()&&self.reserved.iter().all(|bits|*bits==0)).then(||self.slots.next_release())
     }
     fn release(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        release_empty_backing(self.release_bytes(),grant,||{self.slots=Box::default();self.allocation_admitted=false;})
+        release_empty_backing(self.release_bytes(),grant,||{self.slots.release_one();self.allocation_admitted=false;})
     }
 }
 
 impl<M> ChildMemberRegistry<M> {
-    /// 📏️ Quotes the actual fixed child-member slot body before an original native component birth.
-    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let bytes=CHILD_CONTENT_SLOTS.checked_mul(std::mem::size_of::<std::mem::MaybeUninit<ChildMemberEntry<M>>>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original child-member backing extent overflow"))?;Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:bytes,depth:1,..Default::default()})}
+    /// 📏️ Quotes the page table born with the registry before an original native component birth; slot pages are born by the first admission into them.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:ChildSlots::<M>::table_bytes(),depth:1,..Default::default()})}
 
     /// 🖋️ Initializes fixed scalar indexes and the admitted slot body at the final owner address.
     /// # Safety
     /// The target must be exclusive uninitialized storage and its complete slot capacity must already be funded.
     pub unsafe fn initialize_empty_at(target:*mut Self,backing:bool){unsafe{
-        let mut slots=Vec::new();let allocation_admitted=backing&&slots.try_reserve_exact(CHILD_CONTENT_SLOTS).is_ok();
-        if allocation_admitted{slots.set_len(CHILD_CONTENT_SLOTS);}
-        std::ptr::addr_of_mut!((*target).slots).write(slots.into_boxed_slice());
+        let slots=if backing{ChildSlots::allocate()}else{None};let allocation_admitted=slots.is_some();
+        std::ptr::addr_of_mut!((*target).slots).write(slots.unwrap_or_else(ChildSlots::released));
         let occupied=std::ptr::addr_of_mut!((*target).occupied).cast::<u64>();let reserved=std::ptr::addr_of_mut!((*target).reserved).cast::<u64>();let nested=std::ptr::addr_of_mut!((*target).nested).cast::<u64>();
         for index in 0..CHILD_CONTENT_SLOTS/64{occupied.add(index).write(0);reserved.add(index).write(0);nested.add(index).write(0);}
         let generations=std::ptr::addr_of_mut!((*target).generations).cast::<u64>();let dense=std::ptr::addr_of_mut!((*target).dense_slots).cast::<usize>();let ordinal=std::ptr::addr_of_mut!((*target).ordinal_by_slot).cast::<usize>();
@@ -72,13 +144,13 @@ impl<M> ChildMemberRegistry<M> {
     }}
 
     pub fn new() -> Self {
-        let mut slots = Vec::new();
-        let allocation_admitted = slots.try_reserve_exact(CHILD_CONTENT_SLOTS).is_ok();
+        let slots = ChildSlots::allocate();
+        let allocation_admitted = slots.is_some();
         if allocation_admitted {
-            unsafe { slots.set_len(CHILD_CONTENT_SLOTS); };
+            semio_framework_value::birth_ledger::record_original_birth(ChildSlots::<M>::table_bytes());
         }
         Self {
-            slots: slots.into_boxed_slice(),
+            slots: slots.unwrap_or_else(ChildSlots::released),
             occupied: [0; CHILD_CONTENT_SLOTS / 64],
             reserved: [0; CHILD_CONTENT_SLOTS / 64],
             nested: [0; CHILD_CONTENT_SLOTS / 64],
@@ -104,14 +176,14 @@ impl<M> ChildMemberRegistry<M> {
     }
 
     pub fn entry(&self, index: usize) -> Option<&ChildMemberEntry<M>> {
-        self.occupied(index).then(|| unsafe { self.slots[index].assume_init_ref() })
+        self.occupied(index).then(|| unsafe { self.slots.slot(index).assume_init_ref() })
     }
 
     pub fn entry_mut(&mut self, index: usize) -> Option<&mut ChildMemberEntry<M>> {
         if !self.occupied(index) {
             return None;
         }
-        Some(unsafe { self.slots[index].assume_init_mut() })
+        Some(unsafe { self.slots.slot_mut(index).assume_init_mut() })
     }
 
     pub fn nested(&self, index: usize) -> bool {
@@ -148,6 +220,9 @@ impl<M> ChildMemberRegistry<M> {
         match self.locate(key)? {
             Ok(_) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-duplicate"), "fixed child-member identity is already occupied")),
             Err(index) => {
+                if !self.slots.birth_page(index) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-allocation"), "fixed child-member slot page allocation refused"));
+                }
                 let generation = self.next_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-generation"), "fixed child-member admission generation exhausted"))?;
                 self.next_generation = generation;
                 self.generations[index] = generation;
@@ -165,7 +240,7 @@ impl<M> ChildMemberRegistry<M> {
     pub fn insert_admitted(&mut self, admission: ChildMemberAdmission, reference: ArtifactRef, owner: store::OwnerRef, member: M) {
         assert!(self.reserved(admission.index) && self.generations[admission.index] == admission.generation && !self.occupied(admission.index), "exact child-member admission changed while its exclusive app owner was suspended");
         self.reserved[admission.index / 64] &= !(1 << (admission.index % 64));
-        self.slots[admission.index].write(ChildMemberEntry { reference, owner, member });
+        self.slots.slot_mut(admission.index).write(ChildMemberEntry { reference, owner, member });
         self.occupied[admission.index / 64] |= 1 << (admission.index % 64);
         if admission.nested {
             self.nested[admission.index / 64] |= 1 << (admission.index % 64);
@@ -245,12 +320,12 @@ impl<M> ChildMemberRegistry<M> {
 
     pub fn entries_physical(&self) -> impl Iterator<Item = &ChildMemberEntry<M>> {
         let occupied = self.occupied;
-        self.slots.iter().enumerate().filter(move |(index, _)| occupied[*index / 64] & (1 << (*index % 64)) != 0).map(|(_, slot)| unsafe { slot.assume_init_ref() })
+        self.slots.resident().filter(move |(index, _)| occupied[*index / 64] & (1 << (*index % 64)) != 0).map(|(_, slot)| unsafe { slot.assume_init_ref() })
     }
 
     pub fn entries_mut_physical(&mut self) -> impl Iterator<Item = &mut ChildMemberEntry<M>> {
         let occupied = self.occupied;
-        self.slots.iter_mut().enumerate().filter_map(move |(index, slot)| (occupied[index / 64] & (1 << (index % 64)) != 0).then(|| unsafe { slot.assume_init_mut() }))
+        self.slots.resident_mut().filter_map(move |(index, slot)| (occupied[index / 64] & (1 << (index % 64)) != 0).then(|| unsafe { slot.assume_init_mut() }))
     }
 
     pub(super) fn entry_by_ordinal(&self, ordinal: usize) -> Option<&ChildMemberEntry<M>> {
@@ -270,7 +345,7 @@ impl<M> ChildMemberRegistry<M> {
         self.ordinal_by_slot[moved] = ordinal;
         self.dense_slots[self.len] = usize::MAX;
         self.ordinal_by_slot[index] = usize::MAX;
-        Some(unsafe { self.slots[index].assume_init_read() })
+        Some(unsafe { self.slots.slot(index).assume_init_read() })
     }
 
     pub fn cancel_admission(&mut self, admission: &ChildMemberAdmission) -> bool {
@@ -306,8 +381,8 @@ impl<M> ChildMemberRegistry<M> {
     }
 
     fn relocate(&mut self, from: usize, to: usize) {
-        let entry = unsafe { self.slots[from].assume_init_read() };
-        self.slots[to].write(entry);
+        let entry = unsafe { self.slots.slot(from).assume_init_read() };
+        self.slots.slot_mut(to).write(entry);
         self.occupied[from / 64] &= !(1 << (from % 64));
         self.occupied[to / 64] |= 1 << (to % 64);
         if self.nested(from) {

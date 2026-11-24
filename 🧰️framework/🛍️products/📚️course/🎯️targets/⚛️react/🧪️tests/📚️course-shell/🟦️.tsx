@@ -30,7 +30,7 @@ describe("course shell", () => {
   it.each(fixture.overlayCards)("receives footer actions through a passthrough overlay when openable=$openable", async ({ openable, actions, openings }) => {
     const action = vi.fn();
     const open = vi.fn();
-    render(<><style>{".pointer-events-auto { pointer-events: auto; }"}</style><div style={{ pointerEvents: "none" }}><CourseCard id="card-title" card="test" title="Card" icon={null} onOpen={openable ? open : undefined} footerRight={<CardAction primary onClick={action}>Action</CardAction>} /></div></>);
+    render(<><style>{".pointer-events-auto { pointer-events: auto; }"}</style><div style={{ pointerEvents: "none" }}><CourseCard id="card-title" card="test" title="Card" icon={null} onOpen={openable ? open : undefined} footerRight={<CardAction primary icon="arrow-right" onClick={action}>Action</CardAction>} /></div></>);
     await userEvent.setup().click(screen.getByRole("button", { name: "Action" }));
     expect(action).toHaveBeenCalledTimes(actions);
     expect(open).toHaveBeenCalledTimes(openings);

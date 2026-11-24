@@ -71,7 +71,7 @@ where
     let mut renders = Vec::new();
     let bodies: Vec<String> = (&manifest().definition.window_kinds).into_iter().map(|window| window.body_key.clone()).collect();
     for body in bodies {
-        let render = match artifact_app_laws::render_registered_fixture_app(app, &body, &view,cx).await {
+        let render = match semio_plugin_testing_instance_laws::render_registered_fixture_app(app, &body, &view,cx).await {
             Ok(projected) => Ok(projected),
             Err(original) => return Err(original.into()),
         };

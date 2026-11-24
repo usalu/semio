@@ -169,7 +169,9 @@ impl ArtifactEditor for Pdf17Editor {
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
-        crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| semio_plugin::MediaError::Payload(semio_plugin::NATURAL_FILE_PORT.into(), error.to_string()))
+        let snapshot = crate::standards::v1_7::subsets::base::io::import::decode_pdf(bytes).map_err(|error| semio_plugin::MediaError::Payload(semio_plugin::NATURAL_FILE_PORT.into(), error.to_string()))?;
+        crate::standards::v1_7::subsets::base::io::import::original_custody::retain_file(bytes, &snapshot.objects);
+        Ok(snapshot)
     }
 
     fn build_natural_file_decode_owner(bytes: Vec<u8>, contract: semio_plugin::ToolExecutionContract) -> Result<semio_plugin::NaturalFileDecodeOwner<Self::Snapshot>, semio_plugin::MediaError> {

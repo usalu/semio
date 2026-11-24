@@ -5,21 +5,21 @@ use semio_renderer_wgpu_shell_doc_open::NativeOpenedFile;
 impl<'ctx> ActionsCtx<'ctx> {
     pub(super) fn start_native_open(&mut self, action: &ActionDescriptor) -> Result<(), String> {
         let source = self.opening.dropped_sources.pop_front();
-        let current = self.docs.action_session(action, &self.plugins).ok_or("Open File has no owning application")?;
+        let current = self.docs.action_session(action, &self.plugins).ok_or("open-file.no-owning-application")?;
         if self.docs.session.as_ref().is_none_or(|session| session.instance_id != current.instance_id || session.plugin_id != current.plugin_id) {
-            return Err("Open File requires the current local editor".into());
+            return Err("open-file.requires-current-editor".into());
         }
         if action.args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str)
             .is_some_and(|window_id| !current.view_state.window_instances.iter().any(|window| window.id == window_id))
-        { return Err("Open File's window is no longer mounted".into()); }
+        { return Err("open-file.window-unmounted".into()); }
         let program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == current.plugin_id)
-            .cloned().ok_or("Open File's editor is unavailable")?;
+            .cloned().ok_or("open-file.editor-unavailable")?;
         let declaration = program.declared_native_media_save(&current.app.id, semio_framework::SAVE_ARTIFACT_FILE_ACTION_ID)
-            .ok_or("Open File has no matching native binary codec")?;
-        let folder = semio_renderer_wgpu_shell_doc_open::native_local_documents().ok_or("Open File has no local data directory")?;
-        let label = if self.prefs.locale_id == "de" { "Datei öffnen" } else { "Open File" }.to_owned();
+            .ok_or("open-file.no-native-codec")?;
+        let folder = semio_renderer_wgpu_shell_doc_open::native_local_documents().ok_or("open-file.no-local-data-directory")?;
+        let label = shell_chrome_string("document.open.fileLabel", self.prefs.locale_id == "de").to_owned();
         if source.as_deref().is_some_and(|path| !path.extension().and_then(|value| value.to_str()).zip(declaration.extension()).is_some_and(|(dropped, declared)| dropped.eq_ignore_ascii_case(declared))) {
-            return Err("Open File has no matching native binary codec".into());
+            return Err("open-file.no-native-codec".into());
         }
         if !self.opening.start_native_file_open(program, current.app.id.clone(), current.instance_id, declaration, folder, label, source) {
             return Err("document.open-busy".into());
@@ -28,10 +28,10 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     pub async fn finish_native_open(&mut self, app_id: &str, imported: NativeOpenedFile) -> Result<(), String> {
-        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("Open File's source editor closed")?;
+        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("open-file.source-editor-closed")?;
         if !self.plugins.plugins.iter().any(|entry| entry.plugin_id == imported.program.plugin_id
             && entry.package_id == imported.program.package_id && entry.component_sha256 == imported.program.component_sha256)
-        { return Err("Open File's editor package changed".into()); }
+        { return Err("open-file.editor-package-changed".into()); }
         let app = if previous.plugin_id == imported.program.plugin_id && previous.app.id == app_id { previous.app.clone() }
             else { imported.program.manifest.apps.iter().find(|app| app.id == app_id).cloned().ok_or("natural-file.kept-surface-unavailable")? };
         let previous_program = self.plugins.plugins.iter().find(|entry| entry.plugin_id == previous.plugin_id).cloned().unwrap_or_else(|| imported.program.clone());

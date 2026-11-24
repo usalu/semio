@@ -58,11 +58,12 @@ describe("CardStack", () => {
     expect([...container.querySelectorAll("[data-overview-card]")].map(element => element.getAttribute("style"))).toEqual(before);
   });
 
-  it("is a gapless, paddingless column", () => {
-    const { container } = render(<CardStack maxWidth="56rem">{card("a")}</CardStack>);
+  it("is a gapless, paddingless column as wide as its container", () => {
+    const { container } = render(<CardStack>{card("a")}</CardStack>);
     const stack = container.querySelector("[data-card-stack]") as HTMLElement;
-    expect(stack.className).not.toMatch(/\b(gap|p|px|py|pt|pb)-/);
-    expect(stack.style.maxWidth).toBe("56rem");
+    expect(stack.className).not.toMatch(/\b(gap|p|px|py|pt|pb|m|mx|my|max-w)-/);
+    expect(stack.className).toMatch(/\bw-full\b/);
+    expect(stack.style.maxWidth).toBe("");
   });
 });
 

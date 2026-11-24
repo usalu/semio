@@ -1,12 +1,21 @@
 //! 📈️ Diagrams: buckling curves χ(λ̄) with the member markers, LTB χ_LT and M_b,Rd over the restraint spacing, the M–N interaction polygon with its utilisation ray,
 //! the cross-section classification stress block, the S–N fatigue curve with the spectrum, and the fire temperature and k_θ curves.
 
-use super::checks::{part_1_1, part_1_2, part_1_9, AnnexParams};
-use super::model::{En1993Snapshot, FatigueDetail, FireExposure, SteelMaterial, SteelMember, SteelSection};
-use super::norm::{AnnexChoice, CheckReport, CheckResult};
-use super::scene::diagram_kit::{curves, interaction_polygon, sn_curves, Xy};
-use super::scene::*;
-use super::scene::projection_kit::diagram_parts::{column, stroke, axis};
+extern crate semio_s_artifact_norm_en1993_checks as checks;
+extern crate semio_s_artifact_norm_en1993_model as model;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+extern crate semio_s_artifact_norm_en1993_scene_members as scene_members;
+extern crate semio_s_artifact_norm_en1993_scene_members_projection as projection;
+
+use checks::{part_1_1, part_1_2, part_1_9, AnnexParams};
+use model::{En1993Snapshot, FatigueDetail, FireExposure, SteelMaterial, SteelMember, SteelSection};
+use norm::{AnnexChoice, CheckReport, CheckResult};
+use projection::{detail_sketches, fatigue_views};
+use scene::diagram_kit::{curves, interaction_polygon, sn_curves, Xy};
+use scene::projection_kit::diagram_parts::{column, stroke, axis};
+use scene::*;
+use scene_members::kit;
 
 #[path = "../📈️entity-diagrams/🦀️.rs"]
 mod entity_diagrams;
@@ -32,7 +41,7 @@ fn p(point: Xy) -> Vec2 {
 }
 
 fn utilisation_tone(ratio: f64) -> Tone {
-    super::scene::utilisation_tone(ratio)
+    scene::utilisation_tone(ratio)
 }
 
 fn worst<'a>(report: &'a CheckReport, entity: &str, prefix: &str) -> Option<&'a CheckResult> {
@@ -250,7 +259,7 @@ fn classification(d: &En1993Snapshot, member: &SteelMember) -> Option<Diagram2d>
         title: loc(&format!("Cross-section classification – {}", member.label), &format!("Querschnittsklassifizierung – {}", member.label)),
         description: loc(&format!("Class {class} section: {} stress distribution over the height under bending (EN 1993-1-1, 5.5).", if class <= 2 { "plastic" } else { "elastic" }), &format!("Querschnittsklasse {class}: {} Spannungsverteilung über die Höhe bei Biegung (EN 1993-1-1, 5.5).", if class <= 2 { "plastische" } else { "elastische" })),
         axes: vec![axis("Stress σ", "Spannung σ", QuantityKind::Stress, "MPa", AxisScale::Linear, Some((-1.3 * fy, 1.3 * fy))), axis("Height z", "Höhe z", QuantityKind::Length, "m", AxisScale::Linear, Some((-0.7 * section.h, 0.7 * section.h)))],
-        series: vec![Series::Section { id: "section".into(), label: loc(&section.designation, &section.designation), shape: super::kit::section_shape(section), strain: None, stress: Some(SectionProfile { points: stress, unit: "MPa".into() }), neutral_axis: Some(Line2 { origin: Vec2::ZERO, direction: Vec2::new(1.0, 0.0) }) }],
+        series: vec![Series::Section { id: "section".into(), label: loc(&section.designation, &section.designation), shape: kit::section_shape(section), strain: None, stress: Some(SectionProfile { points: stress, unit: "MPa".into() }), neutral_axis: Some(Line2 { origin: Vec2::ZERO, direction: Vec2::new(1.0, 0.0) }) }],
         markers: Vec::new(),
         annotations: vec![DiagramNote { id: "class".into(), at: Vec2::new(0.0, 0.62 * section.h), text: loc(&format!("Class {class}, ε = {eps:.2}"), &format!("Klasse {class}, ε = {eps:.2}")), tone: Tone::Neutral}],
         focus: Some(EntityRef::new(EntityKind::Member, &member.id, format!("members[id={}]", member.id))),
@@ -266,7 +275,7 @@ fn classification(d: &En1993Snapshot, member: &SteelMember) -> Option<Diagram2d>
 fn fatigue(report: &CheckReport, detail: &FatigueDetail, annex: AnnexChoice) -> Option<Diagram2d> {
     let category = part_1_9::detail_category_pa(detail.category) / 1.0e6;
     let curve = sn_curves::sn_curve(category, 1.0e4, 1.0e8);
-    let spectrum: Vec<(f64, f64)> = super::fatigue_views::blocks(detail).into_iter().map(|(range, cycles)| (range * 1.0e6, cycles)).collect();
+    let spectrum: Vec<(f64, f64)> = fatigue_views::blocks(detail).into_iter().map(|(range, cycles)| (range * 1.0e6, cycles)).collect();
     let gamma = part_1_9::gamma_mf(detail.method, detail.consequence, annex);
     let damage = part_1_9::miner_damage(&spectrum, category * 1.0e6, gamma);
     let check = worst(report, &detail.id, "en1993.1-9.fat.");
@@ -299,9 +308,9 @@ fn fire(d: &En1993Snapshot, report: &CheckReport, exposure: &FireExposure) -> Op
     let end = minutes * 1.25;
     let gas = curves::fire_curve(curves::FireCurve::Iso834, end, SAMPLES);
     let history = if exposure.protection_thickness > 1e-6 {
-        super::checks::clauses::fatigue_fire::protected_steel_temperature(&super::checks::clauses::fatigue_fire::gas_iso834, exposure.section_factor.max(1.0), exposure.protection_thickness, exposure.protection_conductivity, exposure.protection_density, exposure.protection_specific_heat, end * 60.0, 10.0)
+        checks::clauses::fatigue_fire::protected_steel_temperature(&checks::clauses::fatigue_fire::gas_iso834, exposure.section_factor.max(1.0), exposure.protection_thickness, exposure.protection_conductivity, exposure.protection_density, exposure.protection_specific_heat, end * 60.0, 10.0)
     } else {
-        super::checks::clauses::fatigue_fire::unprotected_steel_temperature(&super::checks::clauses::fatigue_fire::gas_iso834, 1.0, exposure.section_factor.max(1.0), end * 60.0, 10.0, 0.7, 1.0)
+        checks::clauses::fatigue_fire::unprotected_steel_temperature(&checks::clauses::fatigue_fire::gas_iso834, 1.0, exposure.section_factor.max(1.0), end * 60.0, 10.0, 0.7, 1.0)
     };
     let steel: Vec<Xy> = history.iter().step_by(6).map(|(t, theta)| [t / 60.0, *theta]).collect();
     let theta_cr = part_1_2::critical_temperature_c(exposure.mu0);
@@ -345,7 +354,7 @@ fn fire(d: &En1993Snapshot, report: &CheckReport, exposure: &FireExposure) -> Op
     };
     let utilisation = {
         let curve: Vec<Xy> = history.iter().step_by(6).map(|(t, theta)| [t / 60.0, (exposure.mu0 / part_1_2::k_y_theta(*theta).max(1e-3)).min(UTILISATION_CAP)]).collect();
-        let failure = super::checks::clauses::fatigue_fire::time_to_temperature(&history, theta_cr).map(|t| t / 60.0);
+        let failure = checks::clauses::fatigue_fire::time_to_temperature(&history, theta_cr).map(|t| t / 60.0);
         let mut markers = vec![Marker { id: "utilisation-at-rating".into(), at: Vec2::new(minutes, (exposure.mu0 / part_1_2::k_y_theta(theta_end).max(1e-3)).min(UTILISATION_CAP)), shape: MarkerShape::Circle, tone: rating_tone, label: loc(&format!("μ0/k_y,θ = {:.2} at R{minutes:.0}", exposure.mu0 / part_1_2::k_y_theta(theta_end).max(1e-3)), &format!("μ0/k_y,θ = {:.2} bei R{minutes:.0}", exposure.mu0 / part_1_2::k_y_theta(theta_end).max(1e-3))), utilisation: Some(theta_end / theta_cr.max(1.0)), bound_check: check.map(|c| c.id.clone()), binding: None }];
         if let Some(t) = failure {
             markers.push(Marker { id: "critical-time".into(), at: Vec2::new(t, 1.0), shape: MarkerShape::Diamond, tone: utilisation_tone(minutes / t.max(1e-9)), label: loc(&format!("θ_a,cr reached after {t:.1} min"), &format!("θ_a,cr erreicht nach {t:.1} min")), utilisation: Some(minutes / t.max(1e-9)), bound_check: check.map(|c| c.id.clone()), binding: None });
@@ -379,7 +388,7 @@ fn diagrams_unbased(document: &En1993Snapshot, report: &CheckReport, focus: Opti
     let matches = |ids: &[&str]| focus.is_none_or(|f| ids.contains(&f));
     let mut out = Vec::new();
     for member in &document.members {
-        let related: Vec<&str> = super::kit::dependents(document, &member.id);
+        let related: Vec<&str> = kit::dependents(document, &member.id);
         if !matches(&related) {
             continue;
         }
@@ -401,7 +410,7 @@ fn diagrams_unbased(document: &En1993Snapshot, report: &CheckReport, focus: Opti
     out.extend(annex_diagrams::annex_diagrams(document, report, focus));
     out.extend(design_diagrams::design_diagrams(document, report, focus));
     out.extend(norm_diagrams::norm_diagrams(document, report, focus));
-    out.extend(super::detail_sketches::diagrams(document, report, focus));
-    out.extend(super::fatigue_views::diagrams(document, report, focus));
+    out.extend(detail_sketches::diagrams(document, report, focus));
+    out.extend(fatigue_views::diagrams(document, report, focus));
     out
 }

@@ -280,7 +280,7 @@ impl<T, const N: usize> WorldDynamicRegistry<T, N> {
 #[cfg(not(any(test, feature = "testkit")))]
 impl<T, const N: usize> Drop for WorldDynamicRegistry<T, N> {
     fn drop(&mut self) {
-        assert!(self.is_empty(), "world dynamic registry reached Drop before its exact terminal-empty witness");
+        assert!(std::thread::panicking()||(self.is_empty()), "world dynamic registry reached Drop before its exact terminal-empty witness");
     }
 }
 

@@ -225,7 +225,7 @@ impl<T> ReturnSourceEntries<T> {
 
 impl<T> Drop for ReturnSourceEntries<T> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "return source entries require exact structural handoff before Drop");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "return source entries require exact structural handoff before Drop");
     }
 }
 //#endregion 📚️ReturnSourceEntries
@@ -281,7 +281,7 @@ impl<T> ReturnSourceEntry<T> {
 
 impl<T> Drop for ReturnSourceEntry<T> {
     fn drop(&mut self) {
-        assert!(self.page.is_none() && self.allocated_bytes == 0, "return source entry requires exact value and backing retirement before Drop");
+        assert!(std::thread::panicking()||(self.page.is_none() && self.allocated_bytes == 0), "return source entry requires exact value and backing retirement before Drop");
     }
 }
 

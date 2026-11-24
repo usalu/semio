@@ -35,3 +35,13 @@ fn a_reducer_fault_detail_reads_back_as_the_reducers_own_code_and_message() {
         assert!(semio_plugin_decl_app::tool_contract::reducer_fault_of_detail(foreign).is_none(), "{foreign:?} is not a reducer detail");
     }
 }
+
+/// 🧭️ LAW: a stalled publication names the cause it last waited on, and only for the operation that waited.
+#[test]
+fn a_publication_wait_names_its_cause_for_exactly_its_operation() {
+    use crate::typed_operation::{last_publication_wait, note_publication_wait};
+    note_publication_wait(7, "the store owner refused the granted page (copy bytes, capacity bytes, depth)", [1, 2, 3]);
+    let wait = last_publication_wait(7).expect("the wait is readable for its operation");
+    assert_eq!((wait.cause.starts_with("the store owner refused"), wait.have), (true, [1, 2, 3]));
+    assert!(last_publication_wait(8).is_none());
+}

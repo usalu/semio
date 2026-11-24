@@ -107,7 +107,7 @@ pub fn document_opening_banner_text(opening: &ShellDocumentOpening, now_ms: f64,
         _ => format!("{} {}", shell_chrome_string(key, is_de), opening.label),
     };
     match (&opening.phase, step) {
-        (ShellDocumentOpenPhase::Failed(reason), _) => format!("{head}: {reason}"),
+        (ShellDocumentOpenPhase::Failed(reason), _) => format!("{head}: {}", semio_renderer_wgpu_shell_vocab::shell_fault_text(reason, is_de).unwrap_or(reason)),
         (_, Some(step)) => format!("{head} · {step}/{DOCUMENT_OPEN_STEPS} · {} s", ((now_ms - opening.started_at_ms).max(0.0) / 1000.0).floor() as u64),
         _ => head,
     }
@@ -253,8 +253,9 @@ pub fn status_stack_layout(kind: StatusStackKind, cells: &[StatusCell], viewport
     .max(glyph_w);
     let mut rows: Vec<(Vec<String>, f32, f32)> = Vec::new();
     let mut budget = inner_w;
-    for cell in cells {
-        let own_w = cell_content_w(cell).min(budget);
+    for (index, cell) in cells.iter().enumerate() {
+        let reserve = if horizontal { glyph_w * (cells.len() - index - 1) as f32 } else { 0.0 };
+        let own_w = cell_content_w(cell).min((budget - reserve).max(glyph_w));
         let lines = wrap_status_text(&cell.text, ((if horizontal { own_w } else { inner_w }) / glyph_w).floor().max(1.0) as usize);
         let action_h = if cell.action.is_some() && !horizontal { line_h } else { 0.0 } + if cell.progress.is_some() { bar_h } else { 0.0 };
         let content_w = if horizontal { own_w } else { inner_w };

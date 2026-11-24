@@ -14,7 +14,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
     let fingerprint = scene_geometry_fingerprint(&scene_snapshot);
     let session = Some((4_001_u32, Some("document-geometry".to_string())));
     let cold = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
-    let first = with_puzzle3d_session_for(session.clone(), &config, |app| app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[]));
+    let first = with_puzzle3d_session_for(session.clone(), &config, |app| app.geometry_jsons(&scene_snapshot, None, &[]));
     let after_first = PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get);
     assert_eq!(after_first - cold, 1, "the first call for a cold instance serializes exactly once");
     let second = with_puzzle3d_session_for(session, &config, |app| {
@@ -22,7 +22,7 @@ fn a_second_call_on_one_instance_reuses_the_geometry_cache_instead_of_reserializ
         assert_eq!(cached.as_ref().map(|(cached, _)| *cached), Some(fingerprint), "the session slot handed the warm cache to a brand-new app object");
         drop(cached);
         assert_eq!(app.instance_residency.lock().expect("instance residency").as_ref().map(|residency| residency.revision()), Some(1), "the per-object instance residency came back with the slot too");
-        app.geometry_jsons(&scene_snapshot, &std::collections::BTreeSet::new(), &[])
+        app.geometry_jsons(&scene_snapshot, None, &[])
     });
     assert_eq!(PUZZLE3D_GEOMETRY_SERIALIZATIONS.with(std::cell::Cell::get), after_first, "the second call on the same instance must not re-serialize anything");
     assert_eq!(first, second, "a cache hit returns byte-identical instance and mesh json");

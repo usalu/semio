@@ -9,7 +9,7 @@ import{createOwnerPoolStatusV1}from"../📊️status/🟦️.ts";
 import{OWNER_POOL_POLICY_V1 as P,ownerPoolIdV1,ownerPoolKeepAliveV1,ownerPoolRepublishV1,publishOwnerPoolV1,type OwnerPoolHeadV1,type OwnerPoolManifestV1,type OwnerPoolUnitV1}from"../🟦️.ts";
 
 /** 📣️ What the machine that runs a wave hands over about it, evaluated only when the wave proves cold. */
-export type OwnerPoolPublisherInputV1=Readonly<{workspaceRoot:string;environment:Readonly<Record<string,string|undefined>>;identity:string;globals:OwnerPoolHeadV1["globals"];session():unknown;units():readonly OwnerPoolUnitV1[];threshold?:number;store?:string|undefined;origin?:string;say?(line:string):void;publish?:typeof publishOwnerPoolV1;now?:()=>number}>;
+export type OwnerPoolPublisherInputV1=Readonly<{workspaceRoot:string;environment:Readonly<Record<string,string|undefined>>;identity:string;globals:OwnerPoolHeadV1["globals"];session():unknown;units():readonly OwnerPoolUnitV1[];priority?:number;threshold?:number;store?:string|undefined;origin?:string;say?(line:string):void;publish?:typeof publishOwnerPoolV1;now?:()=>number}>;
 
 /** 📣️ Publishes the owner pool of a wave to the fleet as early as the reader knows its owners, and again as it learns more: `announce` once the unit list is known (before any owner is taken or inferred, so the pools of every machine start within seconds of a read starting anywhere), `learn` while the take pass shrinks the open owners (by `republishShrinkBasisPoints`, at most every `republishMinimumMilliseconds`), `settle` when the take pass ended (the exact open list, a changed list is a new wave), renews the accepted wave between membership updates, and publishes on `miss` as before once a wave has missed `threshold` owners. The work runs after the current turn and one publication at a time, every fault ends in "this machine infers every owner itself", and `SEMIO_OWNER_POOL=off` publishes nothing.
  * @see ./../🧪️tests/🌊️early-wave/🟦️.ts */
@@ -23,7 +23,7 @@ export function createOwnerPoolPublisherV1(input:OwnerPoolPublisherInputV1):Read
   try{
    if(settings===undefined||!settings.upload)return false;
    const renewal=only===undefined&&forced?last?.manifest:undefined;
-   const client=graphFleetClientV1(settings,{fetch:remoteCacheFetchV1(input.environment,{root:input.workspaceRoot})}),units=renewal?.units??only??input.units(),partial=renewal?.head??{version:1 as const,revision:projectRecordKeyTextV1(null),identity:input.identity,globals:input.globals,publisher:`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`.replace(/[^A-Za-z0-9._:@/+-]/gu,"-").slice(0,160)};
+   const client=graphFleetClientV1(settings,{fetch:remoteCacheFetchV1(input.environment,{root:input.workspaceRoot})}),units=renewal?.units??only??input.units(),partial=renewal?.head??{version:1 as const,revision:projectRecordKeyTextV1(null),...input.priority===undefined?{}:{priority:input.priority},identity:input.identity,globals:input.globals,publisher:`${hostname()}:${process.pid}:${randomBytes(3).toString("hex")}`.replace(/[^A-Za-z0-9._:@/+-]/gu,"-").slice(0,160)};
    const id=renewal?.head.id??ownerPoolIdV1(partial,units);if(only!==undefined){if(!forced&&asked?.id===id&&now()-asked.at<P.republishKeepAliveMilliseconds)return true;}else if(!forced&&last?.manifest.head.id===id)return true;
    if(only===undefined){waveId=id;count=units.length;}const head:OwnerPoolHeadV1={...partial,id,createdMs:now()};
    const manifest:OwnerPoolManifestV1={head,session:renewal?.session??serialize(input.session()),units};

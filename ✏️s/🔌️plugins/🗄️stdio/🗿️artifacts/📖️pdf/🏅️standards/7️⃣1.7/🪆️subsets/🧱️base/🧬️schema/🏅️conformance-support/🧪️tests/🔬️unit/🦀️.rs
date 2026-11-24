@@ -1,5 +1,5 @@
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, ObjRef, PdfObject};
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDictAdded, PdfDictDiff, PdfDictModified, PdfObjectAdded, PdfObjectsDiff};
 #[allow(unused_imports)]
@@ -46,7 +46,7 @@ fn removing_a_catalog_entry_takes_what_it_exclusively_installed_with_it() {
 
 #[test]
 fn embedding_a_font_program_leaves_exactly_one_program_key() {
-    let base = document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile", reference(1))])]);
+    let base = document_of(vec![PdfObject::Stream { dict: Vec::new(), data: stream_bytes(b"font"), filters: Vec::new() }, dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile", reference(1))])]);
     let next = crate::standards::v1_7::subsets::base::schema::testkit::after_rows(&base, embed_font_file_rows(&base, id(2), "FontFile2", id(1), None));
     assert_eq!(font_program(&next, id(2)), Some(("FontFile2".to_string(), id(1))));
     assert!(object(&next, id(2)).and_then(|value| value.dict_get("FontFile")).is_none(), "the previous program key is dropped");

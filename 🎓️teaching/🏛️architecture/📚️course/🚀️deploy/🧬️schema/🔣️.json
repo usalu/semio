@@ -12,9 +12,10 @@
       "description": "The static site on the CDN.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["host"],
+      "required": ["host", "language"],
       "properties": {
         "host": { "$ref": "#/$defs/Host", "description": "The host the CDN serves the site at; `https://` + this host is the one browser origin the proctor grants." },
+        "language": { "description": "The language the site speaks until its learner chooses another, whatever the browser asks for.", "type": "string", "enum": ["en", "de"] },
         "legal": {
           "description": "The legal pages the site links in its footer; a page that is not set is not linked.",
           "type": "object",

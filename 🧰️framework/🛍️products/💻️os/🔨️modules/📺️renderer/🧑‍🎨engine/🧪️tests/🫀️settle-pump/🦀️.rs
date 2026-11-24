@@ -145,7 +145,7 @@ fn a_frame_drains_its_input_actions_before_it_takes_a_settle_step() {
 
 #[test]
 fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives_it() {
-    assert!(SHELL_SOURCE().contains("self.owe_settle();\n        Ok(())\n    }"), "settle_boot arms the settle lane and returns instead of driving flush_deferred_actions to a fixed point");
+    assert!(SHELL_SOURCE().contains("self.settle.owe_settle();\n        Ok(())\n    }"), "settle_boot arms the settle lane and returns instead of driving flush_deferred_actions to a fixed point");
     let settle_boot = SHELL_SOURCE().split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_boot = &settle_boot[..["\n    async fn ", "\n    pub(crate) async fn "].iter().filter_map(|marker| settle_boot.find(marker)).min().unwrap_or(settle_boot.len())];
     assert!(!settle_boot.contains("self.flush_deferred_actions("), "settle_boot no longer converges the chain before the first paint");
@@ -169,7 +169,7 @@ fn a_sealed_world_snapshot_hands_camera_fit_to_the_retained_wake_lane() {
 
 #[test]
 fn the_refresh_honours_the_dirty_scope_now_that_the_pump_funds_the_guest() {
-    let refresh = SHELL_SOURCE().split("pub async fn refresh_ui").nth(1).expect("the shell declares refresh_ui");
+    let refresh = SHELL_SOURCE().split("pub async fn refresh_ui_rendered").nth(1).expect("the shell declares refresh_ui_rendered");
     assert!(refresh.contains("if !scope.wants_window_body(&kind.body_key) {"), "a window body is rendered only when the scope names it");
     assert!(refresh.contains("if !scope.wants_panel_body(&body_key) {"), "a panel body is rendered only when the scope names it");
     assert!(refresh.contains("if scope.wants_section(UiDirtySection::Measures) {"), "the measures section is fetched only when the scope names it");

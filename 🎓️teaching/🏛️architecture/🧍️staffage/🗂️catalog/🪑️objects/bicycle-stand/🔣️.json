@@ -73,7 +73,7 @@
         "densityKgM3": 7850,
         "conductivityWmK": 50,
         "specificHeatJKgK": 450,
-        "elasticModulusPa": 210000000000.0,
+        "elasticModulusPa": 210000000000,
         "source": "literature",
         "reference": "iso-10456-2007"
       }
@@ -89,8 +89,8 @@
             "en": "Stand reference (ground point between the legs)",
             "de": "Standbezug (Bodenpunkt zwischen den Beinen)"
           },
-          "x": 0.0,
-          "y": 0.0,
+          "x": 0,
+          "y": 0,
           "angleDeg": 0,
           "lengthM": 0,
           "joint": {
@@ -105,7 +105,7 @@
             "de": "Linkes Bein, vom Fundament bis zur unteren Biegetangente"
           },
           "x": -0.35085,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": 90,
           "lengthM": 0.59585,
           "joint": {
@@ -114,14 +114,14 @@
           "mass": {
             "kg": 2.17,
             "comX": 0.297925,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -138,7 +138,7 @@
             "de": "Linker 90-Grad-Bogen, Radius 180 mm (Sehne)"
           },
           "x": 0.59585,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": -45,
           "lengthM": 0.254558,
           "joint": {
@@ -154,7 +154,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -171,7 +171,7 @@
             "de": "Oberholm zwischen den Biegetangenten"
           },
           "x": 0.254558,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": -45,
           "lengthM": 0.3417,
           "joint": {
@@ -180,14 +180,14 @@
           "mass": {
             "kg": 1.24,
             "comX": 0.17085,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -204,7 +204,7 @@
             "de": "Rechter 90-Grad-Bogen, Radius 180 mm (Sehne)"
           },
           "x": 0.3417,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": -45,
           "lengthM": 0.254558,
           "joint": {
@@ -220,7 +220,7 @@
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -237,7 +237,7 @@
             "de": "Rechtes Bein, von der unteren Biegetangente bis zum Fundament"
           },
           "x": 0.254558,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": -45,
           "lengthM": 0.59585,
           "joint": {
@@ -246,14 +246,14 @@
           "mass": {
             "kg": 2.17,
             "comX": 0.297925,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -270,7 +270,7 @@
             "de": "Querholm, zwischen die Beine geschweißt (Beinachse bis Beinachse)"
           },
           "x": 0.4,
-          "y": 0.0,
+          "y": 0,
           "angleDeg": -90,
           "lengthM": 0.7017,
           "joint": {
@@ -279,14 +279,14 @@
           "mass": {
             "kg": 2.38,
             "comX": 0.35085,
-            "comY": 0.0,
+            "comY": 0,
             "distribution": "uniform",
             "source": "literature",
             "reference": "en-10219-2"
           },
           "section": {
             "areaM2": 0.00045339,
-            "secondMomentM4": 1.15856e-07,
+            "secondMomentM4": 1.15856e-7,
             "extremeFibreM": 0.02415,
             "material": "galv-steel",
             "title": {
@@ -301,8 +301,8 @@
       {
         "id": "leg-left",
         "bone": "leg-left",
-        "x": 0.0,
-        "y": 0.0,
+        "x": 0,
+        "y": 0,
         "kind": "support",
         "title": {
           "en": "Left leg embedded in the footing",
@@ -316,7 +316,7 @@
         "id": "leg-right",
         "bone": "leg-right",
         "x": 0.59585,
-        "y": 0.0,
+        "y": 0,
         "kind": "support",
         "title": {
           "en": "Right leg embedded in the footing",
@@ -330,7 +330,7 @@
         "id": "lean-point",
         "bone": "leg-right",
         "x": 0.04585,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Lean contact on the right leg, 0.55 m above ground",
@@ -341,7 +341,7 @@
         "id": "lock-point",
         "bone": "crossbar",
         "x": 0.35085,
-        "y": 0.0,
+        "y": 0,
         "kind": "load",
         "title": {
           "en": "Lock point at mid cross rail",
@@ -350,19 +350,19 @@
       }
     ],
     "representations": {
-      "500": {
+      "50": {
         "status": "authored",
-        "denominator": 500,
+        "denominator": 50,
         "validRange": {
-          "minDenominator": 350,
-          "maxDenominator": 1000
+          "minDenominator": 20,
+          "maxDenominator": 75
         },
         "pens": {
-          "body": 0.14,
-          "detail": null,
-          "texture": null,
+          "body": 0.35,
+          "detail": 0.18,
+          "texture": 0.13,
           "glazing": null,
-          "ground": 0.18
+          "ground": 0.5
         },
         "hatches": [],
         "geometry": {
@@ -373,12 +373,12 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
-              "y": -0.05105,
+              "x": 0,
+              "y": -0.02415,
               "w": 0.59585,
-              "h": 0.0752,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -388,9 +388,9 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "path",
-              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -400,12 +400,12 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
-              "y": -0.05105,
+              "x": 0,
+              "y": -0.02415,
               "w": 0.3417,
-              "h": 0.0752,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -415,9 +415,9 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "path",
-              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -427,12 +427,12 @@
               "role": "body",
               "z": 3,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
-              "y": -0.05105,
+              "x": 0,
+              "y": -0.02415,
               "w": 0.59585,
-              "h": 0.0752,
+              "h": 0.0483,
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -442,220 +442,64 @@
               "role": "body",
               "z": 3.2,
               "filled": true,
-              "tone": 0.5,
+              "tone": 0.45,
               "kind": "rect",
-              "x": 0.05105,
-              "y": -0.0376,
-              "w": 0.5996,
-              "h": 0.0752,
+              "x": 0.02415,
+              "y": -0.02415,
+              "w": 0.6534,
+              "h": 0.0483,
               "region": "crossbar-galv",
               "material": "galv-steel"
-            }
-          ],
-          "front": [
-            {
-              "id": "leg-right",
-              "bone": "leg-right",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "rect",
-              "x": -0.0315,
-              "y": 0.0,
-              "w": 0.063,
-              "h": 0.59585,
-              "region": "hoop-galv",
-              "material": "galv-steel"
             },
             {
-              "id": "bend-right",
-              "bone": "bend-right",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "path",
-              "d": "M -0.0315 0.59585 L -0.0315 0.7624 A 0.0315 0.0376 0 0 0 0.0315 0.7624 L 0.0315 0.59585 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            }
-          ],
-          "plan": [
-            {
-              "id": "top-rail",
-              "bone": "top-rail",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "rect",
-              "x": -0.17085,
-              "y": -0.0315,
-              "w": 0.3417,
-              "h": 0.063,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-left",
-              "bone": "bend-left",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "path",
-              "d": "M -0.17085 -0.0315 L -0.3374 -0.0315 A 0.0376 0.0315 0 0 0 -0.3374 0.0315 L -0.17085 0.0315 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-right",
-              "bone": "bend-right",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.5,
-              "kind": "path",
-              "d": "M 0.17085 -0.0315 L 0.3374 -0.0315 A 0.0376 0.0315 0 0 1 0.3374 0.0315 L 0.17085 0.0315 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            }
-          ]
-        },
-        "decisions": {
-          "silhouette": {
-            "en": "One U band per member at the print floor (75.2 mm = 0.15 mm on paper) with the cross rail between the legs; the 0.75 x 0.80 m outer size and the 204 mm outer bend radius are kept exactly. Front: the near leg and bend end-on as a 63 mm bar; plan: top rail and bends as one 63 mm bar with round ends (the lateral extent may exceed the real 48.3 mm by 15 mm at most, so the 3D tube of 75.2 mm is drawn 12 mm narrower across, 0.024 mm on paper).",
-            "de": "Ein U-Band je Stab an der Druckgrenze (75,2 mm = 0,15 mm auf dem Papier) mit dem Querholm zwischen den Beinen; das Außenmaß 0,75 x 0,80 m und der äußere Biegeradius 204 mm bleiben exakt. Ansicht: das nahe Bein und der nahe Bogen von vorn als Balken von 63 mm; Grundriss: Oberholm und Bögen als ein Balken von 63 mm mit runden Enden (die seitliche Ausdehnung darf die realen 48,3 mm um höchstens 15 mm übersteigen, daher ist das 3D-Rohr von 75,2 mm quer 12 mm schmaler gezeichnet, 0,024 mm auf dem Papier)."
-          },
-          "retained": {
-            "en": "Outer width 0.75 m, height 0.80 m, outer bend radius, the cross rail at 0.40 m.",
-            "de": "Außenbreite 0,75 m, Höhe 0,80 m, äußerer Biegeradius, Querholm auf 0,40 m."
-          },
-          "merged": {
-            "en": "Tube wall, welds and saddle joints merge into the bands.",
-            "de": "Rohrwand, Nähte und Sattelstöße gehen in den Bändern auf."
-          },
-          "omitted": {
-            "en": "Weld lines, embedded leg ends, hidden parts.",
-            "de": "Nahtlinien, einbetonierte Beinenden, verdeckte Teile."
-          },
-          "thinElements": {
-            "en": "The 0.0483 m tube would be 0.097 mm on paper: every band is thickened inwards to 0.0752 m (0.15 mm), the print floor, so the outer size stays exact and the inner opening shrinks by 27 mm per side.",
-            "de": "Das Rohr von 0,0483 m wäre auf dem Papier 0,097 mm breit: jedes Band ist nach innen auf 0,0752 m (0,15 mm) verdickt, die Druckgrenze, so dass das Außenmaß exakt bleibt und die Innenöffnung je Seite um 27 mm schrumpft."
-          },
-          "hatching": {
-            "en": "None.",
-            "de": "Keine."
-          },
-          "styles": {
-            "en": "Solid band tone 0.5, outline 0.14 mm (the 63 mm bars of front and plan then still print 0.2 mm at 1:1000, the end of the range); ground line 0.18 mm.",
-            "de": "Volles Band Ton 0,5, Kontur 0,14 mm (die Balken von 63 mm in Ansicht und Grundriss drucken so auch bei 1:1000, dem Bereichsende, noch 0,2 mm); Bodenlinie 0,18 mm."
-          },
-          "overlays": {
-            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
-            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
-          }
-        }
-      },
-      "200": {
-        "status": "authored",
-        "denominator": 200,
-        "validRange": {
-          "minDenominator": 150,
-          "maxDenominator": 350
-        },
-        "pens": {
-          "body": 0.18,
-          "detail": 0.13,
-          "texture": null,
-          "glazing": null,
-          "ground": 0.25
-        },
-        "hatches": [],
-        "geometry": {
-          "elevation": [
-            {
-              "id": "leg-left",
-              "bone": "leg-left",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.02415,
-              "w": 0.59585,
-              "h": 0.0483,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-left",
-              "bone": "bend-left",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "path",
-              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "top-rail",
-              "bone": "top-rail",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.02415,
-              "w": 0.3417,
-              "h": 0.0483,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "bend-right",
-              "bone": "bend-right",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "path",
-              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "leg-right",
-              "bone": "leg-right",
-              "role": "body",
-              "z": 3,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.02415,
-              "w": 0.59585,
-              "h": 0.0483,
-              "region": "hoop-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "crossbar",
+              "id": "weld-l",
               "bone": "crossbar",
-              "role": "body",
-              "z": 2.8,
-              "filled": true,
-              "tone": 0.45,
-              "kind": "rect",
-              "x": 0.0,
-              "y": -0.02415,
-              "w": 0.7017,
-              "h": 0.0483,
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.02415,
+                  0.02415
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0.02415,
+                  -0.02415
+                ]
+              ],
+              "closed": false,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "weld-r",
+              "bone": "crossbar",
+              "role": "detail",
+              "z": 4,
+              "filled": false,
+              "tone": 0.3,
+              "kind": "poly",
+              "points": [
+                [
+                  0.67755,
+                  0.02415
+                ],
+                [
+                  0.7017,
+                  0
+                ],
+                [
+                  0.67755,
+                  -0.02415
+                ]
+              ],
+              "closed": false,
               "region": "crossbar-galv",
               "material": "galv-steel"
             }
@@ -670,7 +514,7 @@
               "tone": 0.45,
               "kind": "rect",
               "x": -0.02415,
-              "y": 0.0,
+              "y": 0,
               "w": 0.0483,
               "h": 0.59585,
               "region": "hoop-galv",
@@ -733,32 +577,32 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "Inverted U at true tube size (0.24 mm wide) per member, each bend arc as two quadratic curves, the cross rail as a bar from leg axis to leg axis under the legs. Front: near leg and bend end-on; plan: top rail and bends from above.",
-            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) je Stab, jeder Biegebogen als zwei quadratische Kurven, der Querholm als Balken von Beinachse zu Beinachse unter den Beinen. Ansicht: nahes Bein und naher Bogen von vorn; Grundriss: Oberholm und Bögen von oben."
+            "en": "The hoop at true size (0.97 mm band) drawn per member: legs, two 90 degree bends of 180 mm centre-line radius as true arcs, top rail; the cross rail between the leg faces with the visible half of each saddle joint as a chevron. Front: the near leg and bend end-on, the far parts and the cross rail hidden behind them; plan: the top rail and the two bends seen from above, ending in the leg tubes' semicircles.",
+            "de": "Der Bügel in wahrer Größe (Band 0,97 mm) je Stab gezeichnet: Beine, zwei 90-Grad-Bögen mit 180 mm Mittellinienradius als wahre Kreisbögen, Oberholm; der Querholm zwischen den Beinflächen mit der sichtbaren Hälfte jedes Sattelstoßes als Winkel. Ansicht: das nahe Bein und der nahe Bogen von vorn, die fernen Teile und der Querholm dahinter verdeckt; Grundriss: Oberholm und die zwei Bögen von oben, mit den Halbkreisen der Beinrohre als Enden."
           },
           "retained": {
-            "en": "Real tube diameter 0.0483 m, bend radius 0.18 m, cross rail at 0.40 m.",
-            "de": "Reale Rohrstärke 0,0483 m, Biegeradius 0,18 m, Querholm auf 0,40 m."
+            "en": "Tube 48.3 mm, bend radius 180 mm, cross rail at 400 mm, saddle joints, bend tangents (as the joints of the pieces).",
+            "de": "Rohr 48,3 mm, Biegeradius 180 mm, Querholm auf 400 mm, Sattelstöße, Biegetangenten (als Stöße der Stücke)."
           },
           "merged": {
-            "en": "The saddle joints merge into the legs (the rail runs under them).",
-            "de": "Die Sattelstöße gehen in den Beinen auf (der Holm läuft unter ihnen durch)."
+            "en": "Tube wall and zinc coat are one filled band.",
+            "de": "Rohrwand und Zinkschicht sind ein gefülltes Band."
           },
           "omitted": {
-            "en": "Weld chevrons, welds, vent holes, embedded leg ends, hidden parts.",
-            "de": "Nahtwinkel, Nähte, Entlüftungsbohrungen, einbetonierte Beinenden, verdeckte Teile."
+            "en": "Fillet welds and vent holes (below 0.15 mm on paper), the 0.3 m embedded leg ends, hidden parts in front and plan.",
+            "de": "Kehlnähte und Entlüftungsbohrungen (unter 0,15 mm auf dem Papier), die 0,3 m einbetonierten Beinenden, verdeckte Teile in Ansicht und Grundriss."
           },
           "thinElements": {
-            "en": "Tube is 0.24 mm wide, just above the 0.2 mm feature width; outline 0.18 mm.",
-            "de": "Das Rohr ist 0,24 mm breit, knapp über der Mindestbreite von 0,2 mm; Kontur 0,18 mm."
+            "en": "The weld chevrons are 0.18 mm detail strokes on the 0.97 mm tube.",
+            "de": "Die Nahtwinkel sind Detailstriche von 0,18 mm auf dem 0,97-mm-Rohr."
           },
           "hatching": {
-            "en": "None.",
-            "de": "Keine."
+            "en": "None; the tube is narrower than any hatch spacing.",
+            "de": "Keine; das Rohr ist schmaler als jeder Schraffurabstand."
           },
           "styles": {
-            "en": "Tone 0.45; body pen 0.18 mm, ground 0.25 mm.",
-            "de": "Ton 0,45; Körperstift 0,18 mm, Boden 0,25 mm."
+            "en": "Tone 0.45; body pen 0.35 mm, detail 0.18 mm, ground 0.5 mm.",
+            "de": "Ton 0,45; Körperstift 0,35 mm, Detail 0,18 mm, Boden 0,5 mm."
           },
           "overlays": {
             "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
@@ -791,7 +635,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.59585,
               "h": 0.0483,
@@ -818,7 +662,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.3417,
               "h": 0.0483,
@@ -845,7 +689,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.59585,
               "h": 0.0483,
@@ -881,8 +725,8 @@
                   0.02415
                 ],
                 [
-                  0.0,
-                  0.0
+                  0,
+                  0
                 ],
                 [
                   0.02415,
@@ -908,7 +752,7 @@
                 ],
                 [
                   0.7017,
-                  0.0
+                  0
                 ],
                 [
                   0.67755,
@@ -930,7 +774,7 @@
               "tone": 0.45,
               "kind": "rect",
               "x": -0.02415,
-              "y": 0.0,
+              "y": 0,
               "w": 0.0483,
               "h": 0.59585,
               "region": "hoop-galv",
@@ -1026,19 +870,19 @@
           }
         }
       },
-      "50": {
+      "200": {
         "status": "authored",
-        "denominator": 50,
+        "denominator": 200,
         "validRange": {
-          "minDenominator": 20,
-          "maxDenominator": 75
+          "minDenominator": 150,
+          "maxDenominator": 350
         },
         "pens": {
-          "body": 0.35,
-          "detail": 0.18,
-          "texture": 0.13,
+          "body": 0.18,
+          "detail": 0.13,
+          "texture": null,
           "glazing": null,
-          "ground": 0.5
+          "ground": 0.25
         },
         "hatches": [],
         "geometry": {
@@ -1051,7 +895,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.59585,
               "h": 0.0483,
@@ -1066,7 +910,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
+              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -1078,7 +922,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.3417,
               "h": 0.0483,
@@ -1093,7 +937,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "path",
-              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.017076 -0.017076 A 0.15585 0.15585 0 0 0 0.237482 -0.017076 Z",
+              "d": "M 0.271635 0.017077 Q 0.211841 0.076871 0.127279 0.076871 Q 0.042717 0.076871 -0.017077 0.017077 L 0.017076 -0.017076 Q 0.062724 0.028571 0.127279 0.028571 Q 0.191834 0.028571 0.237482 -0.017076 Z",
               "region": "hoop-galv",
               "material": "galv-steel"
             },
@@ -1105,7 +949,7 @@
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.0,
+              "x": 0,
               "y": -0.02415,
               "w": 0.59585,
               "h": 0.0483,
@@ -1116,66 +960,14 @@
               "id": "crossbar",
               "bone": "crossbar",
               "role": "body",
-              "z": 3.2,
+              "z": 2.8,
               "filled": true,
               "tone": 0.45,
               "kind": "rect",
-              "x": 0.02415,
+              "x": 0,
               "y": -0.02415,
-              "w": 0.6534,
+              "w": 0.7017,
               "h": 0.0483,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "weld-l",
-              "bone": "crossbar",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.02415,
-                  0.02415
-                ],
-                [
-                  0.0,
-                  0.0
-                ],
-                [
-                  0.02415,
-                  -0.02415
-                ]
-              ],
-              "closed": false,
-              "region": "crossbar-galv",
-              "material": "galv-steel"
-            },
-            {
-              "id": "weld-r",
-              "bone": "crossbar",
-              "role": "detail",
-              "z": 4,
-              "filled": false,
-              "tone": 0.3,
-              "kind": "poly",
-              "points": [
-                [
-                  0.67755,
-                  0.02415
-                ],
-                [
-                  0.7017,
-                  0.0
-                ],
-                [
-                  0.67755,
-                  -0.02415
-                ]
-              ],
-              "closed": false,
               "region": "crossbar-galv",
               "material": "galv-steel"
             }
@@ -1190,7 +982,7 @@
               "tone": 0.45,
               "kind": "rect",
               "x": -0.02415,
-              "y": 0.0,
+              "y": 0,
               "w": 0.0483,
               "h": 0.59585,
               "region": "hoop-galv",
@@ -1253,32 +1045,270 @@
         },
         "decisions": {
           "silhouette": {
-            "en": "The hoop at true size (0.97 mm band) drawn per member: legs, two 90 degree bends of 180 mm centre-line radius as true arcs, top rail; the cross rail between the leg faces with the visible half of each saddle joint as a chevron. Front: the near leg and bend end-on, the far parts and the cross rail hidden behind them; plan: the top rail and the two bends seen from above, ending in the leg tubes' semicircles.",
-            "de": "Der Bügel in wahrer Größe (Band 0,97 mm) je Stab gezeichnet: Beine, zwei 90-Grad-Bögen mit 180 mm Mittellinienradius als wahre Kreisbögen, Oberholm; der Querholm zwischen den Beinflächen mit der sichtbaren Hälfte jedes Sattelstoßes als Winkel. Ansicht: das nahe Bein und der nahe Bogen von vorn, die fernen Teile und der Querholm dahinter verdeckt; Grundriss: Oberholm und die zwei Bögen von oben, mit den Halbkreisen der Beinrohre als Enden."
+            "en": "Inverted U at true tube size (0.24 mm wide) per member, each bend arc as two quadratic curves, the cross rail as a bar from leg axis to leg axis under the legs. Front: near leg and bend end-on; plan: top rail and bends from above.",
+            "de": "Umgekehrtes U in wahrer Rohrstärke (0,24 mm breit) je Stab, jeder Biegebogen als zwei quadratische Kurven, der Querholm als Balken von Beinachse zu Beinachse unter den Beinen. Ansicht: nahes Bein und naher Bogen von vorn; Grundriss: Oberholm und Bögen von oben."
           },
           "retained": {
-            "en": "Tube 48.3 mm, bend radius 180 mm, cross rail at 400 mm, saddle joints, bend tangents (as the joints of the pieces).",
-            "de": "Rohr 48,3 mm, Biegeradius 180 mm, Querholm auf 400 mm, Sattelstöße, Biegetangenten (als Stöße der Stücke)."
+            "en": "Real tube diameter 0.0483 m, bend radius 0.18 m, cross rail at 0.40 m.",
+            "de": "Reale Rohrstärke 0,0483 m, Biegeradius 0,18 m, Querholm auf 0,40 m."
           },
           "merged": {
-            "en": "Tube wall and zinc coat are one filled band.",
-            "de": "Rohrwand und Zinkschicht sind ein gefülltes Band."
+            "en": "The saddle joints merge into the legs (the rail runs under them).",
+            "de": "Die Sattelstöße gehen in den Beinen auf (der Holm läuft unter ihnen durch)."
           },
           "omitted": {
-            "en": "Fillet welds and vent holes (below 0.15 mm on paper), the 0.3 m embedded leg ends, hidden parts in front and plan.",
-            "de": "Kehlnähte und Entlüftungsbohrungen (unter 0,15 mm auf dem Papier), die 0,3 m einbetonierten Beinenden, verdeckte Teile in Ansicht und Grundriss."
+            "en": "Weld chevrons, welds, vent holes, embedded leg ends, hidden parts.",
+            "de": "Nahtwinkel, Nähte, Entlüftungsbohrungen, einbetonierte Beinenden, verdeckte Teile."
           },
           "thinElements": {
-            "en": "The weld chevrons are 0.18 mm detail strokes on the 0.97 mm tube.",
-            "de": "Die Nahtwinkel sind Detailstriche von 0,18 mm auf dem 0,97-mm-Rohr."
+            "en": "Tube is 0.24 mm wide, just above the 0.2 mm feature width; outline 0.18 mm.",
+            "de": "Das Rohr ist 0,24 mm breit, knapp über der Mindestbreite von 0,2 mm; Kontur 0,18 mm."
           },
           "hatching": {
-            "en": "None; the tube is narrower than any hatch spacing.",
-            "de": "Keine; das Rohr ist schmaler als jeder Schraffurabstand."
+            "en": "None.",
+            "de": "Keine."
           },
           "styles": {
-            "en": "Tone 0.45; body pen 0.35 mm, detail 0.18 mm, ground 0.5 mm.",
-            "de": "Ton 0,45; Körperstift 0,35 mm, Detail 0,18 mm, Boden 0,5 mm."
+            "en": "Tone 0.45; body pen 0.18 mm, ground 0.25 mm.",
+            "de": "Ton 0,45; Körperstift 0,18 mm, Boden 0,25 mm."
+          },
+          "overlays": {
+            "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
+            "de": "Jedes Stück des gebogenen Rohrs trägt hoop-galv, der Querholm crossbar-galv; die Kraft- und Momentenansichten färben jedes Stück nach seinem eigenen Stab."
+          }
+        }
+      },
+      "500": {
+        "status": "authored",
+        "denominator": 500,
+        "validRange": {
+          "minDenominator": 350,
+          "maxDenominator": 1000
+        },
+        "pens": {
+          "body": 0.14,
+          "detail": null,
+          "texture": null,
+          "glazing": null,
+          "ground": 0.18
+        },
+        "hatches": [],
+        "geometry": {
+          "elevation": [
+            {
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.05105,
+              "w": 0.59585,
+              "h": 0.0752,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.05105,
+              "w": 0.3417,
+              "h": 0.0752,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.271635 0.017077 A 0.20415 0.20415 0 0 1 -0.017077 0.017077 L 0.036098 -0.036098 A 0.12895 0.12895 0 0 0 0.21846 -0.036098 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0,
+              "y": -0.05105,
+              "w": 0.59585,
+              "h": 0.0752,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 3.2,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": 0.05105,
+              "y": -0.0376,
+              "w": 0.5996,
+              "h": 0.0752,
+              "region": "crossbar-galv",
+              "material": "galv-steel"
+            }
+          ],
+          "front": [
+            {
+              "id": "leg-right",
+              "bone": "leg-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0315,
+              "y": 0,
+              "w": 0.063,
+              "h": 0.59585,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.0315 0.59585 L -0.0315 0.7624 A 0.0315 0.0376 0 0 0 0.0315 0.7624 L 0.0315 0.59585 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "leg-left",
+              "bone": "leg-left",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0315,
+              "w": 0.063,
+              "material": "galv-steel",
+              "y": 0,
+              "h": 0.59585,
+              "region": "hoop-galv"
+            },
+            {
+              "id": "crossbar",
+              "bone": "crossbar",
+              "role": "body",
+              "z": 2.9,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.0315,
+              "w": 0.063,
+              "material": "galv-steel",
+              "y": 0.3624,
+              "h": 0.0752,
+              "region": "crossbar-galv"
+            }
+          ],
+          "plan": [
+            {
+              "id": "top-rail",
+              "bone": "top-rail",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "rect",
+              "x": -0.17085,
+              "y": -0.0315,
+              "w": 0.3417,
+              "h": 0.063,
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-left",
+              "bone": "bend-left",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M -0.17085 -0.0315 L -0.3374 -0.0315 A 0.0376 0.0315 0 0 0 -0.3374 0.0315 L -0.17085 0.0315 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            },
+            {
+              "id": "bend-right",
+              "bone": "bend-right",
+              "role": "body",
+              "z": 3,
+              "filled": true,
+              "tone": 0.5,
+              "kind": "path",
+              "d": "M 0.17085 -0.0315 L 0.3374 -0.0315 A 0.0376 0.0315 0 0 1 0.3374 0.0315 L 0.17085 0.0315 Z",
+              "region": "hoop-galv",
+              "material": "galv-steel"
+            }
+          ]
+        },
+        "decisions": {
+          "silhouette": {
+            "en": "One U band per member at the print floor (75.2 mm = 0.15 mm on paper) with the cross rail between the legs; the 0.75 x 0.80 m outer size and the 204 mm outer bend radius are kept exactly. Front: the near leg and bend end-on as a 63 mm bar; plan: top rail and bends as one 63 mm bar with round ends (the lateral extent may exceed the real 48.3 mm by 15 mm at most, so the 3D tube is an oval of 75.2 mm by 63 mm and the three views are the same body).",
+            "de": "Ein U-Band je Stab an der Druckgrenze (75,2 mm = 0,15 mm auf dem Papier) mit dem Querholm zwischen den Beinen; das Außenmaß 0,75 x 0,80 m und der äußere Biegeradius 204 mm bleiben exakt. Ansicht: das nahe Bein und der nahe Bogen von vorn als Balken von 63 mm; Grundriss: Oberholm und Bögen als ein Balken von 63 mm mit runden Enden (die seitliche Ausdehnung darf die realen 48,3 mm um höchstens 15 mm übersteigen, daher ist das 3D-Rohr ein Oval von 75,2 mm mal 63 mm und die drei Ansichten zeigen denselben Körper)."
+          },
+          "retained": {
+            "en": "Outer width 0.75 m, height 0.80 m, outer bend radius, the cross rail at 0.40 m.",
+            "de": "Außenbreite 0,75 m, Höhe 0,80 m, äußerer Biegeradius, Querholm auf 0,40 m."
+          },
+          "merged": {
+            "en": "Tube wall, welds and saddle joints merge into the bands.",
+            "de": "Rohrwand, Nähte und Sattelstöße gehen in den Bändern auf."
+          },
+          "omitted": {
+            "en": "Weld lines, embedded leg ends, hidden parts.",
+            "de": "Nahtlinien, einbetonierte Beinenden, verdeckte Teile."
+          },
+          "thinElements": {
+            "en": "The 0.0483 m tube would be 0.097 mm on paper: every band is thickened inwards to 0.0752 m (0.15 mm), the print floor, so the outer size stays exact and the inner opening shrinks by 27 mm per side.",
+            "de": "Das Rohr von 0,0483 m wäre auf dem Papier 0,097 mm breit: jedes Band ist nach innen auf 0,0752 m (0,15 mm) verdickt, die Druckgrenze, so dass das Außenmaß exakt bleibt und die Innenöffnung je Seite um 27 mm schrumpft."
+          },
+          "hatching": {
+            "en": "None.",
+            "de": "Keine."
+          },
+          "styles": {
+            "en": "Solid band tone 0.5, outline 0.14 mm (the 63 mm bars of front and plan then still print 0.2 mm at 1:1000, the end of the range); ground line 0.18 mm.",
+            "de": "Volles Band Ton 0,5, Kontur 0,14 mm (die Balken von 63 mm in Ansicht und Grundriss drucken so auch bei 1:1000, dem Bereichsende, noch 0,2 mm); Bodenlinie 0,18 mm."
           },
           "overlays": {
             "en": "Every piece of the bent tube carries hoop-galv, the cross rail crossbar-galv; the force and moment views colour each piece by its own member.",
@@ -1631,12 +1661,12 @@
         "thermal": {
           "regions": {
             "hoop-galv": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "crossbar-galv": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -1662,11 +1692,11 @@
         "thermal": {
           "regions": {
             "hoop-galv": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "crossbar-galv": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             }
           },
@@ -1693,11 +1723,11 @@
         "thermal": {
           "regions": {
             "hoop-galv": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             },
             "crossbar-galv": {
-              "exposedFraction": 1.0,
+              "exposedFraction": 1,
               "sunlitFraction": 0.5
             }
           },
@@ -1738,12 +1768,12 @@
         "thermal": {
           "regions": {
             "hoop-galv": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             },
             "crossbar-galv": {
-              "exposedFraction": 1.0,
-              "sunlitFraction": 0.0
+              "exposedFraction": 1,
+              "sunlitFraction": 0
             }
           },
           "emitters": {}
@@ -2055,7 +2085,7 @@
               "kind": "metal",
               "material": "galv-steel",
               "thicknessM": 0.0032,
-              "resistanceM2KW": 6.4e-05,
+              "resistanceM2KW": 0.000064,
               "heatCapacityJM2K": 11304,
               "source": "literature",
               "reference": "iso-10456-2007"
@@ -2088,7 +2118,7 @@
               "kind": "metal",
               "material": "galv-steel",
               "thicknessM": 0.0032,
-              "resistanceM2KW": 6.4e-05,
+              "resistanceM2KW": 0.000064,
               "heatCapacityJM2K": 11304,
               "source": "literature",
               "reference": "iso-10456-2007"
@@ -2142,10 +2172,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["-u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "-u"
+            ]
           },
           {
             "id": "bend-left",
@@ -2155,46 +2212,162 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.023686, 0.184711],
-              [0.022312, 0.189242],
-              [0.02008, 0.193417],
-              [0.017077, 0.197077],
-              [0.013417, 0.20008],
-              [0.009242, 0.202312],
-              [0.004711, 0.203686],
-              [0.0, 0.20415],
-              [-0.004711, 0.203686],
-              [-0.009242, 0.202312],
-              [-0.013417, 0.20008],
-              [-0.017077, 0.197077],
-              [-0.02008, 0.193417],
-              [-0.022312, 0.189242],
-              [-0.023686, 0.184711],
-              [-0.02415, 0.18],
-              [-0.023686, 0.175289],
-              [-0.022312, 0.170758],
-              [-0.02008, 0.166583],
-              [-0.017077, 0.162923],
-              [-0.013417, 0.15992],
-              [-0.009242, 0.157688],
-              [-0.004711, 0.156314],
-              [-0.0, 0.15585],
-              [0.004711, 0.156314],
-              [0.009242, 0.157688],
-              [0.013417, 0.15992],
-              [0.017077, 0.162923],
-              [0.02008, 0.166583],
-              [0.022312, 0.170758],
-              [0.023686, 0.175289],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023686,
+                0.184711
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.02008,
+                0.193417
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.013417,
+                0.20008
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0.004711,
+                0.203686
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.004711,
+                0.203686
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.013417,
+                0.20008
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.02008,
+                0.193417
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.023686,
+                0.184711
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023686,
+                0.175289
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.02008,
+                0.166583
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.013417,
+                0.15992
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                -0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.004711,
+                0.156314
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.013417,
+                0.15992
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.02008,
+                0.166583
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.023686,
+                0.175289
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -2204,9 +2377,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02415
+              ],
+              [
+                0.3417,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           },
           {
             "id": "bend-right",
@@ -2216,46 +2414,162 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.023686, 0.184711],
-              [0.022312, 0.189242],
-              [0.02008, 0.193417],
-              [0.017077, 0.197077],
-              [0.013417, 0.20008],
-              [0.009242, 0.202312],
-              [0.004711, 0.203686],
-              [0.0, 0.20415],
-              [-0.004711, 0.203686],
-              [-0.009242, 0.202312],
-              [-0.013417, 0.20008],
-              [-0.017077, 0.197077],
-              [-0.02008, 0.193417],
-              [-0.022312, 0.189242],
-              [-0.023686, 0.184711],
-              [-0.02415, 0.18],
-              [-0.023686, 0.175289],
-              [-0.022312, 0.170758],
-              [-0.02008, 0.166583],
-              [-0.017077, 0.162923],
-              [-0.013417, 0.15992],
-              [-0.009242, 0.157688],
-              [-0.004711, 0.156314],
-              [-0.0, 0.15585],
-              [0.004711, 0.156314],
-              [0.009242, 0.157688],
-              [0.013417, 0.15992],
-              [0.017077, 0.162923],
-              [0.02008, 0.166583],
-              [0.022312, 0.170758],
-              [0.023686, 0.175289],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023686,
+                0.184711
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.02008,
+                0.193417
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.013417,
+                0.20008
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0.004711,
+                0.203686
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.004711,
+                0.203686
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.013417,
+                0.20008
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.02008,
+                0.193417
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.023686,
+                0.184711
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023686,
+                0.175289
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.02008,
+                0.166583
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.013417,
+                0.15992
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                -0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.004711,
+                0.156314
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.013417,
+                0.15992
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.02008,
+                0.166583
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.023686,
+                0.175289
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -2265,10 +2579,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["+u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "+u"
+            ]
           },
           {
             "id": "crossbar",
@@ -2277,9 +2618,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02415
+              ],
+              [
+                0.7017,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           }
         ],
         "thermal": [
@@ -2322,9 +2688,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "leg-left",
             "part": "member"
           },
@@ -2336,48 +2731,170 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.0, 0.20415],
-              [0.004711, 0.203686],
-              [0.009242, 0.202312],
-              [0.013417, 0.20008],
-              [0.017077, 0.197077],
-              [0.02008, 0.193417],
-              [0.022312, 0.189242],
-              [0.023686, 0.184711],
-              [0.02415, 0.18],
-              [0.023686, 0.175289],
-              [0.022312, 0.170758],
-              [0.02008, 0.166583],
-              [0.017077, 0.162923],
-              [0.013417, 0.15992],
-              [0.009242, 0.157688],
-              [0.004711, 0.156314],
-              [0.0, 0.15585],
-              [0.0, 0.15905],
-              [0.004087, 0.159453],
-              [0.008017, 0.160645],
-              [0.011639, 0.162581],
-              [0.014814, 0.165186],
-              [0.017419, 0.168361],
-              [0.019355, 0.171983],
-              [0.020547, 0.175913],
-              [0.02095, 0.18],
-              [0.020547, 0.184087],
-              [0.019355, 0.188017],
-              [0.017419, 0.191639],
-              [0.014814, 0.194814],
-              [0.011639, 0.197419],
-              [0.008017, 0.199355],
-              [0.004087, 0.200547],
-              [0.0, 0.20095],
-              [0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                0.004711,
+                0.203686
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0.013417,
+                0.20008
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.02008,
+                0.193417
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.023686,
+                0.184711
+              ],
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023686,
+                0.175289
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.02008,
+                0.166583
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.013417,
+                0.15992
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                0.004087,
+                0.159453
+              ],
+              [
+                0.008017,
+                0.160645
+              ],
+              [
+                0.011639,
+                0.162581
+              ],
+              [
+                0.014814,
+                0.165186
+              ],
+              [
+                0.017419,
+                0.168361
+              ],
+              [
+                0.019355,
+                0.171983
+              ],
+              [
+                0.020547,
+                0.175913
+              ],
+              [
+                0.02095,
+                0.18
+              ],
+              [
+                0.020547,
+                0.184087
+              ],
+              [
+                0.019355,
+                0.188017
+              ],
+              [
+                0.017419,
+                0.191639
+              ],
+              [
+                0.014814,
+                0.194814
+              ],
+              [
+                0.011639,
+                0.197419
+              ],
+              [
+                0.008017,
+                0.199355
+              ],
+              [
+                0.004087,
+                0.200547
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-left",
             "part": "member"
@@ -2390,48 +2907,170 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [-0.0, 0.20415],
-              [-0.004711, 0.203686],
-              [-0.009242, 0.202312],
-              [-0.013417, 0.20008],
-              [-0.017077, 0.197077],
-              [-0.02008, 0.193417],
-              [-0.022312, 0.189242],
-              [-0.023686, 0.184711],
-              [-0.02415, 0.18],
-              [-0.023686, 0.175289],
-              [-0.022312, 0.170758],
-              [-0.02008, 0.166583],
-              [-0.017077, 0.162923],
-              [-0.013417, 0.15992],
-              [-0.009242, 0.157688],
-              [-0.004711, 0.156314],
-              [-0.0, 0.15585],
-              [-0.0, 0.15905],
-              [-0.004087, 0.159453],
-              [-0.008017, 0.160645],
-              [-0.011639, 0.162581],
-              [-0.014814, 0.165186],
-              [-0.017419, 0.168361],
-              [-0.019355, 0.171983],
-              [-0.020547, 0.175913],
-              [-0.02095, 0.18],
-              [-0.020547, 0.184087],
-              [-0.019355, 0.188017],
-              [-0.017419, 0.191639],
-              [-0.014814, 0.194814],
-              [-0.011639, 0.197419],
-              [-0.008017, 0.199355],
-              [-0.004087, 0.200547],
-              [-0.0, 0.20095],
-              [-0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.004711,
+                0.203686
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.013417,
+                0.20008
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.02008,
+                0.193417
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.023686,
+                0.184711
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023686,
+                0.175289
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.02008,
+                0.166583
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.013417,
+                0.15992
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                -0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                -0.004087,
+                0.159453
+              ],
+              [
+                -0.008017,
+                0.160645
+              ],
+              [
+                -0.011639,
+                0.162581
+              ],
+              [
+                -0.014814,
+                0.165186
+              ],
+              [
+                -0.017419,
+                0.168361
+              ],
+              [
+                -0.019355,
+                0.171983
+              ],
+              [
+                -0.020547,
+                0.175913
+              ],
+              [
+                -0.02095,
+                0.18
+              ],
+              [
+                -0.020547,
+                0.184087
+              ],
+              [
+                -0.019355,
+                0.188017
+              ],
+              [
+                -0.017419,
+                0.191639
+              ],
+              [
+                -0.014814,
+                0.194814
+              ],
+              [
+                -0.011639,
+                0.197419
+              ],
+              [
+                -0.008017,
+                0.199355
+              ],
+              [
+                -0.004087,
+                0.200547
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-left",
             "part": "member"
@@ -2443,9 +3082,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "top-rail",
             "part": "member"
           },
@@ -2457,48 +3125,170 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.0, 0.20415],
-              [0.004711, 0.203686],
-              [0.009242, 0.202312],
-              [0.013417, 0.20008],
-              [0.017077, 0.197077],
-              [0.02008, 0.193417],
-              [0.022312, 0.189242],
-              [0.023686, 0.184711],
-              [0.02415, 0.18],
-              [0.023686, 0.175289],
-              [0.022312, 0.170758],
-              [0.02008, 0.166583],
-              [0.017077, 0.162923],
-              [0.013417, 0.15992],
-              [0.009242, 0.157688],
-              [0.004711, 0.156314],
-              [0.0, 0.15585],
-              [0.0, 0.15905],
-              [0.004087, 0.159453],
-              [0.008017, 0.160645],
-              [0.011639, 0.162581],
-              [0.014814, 0.165186],
-              [0.017419, 0.168361],
-              [0.019355, 0.171983],
-              [0.020547, 0.175913],
-              [0.02095, 0.18],
-              [0.020547, 0.184087],
-              [0.019355, 0.188017],
-              [0.017419, 0.191639],
-              [0.014814, 0.194814],
-              [0.011639, 0.197419],
-              [0.008017, 0.199355],
-              [0.004087, 0.200547],
-              [0.0, 0.20095],
-              [0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                0.004711,
+                0.203686
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0.013417,
+                0.20008
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.02008,
+                0.193417
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.023686,
+                0.184711
+              ],
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023686,
+                0.175289
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.02008,
+                0.166583
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.013417,
+                0.15992
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                0.004087,
+                0.159453
+              ],
+              [
+                0.008017,
+                0.160645
+              ],
+              [
+                0.011639,
+                0.162581
+              ],
+              [
+                0.014814,
+                0.165186
+              ],
+              [
+                0.017419,
+                0.168361
+              ],
+              [
+                0.019355,
+                0.171983
+              ],
+              [
+                0.020547,
+                0.175913
+              ],
+              [
+                0.02095,
+                0.18
+              ],
+              [
+                0.020547,
+                0.184087
+              ],
+              [
+                0.019355,
+                0.188017
+              ],
+              [
+                0.017419,
+                0.191639
+              ],
+              [
+                0.014814,
+                0.194814
+              ],
+              [
+                0.011639,
+                0.197419
+              ],
+              [
+                0.008017,
+                0.199355
+              ],
+              [
+                0.004087,
+                0.200547
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-right",
             "part": "member"
@@ -2511,48 +3301,170 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [-0.0, 0.20415],
-              [-0.004711, 0.203686],
-              [-0.009242, 0.202312],
-              [-0.013417, 0.20008],
-              [-0.017077, 0.197077],
-              [-0.02008, 0.193417],
-              [-0.022312, 0.189242],
-              [-0.023686, 0.184711],
-              [-0.02415, 0.18],
-              [-0.023686, 0.175289],
-              [-0.022312, 0.170758],
-              [-0.02008, 0.166583],
-              [-0.017077, 0.162923],
-              [-0.013417, 0.15992],
-              [-0.009242, 0.157688],
-              [-0.004711, 0.156314],
-              [-0.0, 0.15585],
-              [-0.0, 0.15905],
-              [-0.004087, 0.159453],
-              [-0.008017, 0.160645],
-              [-0.011639, 0.162581],
-              [-0.014814, 0.165186],
-              [-0.017419, 0.168361],
-              [-0.019355, 0.171983],
-              [-0.020547, 0.175913],
-              [-0.02095, 0.18],
-              [-0.020547, 0.184087],
-              [-0.019355, 0.188017],
-              [-0.017419, 0.191639],
-              [-0.014814, 0.194814],
-              [-0.011639, 0.197419],
-              [-0.008017, 0.199355],
-              [-0.004087, 0.200547],
-              [-0.0, 0.20095],
-              [-0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.004711,
+                0.203686
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.013417,
+                0.20008
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.02008,
+                0.193417
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.023686,
+                0.184711
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023686,
+                0.175289
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.02008,
+                0.166583
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.013417,
+                0.15992
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                -0.004711,
+                0.156314
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                -0.004087,
+                0.159453
+              ],
+              [
+                -0.008017,
+                0.160645
+              ],
+              [
+                -0.011639,
+                0.162581
+              ],
+              [
+                -0.014814,
+                0.165186
+              ],
+              [
+                -0.017419,
+                0.168361
+              ],
+              [
+                -0.019355,
+                0.171983
+              ],
+              [
+                -0.020547,
+                0.175913
+              ],
+              [
+                -0.02095,
+                0.18
+              ],
+              [
+                -0.020547,
+                0.184087
+              ],
+              [
+                -0.019355,
+                0.188017
+              ],
+              [
+                -0.017419,
+                0.191639
+              ],
+              [
+                -0.014814,
+                0.194814
+              ],
+              [
+                -0.011639,
+                0.197419
+              ],
+              [
+                -0.008017,
+                0.199355
+              ],
+              [
+                -0.004087,
+                0.200547
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-right",
             "part": "member"
@@ -2564,9 +3476,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "leg-right",
             "part": "member"
           },
@@ -2577,9 +3518,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "crossbar",
             "part": "member"
           },
@@ -2590,9 +3560,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "bend-left",
             "part": "joint"
@@ -2604,9 +3582,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "top-rail",
             "part": "joint"
@@ -2618,9 +3604,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "bend-right",
             "part": "joint"
@@ -2632,9 +3626,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "joint"
@@ -2646,9 +3648,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.02415, 0.0, 0.0]
+              "translation": [
+                0.02415,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -2660,9 +3670,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.029, 0.029, 0.029],
+            "radii": [
+              0.029,
+              0.029,
+              0.029
+            ],
             "transform": {
-              "translation": [0.67755, 0.0, 0.0]
+              "translation": [
+                0.67755,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -2674,9 +3692,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0075, 0.0633, 0.0633],
+            "size": [
+              0.0075,
+              0.0633,
+              0.0633
+            ],
             "transform": {
-              "translation": [-0.00375, 0.0, 0.0]
+              "translation": [
+                -0.00375,
+                0,
+                0
+              ]
             },
             "member": "leg-left",
             "part": "support",
@@ -2689,9 +3715,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0075, 0.0633, 0.0633],
+            "size": [
+              0.0075,
+              0.0633,
+              0.0633
+            ],
             "transform": {
-              "translation": [0.5996, 0.0, 0.0]
+              "translation": [
+                0.5996,
+                0,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "support",
@@ -2724,10 +3758,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["-u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "-u"
+            ]
           },
           {
             "id": "bend-left",
@@ -2737,38 +3798,130 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.023327, 0.18625],
-              [0.020915, 0.192075],
-              [0.017077, 0.197077],
-              [0.012075, 0.200915],
-              [0.00625, 0.203327],
-              [0.0, 0.20415],
-              [-0.00625, 0.203327],
-              [-0.012075, 0.200915],
-              [-0.017077, 0.197077],
-              [-0.020915, 0.192075],
-              [-0.023327, 0.18625],
-              [-0.02415, 0.18],
-              [-0.023327, 0.17375],
-              [-0.020915, 0.167925],
-              [-0.017077, 0.162923],
-              [-0.012075, 0.159085],
-              [-0.00625, 0.156673],
-              [-0.0, 0.15585],
-              [0.00625, 0.156673],
-              [0.012075, 0.159085],
-              [0.017077, 0.162923],
-              [0.020915, 0.167925],
-              [0.023327, 0.17375],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023327,
+                0.18625
+              ],
+              [
+                0.020915,
+                0.192075
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.012075,
+                0.200915
+              ],
+              [
+                0.00625,
+                0.203327
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.00625,
+                0.203327
+              ],
+              [
+                -0.012075,
+                0.200915
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.020915,
+                0.192075
+              ],
+              [
+                -0.023327,
+                0.18625
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023327,
+                0.17375
+              ],
+              [
+                -0.020915,
+                0.167925
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.012075,
+                0.159085
+              ],
+              [
+                -0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.00625,
+                0.156673
+              ],
+              [
+                0.012075,
+                0.159085
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.020915,
+                0.167925
+              ],
+              [
+                0.023327,
+                0.17375
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -2778,9 +3931,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02415
+              ],
+              [
+                0.3417,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           },
           {
             "id": "bend-right",
@@ -2790,38 +3968,130 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.023327, 0.18625],
-              [0.020915, 0.192075],
-              [0.017077, 0.197077],
-              [0.012075, 0.200915],
-              [0.00625, 0.203327],
-              [0.0, 0.20415],
-              [-0.00625, 0.203327],
-              [-0.012075, 0.200915],
-              [-0.017077, 0.197077],
-              [-0.020915, 0.192075],
-              [-0.023327, 0.18625],
-              [-0.02415, 0.18],
-              [-0.023327, 0.17375],
-              [-0.020915, 0.167925],
-              [-0.017077, 0.162923],
-              [-0.012075, 0.159085],
-              [-0.00625, 0.156673],
-              [-0.0, 0.15585],
-              [0.00625, 0.156673],
-              [0.012075, 0.159085],
-              [0.017077, 0.162923],
-              [0.020915, 0.167925],
-              [0.023327, 0.17375],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023327,
+                0.18625
+              ],
+              [
+                0.020915,
+                0.192075
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.012075,
+                0.200915
+              ],
+              [
+                0.00625,
+                0.203327
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.00625,
+                0.203327
+              ],
+              [
+                -0.012075,
+                0.200915
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.020915,
+                0.192075
+              ],
+              [
+                -0.023327,
+                0.18625
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023327,
+                0.17375
+              ],
+              [
+                -0.020915,
+                0.167925
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.012075,
+                0.159085
+              ],
+              [
+                -0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.00625,
+                0.156673
+              ],
+              [
+                0.012075,
+                0.159085
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.020915,
+                0.167925
+              ],
+              [
+                0.023327,
+                0.17375
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -2831,10 +4101,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["+u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "+u"
+            ]
           },
           {
             "id": "crossbar",
@@ -2843,9 +4140,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02415
+              ],
+              [
+                0.7017,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           }
         ],
         "thermal": [
@@ -2888,9 +4210,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "leg-left",
             "part": "member"
           },
@@ -2902,40 +4253,138 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.0, 0.20415],
-              [0.00625, 0.203327],
-              [0.012075, 0.200915],
-              [0.017077, 0.197077],
-              [0.020915, 0.192075],
-              [0.023327, 0.18625],
-              [0.02415, 0.18],
-              [0.023327, 0.17375],
-              [0.020915, 0.167925],
-              [0.017077, 0.162923],
-              [0.012075, 0.159085],
-              [0.00625, 0.156673],
-              [0.0, 0.15585],
-              [0.0, 0.15905],
-              [0.005422, 0.159764],
-              [0.010475, 0.161857],
-              [0.014814, 0.165186],
-              [0.018143, 0.169525],
-              [0.020236, 0.174578],
-              [0.02095, 0.18],
-              [0.020236, 0.185422],
-              [0.018143, 0.190475],
-              [0.014814, 0.194814],
-              [0.010475, 0.198143],
-              [0.005422, 0.200236],
-              [0.0, 0.20095],
-              [0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                0.00625,
+                0.203327
+              ],
+              [
+                0.012075,
+                0.200915
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.020915,
+                0.192075
+              ],
+              [
+                0.023327,
+                0.18625
+              ],
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023327,
+                0.17375
+              ],
+              [
+                0.020915,
+                0.167925
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.012075,
+                0.159085
+              ],
+              [
+                0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                0.005422,
+                0.159764
+              ],
+              [
+                0.010475,
+                0.161857
+              ],
+              [
+                0.014814,
+                0.165186
+              ],
+              [
+                0.018143,
+                0.169525
+              ],
+              [
+                0.020236,
+                0.174578
+              ],
+              [
+                0.02095,
+                0.18
+              ],
+              [
+                0.020236,
+                0.185422
+              ],
+              [
+                0.018143,
+                0.190475
+              ],
+              [
+                0.014814,
+                0.194814
+              ],
+              [
+                0.010475,
+                0.198143
+              ],
+              [
+                0.005422,
+                0.200236
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-left",
             "part": "member"
@@ -2948,40 +4397,138 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [-0.0, 0.20415],
-              [-0.00625, 0.203327],
-              [-0.012075, 0.200915],
-              [-0.017077, 0.197077],
-              [-0.020915, 0.192075],
-              [-0.023327, 0.18625],
-              [-0.02415, 0.18],
-              [-0.023327, 0.17375],
-              [-0.020915, 0.167925],
-              [-0.017077, 0.162923],
-              [-0.012075, 0.159085],
-              [-0.00625, 0.156673],
-              [-0.0, 0.15585],
-              [-0.0, 0.15905],
-              [-0.005422, 0.159764],
-              [-0.010475, 0.161857],
-              [-0.014814, 0.165186],
-              [-0.018143, 0.169525],
-              [-0.020236, 0.174578],
-              [-0.02095, 0.18],
-              [-0.020236, 0.185422],
-              [-0.018143, 0.190475],
-              [-0.014814, 0.194814],
-              [-0.010475, 0.198143],
-              [-0.005422, 0.200236],
-              [-0.0, 0.20095],
-              [-0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.00625,
+                0.203327
+              ],
+              [
+                -0.012075,
+                0.200915
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.020915,
+                0.192075
+              ],
+              [
+                -0.023327,
+                0.18625
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023327,
+                0.17375
+              ],
+              [
+                -0.020915,
+                0.167925
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.012075,
+                0.159085
+              ],
+              [
+                -0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                -0.005422,
+                0.159764
+              ],
+              [
+                -0.010475,
+                0.161857
+              ],
+              [
+                -0.014814,
+                0.165186
+              ],
+              [
+                -0.018143,
+                0.169525
+              ],
+              [
+                -0.020236,
+                0.174578
+              ],
+              [
+                -0.02095,
+                0.18
+              ],
+              [
+                -0.020236,
+                0.185422
+              ],
+              [
+                -0.018143,
+                0.190475
+              ],
+              [
+                -0.014814,
+                0.194814
+              ],
+              [
+                -0.010475,
+                0.198143
+              ],
+              [
+                -0.005422,
+                0.200236
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-left",
             "part": "member"
@@ -2993,9 +4540,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "top-rail",
             "part": "member"
           },
@@ -3007,40 +4583,138 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.0, 0.20415],
-              [0.00625, 0.203327],
-              [0.012075, 0.200915],
-              [0.017077, 0.197077],
-              [0.020915, 0.192075],
-              [0.023327, 0.18625],
-              [0.02415, 0.18],
-              [0.023327, 0.17375],
-              [0.020915, 0.167925],
-              [0.017077, 0.162923],
-              [0.012075, 0.159085],
-              [0.00625, 0.156673],
-              [0.0, 0.15585],
-              [0.0, 0.15905],
-              [0.005422, 0.159764],
-              [0.010475, 0.161857],
-              [0.014814, 0.165186],
-              [0.018143, 0.169525],
-              [0.020236, 0.174578],
-              [0.02095, 0.18],
-              [0.020236, 0.185422],
-              [0.018143, 0.190475],
-              [0.014814, 0.194814],
-              [0.010475, 0.198143],
-              [0.005422, 0.200236],
-              [0.0, 0.20095],
-              [0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                0.00625,
+                0.203327
+              ],
+              [
+                0.012075,
+                0.200915
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.020915,
+                0.192075
+              ],
+              [
+                0.023327,
+                0.18625
+              ],
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.023327,
+                0.17375
+              ],
+              [
+                0.020915,
+                0.167925
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.012075,
+                0.159085
+              ],
+              [
+                0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                0.005422,
+                0.159764
+              ],
+              [
+                0.010475,
+                0.161857
+              ],
+              [
+                0.014814,
+                0.165186
+              ],
+              [
+                0.018143,
+                0.169525
+              ],
+              [
+                0.020236,
+                0.174578
+              ],
+              [
+                0.02095,
+                0.18
+              ],
+              [
+                0.020236,
+                0.185422
+              ],
+              [
+                0.018143,
+                0.190475
+              ],
+              [
+                0.014814,
+                0.194814
+              ],
+              [
+                0.010475,
+                0.198143
+              ],
+              [
+                0.005422,
+                0.200236
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-right",
             "part": "member"
@@ -3053,40 +4727,138 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [-0.0, 0.20415],
-              [-0.00625, 0.203327],
-              [-0.012075, 0.200915],
-              [-0.017077, 0.197077],
-              [-0.020915, 0.192075],
-              [-0.023327, 0.18625],
-              [-0.02415, 0.18],
-              [-0.023327, 0.17375],
-              [-0.020915, 0.167925],
-              [-0.017077, 0.162923],
-              [-0.012075, 0.159085],
-              [-0.00625, 0.156673],
-              [-0.0, 0.15585],
-              [-0.0, 0.15905],
-              [-0.005422, 0.159764],
-              [-0.010475, 0.161857],
-              [-0.014814, 0.165186],
-              [-0.018143, 0.169525],
-              [-0.020236, 0.174578],
-              [-0.02095, 0.18],
-              [-0.020236, 0.185422],
-              [-0.018143, 0.190475],
-              [-0.014814, 0.194814],
-              [-0.010475, 0.198143],
-              [-0.005422, 0.200236],
-              [-0.0, 0.20095],
-              [-0.0, 0.20415]
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.00625,
+                0.203327
+              ],
+              [
+                -0.012075,
+                0.200915
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.020915,
+                0.192075
+              ],
+              [
+                -0.023327,
+                0.18625
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.023327,
+                0.17375
+              ],
+              [
+                -0.020915,
+                0.167925
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.012075,
+                0.159085
+              ],
+              [
+                -0.00625,
+                0.156673
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0,
+                0.15905
+              ],
+              [
+                -0.005422,
+                0.159764
+              ],
+              [
+                -0.010475,
+                0.161857
+              ],
+              [
+                -0.014814,
+                0.165186
+              ],
+              [
+                -0.018143,
+                0.169525
+              ],
+              [
+                -0.020236,
+                0.174578
+              ],
+              [
+                -0.02095,
+                0.18
+              ],
+              [
+                -0.020236,
+                0.185422
+              ],
+              [
+                -0.018143,
+                0.190475
+              ],
+              [
+                -0.014814,
+                0.194814
+              ],
+              [
+                -0.010475,
+                0.198143
+              ],
+              [
+                -0.005422,
+                0.200236
+              ],
+              [
+                0,
+                0.20095
+              ],
+              [
+                0,
+                0.20415
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             },
             "member": "bend-right",
             "part": "member"
@@ -3098,9 +4870,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "leg-right",
             "part": "member"
           },
@@ -3111,9 +4912,38 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.02095], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.02095], [0.0, 0.02095]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0],
+            "profile": [
+              [
+                0,
+                0.02095
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02095
+              ],
+              [
+                0,
+                0.02095
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "member": "crossbar",
             "part": "member"
           },
@@ -3124,9 +4954,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "bend-left",
             "part": "joint"
@@ -3138,9 +4976,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "top-rail",
             "part": "joint"
@@ -3152,9 +4998,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "bend-right",
             "part": "joint"
@@ -3166,9 +5020,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.0, 0.0, 0.0]
+              "translation": [
+                0,
+                0,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "joint"
@@ -3180,9 +5042,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.02415, 0.0, 0.0]
+              "translation": [
+                0.02415,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3194,9 +5064,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.032, 0.032, 0.032],
+            "radii": [
+              0.032,
+              0.032,
+              0.032
+            ],
             "transform": {
-              "translation": [0.67755, 0.0, 0.0]
+              "translation": [
+                0.67755,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3208,9 +5086,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.015, 0.0783, 0.0783],
+            "size": [
+              0.015,
+              0.0783,
+              0.0783
+            ],
             "transform": {
-              "translation": [-0.0075, 0.0, 0.0]
+              "translation": [
+                -0.0075,
+                0,
+                0
+              ]
             },
             "member": "leg-left",
             "part": "support",
@@ -3223,9 +5109,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.015, 0.0783, 0.0783],
+            "size": [
+              0.015,
+              0.0783,
+              0.0783
+            ],
             "transform": {
-              "translation": [0.60335, 0.0, 0.0]
+              "translation": [
+                0.60335,
+                0,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "support",
@@ -3258,10 +5152,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["-u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "-u"
+            ]
           },
           {
             "id": "bend-left",
@@ -3271,30 +5192,98 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.022312, 0.189242],
-              [0.017077, 0.197077],
-              [0.009242, 0.202312],
-              [0.0, 0.20415],
-              [-0.009242, 0.202312],
-              [-0.017077, 0.197077],
-              [-0.022312, 0.189242],
-              [-0.02415, 0.18],
-              [-0.022312, 0.170758],
-              [-0.017077, 0.162923],
-              [-0.009242, 0.157688],
-              [-0.0, 0.15585],
-              [0.009242, 0.157688],
-              [0.017077, 0.162923],
-              [0.022312, 0.170758],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -3304,9 +5293,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.3417, 0.02415], [0.3417, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.3417,
+                0.02415
+              ],
+              [
+                0.3417,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           },
           {
             "id": "bend-right",
@@ -3316,30 +5330,98 @@
             "role": "body",
             "tone": 0.45,
             "profile": [
-              [0.02415, 0.18],
-              [0.022312, 0.189242],
-              [0.017077, 0.197077],
-              [0.009242, 0.202312],
-              [0.0, 0.20415],
-              [-0.009242, 0.202312],
-              [-0.017077, 0.197077],
-              [-0.022312, 0.189242],
-              [-0.02415, 0.18],
-              [-0.022312, 0.170758],
-              [-0.017077, 0.162923],
-              [-0.009242, 0.157688],
-              [-0.0, 0.15585],
-              [0.009242, 0.157688],
-              [0.017077, 0.162923],
-              [0.022312, 0.170758],
-              [0.02415, 0.18]
+              [
+                0.02415,
+                0.18
+              ],
+              [
+                0.022312,
+                0.189242
+              ],
+              [
+                0.017077,
+                0.197077
+              ],
+              [
+                0.009242,
+                0.202312
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.009242,
+                0.202312
+              ],
+              [
+                -0.017077,
+                0.197077
+              ],
+              [
+                -0.022312,
+                0.189242
+              ],
+              [
+                -0.02415,
+                0.18
+              ],
+              [
+                -0.022312,
+                0.170758
+              ],
+              [
+                -0.017077,
+                0.162923
+              ],
+              [
+                -0.009242,
+                0.157688
+              ],
+              [
+                0,
+                0.15585
+              ],
+              [
+                0.009242,
+                0.157688
+              ],
+              [
+                0.017077,
+                0.162923
+              ],
+              [
+                0.022312,
+                0.170758
+              ],
+              [
+                0.02415,
+                0.18
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ]
             }
           },
           {
@@ -3349,10 +5431,37 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.59585, 0.02415], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.0, 0.0],
-            "sectionFaces": ["+u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.59585,
+                0.02415
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "sectionFaces": [
+              "+u"
+            ]
           },
           {
             "id": "crossbar",
@@ -3361,9 +5470,34 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.45,
-            "profile": [[0.0, 0.0], [0.0, 0.02415], [0.7017, 0.02415], [0.7017, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.02415
+              ],
+              [
+                0.7017,
+                0.02415
+              ],
+              [
+                0.7017,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ]
           }
         ],
         "thermal": [
@@ -3442,9 +5576,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.04, 0.04, 0.04],
+            "radii": [
+              0.04,
+              0.04,
+              0.04
+            ],
             "transform": {
-              "translation": [0.02415, 0.0, 0.0]
+              "translation": [
+                0.02415,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3456,9 +5598,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.04, 0.04, 0.04],
+            "radii": [
+              0.04,
+              0.04,
+              0.04
+            ],
             "transform": {
-              "translation": [0.67755, 0.0, 0.0]
+              "translation": [
+                0.67755,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3470,9 +5620,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.03, 0.0783, 0.0783],
+            "size": [
+              0.03,
+              0.0783,
+              0.0783
+            ],
             "transform": {
-              "translation": [-0.015, 0.0, 0.0]
+              "translation": [
+                -0.015,
+                0,
+                0
+              ]
             },
             "member": "leg-left",
             "part": "support",
@@ -3485,9 +5643,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.03, 0.0783, 0.0783],
+            "size": [
+              0.03,
+              0.0783,
+              0.0783
+            ],
             "transform": {
-              "translation": [0.61085, 0.0, 0.0]
+              "translation": [
+                0.61085,
+                0,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "support",
@@ -3520,10 +5686,44 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.59585, 0.0376], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.01345, 0.0],
-            "sectionFaces": ["-u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0376
+              ],
+              [
+                0.59585,
+                0.0376
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              -0.01345,
+              0
+            ],
+            "sectionFaces": [
+              "-u"
+            ],
+            "transform": {
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
+            }
           },
           {
             "id": "bend-left",
@@ -3533,26 +5733,87 @@
             "role": "body",
             "tone": 0.5,
             "profile": [
-              [0.0376, 0.16655],
-              [0.032563, 0.18535],
-              [0.0188, 0.199113],
-              [0.0, 0.20415],
-              [-0.0188, 0.199113],
-              [-0.032563, 0.18535],
-              [-0.0376, 0.16655],
-              [-0.032563, 0.14775],
-              [-0.0188, 0.133987],
-              [-0.0, 0.12895],
-              [0.0188, 0.133987],
-              [0.032563, 0.14775],
-              [0.0376, 0.16655]
+              [
+                0.0376,
+                0.16655
+              ],
+              [
+                0.032563,
+                0.18535
+              ],
+              [
+                0.0188,
+                0.199113
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.0188,
+                0.199113
+              ],
+              [
+                -0.032563,
+                0.18535
+              ],
+              [
+                -0.0376,
+                0.16655
+              ],
+              [
+                -0.032563,
+                0.14775
+              ],
+              [
+                -0.0188,
+                0.133987
+              ],
+              [
+                0,
+                0.12895
+              ],
+              [
+                0.0188,
+                0.133987
+              ],
+              [
+                0.032563,
+                0.14775
+              ],
+              [
+                0.0376,
+                0.16655
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ],
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
             }
           },
           {
@@ -3562,9 +5823,41 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.3417, 0.0376], [0.3417, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.01345, 0.0]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0376
+              ],
+              [
+                0.3417,
+                0.0376
+              ],
+              [
+                0.3417,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              -0.01345,
+              0
+            ],
+            "transform": {
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
+            }
           },
           {
             "id": "bend-right",
@@ -3574,26 +5867,87 @@
             "role": "body",
             "tone": 0.5,
             "profile": [
-              [0.0376, 0.16655],
-              [0.032563, 0.18535],
-              [0.0188, 0.199113],
-              [0.0, 0.20415],
-              [-0.0188, 0.199113],
-              [-0.032563, 0.18535],
-              [-0.0376, 0.16655],
-              [-0.032563, 0.14775],
-              [-0.0188, 0.133987],
-              [-0.0, 0.12895],
-              [0.0188, 0.133987],
-              [0.032563, 0.14775],
-              [0.0376, 0.16655]
+              [
+                0.0376,
+                0.16655
+              ],
+              [
+                0.032563,
+                0.18535
+              ],
+              [
+                0.0188,
+                0.199113
+              ],
+              [
+                0,
+                0.20415
+              ],
+              [
+                -0.0188,
+                0.199113
+              ],
+              [
+                -0.032563,
+                0.18535
+              ],
+              [
+                -0.0376,
+                0.16655
+              ],
+              [
+                -0.032563,
+                0.14775
+              ],
+              [
+                -0.0188,
+                0.133987
+              ],
+              [
+                0,
+                0.12895
+              ],
+              [
+                0.0188,
+                0.133987
+              ],
+              [
+                0.032563,
+                0.14775
+              ],
+              [
+                0.0376,
+                0.16655
+              ]
             ],
-            "axis": [0, 0, 1],
-            "origin": [0.0, 0.0, 0.0],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
             "sweepRad": 1.570796,
             "transform": {
-              "translation": [0.127279, -0.127279, 0.0],
-              "rotation": [0.0, 0.0, 0.382683, 0.92388]
+              "translation": [
+                0.127279,
+                -0.127279,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0.382683,
+                0.92388
+              ],
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
             }
           },
           {
@@ -3603,10 +5957,44 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.0, 0.0], [0.0, 0.0376], [0.59585, 0.0376], [0.59585, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, -0.01345, 0.0],
-            "sectionFaces": ["+u"]
+            "profile": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0.0376
+              ],
+              [
+                0.59585,
+                0.0376
+              ],
+              [
+                0.59585,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              -0.01345,
+              0
+            ],
+            "sectionFaces": [
+              "+u"
+            ],
+            "transform": {
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
+            }
           },
           {
             "id": "crossbar",
@@ -3615,9 +6003,41 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.5,
-            "profile": [[0.01345, 0.0], [0.01345, 0.0376], [0.68825, 0.0376], [0.68825, 0.0]],
-            "axis": [1, 0, 0],
-            "origin": [0.0, 0.0, 0.0]
+            "profile": [
+              [
+                0.01345,
+                0
+              ],
+              [
+                0.01345,
+                0.0376
+              ],
+              [
+                0.68825,
+                0.0376
+              ],
+              [
+                0.68825,
+                0
+              ]
+            ],
+            "axis": [
+              1,
+              0,
+              0
+            ],
+            "origin": [
+              0,
+              0,
+              0
+            ],
+            "transform": {
+              "scale": [
+                1,
+                1,
+                0.837766
+              ]
+            }
           }
         ],
         "thermal": [
@@ -3630,88 +6050,214 @@
             "tone": 0.45,
             "sections": [
               {
-                "at": [0.0, -0.0, 0.0],
+                "at": [
+                  0,
+                  0,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.0, 0.707107, 0.0, 0.707107]
+                "rotation": [
+                  0,
+                  0.707107,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.59585, -0.0, 0.0],
+                "at": [
+                  0.59585,
+                  0,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.0, 0.707107, 0.0, 0.707107]
+                "rotation": [
+                  0,
+                  0.707107,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.651473, -0.00881, 0.0],
+                "at": [
+                  0.651473,
+                  -0.00881,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.218508, 0.672499, 0.0, 0.707107]
+                "rotation": [
+                  0.218508,
+                  0.672499,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.701651, -0.034377, 0.0],
+                "at": [
+                  0.701651,
+                  -0.034377,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.415627, 0.572062, 0.0, 0.707107]
+                "rotation": [
+                  0.415627,
+                  0.572062,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.741473, -0.074199, 0.0],
+                "at": [
+                  0.741473,
+                  -0.074199,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.572062, 0.415627, 0.0, 0.707107]
+                "rotation": [
+                  0.572062,
+                  0.415627,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.76704, -0.124377, 0.0],
+                "at": [
+                  0.76704,
+                  -0.124377,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.672499, 0.218508, 0.0, 0.707107]
+                "rotation": [
+                  0.672499,
+                  0.218508,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.77585, -0.18, 0.0],
+                "at": [
+                  0.77585,
+                  -0.18,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
+                "rotation": [
+                  0.707107,
+                  0,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.77585, -0.5217, 0.0],
+                "at": [
+                  0.77585,
+                  -0.5217,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.707107, 0.0, 0.0, 0.707107]
+                "rotation": [
+                  0.707107,
+                  0,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.76704, -0.577323, 0.0],
+                "at": [
+                  0.76704,
+                  -0.577323,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.672499, -0.218508, 0.0, 0.707107]
+                "rotation": [
+                  0.672499,
+                  -0.218508,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.741473, -0.627501, 0.0],
+                "at": [
+                  0.741473,
+                  -0.627501,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.572062, -0.415627, 0.0, 0.707107]
+                "rotation": [
+                  0.572062,
+                  -0.415627,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.701651, -0.667323, 0.0],
+                "at": [
+                  0.701651,
+                  -0.667323,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.415627, -0.572062, 0.0, 0.707107]
+                "rotation": [
+                  0.415627,
+                  -0.572062,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.651473, -0.69289, 0.0],
+                "at": [
+                  0.651473,
+                  -0.69289,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.218508, -0.672499, 0.0, 0.707107]
+                "rotation": [
+                  0.218508,
+                  -0.672499,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.59585, -0.7017, 0.0],
+                "at": [
+                  0.59585,
+                  -0.7017,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.0, -0.707107, 0.0, 0.707107]
+                "rotation": [
+                  0,
+                  -0.707107,
+                  0,
+                  0.707107
+                ]
               },
               {
-                "at": [0.0, -0.7017, 0.0],
+                "at": [
+                  0,
+                  -0.7017,
+                  0
+                ],
                 "rx": 0.02415,
                 "ry": 0.02415,
-                "rotation": [0.0, -0.707107, 0.0, 0.707107]
+                "rotation": [
+                  0,
+                  -0.707107,
+                  0,
+                  0.707107
+                ]
               }
             ],
             "capStart": true,
@@ -3769,9 +6315,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.06, 0.06, 0.06],
+            "radii": [
+              0.06,
+              0.06,
+              0.06
+            ],
             "transform": {
-              "translation": [0.05105, 0.0, 0.0]
+              "translation": [
+                0.05105,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3783,9 +6337,17 @@
             "material": "galv-steel",
             "role": "detail",
             "tone": 0.3,
-            "radii": [0.06, 0.06, 0.06],
+            "radii": [
+              0.06,
+              0.06,
+              0.06
+            ],
             "transform": {
-              "translation": [0.65065, 0.0, 0.0]
+              "translation": [
+                0.65065,
+                0,
+                0
+              ]
             },
             "member": "crossbar",
             "part": "joint"
@@ -3797,9 +6359,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0752, 0.1052, 0.1052],
+            "size": [
+              0.0752,
+              0.1052,
+              0.1052
+            ],
             "transform": {
-              "translation": [-0.0376, -0.01345, 0.0]
+              "translation": [
+                -0.0376,
+                -0.01345,
+                0
+              ]
             },
             "member": "leg-left",
             "part": "support",
@@ -3812,9 +6382,17 @@
             "material": "galv-steel",
             "role": "body",
             "tone": 0.15,
-            "size": [0.0752, 0.1052, 0.1052],
+            "size": [
+              0.0752,
+              0.1052,
+              0.1052
+            ],
             "transform": {
-              "translation": [0.63345, -0.01345, 0.0]
+              "translation": [
+                0.63345,
+                -0.01345,
+                0
+              ]
             },
             "member": "leg-right",
             "part": "support",
@@ -3823,8 +6401,8 @@
         ],
         "decisions": [
           {
-            "en": "Body: the 48.3 mm tube is 0.1 mm on paper, below the 75 mm feature, so the tube is a round 75.2 mm tube at the print floor, thickened inwards from the true outer edge (outer size 0.75 x 0.80 m exact, bend outer radius 204 mm kept, inner 129 mm), bends as tori with 12-point sections, the cross rail between the thickened legs; front and plan draw it 63 mm across (lateral extent rule), 0.024 mm on paper less than the model.",
-            "de": "Körper: das Rohr 48,3 mm ist auf dem Papier 0,1 mm breit, unter der Einzelheit 75 mm, daher ist es ein rundes Rohr von 75,2 mm an der Druckgrenze, vom wahren Außenrand nach innen verdickt (Außenmaß 0,75 x 0,80 m exakt, äußerer Biegeradius 204 mm behalten, innen 129 mm), Bögen als Tori mit Schnitten aus 12 Punkten, der Querholm zwischen den verdickten Beinen; Ansicht und Grundriss zeichnen es quer 63 mm (Regel der seitlichen Ausdehnung), 0,024 mm auf dem Papier weniger als das Modell."
+            "en": "Body: the 48.3 mm tube is 0.1 mm on paper, below the 75 mm feature, so the tube is 75.2 mm deep in the plane of the hoop at the print floor, thickened inwards from the true outer edge (outer size 0.75 x 0.80 m exact, bend outer radius 204 mm kept, inner 129 mm), and 63 mm across, the oval section that front and plan draw (the lateral extent rule allows 15 mm more than the real 48.3 mm); bends as tori with 12-point sections, the cross rail between the thickened legs.",
+            "de": "Körper: das Rohr 48,3 mm ist auf dem Papier 0,1 mm breit, unter der Einzelheit 75 mm, daher ist es in der Bügelebene 75,2 mm tief an der Druckgrenze, vom wahren Außenrand nach innen verdickt (Außenmaß 0,75 x 0,80 m exakt, äußerer Biegeradius 204 mm behalten, innen 129 mm), und quer 63 mm breit, der ovale Querschnitt, den Ansicht und Grundriss zeichnen (die Regel der seitlichen Ausdehnung erlaubt 15 mm mehr als die realen 48,3 mm); Bögen als Tori mit Schnitten aus 12 Punkten, der Querholm zwischen den verdickten Beinen."
           },
           {
             "en": "Thermal: the hoop region is the true 48.3 mm tube along its real centre line, one slender loft with a section every 18 degrees in the bends inside the thickened body, because the region's area is that of the real tube; the cross rail references the body rail (the C15 total then reads the real hoop and the floor-size rail).",

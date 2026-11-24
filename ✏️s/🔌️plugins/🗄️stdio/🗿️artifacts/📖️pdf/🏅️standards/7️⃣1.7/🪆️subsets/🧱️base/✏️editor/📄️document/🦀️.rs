@@ -2,6 +2,7 @@
 
 use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::{diff::PdfPageBox, mutations::*, snapshot::*};
 use semio_plugin::Fault;
+pub use semio_s_artifact_stdio_pdf_page_editor_view::{page_index, page_number, PageNumberRange};
 
 #[path = "🚨️faults/🦀️.rs"]
 mod faults;
@@ -123,6 +124,21 @@ pub fn page_mode(name: &str) -> Result<Option<PdfPageMode>, Fault> {
         "useAttachments" => PdfPageMode::UseAttachments,
         other => return Err(fault(format!("unknown page mode '{other}'"))),
     }))
+}
+
+/// 🚧️ The coded refusal of a page number outside `1..=last`; its localized notice names the valid range.
+pub fn page_fault(range: PageNumberRange) -> Fault {
+    refuse(PdfFault::PageNumberOutOfRange, format!("pdf page {} does not exist, valid pages are 1..{}", range.number, range.last)).with_param("page", range.number.to_string()).with_param("last", range.last.to_string())
+}
+
+/// 📚️ The page at a zero-based index, refused with the coded range fault naming the valid page numbers.
+pub fn page_of(snapshot: &PdfSnapshot, index: usize) -> Result<&PdfPage, Fault> {
+    snapshot.pages.get(index).ok_or_else(|| page_fault(PageNumberRange { number: page_number(index) as u64, last: snapshot.pages.len() }))
+}
+
+/// 🧭️ The zero-based index of a one-based page number among `count` slots, refused with the coded range fault.
+pub fn resolve_page(count: usize, number: u64) -> Result<usize, Fault> {
+    page_index(count, number).map_err(page_fault)
 }
 
 pub fn require_page(snapshot: &PdfSnapshot, page: usize) -> Result<(), Fault> {

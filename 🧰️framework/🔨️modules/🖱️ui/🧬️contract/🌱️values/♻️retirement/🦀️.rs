@@ -151,7 +151,7 @@ impl Drop for UiValueRetirement {
             }
             *self.value = UiValue::Null;
         }
-        panic!("UiValueRetirement requires exact terminal closure");
+        assert!(std::thread::panicking(),"UiValueRetirement requires exact terminal closure");
     }
 }
 //#endregion 🪪️ExactValueOwner

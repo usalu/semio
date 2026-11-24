@@ -393,16 +393,16 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
             PdfObject::Dict(apply_dict_diff(diff, entries))
         }
         PdfValueDiff::Stream { dict, data, filters } => {
-            let (base_dict, base_data, base_filters): (&[PdfDictEntry], &[u8], &[PdfStreamFilter]) = match base {
-                PdfObject::Stream { dict, data, filters } => (dict.as_slice(), data.as_slice(), filters.as_slice()),
-                _ => (&[], &[], &[]),
+            let (base_dict, base_data, base_filters): (&[PdfDictEntry], Option<&crate::standards::v1_7::subsets::base::schema::snapshot::PdfStreamBytes>, &[PdfStreamFilter]) = match base {
+                PdfObject::Stream { dict, data, filters } => (dict.as_slice(), Some(data), filters.as_slice()),
+                _ => (&[], None, &[]),
             };
             PdfObject::Stream {
                 dict: match dict {
                     Some(d) => apply_dict_diff(d, base_dict),
                     None => base_dict.to_vec(),
                 },
-                data: data.clone().unwrap_or_else(|| base_data.to_vec()),
+                data: match data { Some(data) => crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(data), None => base_data.cloned().unwrap_or_default() },
                 filters: filters.clone().unwrap_or_else(|| base_filters.to_vec()),
             }
         }
@@ -462,7 +462,7 @@ fn inverse_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfValueDiff {
     match (diff, base) {
         (PdfValueDiff::Array { diff }, PdfObject::Array(items)) => PdfValueDiff::Array { diff: inverse_array_diff(diff, items) },
         (PdfValueDiff::Dict { diff }, PdfObject::Dict(entries)) => PdfValueDiff::Dict { diff: inverse_dict_diff(diff, entries) },
-        (PdfValueDiff::Stream { dict, data, filters }, PdfObject::Stream { dict: base_dict, data: base_data, filters: base_filters }) => PdfValueDiff::Stream { dict: dict.as_ref().map(|dict| inverse_dict_diff(dict, base_dict)), data: data.as_ref().map(|_| base_data.clone()), filters: filters.as_ref().map(|_| base_filters.clone()) },
+        (PdfValueDiff::Stream { dict, data, filters }, PdfObject::Stream { dict: base_dict, data: base_data, filters: base_filters }) => PdfValueDiff::Stream { dict: dict.as_ref().map(|dict| inverse_dict_diff(dict, base_dict)), data: data.as_ref().map(|_| base_data.to_vec_owner()), filters: filters.as_ref().map(|_| base_filters.clone()) },
         (PdfValueDiff::Replace { .. }, _) => PdfValueDiff::Replace { value: base.clone() },
         (PdfValueDiff::Bool { .. }, PdfObject::Bool(value)) => PdfValueDiff::Bool { value: *value },
         (PdfValueDiff::Int { .. }, PdfObject::Int(value)) => PdfValueDiff::Int { value: *value },

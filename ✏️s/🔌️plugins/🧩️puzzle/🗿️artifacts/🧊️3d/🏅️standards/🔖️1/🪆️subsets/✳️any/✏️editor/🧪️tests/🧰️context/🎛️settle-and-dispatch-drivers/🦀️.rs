@@ -232,11 +232,14 @@ pub async fn dispatch_reporting_with_items(
     settle_into_reporting_with_items(app, typed, maximum_items).await
 }
 
-/// 🧾 The addressed window rides in the action arguments, exactly as the shell sends it.
+/// 🧾 The addressed window rides in the action arguments, exactly as the shell sends it, unless the action
+/// names its own `windowId` argument.
 fn action_args(args: Option<&Value>, window_id: &str) -> Option<semio_framework_value::DslValue> {
     let mut value = args.cloned().unwrap_or_else(|| Value::Object(Default::default()));
     if let Value::Object(object) = &mut value {
-        object.insert("windowId", Value::String(window_id.into()));
+        if !object.contains_key("windowId") {
+            object.insert("windowId", Value::String(window_id.into()));
+        }
     }
     Some(semio_framework_pack_json::to_dsl_value(&value))
 }

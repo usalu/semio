@@ -49,6 +49,7 @@ async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_row_renders_without_the_actions_column() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Home viewer row"));
     assert!(json.contains("Fabrication"));
     assert!(json.contains("hub"));
@@ -60,6 +61,7 @@ async fn a_row_renders_without_the_actions_column() {
 /// viewer just never attaches row-scoped action buttons to it.
 #[semio_framework_async_macros::async_test]
 async fn a_row_stamps_the_space_row_id() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     observe(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_EN, &TreeWindows::unhosted()).expect("Home viewer row"), |root| {
         let row = root.children.iter().find(|node| node.key.as_str() == "space:sp-1").expect("Home viewer row id");
         let semio_ui_contract::Component::TableRow(props) = &row.component else { panic!("a viewer row is one TableRow record") };
@@ -69,6 +71,7 @@ async fn a_row_stamps_the_space_row_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_locale_labels_resolve() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(render_rows(&[one_hub_row().await], &HomeTableLabels::NATIVE_DE, &TreeWindows::unhosted()).expect("German Home viewer row"));
     assert!(json.contains("Aktualisiert"));
     assert!(json.contains("Herkunft"));
@@ -87,6 +90,7 @@ async fn row_cells_are_localized_words_and_a_utc_minute() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_with_a_folded_space_renders_a_table_row() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let event = store::os_directory::DirectoryEvent {
         seq: 1,
         id: "evt-1".into(),

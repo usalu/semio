@@ -1,0 +1,7 @@
+[
+{"op": "shape-add", "scale": "50", "view": "plan", "after": "head-board", "shape": {"id": "chute-strap", "bone": "frame", "role": "body", "z": 4.5, "filled": true, "tone": 0.5, "kind": "rect", "x": 0.835, "y": -0.096, "w": 0.03, "h": 0.192, "region": "screw-steel", "material": "stainless-scaled"}},
+{"op": "solid-set", "scale": "100", "id": "gate-gate-1", "set": {"from": -0.0075, "to": 0.0075}},
+{"op": "solid-set", "scale": "100", "id": "gate-gate-2", "set": {"from": -0.0075, "to": 0.0075}},
+{"op": "set", "path": ["volumes", "100", "body", {"id": "gate-gate-1"}, "sheet"]},
+{"op": "set", "path": ["volumes", "100", "body", {"id": "gate-gate-2"}, "sheet"]}
+]

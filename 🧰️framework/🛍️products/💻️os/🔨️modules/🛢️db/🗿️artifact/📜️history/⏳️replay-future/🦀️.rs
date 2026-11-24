@@ -566,7 +566,7 @@ impl Future for HistoryReplayFuture {
 
 impl Drop for HistoryReplayFuture {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "history replay reached Drop before retained source/result/page retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "history replay reached Drop before retained source/result/page retirement");
     }
 }
 //#endregion 🔖️HistoryReplay

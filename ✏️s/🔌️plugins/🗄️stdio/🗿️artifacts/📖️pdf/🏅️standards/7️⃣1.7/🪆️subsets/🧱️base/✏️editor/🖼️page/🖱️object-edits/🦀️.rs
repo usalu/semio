@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🖱️ObjectEdits
-pub(super) fn payload_edit(action: &str, page: u32, object: String, text: String, extra: String, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64) -> PdfPageEdit {
+pub(super) fn payload_edit(action: &str, page: Option<u32>, object: String, text: String, extra: String, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64) -> PdfPageEdit {
     PdfPageEdit { action: action.to_string(), payload: json!({ "page": page, "object": object, "text": text, "extra": extra, "x": x, "y": y, "width": width, "height": height, "red": red, "green": green, "blue": blue }).to_string() }
 }
 
@@ -53,7 +53,7 @@ pub(super) fn edit_object(snapshot: &PdfSnapshot, action: &str, object_id: &str,
 }
 
 pub(super) fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: usize, x: f64, y: f64, width: f64, height: f64, red: f64, green: f64, blue: f64, text: &str) -> Result<Vec<PdfMutation>, Fault> {
-    let page = snapshot.pages.get(page_index).ok_or_else(|| fault(format!("pdf page {page_index} does not exist")))?;
+    let page = page_of(snapshot, page_index)?;
     let mut content = page.content.clone();
     let mut extra = Vec::new();
     match action {

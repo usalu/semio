@@ -758,7 +758,7 @@
         "en": "Seated Office Worker",
         "de": "Büroarbeitende Person im Sitzen"
       },
-      "heightM": 1.409,
+      "heightM": 1.42,
       "widthM": 1.308,
       "powerW": 188.9,
       "poses": [
@@ -1029,7 +1029,7 @@
         "de": "Ältere Person mit Gehstock"
       },
       "heightM": 1.63,
-      "widthM": 0.48,
+      "widthM": 0.477,
       "powerW": 125.6,
       "poses": [
         "stooped-standing",
@@ -1188,8 +1188,8 @@
         "en": "Parent with Stroller",
         "de": "Elternteil mit Kinderwagen"
       },
-      "heightM": 1.75,
-      "widthM": 1.8,
+      "heightM": 1.739,
+      "widthM": 1.81,
       "powerW": 310.7,
       "poses": [
         "pushing-stroller",
@@ -1507,7 +1507,7 @@
         "de": "Hauskatze"
       },
       "heightM": 0.36,
-      "widthM": 0.77,
+      "widthM": 0.76,
       "powerW": 12.9,
       "poses": [
         "standing-alert",
@@ -1561,7 +1561,7 @@
         "de": "Pferd"
       },
       "heightM": 2.33,
-      "widthM": 2.9,
+      "widthM": 2.913,
       "powerW": 576.2,
       "poses": [
         "standing-alert",
@@ -2184,7 +2184,7 @@
         "de": "Stadtauto"
       },
       "heightM": 1.5,
-      "widthM": 3.9,
+      "widthM": 3.926,
       "powerW": 80000,
       "poses": [
         "parked",
@@ -2393,7 +2393,7 @@
         "de": "Turmdrehkran"
       },
       "heightM": 52.25,
-      "widthM": 71.8,
+      "widthM": 71.822,
       "powerW": 70000,
       "poses": [
         "parked-weathervane",
@@ -2447,7 +2447,7 @@
         "de": "Gabelstapler"
       },
       "heightM": 2.325,
-      "widthM": 3.646,
+      "widthM": 3.662,
       "powerW": 27000,
       "poses": [
         "lowered-forks",
@@ -3216,7 +3216,7 @@
         "en": "Kneeling Gardener",
         "de": "Kniende Gärtnerin"
       },
-      "heightM": 1.033,
+      "heightM": 1.027,
       "widthM": 1.835,
       "powerW": 348.4,
       "poses": [
@@ -3269,7 +3269,7 @@
         "en": "Parent Carrying a Toddler",
         "de": "Elternteil trägt ein Kleinkind"
       },
-      "heightM": 1.744,
+      "heightM": 1.757,
       "widthM": 0.655,
       "powerW": 176.7,
       "poses": [
@@ -3476,7 +3476,7 @@
         "de": "Schwangere Person"
       },
       "heightM": 1.7,
-      "widthM": 0.531,
+      "widthM": 0.527,
       "powerW": 135.2,
       "poses": [
         "hand-on-back",
@@ -3527,9 +3527,9 @@
         "en": "Runner with Blade Prosthesis",
         "de": "Läufer mit Prothesenfeder"
       },
-      "heightM": 1.773,
-      "widthM": 0.864,
-      "powerW": 1187.7,
+      "heightM": 1.783,
+      "widthM": 0.874,
+      "powerW": 955.3,
       "poses": [
         "standing-ready",
         "hands-on-hips",
@@ -5004,7 +5004,7 @@
         "de": "Gebärdende Person"
       },
       "heightM": 1.716,
-      "widthM": 0.556,
+      "widthM": 0.554,
       "powerW": 146.1,
       "poses": [
         "relaxed",
@@ -5057,7 +5057,7 @@
         "de": "Person beim Dehnen"
       },
       "heightM": 1.7176,
-      "widthM": 0.6994,
+      "widthM": 0.701,
       "powerW": 224,
       "poses": [
         "quad-stretch",
@@ -5108,7 +5108,7 @@
         "en": "Person Sweeping",
         "de": "Kehrende Person"
       },
-      "heightM": 1.679,
+      "heightM": 1.665,
       "widthM": 1.326,
       "powerW": 321.4,
       "poses": [
@@ -6586,7 +6586,7 @@
         "de": "Rotfuchs"
       },
       "heightM": 0.587,
-      "widthM": 1.1,
+      "widthM": 1.089,
       "powerW": 18.2,
       "poses": [
         "standing-alert",
@@ -6688,7 +6688,7 @@
         "en": "Sheep (Ewe in Full Fleece)",
         "de": "Schaf (Mutterschaf im vollen Vlies)"
       },
-      "heightM": 0.823,
+      "heightM": 0.837,
       "widthM": 1.27,
       "powerW": 98.4,
       "poses": [
@@ -6740,8 +6740,8 @@
         "en": "Agave",
         "de": "Agave"
       },
-      "heightM": 1.445,
-      "widthM": 2.5,
+      "heightM": 1.447,
+      "widthM": 2.4916,
       "powerW": 0,
       "poses": [
         "summer-turgid",
@@ -6795,8 +6795,8 @@
         "en": "Apple Tree, Orchard Standard",
         "de": "Apfelbaum, Hochstamm"
       },
-      "heightM": 6.35,
-      "widthM": 6.789,
+      "heightM": 6.3963,
+      "widthM": 6.8071,
       "powerW": 0,
       "poses": [
         "summer-fruit-set",
@@ -6906,8 +6906,8 @@
         "en": "Bamboo Clump",
         "de": "Bambushorst"
       },
-      "heightM": 4.552,
-      "widthM": 2.977,
+      "heightM": 4.5418,
+      "widthM": 2.974,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -7239,7 +7239,7 @@
         "de": "Gemeine Esche"
       },
       "heightM": 25.6,
-      "widthM": 15.769,
+      "widthM": 15.7557,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -7296,7 +7296,7 @@
         "en": "Common Hawthorn",
         "de": "Eingriffeliger Weißdorn"
       },
-      "heightM": 6,
+      "heightM": 6.015,
       "widthM": 6.3942,
       "powerW": 0,
       "poses": [
@@ -7684,7 +7684,7 @@
         "de": "Stieleiche"
       },
       "heightM": 17.302,
-      "widthM": 19.07,
+      "widthM": 18.853,
       "powerW": 0,
       "poses": [
         "calm",
@@ -7794,7 +7794,7 @@
         "de": "Rotbuche"
       },
       "heightM": 29.6,
-      "widthM": 21.299,
+      "widthM": 21.2911,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -8018,8 +8018,8 @@
         "en": "Fig Tree, Multi-Stem",
         "de": "Feigenbaum, mehrstämmig"
       },
-      "heightM": 5.011,
-      "widthM": 7.021,
+      "heightM": 5.0076,
+      "widthM": 7.0112,
       "powerW": 0,
       "poses": [
         "calm",
@@ -8185,8 +8185,8 @@
         "en": "Hornbeam Hedge",
         "de": "Hainbuchenhecke"
       },
-      "heightM": 1.87,
-      "widthM": 3.14,
+      "heightM": 1.8654,
+      "widthM": 3.1882,
       "powerW": 0,
       "poses": [
         "calm",
@@ -8241,7 +8241,7 @@
         "de": "Rosskastanie"
       },
       "heightM": 24.168,
-      "widthM": 19.047,
+      "widthM": 19.0432,
       "powerW": 0,
       "poses": [
         "candle-bloom",
@@ -8409,7 +8409,7 @@
         "de": "Efeu am Spalier"
       },
       "heightM": 2.105,
-      "widthM": 1.92,
+      "widthM": 1.9,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -8685,8 +8685,8 @@
         "en": "London Plane, Pollarded",
         "de": "Platane, gekappt (Kopfbaum)"
       },
-      "heightM": 8.634,
-      "widthM": 5.657,
+      "heightM": 8.654,
+      "widthM": 5.672,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -8798,7 +8798,7 @@
         "de": "Chinaschilf"
       },
       "heightM": 1.75,
-      "widthM": 2.14,
+      "widthM": 2.125,
       "powerW": 0,
       "poses": [
         "calm",
@@ -8852,7 +8852,7 @@
         "en": "Multi-stem Birch",
         "de": "Mehrstämmige Birke"
       },
-      "heightM": 13.018,
+      "heightM": 13.031,
       "widthM": 9.205,
       "powerW": 0,
       "poses": [
@@ -9019,7 +9019,7 @@
         "en": "Olive Tree, Old and Gnarled",
         "de": "Ölbaum, alt und knorrig"
       },
-      "heightM": 6.891,
+      "heightM": 6.877,
       "widthM": 8.163,
       "powerW": 0,
       "poses": [
@@ -9297,7 +9297,7 @@
         "de": "Roteiche"
       },
       "heightM": 21.098,
-      "widthM": 18.394,
+      "widthM": 18.389,
       "powerW": 0,
       "poses": [
         "calm",
@@ -9631,7 +9631,7 @@
         "de": "Waldkiefer"
       },
       "heightM": 22.179,
-      "widthM": 12.076,
+      "widthM": 12.056,
       "powerW": 0,
       "poses": [
         "calm",
@@ -9740,7 +9740,7 @@
         "en": "Small-Leaved Lime",
         "de": "Winterlinde"
       },
-      "heightM": 14.386,
+      "heightM": 14.399,
       "widthM": 8.954,
       "powerW": 0,
       "poses": [
@@ -9909,8 +9909,8 @@
         "en": "Stone Pine, Umbrella Crown",
         "de": "Pinie, Schirmkrone"
       },
-      "heightM": 20.494,
-      "widthM": 14.452,
+      "heightM": 20.452,
+      "widthM": 14.472,
       "powerW": 0,
       "poses": [
         "calm",
@@ -10021,8 +10021,8 @@
         "en": "Sweetgum",
         "de": "Amberbaum"
       },
-      "heightM": 18,
-      "widthM": 9.443,
+      "heightM": 17.979,
+      "widthM": 9.372,
       "powerW": 0,
       "poses": [
         "calm",
@@ -10078,8 +10078,8 @@
         "en": "Sycamore Maple",
         "de": "Bergahorn"
       },
-      "heightM": 25.1,
-      "widthM": 20.795,
+      "heightM": 25.104,
+      "widthM": 20.778,
       "powerW": 0,
       "poses": [
         "summer-calm",
@@ -10247,8 +10247,8 @@
         "en": "Weeping Willow",
         "de": "Trauerweide"
       },
-      "heightM": 11.1,
-      "widthM": 16.212,
+      "heightM": 11.094,
+      "widthM": 16.124,
       "powerW": 0,
       "poses": [
         "calm",
@@ -11476,7 +11476,7 @@
         "de": "Lieferwagen"
       },
       "heightM": 1.99,
-      "widthM": 5.34,
+      "widthM": 5.353,
       "powerW": 100000,
       "poses": [
         "parked",
@@ -11584,7 +11584,7 @@
         "de": "Motorroller 125"
       },
       "heightM": 1.15,
-      "widthM": 1.85,
+      "widthM": 1.881,
       "powerW": 8000,
       "poses": [
         "parked-on-stand",
@@ -11638,7 +11638,7 @@
         "en": "Low-Floor Tram Section",
         "de": "Niederflur-Straßenbahnabschnitt"
       },
-      "heightM": 5,
+      "heightM": 5.022,
       "widthM": 15.45,
       "powerW": 495000,
       "poses": [
@@ -11694,7 +11694,7 @@
         "de": "Fahrmischer, 9 m3"
       },
       "heightM": 3.65,
-      "widthM": 9,
+      "widthM": 9.011,
       "powerW": 310000,
       "poses": [
         "transit-agitating",
@@ -11746,7 +11746,7 @@
         "de": "Schallgedämmtes Container-Dieselaggregat, 400 kVA"
       },
       "heightM": 3.57,
-      "widthM": 6.06,
+      "widthM": 6.076,
       "powerW": 320000,
       "poses": [
         "off",
@@ -11798,7 +11798,7 @@
         "de": "Luft-Wasser-Wärmepumpe Außengerät, 12 kW"
       },
       "heightM": 1.45,
-      "widthM": 0.47,
+      "widthM": 0.479,
       "powerW": 2850,
       "poses": [
         "heating",
@@ -13782,7 +13782,7 @@
         "de": "Gebrauchter Stahltreppenlauf"
       },
       "heightM": 1.122,
-      "widthM": 4.974,
+      "widthM": 4.952,
       "powerW": 0,
       "poses": [
         "stored",
@@ -16311,8 +16311,8 @@
         "en": "Conventional Oil Pumpjack with Nodding Beam",
         "de": "Klassische Erdölpumpe mit nickendem Balancier"
       },
-      "heightM": 6.87,
-      "widthM": 9.2,
+      "heightM": 6.878,
+      "widthM": 9.1,
       "powerW": 22000,
       "poses": [
         "stopped",

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: l12-run.sh <2d|3d|5d|hub> <steps-file>; each steps-file line = cargo test args of one step. One 4g tmpfs namespace; overlay build dir (lower = prior 5d native cache); test executables deleted after each step; opt-level 1 + embed-metadata=no to fit 4g.
+# usage: l12-run.sh <2d|3d|5d|hub> <steps-file>; each steps-file line = cargo test args of one step. One 4g tmpfs namespace; overlay build dir (lower = prior 5d native cache); test executables deleted after each step; opt-level 1 + embed-metadata=no to fit 4g; L12_PLAIN=1 keeps the lower cache's own flags so unchanged crates come from the lower.
 set -eu
 t=$(cd "$(dirname "$0")" && pwd); dim=$1; steps=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 export L12_PKGS="${L12_PKGS:-semio-s-artifact-puzzle-3d-editor semio-s-artifact-puzzle-3d}" L12_DIM=$dim L12_REQ="$t/🗑️generated/l12-req-$dim" L12_STEPS=$steps L12_SPILL="${L12_SPILL:-$t/🗑️generated/l12-spill}"; mkdir -p "$L12_SPILL"
@@ -11,9 +11,9 @@ case $dim in
 esac
 [ -n "${L12_CD:-}" ] && cd="cd \"$L12_CD\""
 body='G="$L12_SPILL"; for c in $L12_PKGS; do mkdir -p "$G/$c" /tmp/build/b/debug/build/$c; mount --bind "$G/$c" /tmp/build/b/debug/build/$c; done
-export CARGO_PROFILE_DEV_OPT_LEVEL=1 CARGO_PROFILE_TEST_OPT_LEVEL=1 CARGO_PROFILE_DEV_CODEGEN_UNITS=16 CARGO_PROFILE_TEST_CODEGEN_UNITS=16 CARGO_PROFILE_DEV_DEBUG_ASSERTIONS=true CARGO_PROFILE_DEV_OVERFLOW_CHECKS=true
+[ -n "${L12_PLAIN:-}" ] || export CARGO_PROFILE_DEV_OPT_LEVEL=1 CARGO_PROFILE_TEST_OPT_LEVEL=1 CARGO_PROFILE_DEV_CODEGEN_UNITS=16 CARGO_PROFILE_TEST_CODEGEN_UNITS=16 CARGO_PROFILE_DEV_DEBUG_ASSERTIONS=true CARGO_PROFILE_DEV_OVERFLOW_CHECKS=true
 export ZIG_GLOBAL_CACHE_DIR=/tmp/zig ZIG_LOCAL_CACHE_DIR=/tmp/zig-local
-export RUSTFLAGS="$RUSTFLAGS -C embed-bitcode=no -C strip=symbols -Zembed-metadata=no"
+[ -n "${L12_PLAIN:-}" ] || export RUSTFLAGS="$RUSTFLAGS -C embed-bitcode=no -C strip=symbols -Zembed-metadata=no"
 while IFS= read -r line; do
   [ -z "$line" ] && continue
   echo "L12-STEP $line"

@@ -20,6 +20,7 @@ fn retire_inspector_view(view: ViewModel) {
 
 #[test]
 fn inspector_selection_fixtures() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
     let mut layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     layer_base_mut(&mut layer).id = "shape.a".into();
@@ -39,6 +40,7 @@ fn inspector_selection_fixtures() {
 
 #[test]
 fn inspector_stroke_controls_are_localized() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -54,6 +56,7 @@ fn inspector_stroke_controls_are_localized() {
 
 #[test]
 fn inspector_path_nodes_publish_localized_edit_actions() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 12.0], ctrl2: [12.0, 12.0], to: [12.0, 0.0] }, PathSegment::Line { to: [12.0,12.0] }, PathSegment::Move { to: [20.0,20.0] }, PathSegment::Line { to: [30.0,30.0] }].into());
     layer_base_mut(&mut layer).id = "path".into();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -95,6 +98,7 @@ fn inspector_input_rows(node: &serde_json::Value, output: &mut Vec<serde_json::V
 
 #[test]
 fn node_coordinates_are_grouped_into_readable_pairs() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️node-rows/🔣️.json")).unwrap();
     let segments: Vec<PathSegment> = serde_json::from_value(fixture["segments"].clone()).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
@@ -112,6 +116,7 @@ fn node_coordinates_are_grouped_into_readable_pairs() {
 
 #[test]
 fn gradient_coordinates_and_stops_have_labeled_rows() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎨️fill-rows/🔣️.json")).unwrap();
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for disabled in [false, true] {
@@ -135,6 +140,7 @@ fn gradient_coordinates_and_stops_have_labeled_rows() {
 
 #[test]
 fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut layer=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
     layer_base_mut(&mut layer).id="shape".into();
     let mut document=DrawingSnapshot { layers:vec![layer].into(),..Default::default() };
@@ -153,6 +159,7 @@ fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
 
 #[test]
 fn gradient_inspector_projects_type_coordinates_and_stops() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
     layer_base_mut(&mut layer).attributes.fill = semio_s_artifact_draw_drawing_model::fill::edit_fill(None,&semio_s_artifact_draw_drawing_model::fill::FillEdit::Type { value: semio_s_artifact_draw_drawing_model::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
@@ -173,6 +180,7 @@ fn gradient_inspector_projects_type_coordinates_and_stops() {
 
 #[test]
 fn inspector_controls_bind_the_events_the_host_dispatches() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     fn check(node: &serde_json::Value, events: &serde_json::Value, count: &mut usize) {
         if let Some(expected) = node["component"]["type"].as_str().and_then(|kind| events.get(kind)) {
             let bindings = node["bindings"].as_array().unwrap();
@@ -201,6 +209,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
 
 #[test]
 fn text_inspector_is_multiline_localized_and_commits_on_blur() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let layer = semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
@@ -214,6 +223,7 @@ fn text_inspector_is_multiline_localized_and_commits_on_blur() {
 
 #[test]
 fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     fn control(node:&serde_json::Value)->Option<&serde_json::Value> {
         if node["key"]=="drawing-inspector.fillRule.input" {return Some(node);}
         node["children"].as_array()?.iter().find_map(control)
@@ -249,6 +259,7 @@ fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
 
 #[test]
 fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut layer=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Layer")).to_string().into()).expect("nonempty authored identity"), "Layer");
     layer_base_mut(&mut layer).id="layer".into();
     let document=DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
@@ -262,6 +273,7 @@ fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
 
 #[test]
 fn ungroup_control_appears_for_editable_groups_in_both_languages() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     layer_base_mut(&mut group).id="group".into();
     let view=ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
@@ -277,6 +289,7 @@ fn ungroup_control_appears_for_editable_groups_in_both_languages() {
 
 #[test]
 fn group_isolation_inspector_exposes_localized_common_mixed_and_locked_states() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     fn control(node:&serde_json::Value)->Option<&serde_json::Value> {
         if node["key"]=="drawing-inspector.isolation.input" {return Some(node);}
         node["children"].as_array()?.iter().find_map(control)
@@ -307,6 +320,7 @@ fn group_isolation_inspector_exposes_localized_common_mixed_and_locked_states() 
 
 #[test]
 fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     fn control(node: &serde_json::Value) -> Option<&serde_json::Value> {
         if node["key"] == "drawing-inspector.blendMode.input" { return Some(node); }
         node["children"].as_array()?.iter().find_map(control)
@@ -347,6 +361,7 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
 
 #[test]
 fn authored_geometry_controls_match_shared_inspector_contract() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let layer=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((case["kind"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), case["kind"].as_str().unwrap());
@@ -368,6 +383,7 @@ fn authored_geometry_controls_match_shared_inspector_contract() {
 
 #[test]
 fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🧪️tests/🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     let segment=PathSegment::Move{to:[0.0,0.0]};
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
@@ -386,6 +402,7 @@ fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
 /// 🧭️ Neutral eligibility cases reach the actual bilingual inspector with inherited locks and original groups.
 #[test]
 fn inspector_actions_respect_selection_eligibility() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../📌️panels/🔍️properties/🎬️actions/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let selection=&row["selection"];

@@ -1820,6 +1820,7 @@ dependencies = [
  "semio-framework-value-native-list-receiver",
  "semio-framework-value-native-receiver-protocol",
  "semio-framework-value-native-receiving-contract",
+ "semio-framework-value-native-record-machine",
  "semio-framework-value-native-reservation",
  "semio-framework-value-native-schema",
  "semio-framework-value-native-schema-engine",
@@ -1879,6 +1880,23 @@ dependencies = [
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-native-record-machine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-default",
+ "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-receiving-contract",
+ "semio-framework-value-native-schema",
+ "semio-framework-value-native-schema-engine",
+ "semio-framework-value-native-storage",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]

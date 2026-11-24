@@ -31,5 +31,5 @@ pub fn graph_png_preview(
         return None;
     }
     let super::PdfObject::Stream { data, .. } = value else { return None; };
-    Some(data)
+    Some(data.to_vec_owner())
 }

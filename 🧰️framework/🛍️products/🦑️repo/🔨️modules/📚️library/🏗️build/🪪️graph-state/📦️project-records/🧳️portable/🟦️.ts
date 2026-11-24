@@ -111,7 +111,7 @@ const rawPatterns=(host:HostV1)=>{const root=bare(host.root).replaceAll("/","\\"
 export function neutralTextV1(text:string,host:HostV1,policy:PortableRowsPolicyV1=portableRowsPolicyV1):string{
  if(!host.windows)return Buffer.from(neutralizeRootV1(Buffer.from(text),host.root)).toString("utf8");
  const moved=text.replace(rootPattern(host),policy.rootToken);
- if(rawPatterns(host).some(pattern=>pattern.test(moved)))throw new UnportableV1("root spelled with backslashes");
+ {const hit=rawPatterns(host).map(pattern=>pattern.exec(moved)).find(found=>found!==null);if(hit)throw new UnportableV1("root spelled with backslashes: "+JSON.stringify(moved.slice(Math.max(0,hit.index-16),hit.index+hit[0].length+48)));}
  return moved;
 }
 

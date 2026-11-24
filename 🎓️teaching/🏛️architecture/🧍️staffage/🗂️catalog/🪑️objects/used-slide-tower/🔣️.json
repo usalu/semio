@@ -6271,6 +6271,66 @@
         ]
        ],
        "closed": true
+      },
+      {
+       "id": "eye-right",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 2.81,
+       "points": [
+        [
+         0.785,
+         0.955342
+        ],
+        [
+         0.815,
+         0.955342
+        ],
+        [
+         0.815,
+         1.017342
+        ],
+        [
+         0.785,
+         1.017342
+        ]
+       ]
+      },
+      {
+       "id": "eye-left",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 2.81,
+       "points": [
+        [
+         0.785,
+         0.955342
+        ],
+        [
+         0.815,
+         0.955342
+        ],
+        [
+         0.815,
+         1.017342
+        ],
+        [
+         0.785,
+         1.017342
+        ]
+       ]
       }
      ],
      "front": [
@@ -7929,6 +7989,66 @@
         ]
        ],
        "closed": true
+      },
+      {
+       "id": "eye-right",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 2.09,
+       "points": [
+        [
+         -0.615,
+         3.555342
+        ],
+        [
+         -0.585,
+         3.555342
+        ],
+        [
+         -0.585,
+         3.617342
+        ],
+        [
+         -0.615,
+         3.617342
+        ]
+       ]
+      },
+      {
+       "id": "eye-left",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 2.09,
+       "points": [
+        [
+         0.585,
+         3.555342
+        ],
+        [
+         0.615,
+         3.555342
+        ],
+        [
+         0.615,
+         3.617342
+        ],
+        [
+         0.585,
+         3.617342
+        ]
+       ]
       }
      ],
      "plan": [
@@ -9480,6 +9600,66 @@
         ]
        ],
        "closed": true
+      },
+      {
+       "id": "eye-right",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 5.6173,
+       "points": [
+        [
+         -0.015,
+         -0.615
+        ],
+        [
+         0.015,
+         -0.615
+        ],
+        [
+         0.015,
+         -0.585
+        ],
+        [
+         -0.015,
+         -0.585
+        ]
+       ]
+      },
+      {
+       "id": "eye-left",
+       "bone": "roof",
+       "role": "detail",
+       "filled": true,
+       "tone": 0.62,
+       "region": "galvanised-steel",
+       "material": "steel-galvanised-weathered",
+       "kind": "poly",
+       "closed": true,
+       "z": 5.6173,
+       "points": [
+        [
+         -0.015,
+         0.585
+        ],
+        [
+         0.015,
+         0.585
+        ],
+        [
+         0.015,
+         0.615
+        ],
+        [
+         -0.015,
+         0.615
+        ]
+       ]
       }
      ]
     },
@@ -33366,6 +33546,46 @@
       ],
       "from": -0.8,
       "to": 0.8
+     },
+     {
+      "id": "eye-right",
+      "bone": "roof",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.062,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.986342,
+        -0.6
+       ]
+      }
+     },
+     {
+      "id": "eye-left",
+      "bone": "roof",
+      "material": "steel-galvanised-weathered",
+      "role": "detail",
+      "tone": 0.62,
+      "kind": "box",
+      "size": [
+       0.03,
+       0.062,
+       0.03
+      ],
+      "transform": {
+       "translation": [
+        0.8,
+        0.986342,
+        0.6
+       ]
+      }
      }
     ],
     "thermal": [
@@ -33683,6 +33903,16 @@
       "id": "th-ridge",
       "of": "ridge",
       "region": "roof-boards"
+     },
+     {
+      "id": "th-eye-left",
+      "of": "eye-left",
+      "region": "galvanised-steel"
+     },
+     {
+      "id": "th-eye-right",
+      "of": "eye-right",
+      "region": "galvanised-steel"
      }
     ],
     "structure": [

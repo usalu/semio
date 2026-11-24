@@ -9,7 +9,7 @@
   "bindingCancelPosts": 1,
   "rearmPosts": 1,
   "semanticActions": 2,
-  "seedParts": 80,
+  "seedParts": 64,
   "cancelAfter": 3,
   "settledCancelActions": 2,
   "settledCancelBaseWork": 1,

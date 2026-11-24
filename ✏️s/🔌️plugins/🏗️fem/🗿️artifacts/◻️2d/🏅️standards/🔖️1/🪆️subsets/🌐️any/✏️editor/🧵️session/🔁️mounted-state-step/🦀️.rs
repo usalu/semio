@@ -212,7 +212,7 @@ impl MountedState {
             } else if let Some(plan) = PLANS.get(self.graph_plans.len()).cloned() {
                 self.graph_plans.push(plan);
             } else {
-                self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
+                self.graph = Some(FemJobGraph::new(self.identity.operation(cx.operation(), cx.generation()), std::mem::take(&mut self.graph_plans), 1));
                 self.stage = MountedStage::Graph;
             }
             cx.consume_fuel(1);
@@ -236,7 +236,7 @@ impl MountedState {
                         }
                         self.visual.state = FemVisualState::Unmeshed;
                         self.visual_dirty = true;
-                        self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
+                        self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(cx.operation(), cx.generation()), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
                         self.stage = MountedStage::Mesh;
                     } else {
                         self.stage = MountedStage::BuildModel;
@@ -330,7 +330,7 @@ impl MountedState {
                         return Ok(self.progress(b"fem2d.region-complete"));
                     }
                     let model = self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once");
-                    self.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, self.identity.operation(), 1));
+                    self.assembly_build = Some(AssemblyJobConstruction::new_mounted(model, self.identity.operation(cx.operation(), cx.generation()), 1));
                     self.stage = MountedStage::PrepareAssembly;
                     self.visual.state = FemVisualState::Assembling;
                     cx.consume_fuel(1);
@@ -380,7 +380,7 @@ impl MountedState {
                         return Ok(self.begin_eigen(matrix));
                     }
                     let rhs = std::mem::take(&mut self.load_build.as_mut().expect("assembled loads retained").free);
-                    self.pcg_build = match PcgJobConstruction::new_with_mounted_rhs(self.identity.operation(), matrix, rhs) {
+                    self.pcg_build = match PcgJobConstruction::new_with_mounted_rhs(self.identity.operation(cx.operation(), cx.generation()), matrix, rhs) {
                         Ok(builder) => Some(builder),
                         Err((matrix, rhs)) => { self.rejected_pcg_matrix = Some(matrix); self.load_build.as_mut().expect("load owner retained").free = rhs; return Ok(self.fail(b"fem2d.pcg-rhs-shape".to_vec())); }
                     };

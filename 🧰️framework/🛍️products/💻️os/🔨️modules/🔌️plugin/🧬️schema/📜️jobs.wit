@@ -57,15 +57,18 @@ interface jobs {
     admitted: bool,
     refusal: option<actor-call-failure>,
   }
-  start-job: async func(job: u64, budget: job-budget) -> job-start-call;
-  step-job: async func(job: u64, budget: job-budget) -> job-step-call;
-  read-job-output: async func(job: u64, budget: job-budget) -> job-output-call;
-  acknowledge-job-output: async func(job: u64, budget: job-budget) -> job-output-ack-call;
-  cancel-job: async func(job: u64, budget: job-budget) -> job-cancel-call;
-  close-jobs: async func(budget: job-budget) -> job-cancel-call;
-  publish-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-publish-call;
-  read-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-read-call;
-  acknowledge-actor-failure: async func(reference: actor-failure-call-reference, budget: job-budget) -> actor-failure-ack-call;
+  /// 🎚️ Stages the ONE `job-budget` the next job call below consumes: same sync-export contract and same law as
+  /// `reactor.stage-actor-context-budget`, so every async job export stays at most 16 flat values.
+  stage-job-budget: func(budget: job-budget);
+  start-job: async func(job: u64) -> job-start-call;
+  step-job: async func(job: u64) -> job-step-call;
+  read-job-output: async func(job: u64) -> job-output-call;
+  acknowledge-job-output: async func(job: u64) -> job-output-ack-call;
+  cancel-job: async func(job: u64) -> job-cancel-call;
+  close-jobs: async func() -> job-cancel-call;
+  publish-actor-failure: async func(reference: actor-failure-call-reference) -> actor-failure-publish-call;
+  read-actor-failure: async func(reference: actor-failure-call-reference) -> actor-failure-read-call;
+  acknowledge-actor-failure: async func(reference: actor-failure-call-reference) -> actor-failure-ack-call;
   /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
   /// bytes; the first `none` is the terminal observation and releases the operation authority.
   take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;

@@ -34,6 +34,7 @@ import {
 } from "@semio-tech/framework";
 import { type DocumentScope } from "@semio-tech/framework/document/scope";
 import { type DocumentArchivePack } from "@semio-tech/framework/wire-contracts";
+import { createDocumentLoadGateV1 } from "../⏳️document-load-gate/🟦️.ts";
 import {
   createSealedInstanceLedgerV1,
   createSessionAppSwitchGateV1,
@@ -263,7 +264,7 @@ export function useShellCoreState({
       return next.projections;
     });
     if (applied && key === focusedExampleProgramRef.current) {
-      const remembered = committedExamplesByProgramRef.current.get(key)?.exampleId ?? "";
+      const remembered = committedExamplesByProgramRef.current.get(key)?.exampleId;
       const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, remembered, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
       if (navbarExample !== undefined) {
         dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
@@ -519,6 +520,8 @@ export function useShellCoreState({
    * have: `operationSettlersRef` only knows about operations somebody is awaiting, and nothing at all
    * tracked an extension round trip. */
   const sessionWorkRef = useRef(createSessionWorkLedgerV1());
+  /** ⏳️ The whole-document loads running per instance and the inputs parked behind them (`⏳️document-load-gate`). */
+  const documentLoadGateRef = useRef(createDocumentLoadGateV1());
   /** 🪦️ Instances a switch has sealed. Read by every path that would otherwise address a retired
    * instance, so a late action/effect resolves to ONE {@link sealedInstanceDropTextV1} line instead of
    * `no actor for instance N` plus a stack. */
@@ -679,7 +682,7 @@ export function useShellCoreState({
     refreshGenerationRef, replaceBodiesGenerationRef, clipboardFragmentRef, appRegistrationsJsonRef,
     spawnedRefreshSlotsRef, contributorInstancesRef, contributorPassesRef, externalSlotNodesRef, layoutSeedKeyRef,
     extraWindowCounterRef, shellContextMenu, setShellContextMenu, extraWindowInstancesRef, settleOperation,
-    awaitOperationSettle, sessionWorkRef, sealedInstancesRef, sessionSwitchGateRef, surfaceSwitchBusy,
+    awaitOperationSettle, sessionWorkRef, documentLoadGateRef, sealedInstancesRef, sessionSwitchGateRef, surfaceSwitchBusy,
     setSurfaceSwitchBusy, dropForSealedInstance, dropForRetiredInstance, setWindowTitle, setWindowIcon,
     uiRefreshCacheRef, spawnedUiRefreshCacheRef, spawnedLayoutSeedRef, openSpaceIdRef, openSpaceEpochRef, openSpaceId, rememberOpenSpaceId,
     openInstanceIdRef, sessionRef, treeWindowSchedulerRef, refreshUiRef, panelTreeConfigCacheRef, treeWindowGeneration,

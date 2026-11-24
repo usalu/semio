@@ -1,0 +1,3 @@
+[
+{"op":"shape","scale":"500","view":"plan","id":"jacket","shape":{"id":"jacket","bone":"torso","role":"body","z":2.6,"filled":true,"tone":0.34,"material":"softshell","kind":"poly","points":[[0.2716,-0.1338],[0.3999,-0.1058],[0.4606,-0.0638],[0.5002,-0.0568],[0.4956,0.0692],[0.4512,0.0762],[0.3882,0.1135],[0.2786,0.1298],[0.0522,0.1205],[-0.1951,0.1392],[-0.1811,-0.1152],[0.0989,-0.1152]],"closed":true,"solid":{"kind":"extruded","sweep":"w","z0":-0.2,"z1":0.199},"regions":["torso-clothing"]}}
+]

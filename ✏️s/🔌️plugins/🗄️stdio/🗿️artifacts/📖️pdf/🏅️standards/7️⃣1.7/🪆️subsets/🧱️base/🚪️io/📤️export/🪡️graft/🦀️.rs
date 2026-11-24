@@ -20,6 +20,11 @@ impl<'a> Graft<'a> {
         Self { typed, graph, trailer: typed.trailer.clone(), next, displaced: Vec::new() }
     }
 
+    /// 🧵 A graft over only the objects one patch reads: `graph` seeds the page, its tree ancestors and its resource dictionaries, `next` is the document's first free object number, and every other object stays with the caller.
+    pub fn sparse(typed: &'a PdfSnapshot, graph: BTreeMap<u32, PdfIndirectObject>, trailer: Vec<PdfDictEntry>, next: u32) -> Self {
+        Self { typed, graph, trailer, next, displaced: Vec::new() }
+    }
+
     pub fn read(&self) -> PResult<Reading> {
         Reading::of(GraphView(&self.graph), &self.trailer, &self.typed.declared_version)
     }

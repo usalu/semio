@@ -122,13 +122,18 @@ fn text_value(value: &str) -> UiAssemblyResult<UiValue> {
     UiText::try_from_str(value).map(UiValue::Text).ok_or_else(|| error("puzzle2d inspector action text admission failed"))
 }
 
+/// ✅️ The localized yes/no reading of a flag row.
+fn flag_text(labels: &Puzzle2dLabels, pressed: bool) -> &str {
+    if pressed { labels.yes.as_str() } else { labels.no.as_str() }
+}
+
 /// 🩹️ One `setSelectionFlag` toggle row over the live selection.
-fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
+fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, labels: &Puzzle2dLabels, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| error("puzzle2d inspector action map admission failed"))?;
     builder.push("flag".to_owned(), text_value(flag_name)?).map_err(|_| error("puzzle2d inspector action map entry admission failed"))?;
     builder.push("value".to_owned(), UiValue::Bool(!pressed)).map_err(|_| error("puzzle2d inspector action map entry admission failed"))?;
     let action = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(UiValue::Map(builder.finish())))?;
-    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(flag_text(labels, pressed).to_owned()), action))
 }
 
 //#region 🎯️TargetRegionFields
@@ -136,13 +141,13 @@ fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, flag_nam
 // on the same lines.
 /// 🎯️ One `setTargetRegionFlag` toggle row over the addressed region — a region's flags are a
 /// different collection from a node's, so this never reuses [`flag_row`]'s `setSelectionFlag`.
-fn region_flag_row(fields: &mut UiFixedList<BuiltNode>, row_id: &str, label: &str, region_id: &str, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
+fn region_flag_row(fields: &mut UiFixedList<BuiltNode>, row_id: &str, label: &str, labels: &Puzzle2dLabels, region_id: &str, flag_name: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| error("puzzle2d inspector region action map admission failed"))?;
     builder.push("flag".to_owned(), text_value(flag_name)?).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
     builder.push("id".to_owned(), text_value(region_id)?).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
     builder.push("value".to_owned(), UiValue::Bool(!pressed)).map_err(|_| error("puzzle2d inspector region action map entry admission failed"))?;
     let action = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID).action("setTargetRegionFlag", Some(UiValue::Map(builder.finish())))?;
-    push(fields, tree_item_with_action(format!("{ROOT}.{row_id}"), ui_label(label)?, Some(pressed.to_string()), action))
+    push(fields, tree_item_with_action(format!("{ROOT}.{row_id}"), ui_label(label)?, Some(flag_text(labels, pressed).to_owned()), action))
 }
 
 /// 🎯️ The fields of one fill-constraining rectangle: its id and label, its minimum corner, its
@@ -156,8 +161,8 @@ fn target_region_fields(region: &Value, labels: &Puzzle2dLabels) -> UiAssemblyRe
     read_only(&mut fields, "target-region.y", labels.y.as_str(), number(region, "y"))?;
     read_only(&mut fields, "target-region.width", labels.width.as_str(), number(region, "width"))?;
     read_only(&mut fields, "target-region.height", labels.height.as_str(), number(region, "height"))?;
-    region_flag_row(&mut fields, "target-region.hidden", labels.hidden.as_str(), &id, "hidden", flag(region, "hidden"))?;
-    region_flag_row(&mut fields, "target-region.locked", labels.locked.as_str(), &id, "locked", flag(region, "locked"))?;
+    region_flag_row(&mut fields, "target-region.hidden", labels.hidden.as_str(), labels, &id, "hidden", flag(region, "hidden"))?;
+    region_flag_row(&mut fields, "target-region.locked", labels.locked.as_str(), labels, &id, "locked", flag(region, "locked"))?;
     Ok(fields)
 }
 //#endregion 🎯️TargetRegionFields
@@ -189,8 +194,8 @@ fn node_fields(node: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
         stepper_row(&mut fields, "node.radius", labels.radius.as_str(), id, "radius", stepper_value(node, "radius", 24.0), 1.0)?;
     }
     read_only(&mut fields, "node.handles", labels.handles.as_str(), node.get("handles").and_then(Value::as_array).map_or(0, Vec::len))?;
-    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node))?;
-    flag_row(&mut fields, "node.locked", labels.locked.as_str(), "locked", flag(node, "locked"))?;
+    flag_row(&mut fields, "node.hidden", labels.hidden.as_str(), labels, "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(node))?;
+    flag_row(&mut fields, "node.locked", labels.locked.as_str(), labels, "locked", flag(node, "locked"))?;
     Ok(fields)
 }
 
@@ -200,8 +205,8 @@ fn edge_fields(edge: &Value, labels: &Puzzle2dLabels) -> UiAssemblyResult<UiFixe
     read_only(&mut fields, "edge.kind", labels.edge_kind.as_str(), text(edge, "edgeKind"))?;
     read_only(&mut fields, "edge.source", labels.source.as_str(), text(edge, "source"))?;
     read_only(&mut fields, "edge.target", labels.target.as_str(), text(edge, "target"))?;
-    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(edge))?;
-    flag_row(&mut fields, "edge.locked", labels.locked.as_str(), "locked", flag(edge, "locked"))?;
+    flag_row(&mut fields, "edge.hidden", labels.hidden.as_str(), labels, "hidden", semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::puzzle2d_entity_hidden(edge))?;
+    flag_row(&mut fields, "edge.locked", labels.locked.as_str(), labels, "locked", flag(edge, "locked"))?;
     Ok(fields)
 }
 

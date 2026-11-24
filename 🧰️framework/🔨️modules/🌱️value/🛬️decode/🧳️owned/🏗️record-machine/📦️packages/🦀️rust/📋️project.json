@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/value-native-record-machine-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

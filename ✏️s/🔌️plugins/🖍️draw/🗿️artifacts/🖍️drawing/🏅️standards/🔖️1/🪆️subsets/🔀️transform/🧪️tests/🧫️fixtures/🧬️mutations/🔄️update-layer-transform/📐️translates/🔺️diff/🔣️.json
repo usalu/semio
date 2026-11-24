@@ -21,18 +21,21 @@
           "textSize": null,
           "fillRule": null,
           "transform": {
-            "x": 24,
-            "y": -8,
-            "scaleX": 2,
+            "x": 24.0,
+            "y": -8.0,
+            "scaleX": 2.0,
             "scaleY": 1.5,
-            "shear": 0,
-            "rotation": 0
+            "shear": 0.0,
+            "rotation": 0.0
           },
           "fill": null,
           "stroke": null,
           "traceParams": null,
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       }
     ]

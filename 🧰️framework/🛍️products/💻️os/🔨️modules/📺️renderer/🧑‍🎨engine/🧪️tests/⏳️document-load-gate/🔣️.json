@@ -1,0 +1,15 @@
+{
+  "ephemeralNoteActionId": "noteShellCommand",
+  "policy": [
+    { "action": "noteShellCommand", "kind": "shell", "expect": "drop" },
+    { "action": "noteShellCommand", "kind": null, "expect": "drop" },
+    { "action": "setContributions", "kind": "mutation", "expect": "defer" },
+    { "action": "paste", "kind": "clipboard", "expect": "defer" },
+    { "action": "setActiveTab", "kind": "view", "expect": "pass" },
+    { "action": "hover", "kind": "interaction", "expect": "pass" },
+    { "action": "undo", "kind": "history", "expect": "pass" },
+    { "action": "historyEditCancelReplay", "kind": "history", "expect": "pass" },
+    { "action": "unknown", "kind": null, "expect": "pass" }
+  ],
+  "capacity": 2
+}

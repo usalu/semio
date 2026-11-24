@@ -9,6 +9,5 @@ package semio:framework@1.0.0;
 /// `list-artifact-inferences`, `list-artifact-mutations`, `list-io-entries`) is now static data
 /// inside this one descriptor instead.
 interface describe {
-  use reactor.{actor-context-budget};
-  describe: async func(budget: actor-context-budget) -> list<u8>;
+  describe: async func() -> list<u8>;
 }

@@ -189,6 +189,12 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         true
     }
 
+    /// 🛑️ Abandons this publication with the cause that ends it; an earlier retained cause stays the primary one.
+    pub fn abandon(&mut self, cause: ValueError) {
+        if self.fault.is_none() { *self.fault = Some(cause); }
+        self.begin_close();
+    }
+
     pub fn begin_close(&mut self) {
         if self.close_started {
             return;

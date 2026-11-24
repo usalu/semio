@@ -94,13 +94,13 @@ fn id_list_value(ids: &[String]) -> UiAssemblyResult<UiValue> {
 
 /// 🩹️ One `patchInspector` toggle row — flips a boolean `field` (`hidden`/`locked`) on every id in
 /// `ids`, the two fields that command accepts for any entity.
-fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, entity: &str, ids: &[String], field: &str, pressed: bool) -> UiAssemblyResult<()> {
+fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, labels: &Puzzle3dLabels, entity: &str, ids: &[String], field: &str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle3d inspector action map admission failed"))?;
     for (key, value) in [("entity", text_value(entity)?), ("field", text_value(field)?), ("ids", id_list_value(ids)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle3d inspector action map entry admission failed"))?;
     }
     let action = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("patchInspector", Some(UiValue::Map(builder.finish())))?;
-    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(if pressed { labels.yes.as_str() } else { labels.no.as_str() }.to_owned()), action))
 }
 //#endregion 🔖️Rows
 
@@ -115,8 +115,8 @@ fn object_fields(object: &Puzzle3dObject, ids: &[String], labels: &Puzzle3dLabel
     read_only(&mut fields, "object.scale", labels.scale.as_str(), vec3(object_scale_json(object)))?;
     read_only(&mut fields, "object.mesh-url", labels.mesh_url.as_str(), object.mesh_url.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "object.vortices", labels.vortices.as_str(), object.vortices.len())?;
-    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "hidden", object.hidden)?;
-    flag_row(&mut fields, "object.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_OBJECT, ids, "locked", object.locked)?;
+    flag_row(&mut fields, "object.hidden", labels.hidden.as_str(), labels, PUZZLE3D_GRANULARITY_OBJECT, ids, "hidden", object.hidden)?;
+    flag_row(&mut fields, "object.locked", labels.locked.as_str(), labels, PUZZLE3D_GRANULARITY_OBJECT, ids, "locked", object.locked)?;
     Ok(fields)
 }
 
@@ -151,8 +151,8 @@ fn target_volume_fields(volume: &Puzzle3dTargetVolume, ids: &[String], labels: &
     read_only(&mut fields, "target-volume.origin", labels.origin.as_str(), vec3(volume.origin))?;
     read_only(&mut fields, "target-volume.orientation", labels.orientation.as_str(), vec4(volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
     read_only(&mut fields, "target-volume.scale", labels.scale.as_str(), vec3(target_volume_scale_json(volume)))?;
-    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "hidden", volume.hidden)?;
-    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "locked", volume.locked)?;
+    flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), labels, PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "hidden", volume.hidden)?;
+    flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), labels, PUZZLE3D_GRANULARITY_TARGET_VOLUME, ids, "locked", volume.locked)?;
     Ok(fields)
 }
 
@@ -163,8 +163,8 @@ fn reference_fields(reference: &Puzzle3dReference, ids: &[String], labels: &Puzz
     read_only(&mut fields, "reference.media-kind", labels.media_kind.as_str(), reference.source.media_kind.as_deref().unwrap_or_default())?;
     read_only(&mut fields, "reference.origin", labels.origin.as_str(), vec3(reference.origin))?;
     read_only(&mut fields, "reference.width-world", labels.width.as_str(), reference.width_world)?;
-    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "hidden", reference.hidden)?;
-    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), PUZZLE3D_GRANULARITY_REFERENCE, ids, "locked", reference.locked)?;
+    flag_row(&mut fields, "reference.hidden", labels.hidden.as_str(), labels, PUZZLE3D_GRANULARITY_REFERENCE, ids, "hidden", reference.hidden)?;
+    flag_row(&mut fields, "reference.locked", labels.locked.as_str(), labels, PUZZLE3D_GRANULARITY_REFERENCE, ids, "locked", reference.locked)?;
     Ok(fields)
 }
 

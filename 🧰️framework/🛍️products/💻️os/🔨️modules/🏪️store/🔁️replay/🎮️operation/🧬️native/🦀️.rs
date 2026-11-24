@@ -80,9 +80,13 @@ pub(crate) type Failure=semio_framework_value::OriginalRetirementFailure;
 pub(crate) type Exit=semio_framework_value::RetirementPollExit;
 /// 🪜️ The smallest work ceiling the probe opens; a loan below it plus the invocation handoff opens no effect.
 pub(crate) const PROBE_CEILING_FLOOR:u64=8;
-/// 🪙️ Opens one original work effect at the largest ceiling the job admits, backing off by quarters.
+/// 📏️ The largest work ceiling one probe opens, whatever the turn still holds: the browser shard grants a turn 50,000,000 units of fuel, and a probe that opened (and a producer that sized its demands against) the whole turn would work for the wall bound of the lane instead of one bounded step.
+pub(crate) const PROBE_CEILING_CAP:u64=1<<20;
+/// 🎚️ The ceiling a probe opens first: what the turn still holds minus the invocation unit, never above [`PROBE_CEILING_CAP`] and never below [`PROBE_CEILING_FLOOR`]; without a readable hint the cap itself.
+pub(crate) fn probe_ceiling(available:Option<u64>)->u64{available.map_or(PROBE_CEILING_CAP,|fuel|fuel.saturating_sub(1).min(PROBE_CEILING_CAP)).max(PROBE_CEILING_FLOOR)}
+/// 🪙️ Opens one original work effect at the largest ceiling the job admits below [`PROBE_CEILING_CAP`], backing off by quarters.
 pub(crate) fn probe_effect<R>(control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,Effect<'_,'_>)->R)->Result<Option<R>,ValueError>{
- let mut run=Some(run);let mut maximum:u64=1<<20;
+ let mut run=Some(run);let mut maximum:u64=probe_ceiling(control.available_work_hint());
  loop{
   let attempt=control.with_effect(grant,maximum,|control,effect|(run.take().expect("probe closure runs once"))(control,effect))?;
   if attempt.is_some(){return Ok(attempt)}

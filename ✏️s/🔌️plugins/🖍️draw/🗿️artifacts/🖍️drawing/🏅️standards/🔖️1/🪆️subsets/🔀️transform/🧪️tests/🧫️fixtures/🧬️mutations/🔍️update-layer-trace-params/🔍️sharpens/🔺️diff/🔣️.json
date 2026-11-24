@@ -28,7 +28,10 @@
             "simplifyEpsilon": 0.25
           },
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       }
     ]

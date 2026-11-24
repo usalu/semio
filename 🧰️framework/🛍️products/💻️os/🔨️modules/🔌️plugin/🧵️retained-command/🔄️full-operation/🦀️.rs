@@ -7,6 +7,22 @@ impl semio_os_kernel::os_vcs::io::binary::entity_identity::control::IdentityWork
     }
 }
 
+/// 🧭️ Why one publication unit could not advance the ladder: a static cause and the three figures it was measured against.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PublicationWait { pub cause: &'static str, pub have: [u64; 3] }
+
+thread_local! { static LAST_PUBLICATION_WAIT: std::cell::Cell<Option<(u64, PublicationWait)>> = const { std::cell::Cell::new(None) }; }
+
+/// 🧭️ Records the cause the latest publication unit of `operation` waited on, so a stall names it instead of staying silent.
+pub fn note_publication_wait(operation: u64, cause: &'static str, have: [u64; 3]) {
+    LAST_PUBLICATION_WAIT.with(|slot| slot.set(Some((operation, PublicationWait { cause, have }))));
+}
+
+/// 🧭️ Reads the cause last recorded for `operation`, if any.
+pub fn last_publication_wait(operation: u64) -> Option<PublicationWait> {
+    LAST_PUBLICATION_WAIT.with(|slot| slot.get().filter(|(id, _)| *id == operation).map(|(_, wait)| wait))
+}
+
 pub use semio_plugin_result_page::{result_page_wire,pending_result_page};
 #[path="📃️mounted/🦀️.rs"]
 mod mounted_page;
@@ -92,9 +108,27 @@ impl PublicationFailureCustody{
     pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{let grant=effect.grant();if let Some(place)=self.reservation.as_mut(){let turn=semio_plugin_ownership::bounded_ownership::plugin_poll_outcome(place.close_step(grant.maximum_copy_bytes,effect));if place.terminal_is_empty(){self.reservation=None}return turn}semio_plugin_ownership::bounded_ownership::plugin_poll_outcome(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.original,&mut self.retirement,effect))}
 }
 
+/// 🛑️ An abandoned publication only retires and never prepares again, so any retained refusal is final; a live one is final only for kinds no retry changes.
+fn refusal_has_no_retry_path(kind: semio_framework_value::ValueRefusalKind, abandoned: bool) -> bool {
+    abandoned || matches!(kind, semio_framework_value::ValueRefusalKind::UnsupportedOwner | semio_framework_value::ValueRefusalKind::InvariantViolated)
+}
+
 #[cfg(test)]
 mod publication_failure_tests{
     use super::*;
+    use semio_framework_value::ValueRefusalKind as Kind;
+    #[test]
+    fn an_abandoned_publication_refusal_is_final_for_every_kind_and_a_live_one_only_for_structural_kinds(){
+        for kind in [Kind::WorkLimit,Kind::Canceled,Kind::OwnershipLimit,Kind::AllocationFailed,Kind::DepthLimit]{
+            assert!(refusal_has_no_retry_path(kind,true));
+            assert!(!refusal_has_no_retry_path(kind,false));
+        }
+        for kind in [Kind::UnsupportedOwner,Kind::InvariantViolated]{
+            assert!(refusal_has_no_retry_path(kind,false));
+            assert!(refusal_has_no_retry_path(kind,true));
+        }
+    }
+
     use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure};
     const BODY:usize=2048;
     fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:4096}}
@@ -260,16 +294,22 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         matches!(refusal.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner|semio_framework_value::ValueRefusalKind::InvariantViolated).then(|| format!("is refused by its owner without a retry path: {refusal}"))
     }
 
-    /// 🛑️ The deterministic refusal of a live preparation: its owner refused it for a reason no retry can change, so the publication unit faults the operation at once instead of advancing it into the stall ceiling.
+    /// 🛑️ The deterministic refusal of a live preparation: its owner refused it for a reason no retry can change, so the publication unit faults the operation at once instead of advancing it into the stall ceiling. A closing owner without a retained cause is the acknowledged publication retiring (its store published and the host acknowledged it), never a refusal.
     pub fn deterministic_preparation_refusal(&self) -> Option<String> {
-        let refusal = self.pending_artifact_publication.as_ref()?.preparation_refusal()?;
-        matches!(refusal.kind,semio_framework_value::ValueRefusalKind::UnsupportedOwner|semio_framework_value::ValueRefusalKind::InvariantViolated).then(|| format!("is refused by its owner without a retry path: {refusal}"))
+        if !self.publication_failure.terminal_is_empty() { return None }
+        let pending = self.pending_artifact_publication.as_ref()?;
+        let abandoned = pending.is_abandoned();
+        match pending.preparation_refusal() {
+            Some(refusal) if refusal_has_no_retry_path(refusal.kind, abandoned) => Some(format!("is refused by its owner without a retry path: {refusal}")),
+            None if abandoned => pending.fault().map(|fault| format!("abandoned its pending publication: {fault}")),
+            _ => None,
+        }
     }
 
     /// 🎭️ Yields the actual actor capture receipt before admitting any durable mutation input.
     pub fn admit_actor_capture(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.actor_capture.is_some()&&self.actor_capture_pending.terminal_is_empty(){return Ok(false)}
-        cx.with_retained_loan(grant,|same|{if same.should_yield()||same.is_cancelled(){return Ok(true)}let turn=self.actor_capture_pending.advance(&self.meta.actor,&mut self.actor_capture,same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;Ok(true)})
+        let op=self.operation.operation.0;cx.with_retained_loan(grant,|same|{if same.should_yield()||same.is_cancelled(){note_publication_wait(op,"the actor capture yielded or was cancelled (fuel, cancelled, retained items)",[same.fuel_remaining(),u64::from(same.is_cancelled()),same.retained_grant().maximum_items as u64]);return Ok(true)}let turn=self.actor_capture_pending.advance(&self.meta.actor,&mut self.actor_capture,same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;Ok(true)})
     }
 
     /// 🧮️ Records an advanced Store checkpoint or an accepted physical preparation receipt.
@@ -277,6 +317,8 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.publication_checkpoint != Some(checkpoint) || ownership != RetainedCloneProgress::default() {
             self.publication_checkpoint = Some(checkpoint);
             self.publication_progress = self.publication_progress.saturating_add(1);
+        } else {
+            note_publication_wait(self.operation.operation.0, "the store checkpoint did not advance (publication progress, copied items, copied bytes)", [self.publication_progress, ownership.copied_items as u64, ownership.copied_bytes as u64]);
         }
     }
 
@@ -368,7 +410,6 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                         let failure=view.callback.or(view.qualification).or(view.receipt_qualification);
                         let authored=failure.as_ref().and_then(|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>Some(ArtifactBoundedToolFault::from_fault(fault)),_=>None});
                         let cause=failure.map_or_else(||"typed operation worker step returned a continuation without a cause".to_owned(),|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>format!("{:?}: {}",fault.code,fault.message),semio_framework_job::OriginalTurnPrimary::Value(error)=>format!("{:?}: {}",error.kind,error.message),other=>format!("{other:?}")});
-                        eprintln!("[DEBUG] worker continuation cause: {cause}");
                         self.terminal_fault.get_or_insert_with(||authored.unwrap_or_else(||ArtifactBoundedToolFault::from_fault(&Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.worker-continuation"),cause))));
                         self.terminal_seen=true;
                         if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}
@@ -394,11 +435,12 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         }
         let step_fuel=cx.fuel_remaining().min(contract.max_work_units_per_step);
         let step_deadline_us=cx.now_us().map_or(cx.deadline_us(),|now|now.saturating_add(u64::from(contract.max_step_micros)));
-        match cx.with_retained_loan(grant,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))){
+        let producer=RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items,..grant};
+        match cx.with_retained_loan(producer,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))){
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;
-                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
+                if !progress.fits(issued)||!progress.fits(producer)||issued.maximum_items>producer.maximum_items||issued.maximum_copy_bytes>producer.maximum_copy_bytes||issued.maximum_capacity_bytes>producer.maximum_capacity_bytes||issued.maximum_release_bytes>producer.maximum_release_bytes||issued.maximum_depth>producer.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
                 if matches!(session.checked_out_outcome(),Ok(None))&&session.resume().is_ok(){self.worker_semantic_pending=false;}
                 Ok(PluginLifecycleStep::Progress(progress))
             }
@@ -460,6 +502,17 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             let progress = self.result_page_retirement_step(effect)?;
             let complete = !self.result_page_retirement_pending();
             Ok((if complete { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) }, complete))
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+
+    /// ♻️ Spends ONE bounded retirement turn on the pending store publication its owner already closed (acknowledged result, refused preparation or cancelled authority): the publication unit would otherwise wait for a maintenance turn that no host guarantees, so a closing owner stalled the operation until the publication-stall ceiling faulted it. The turn reports its own progress and yields to cancellation like every retirement step.
+    pub fn advance_closing_publication(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        semio_framework_value::debug_histogram::debug_unit(self.debug_granted_retirement_owner());
+        let grant = cx.retained_grant();
+        let demand = self.granted_retirement_demands(grant.maximum_copy_bytes)?;
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |same, actual| {
+            let step = self.granted_retirement_step(same, actual)?;
+            Ok((PluginLifecycleStep::Progress(step.progress()), false))
         }).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 

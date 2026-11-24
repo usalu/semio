@@ -2,7 +2,7 @@ import {afterAll,expect,test} from "bun:test";
 import {mkdtempSync,readdirSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {acquireLightSlotV1,acquireSlotV1,lightSlotsHeldV1} from "../../🔒️lock/🟦️.ts";
+import {acquireLightSlotV1,acquireSlotV1,lightSlotsHeldV1,tryAcquireSlotV1} from "../../🔒️lock/🟦️.ts";
 import {slotQueueMillisecondsV1} from "../../../../../🏗️build/🌐️remote-execution/🚀️offload/🚦️admission/🟦️.ts";
 const roots:string[]=[],fresh=()=>{const root=mkdtempSync(join(tmpdir(),"semio-light-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
@@ -26,4 +26,12 @@ test("a light slot count below one is refused and a cancelled wait leaves nothin
  const held=await acquireLightSlotV1(root,1),controller=new AbortController(),waiting=acquireLightSlotV1(root,1,{signal:controller.signal});
  setTimeout(()=>controller.abort(Error("cancelled")),100);await expect(waiting).rejects.toThrow("cancelled");
  held.release();expect(lightSlotsHeldV1(root,1)).toBe(0);
+});
+test("a free local slot is taken at once without joining a queue, concurrent callers never share one, and a full or queued pool answers nothing",async()=>{
+ const root=fresh(),first=tryAcquireSlotV1(root,2),second=tryAcquireSlotV1(root,2);
+ expect(first).toBeDefined();expect(second).toBeDefined();expect(first!.path).not.toBe(second!.path);expect(tryAcquireSlotV1(root,2),"both slots taken").toBeUndefined();
+ const waiting=acquireSlotV1(root,2);await new Promise(done=>setTimeout(done,150));first!.release();
+ expect(tryAcquireSlotV1(root,2),"a free slot never overtakes the waiter that holds the oldest ticket").toBeUndefined();
+ const claim=await waiting;expect(claim.waitedMs).toBeGreaterThanOrEqual(100);claim.release();second!.release();
+ expect(tryAcquireSlotV1(root,0)).toBeUndefined();expect(tryAcquireSlotV1(root,1)).toBeDefined();
 });

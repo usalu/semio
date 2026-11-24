@@ -1,6 +1,6 @@
 //! 🧵️ Hand-projected canonical trees for the COS shapes whose wire is not a plain field-role record.
 use super::*;
-use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree, ArtifactCanonicalOctets};
+use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree, ArtifactCanonicalOctets, ArtifactCanonicalPagedOctets};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
 type Field<'a> = Option<(&'static str, &'a dyn Tree)>;
@@ -56,7 +56,7 @@ impl PdfObject {
             Self::Array(value) => (&COS_KINDS[8], [field("value", value), None, None, None]),
             Self::Dict(value) => (&COS_KINDS[9], [field("value", value), None, None, None]),
             Self::Ref(value) => (&COS_KINDS[10], [field("num", &value.num), field("gen", &value.gen), None, None]),
-            Self::Stream { dict, data, filters } => (&COS_KINDS[11], [field("dict", dict), field("data", ArtifactCanonicalOctets::from_ref(data)), field("filters", filters), None]),
+            Self::Stream { dict, data, filters } => (&COS_KINDS[11], [field("dict", dict), field("data", ArtifactCanonicalPagedOctets::from_ref(data)), field("filters", filters), None]),
         }
     }
 }

@@ -30,6 +30,7 @@ semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../../🔨️module
 semio-s-artifact-stdio-pdf-paint-codecs = { path = "../../../../../🔨️modules/🎞️paint-codecs/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-page-editor-view = { path = "../../../🔭️view/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-page-coordinates = { path = "../../../🧭️geometry/🧭️coordinates/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-cmyk-image-clut = { path = "../../../🧮️function-colour/🌈️cmyk-image-clut/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-ui-contract = { workspace = true }
 semio-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

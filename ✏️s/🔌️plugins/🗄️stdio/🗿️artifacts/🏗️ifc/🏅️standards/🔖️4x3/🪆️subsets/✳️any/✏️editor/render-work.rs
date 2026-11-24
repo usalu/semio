@@ -47,6 +47,11 @@ impl Ifc4x3RenderWork {
     }
 
     pub fn render(&mut self,body: &str,source:&std::sync::Arc<IfcSnapshot>,doc: &ArtifactView<'_,IfcSnapshot>,view: &semio_plugin::ViewModel,cx: &mut StepContext<'_>) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
+        let result=self.render_inner(body,source,doc,view,cx);
+        if let Err(error)=&result{eprintln!("[DEBUG] render refusal {error:?}");}
+        result
+    }
+    fn render_inner(&mut self,body: &str,source:&std::sync::Arc<IfcSnapshot>,doc: &ArtifactView<'_,IfcSnapshot>,view: &semio_plugin::ViewModel,cx: &mut StepContext<'_>) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         if !std::ptr::eq(source.as_ref(),doc.snapshot){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IFC original render source loan changed").into());}
         if body!=if self.staged{semio_plugin::action_staging::STAGED_FORM_BODY_KEY}else{editing::SNAPSHOT_DETAILS_BODY_KEY}{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"IFC retained render body changed").into());}
         if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"IFC original render query cancelled").into());}

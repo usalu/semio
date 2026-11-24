@@ -974,6 +974,15 @@
         },
         "dwellingCount": {
           "type": "integer",
+          "x-semio-ui": {
+            "label": {
+              "en": "Number of dwellings",
+              "de": "Anzahl der Wohneinheiten"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 1
+          },
           "minimum": 0,
           "maximum": 4294967295
         }

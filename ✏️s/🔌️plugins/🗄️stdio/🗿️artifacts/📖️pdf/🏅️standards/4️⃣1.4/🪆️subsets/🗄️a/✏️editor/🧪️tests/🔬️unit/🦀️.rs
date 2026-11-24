@@ -58,7 +58,7 @@ fn own14_declared_document_and_mutation_owners_are_exact() {
 #[test]
 fn own14_typed_page_command_uses_the_own_mutation_codec() {
     use protocol::{OpBinary, OpText, ColdMutation, Mutation, MutationDiff};
-    let args = semio_framework_value::DslValue::Object(vec![("page".into(), semio_framework_value::DslValue::float(0.0)), ("width".into(), semio_framework_value::DslValue::float(8.0)), ("height".into(), semio_framework_value::DslValue::float(9.0))]);
+    let args = semio_framework_value::DslValue::Object(vec![("page".into(), semio_framework_value::DslValue::float(1.0)), ("width".into(), semio_framework_value::DslValue::float(8.0)), ("height".into(), semio_framework_value::DslValue::float(9.0))]);
     let command = <Pdf14AEditor as ArtifactEditor>::command_from_action("set-page-size", &mut Some(args), &mut None).unwrap();
     let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(native) = command else { panic!("own native page command"); };
     assert_eq!(Pdf14AEditorCommand::decode_op(&native.encode_op().unwrap()).unwrap(), native);

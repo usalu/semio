@@ -11,8 +11,6 @@ role = "library"
 
 [package.metadata.semio.carve]
 owned = [
-  "standards::v1_7::subsets::base::io::binary::mutations::append_page_content",
-  "standards::v1_7::subsets::base::io::binary::mutations::set_object_value",
   "standards::v1_7::subsets::base::io::text::mutations::append_page_content",
   "standards::v1_7::subsets::base::modules::content",
   "standards::v1_7::subsets::base::modules::content::program",

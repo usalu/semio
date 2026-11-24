@@ -101,7 +101,7 @@ impl FlowInvocationRequestWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.retirement.is_none()}
 }
-impl Drop for FlowInvocationRequestWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original invocation request requires explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for FlowInvocationRequestWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original invocation request requires explicit terminal custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
 
 
 

@@ -164,3 +164,20 @@ test("law: a long prime does not hold a heavy question back (two lanes), and two
   const first=await prime,next=await second;expect(next.done-first.done,"the second prime started after the first ended").toBeGreaterThanOrEqual(2500);
  }finally{rmSync(directory,{recursive:true,force:true});}
 },40000);
+
+test("law: a child that ends by SIGKILL while the host warden holds a cancel record for its pid is refused as cancelled (bilingual, naming the kind and megabytes); without a record, with an old record or with a failing reader it stays the generic failure",async()=>{
+ const directory=mkdtempSync(join(tmpdir(),"heavy-cancelled-"));
+ try{
+  const script=fakeChild(directory,"killed.cjs","beat();process.kill(process.pid,'SIGKILL');setInterval(()=>{},1000);");
+  const ask=(cancelOf:(pid:number)=>unknown)=>askHeavyQuestionV1(QUESTION,{workspaceRoot:directory,policy:FAST,ports:{...ONE,cancelOf:cancelOf as never},script}).then(()=>undefined,(error:unknown)=>error as any);
+  let seen=0;
+  const cancelled=await ask(pid=>{seen=pid;return{version:1,pid,atMs:Date.now()+1000,kind:"heavy-question",megabytes:2300,reason:"danger"};});
+  expect(seen).toBeGreaterThan(1);
+  expect(isRepoErrorV1(cancelled)).toBe(true);expect(cancelled.code).toBe("failed");expect(cancelled.key).toBe("build.graph.heavy-question-cancelled");
+  expect(cancelled.values).toMatchObject({pid:String(seen),kind:"heavy-question",megabytes:"2300",reason:"danger"});
+  expect(renderRepoErrorV1(cancelled,"en")).toContain("host warden");expect(renderRepoErrorV1(cancelled,"de")).toContain("Host-Wächter");
+  expect((await ask(()=>null)).key).toBe("build.graph.heavy-question-failed");
+  expect((await ask(()=>({atMs:1,kind:"heavy-question",megabytes:1,reason:"danger"}))).key).toBe("build.graph.heavy-question-failed");
+  expect((await ask(()=>{throw Error("unreadable");})).key).toBe("build.graph.heavy-question-failed");
+ }finally{rmSync(directory,{recursive:true,force:true});}
+},60000);

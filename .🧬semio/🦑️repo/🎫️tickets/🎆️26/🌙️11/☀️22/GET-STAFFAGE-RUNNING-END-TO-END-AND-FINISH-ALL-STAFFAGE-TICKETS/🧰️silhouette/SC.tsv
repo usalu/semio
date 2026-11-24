@@ -1,0 +1,23 @@
+components	masonry-wall-with-lintel	1:100 front Hausdorff: expected 0.1275 to be less than or equal to 0.03
+components	panel-radiator	1:100 elevation Hausdorff: expected 0.0305078125 to be less than or equal to 0.03
+components	reclaimed-cobblestone-bag	Error: Input buffer has corrupt header: glib XML parse error, buffer size limit exceeded (the rendered view is larger than 10 MB)
+components	reclaimed-concrete-wall-panel	1:500 axis 0: 6 m against 6.12 m: expected 0.1200000000000001 to be less than or equal to 0.075
+components	reclaimed-floorboard-stack	1:50 elevation Hausdorff: expected 0.015116733278059779 to be less than or equal to 0.015
+components	reclaimed-lattice-girder	1:50 elevation Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	reclaimed-paving-slab-pallet	1:50 front Hausdorff: expected 0.016875 to be less than or equal to 0.015
+components	reclaimed-precast-stair	1:200 axis 0: 3.25366 m against 3.2958 m: expected 0.042139999999999844 to be less than or equal to 0.03
+components	reclaimed-steel-column	1:50 elevation Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+components	reclaimed-steel-stair	1:200 axis 0: 4.9150030000000005 m against 4.974 m: expected 0.058996999999999744 to be less than or equal to 0.03
+components	reclaimed-timber-roof-truss	1:50 front Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	reclaimed-trapezoidal-sheet-stack	1:100 front Hausdorff: expected 0.03181980515339464 to be less than or equal to 0.03
+components	sectional-garage-door	1:100 elevation Hausdorff: expected 0.0557477578024444 to be less than or equal to 0.03
+components	sliding-door	1:500 elevation Hausdorff: expected 0.157421875 to be less than or equal to 0.15
+components	spiral-stair	1:50 elevation Hausdorff: expected 0.04950142043416532 to be less than or equal to 0.015
+components	stair-flight	1:50 elevation Hausdorff: expected 0.021378289220608835 to be less than or equal to 0.015
+components	tilt-window	1:200 front Hausdorff: expected 0.06206250000000001 to be less than or equal to 0.06
+components	used-buffer-storage-tank	1:50 front Hausdorff: expected 0.01875 to be less than or equal to 0.015
+components	used-insulated-copper-coils	1:100 elevation Hausdorff: expected 0.042962090407414256 to be less than or equal to 0.03
+components	used-radiant-ceiling-strip	1:100 front Hausdorff: expected 0.045 to be less than or equal to 0.03
+components	used-steel-pipe-rack	1:50 elevation Hausdorff: expected 0.04596619002049223 to be less than or equal to 0.015
+components	used-trench-convector	1:50 front Hausdorff: expected 0.02625 to be less than or equal to 0.015
+components	wheelchair-ramp	1:200 elevation Hausdorff: expected 0.105 to be less than or equal to 0.06

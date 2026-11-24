@@ -42,6 +42,7 @@ semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️fr
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true }

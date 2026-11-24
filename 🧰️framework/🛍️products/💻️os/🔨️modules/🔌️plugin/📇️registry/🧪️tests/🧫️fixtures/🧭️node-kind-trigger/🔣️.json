@@ -1,0 +1,152 @@
+{
+  "examples": {
+    "hexagonal-mushroom-column": {
+      "nodeKinds": [
+        "brep.curve.polygon",
+        "brep.solid.extrude",
+        "math.vector"
+      ],
+      "extensions": [
+        "flow-extension-brep",
+        "flow-extension-math"
+      ]
+    },
+    "sphere-cut-with-torus": {
+      "nodeKinds": [
+        "brep.bool.cut",
+        "brep.measure.volume",
+        "brep.prim3d.sphere",
+        "brep.prim3d.torus"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    },
+    "box-shell-preview": {
+      "nodeKinds": [
+        "brep.prim3d.box",
+        "brep.solid.shell"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    },
+    "box-fillet-preview": {
+      "nodeKinds": [
+        "brep.prim3d.box",
+        "brep.solid.fillet"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    },
+    "rectangle-extrude-volume": {
+      "nodeKinds": [
+        "brep.curve.rectangle",
+        "brep.measure.volume",
+        "brep.solid.extrude",
+        "math.vector"
+      ],
+      "extensions": [
+        "flow-extension-brep",
+        "flow-extension-math"
+      ]
+    },
+    "mesh-workbench": {
+      "nodeKinds": [
+        "brep.mesh.analyze",
+        "brep.mesh.box",
+        "brep.mesh.extrude",
+        "brep.mesh.inset",
+        "brep.mesh.toBrep"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    },
+    "sphere-box-fuse": {
+      "nodeKinds": [
+        "brep.bool.fuse",
+        "brep.prim3d.box",
+        "brep.prim3d.sphere"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    },
+    "face-sweep-extrude": {
+      "nodeKinds": [
+        "brep.curve.rectangle",
+        "brep.surf.planarFaceWire",
+        "brep.sweep.extrude",
+        "math.vector"
+      ],
+      "extensions": [
+        "flow-extension-brep",
+        "flow-extension-math"
+      ]
+    },
+    "rectangle-wire-preview": {
+      "nodeKinds": [
+        "brep.curve.rectangle"
+      ],
+      "extensions": [
+        "flow-extension-brep"
+      ]
+    }
+  },
+  "documents": {
+    "dsl": "widgets {\n  input-slider id=\"a\" value=1\n  neuron id=\"cut\" neuron-kind=brep.bool.cut preview=true\n  neuron id=\"box\" neuron-kind=\"brep.prim3d.box\" preview=false\n  neuron id=\"sum\" neuron-kind=math.add preview=false\n  neuron id=\"again\" neuron-kind=brep.bool.cut preview=false\n}\n",
+    "json": "{\"widgets\":[{\"kind\":\"neuron\",\"id\":\"x\",\"neuronKind\":\"math.add\"},{\"kind\":\"neuron\",\"id\":\"y\",\"neuronKind\":\"zzz.unknown\"},{\"kind\":\"slider\",\"id\":\"s\"}]}",
+    "none": "widgets {\n  input-slider id=\"a\" value=1\n}\n"
+  },
+  "expected": {
+    "dsl": {
+      "nodeKinds": [
+        "brep.bool.cut",
+        "brep.prim3d.box",
+        "math.add"
+      ],
+      "requests": [
+        "brep.bool.cut",
+        "math.add"
+      ],
+      "extensions": [
+        "flow-extension-brep",
+        "flow-extension-math"
+      ]
+    },
+    "json": {
+      "nodeKinds": [
+        "math.add",
+        "zzz.unknown"
+      ],
+      "requests": [
+        "math.add",
+        "zzz.unknown"
+      ],
+      "extensions": [
+        "flow-extension-math"
+      ]
+    },
+    "none": {
+      "nodeKinds": [],
+      "requests": [],
+      "extensions": []
+    }
+  },
+  "labels": {
+    "unavailable": {
+      "en": "The document opened with unavailable nodes: brep.bool.cut. Extension flow-extension-brep could not be loaded. Everything else works.",
+      "de": "Das Dokument wurde mit nicht verfügbaren Knoten geöffnet: brep.bool.cut. Erweiterung flow-extension-brep konnte nicht geladen werden. Alles andere funktioniert."
+    },
+    "cancelled": {
+      "en": "Opening the document was cancelled while loading extension flow-extension-brep.",
+      "de": "Das Öffnen des Dokuments wurde beim Laden der Erweiterung flow-extension-brep abgebrochen."
+    },
+    "preparing": {
+      "en": "Preparing extensions for this document (1 of 2)…",
+      "de": "Erweiterungen für dieses Dokument werden vorbereitet (1 von 2)…"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "contract": {
+    "en": "The size ceiling of every shared closure group of the providers project and the unrelated subsystems a group may still reach. A ceiling is the measured size of 2026-11-23 plus five percent; a group that grows past it, a group without a ceiling, or a group that reaches a scheduling domain its view leaves out fails the law, so the closure a project record is validated through can only shrink on purpose.",
+    "de": "Die Größenobergrenze jeder geteilten Abschlussgruppe des Anbieterprojekts und die fremden Teilsysteme, die eine Gruppe noch erreichen darf. Eine Obergrenze ist die gemessene Größe vom 23.11.2026 plus fünf Prozent; eine Gruppe, die darüber wächst, eine Gruppe ohne Obergrenze oder eine Gruppe, die eine Scheduling-Domäne erreicht, die ihre Sicht auslässt, verletzt das Gesetz, sodass der Abschluss, durch den ein Projekt-Eintrag geprüft wird, nur absichtlich kleiner werden kann."
+  },
+  "groups": {
+    "scriptProvider:artifact-package:native": 2275,
+    "scriptProvider:artifact-package:scheduling": 2000,
+    "scriptProvider:artifact-staging:native": 300,
+    "scriptProvider:artifact-staging:scheduling": 175,
+    "scriptProvider:cargo-admission:native": 2275,
+    "scriptProvider:cargo-admission:scheduling": 2000,
+    "scriptProvider:cargo-workspace:native": 2275,
+    "scriptProvider:cargo-workspace:scheduling": 2000,
+    "scriptProvider:extension-package:native": 2275,
+    "scriptProvider:extension-package:scheduling": 2000,
+    "scriptProvider:repository-tooling:native": 2275,
+    "scriptProvider:repository-tooling:scheduling": 2000,
+    "scriptProvider:styling-python:native": 2275,
+    "scriptProvider:styling-python:scheduling": 2000,
+    "scriptProvider:typescript-check:native": 2275,
+    "scriptProvider:typescript-check:scheduling": 2000,
+    "scriptProvider:wasm-build:native": 2275,
+    "scriptProvider:wasm-build:scheduling": 2000,
+    "toolClosure:cargo-command:native": 2275,
+    "toolClosure:cargo-lock-owner:native": 2275,
+    "toolClosure:driver-stages:scheduling": 2000,
+    "toolClosure:extension-package:scheduling": 2000,
+    "toolClosure:free-space:scheduling": 50,
+    "toolClosure:inventory-index:scheduling": 2100,
+    "toolClosure:module-tree:scheduling": 25,
+    "toolClosure:native-toolchain:native": 25,
+    "toolClosure:normalization-digests:scheduling": 2075,
+    "toolClosure:orphans-parent-script:scheduling": 75,
+    "toolClosure:owned-execution:scheduling": 125,
+    "toolClosure:owner-command:scheduling": 2000,
+    "toolClosure:package-budget:scheduling": 25,
+    "toolClosure:package-execution:scheduling": 2000,
+    "toolClosure:package-router:scheduling": 50,
+    "toolClosure:process-router:scheduling": 2025,
+    "toolClosure:runtime-identity:scheduling": 50,
+    "toolClosure:runtime-main-module:scheduling": 25,
+    "toolClosure:runtime-main-package:scheduling": 25,
+    "toolClosure:runtime-parse:scheduling": 50,
+    "toolClosure:runtime-sqlite:scheduling": 50,
+    "toolClosure:test-adapter:scheduling": 25,
+    "toolClosure:test-source-text:scheduling": 25,
+    "toolClosure:testing-budget:scheduling": 25,
+    "toolClosure:testing-cargo:scheduling": 2000,
+    "toolClosure:testing-execution:scheduling": 2000,
+    "toolClosure:testing-framework:scheduling": 2025,
+    "toolClosure:testing-vitest:scheduling": 2000,
+    "toolClosure:typescript-build:scheduling": 2000,
+    "toolClosure:validator-oracles:scheduling": 50
+  },
+  "subsystems": {
+    "cas": {
+      "prefix": "🏗️build/🗄️cas/",
+      "maximumFilesPerGroup": 20
+    },
+    "unit-cache": {
+      "prefix": "⚡️caching/🦀️cargo/🗃️unit-cache/",
+      "maximumFilesPerGroup": 62
+    }
+  }
+}

@@ -110,7 +110,7 @@ def axial_shell_constant(nu: float = 0.3) -> list[dict]:
 def shell_utilisation(radius: float, thickness: float, length: float, welded: bool) -> float:
     action = {"id": "N", "kind": "permanent", "category": "selfWeight", "source": "external", "gKLine": 0.0, "qKLine": 0.0, "nK": 1.0e6, "vYK": 0.0, "vZK": 0.0, "mYK": 0.0, "mZK": 0.0, "torsionK": 0.0, "localLoadK": 0.0}
     shell = {"id": "s", "materialId": "m", "radius": radius, "thickness": thickness, "length": length, "welded": welded, "fabricationClass": "b", "actions": [action]}
-    document = {"annex": "en", "reliabilityClass": "RC2", "materials": [{"id": "m", "designation": "aw6082-t6", "productForm": "extrudedProfile"}], "shells": [shell]}
+    document = {"annex": "En", "reliabilityClass": "RC2", "materials": [{"id": "m", "designation": "aw6082-t6", "productForm": "extrudedProfile"}], "shells": [shell]}
     checks = ORACLE.evaluate(document)["checks"]
     return next(c["utilization"] for c in checks if c["id"] == "en1999.1-5.buckle.s")
 
@@ -155,7 +155,7 @@ def i_member_document(welded: bool, member: dict, action: dict) -> dict:
     section = {"id": "s", "kind": "extrudedI", "height": H, "width": B, "flangeThickness": TF, "webThickness": TW, "outerDiameter": 0.0, "elements": [element("flange-top", flange, TF, True, welded), element("flange-bot", flange, TF, True, welded), element("web", web, TW, False, welded)]}
     base = {"id": "m", "sectionId": "s", "materialId": "m", "length": 4.0, "support": "simplySupported", "bucklingLengthY": 4.0, "bucklingLengthZ": 4.0, "bucklingLengthT": 4.0, "ltbLength": 4.0, "c1": 1.0, "restrainedLtb": False, "bearingLength": 0.0, "transverseWeld": False, "transverseWeldOffset": 0.0}
     act = {"id": "G", "kind": "permanent", "category": "selfWeight", "source": "external", "gKLine": 0.0, "qKLine": 0.0, "nK": 0.0, "vYK": 0.0, "vZK": 0.0, "mYK": 0.0, "mZK": 0.0, "torsionK": 0.0, "localLoadK": 0.0}
-    return {"annex": "en", "reliabilityClass": "RC2", "materials": [{"id": "m", "designation": "aw6082-t6", "productForm": "extrudedProfile"}], "sections": [section], "members": [{**base, **member, "actions": [{**act, **action}]}]}
+    return {"annex": "En", "reliabilityClass": "RC2", "materials": [{"id": "m", "designation": "aw6082-t6", "productForm": "extrudedProfile"}], "sections": [section], "members": [{**base, **member, "actions": [{**act, **action}]}]}
 
 
 def utilisation(document: dict, check: str) -> float:

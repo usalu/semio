@@ -7,7 +7,7 @@ import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/�
 import {appendEventsV1,blobPathV1,formatHlcV1,writeBlobV1} from "../../../📒️journal/🟦️.ts";
 import {joinV1,seedV1,type ReplicaEventV1} from "../../🟦️.ts";
 import {spawnSync} from "node:child_process";
-import {BootstrapRefusedV1,bootstrapArchiveNameV1,bootstrapPathsV1,readBootstrapV1,settleBootstrapV1,tarEndV1,tarEntryHeaderV1,tarPaddingV1,writeBootstrapArchiveV1} from "../🟦️.ts";
+import {BootstrapRefusedV1,bootstrapArchiveNameV1,bootstrapPathsV1,readBootstrapRecordV1,readBootstrapV1,retireSupersededV1,settleBootstrapV1,tarEndV1,tarEntryHeaderV1,tarPaddingV1,writeBootstrapArchiveV1} from "../🟦️.ts";
 
 const python=testPythonV1(),oracle=join(import.meta.dirname,"🐍️.py"),system=Bun.which("tar"),scratch:string[]=[];
 const temp=(label:string):string=>{const path=mkdtempSync(join(tmpdir(),`bootstrap-${label}-`));scratch.push(path);return path;};
@@ -432,4 +432,98 @@ gitTest("with reachable packing the archive holds one new pack of the reachable 
  const sidecar=readFileSync(result.archive.replace(".tar",".entries"),"utf8");
  expect(sidecar.includes(".git/objects/pack/")).toBe(false);
  expect(readdirSync(directory).length).toBeGreaterThan(3);
+});
+
+const dirOf=(store:string):string=>bootstrapPathsV1(store).directory;
+const retention=(store:string,...allowed:string[])=>Bun.spawnSync([python!,"-I",oracle,"retention",store,...allowed],{stdout:"pipe",stderr:"pipe"});
+const tars=(store:string):string[]=>readdirSync(dirOf(store)).filter(name=>name.endsWith(".tar")).sort();
+const age=(file:string,milliseconds:number):void=>{const moment=new Date(Date.now()-milliseconds);utimesSync(file,moment,moment);};
+
+test("retention: publish A, publish B keeps A for readers inside the grace and retires it once the grace passed",async()=>{
+ const {store,worktree,options}=await server("retire");
+ const first=await writeBootstrapArchiveV1(options);
+ writeFileSync(join(worktree,"a.txt"),"changed\n");
+ const second=await writeBootstrapArchiveV1({...options,force:true});
+ const a=bootstrapArchiveNameV1(first.sha256),b=bootstrapArchiveNameV1(second.sha256);
+ expect(tars(store)).toEqual([a,b].sort());
+ if(python){expect(retention(store).exitCode).toBe(1);expect(retention(store,a,a.replace(".tar",".entries")).exitCode).toBe(0);}
+ const held=await retireSupersededV1(store,{graceMilliseconds:3_600_000});
+ expect(held.retired.files).toBe(0);expect(held.held.files).toBe(2);expect(held.held.bytes).toBeGreaterThan(0);
+ const later=await retireSupersededV1(store,{graceMilliseconds:3_600_000,now:Date.now()+3_700_000});
+ expect(later.retired.files).toBe(2);expect(tars(store)).toEqual([b]);
+ if(python)expect(retention(store).exitCode).toBe(0);
+ expect((await readBootstrapV1(store))!.manifest.archive).toBe(b);
+});
+
+test("retention: a reader that opened A before the switch finishes its copy and a later read follows the manifest to B",async()=>{
+ const {store,worktree,options}=await server("reader");
+ const first=await writeBootstrapArchiveV1(options);
+ const reader=await Bun.file(first.archive).stream().getReader();
+ const head=await reader.read();
+ writeFileSync(join(worktree,"a.txt"),"changed again\n");
+ const second=await writeBootstrapArchiveV1({...options,force:true,graceMilliseconds:0});
+ const manifest=await readBootstrapV1(store);
+ expect(manifest!.manifest.sha256).toBe(second.sha256);
+ let bytes=head.value?.length??0,done=head.done;
+ while(!done){const next=await reader.read();done=next.done;bytes+=next.value?.length??0;}
+ expect(bytes).toBe(lstatSync(first.archive,{throwIfNoEntry:false})?.size??bytes);
+ expect(sha(readFileSync(manifest!.archive))).toBe(manifest!.manifest.sha256);
+});
+
+test("retention: an orphan archive no manifest names is swept after the grace, a crash between publish and retire leaks nothing",async()=>{
+ const {store,options}=await server("orphan");
+ const first=await writeBootstrapArchiveV1(options);
+ const orphan=join(dirOf(store),"worktree-0123456789abcdef.tar"),side=join(dirOf(store),"worktree-0123456789abcdef.entries");
+ writeFileSync(orphan,Buffer.alloc(4096));writeFileSync(side,"x");
+ const fresh=await retireSupersededV1(store,{graceMilliseconds:3_600_000});
+ expect(fresh.retired.files).toBe(0);expect(existsSync(orphan)).toBe(true);
+ age(orphan,2*3_600_000);age(side,2*3_600_000);age(bootstrapPathsV1(store).manifest,2*3_600_000);
+ const events:ReplicaEventV1[]=[];
+ const again=await writeBootstrapArchiveV1(options,undefined,event=>events.push(event));
+ expect(again.outcome).toBe("unchanged");
+ expect(existsSync(orphan)||existsSync(side)).toBe(false);
+ expect(events.some(event=>event.event==="retired"&&event.reason==="superseded")).toBe(true);
+ expect(tars(store)).toEqual([bootstrapArchiveNameV1(first.sha256)]);
+ if(python)expect(retention(store).exitCode).toBe(0);
+});
+
+test("retention: the grace counts from the manifest switch, so an archive whose mtime was never touched is still held",async()=>{
+ const {store,worktree,options}=await server("switch");
+ const first=await writeBootstrapArchiveV1(options);
+ age(first.archive,5*3_600_000);age(first.archive.replace(".tar",".entries"),5*3_600_000);
+ writeFileSync(join(worktree,"a.txt"),"switched\n");
+ await writeBootstrapArchiveV1({...options,force:true});
+ expect(existsSync(first.archive)).toBe(true);
+});
+
+test("retention: under space pressure the shorter pressure grace retires a superseded archive, and a build that still does not fit is refused and reported in the record",async()=>{
+ const {store,worktree,options}=await server("pressure");
+ const first=await writeBootstrapArchiveV1(options);
+ writeFileSync(join(worktree,"a.txt"),"p1\n");
+ const second=await writeBootstrapArchiveV1({...options,force:true});
+ for(const name of readdirSync(dirOf(store)))if(name.startsWith("worktree-"))age(join(dirOf(store),name),1_200_000);
+ age(bootstrapPathsV1(store).manifest,1_200_000);
+ const need=lstatSync(second.archive).size,events:ReplicaEventV1[]=[];
+ writeFileSync(join(worktree,"a.txt"),"p2\n");
+ const third=await writeBootstrapArchiveV1({...options,force:true,space:async()=>({free:Math.ceil(need*1.1),total:100*need}),reserveBytes:need>>1},undefined,event=>events.push(event)).catch(error=>error);
+ expect(events.some(event=>event.event==="retired"&&event.reason==="pressure")).toBe(true);
+ expect(existsSync(first.archive)).toBe(false);
+ expect(third).not.toBeInstanceOf(Error);
+ const refused=await writeBootstrapArchiveV1({...options,force:true,space:async()=>({free:10_000_000,total:100_000_000}),reserveBytes:9_000_000}).catch(error=>error);
+ expect(refused).toBeInstanceOf(BootstrapRefusedV1);
+ const record=await readBootstrapRecordV1(worktree);
+ expect(record?.refusal?.need).toBeDefined();
+ expect(record?.archive).toBe((await readBootstrapV1(store))!.manifest.archive);
+});
+
+test("retention: the status record counts the held and retired bytes after a successful build, and the schema declares the grace the code uses",async()=>{
+ const {store,worktree,options}=await server("record");
+ await writeBootstrapArchiveV1(options);
+ writeFileSync(join(worktree,"a.txt"),"r1\n");
+ await writeBootstrapArchiveV1({...options,force:true});
+ const record=await readBootstrapRecordV1(worktree);
+ expect(record?.refusal).toBeNull();expect(record?.held.files).toBe(2);expect(record?.held.bytes).toBeGreaterThan(0);expect(record?.bytes).toBeGreaterThan(0);
+ const schema=JSON.parse(readFileSync(join(import.meta.dirname,"..","🧬️schema","🔣️.json"),"utf8")).definitions.Retention.properties;
+ expect(schema.graceMilliseconds.default).toBe(3_600_000);expect(schema.pressureGraceMilliseconds.default).toBe(600_000);
+ void store;
 });

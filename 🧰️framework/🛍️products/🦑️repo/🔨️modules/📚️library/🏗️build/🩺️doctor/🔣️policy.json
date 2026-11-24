@@ -162,12 +162,13 @@
       "id": "storage-images",
       "area": "storage",
       "rules": [
+        "storage.image-detached",
         "storage.image-detached-blocking",
         "storage.image-misplaced"
       ],
       "summary": {
-        "en": "Attach the disk images that are detached while the dependency links dangle, and move the images that a killed reclaim left at a private scratch mount point back to their mount point.",
-        "de": "Hängt die Disk-Images ein, die ausgehängt sind, während die Abhängigkeits-Links ins Leere zeigen, und bringt Images, die ein beendeter Reclaim an einem privaten Scratch-Einhängepunkt zurückließ, an ihren Einhängepunkt zurück."
+        "en": "Attach the disk images that are detached (deleting a leftover sibling volume of a killed in-place kick first), and move the images that a killed reclaim left at a private scratch mount point back to their mount point.",
+        "de": "Hängt die ausgehängten Disk-Images ein (ein zurückgebliebenes Geschwister-Volume eines beendeten direkten Anstoßes wird zuvor gelöscht) und bringt Images, die ein beendeter Reclaim an einem privaten Scratch-Einhängepunkt zurückließ, an ihren Einhängepunkt zurück."
       },
       "safety": {
         "en": "Only images of the declared cache partitions: the exclusive image lease is taken without waiting (a running reclaim or opener keeps the image and nothing changes), the stray mount is detached without force (a busy device refuses), the image attaches only at its own empty, unmounted mount point with owners on, and every target is derived again from the kernel inventory right before it is touched. Only macOS has attachable images; no data of the image is touched.",

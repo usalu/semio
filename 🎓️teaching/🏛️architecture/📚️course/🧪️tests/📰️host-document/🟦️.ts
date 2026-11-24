@@ -53,4 +53,12 @@ describe("📰️ host document", () => {
     for (const url of Object.values(legal)) expect(String(url)).toMatch(/^https:\/\/\S+$/u);
     expect(readFileSync(resolve(site, "🟦️.ts"), "utf8")).toContain("legal: site.legal");
   });
+
+  it("hands the app the German the deployment names as the site's own language, and keeps its introduction to one short paragraph", () => {
+    expect(deployment.site.language).toBe("de");
+    expect(languages).toContain(deployment.site.language);
+    expect(readFileSync(resolve(site, "🟦️.ts"), "utf8")).toContain("language: site.language");
+    expect(course.introduction.paragraphs).toHaveLength(1);
+    for (const language of languages) expect((course.introduction.paragraphs[0] as Readonly<Record<string, string>>)[language]!.length).toBeLessThanOrEqual(320);
+  });
 });

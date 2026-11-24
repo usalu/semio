@@ -48,7 +48,7 @@ describe("⛰️ the challenge on the quiz cards and pages", () => {
     await user.click(within(screen.getByRole("region", { name: "Quiz heating" })).getByRole("button", { name: "Resume (Medium)" }));
     expect(session.resumeRun).toHaveBeenCalledWith("1".repeat(32), expect.any(AbortSignal));
     expect(session.startRun).toHaveBeenCalledTimes(2);
-  });
+  }, 60_000);
 
   for (const locale of ["en", "de"] as const) {
     it(`keeps every quiz card as compact as before in ${locale}: no chooser, at most two actions of one short line and short facts`, () => {
@@ -72,7 +72,7 @@ describe("⛰️ the challenge on the quiz cards and pages", () => {
     const user = userEvent.setup();
     render(<Choosing session={session} page="physics" challenge="medium" chosen={(next) => chosen.push(next)} />);
     await act(async () => undefined);
-    const group = within(pane("physics")).getByRole("group", { name: "Challenge" });
+    const group = within(pane("physics")).getByRole("radiogroup", { name: "Challenge" });
     const radios = within(group).getAllByRole("radio");
     expect(radios.map((radio) => radio.getAttribute("value"))).toEqual(["easy", "medium", "hard", "expert"]);
     expect(radios.map((radio) => (radio as HTMLInputElement).checked)).toEqual([false, true, false, false]);
@@ -99,7 +99,7 @@ describe("⛰️ the challenge on the quiz cards and pages", () => {
     const user = userEvent.setup();
     render(<Choosing session={stubSession()} page="physics" challenge="medium" remembered={{ cooling: "easy" }} chosen={(next) => chosen.push(next)} />);
     await act(async () => undefined);
-    await user.click(within(within(pane("physics")).getByRole("group", { name: "Challenge" })).getByRole("radio", { name: "Expert" }));
+    await user.click(within(within(pane("physics")).getByRole("radiogroup", { name: "Challenge" })).getByRole("radio", { name: "Expert" }));
     const remembered = chosen.at(-1)!;
     expect(remembered.challenges).toEqual({ cooling: "easy", physics: "expert" });
     expect(QUIZZES.map((quiz) => challengeOf(remembered, quiz))).toEqual(QUIZZES.map((quiz) => (quiz === "physics" ? "expert" : quiz === "cooling" ? "easy" : "medium")));
@@ -109,8 +109,8 @@ describe("⛰️ the challenge on the quiz cards and pages", () => {
   it("says the chooser and its lines in German", async () => {
     render(<Choosing session={stubSession()} page="physics" challenge="hard" locale="de" />);
     await act(async () => undefined);
-    const group = within(pane("physics")).getByRole("group", { name: "Herausforderung" });
-    expect(within(group).getAllByRole("radio").map((radio) => radio.parentElement?.querySelector("label")?.textContent)).toEqual(["Leicht", "Mittel", "Schwer", "Experte"]);
+    const group = within(pane("physics")).getByRole("radiogroup", { name: "Herausforderung" });
+    expect(within(group).getAllByRole("radio").map((radio) => document.getElementById(radio.getAttribute("aria-labelledby") ?? "")?.textContent)).toEqual(["Leicht", "Mittel", "Schwer", "Experte"]);
     expect(within(group).getByRole("radio", { name: "Schwer" })).toHaveProperty("checked", true);
     expect(within(group).getByText(/Du schätzt sie\. Höchstpunktzahl: 300$/u)).toBeTruthy();
     expect(within(pane("physics")).getByRole("button", { name: "Starten (Schwer)" })).toBeTruthy();

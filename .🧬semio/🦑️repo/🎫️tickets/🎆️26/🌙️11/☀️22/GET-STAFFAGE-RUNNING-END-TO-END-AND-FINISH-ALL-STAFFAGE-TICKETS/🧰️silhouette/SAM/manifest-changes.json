@@ -1,0 +1,11 @@
+{
+  "hot-water-cylinder": { "depthM": 0.61 },
+  "server-rack": { "depthM": 1.015 },
+  "evaporative-humidifier": { "depthM": 0.408 },
+  "heat-pump-outdoor-unit": { "widthM": 0.479, "depthM": 1.115 },
+  "diesel-generator": { "widthM": 6.076, "depthM": 2.452 },
+  "concrete-mixer-truck": { "widthM": 9.011 },
+  "forklift": { "widthM": 3.662 },
+  "oil-pumpjack": { "widthM": 9.1, "heightM": 6.878 },
+  "tower-crane": { "widthM": 71.822 }
+}

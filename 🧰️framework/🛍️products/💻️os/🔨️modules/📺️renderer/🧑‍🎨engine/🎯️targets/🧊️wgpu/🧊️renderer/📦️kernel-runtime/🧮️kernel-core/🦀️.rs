@@ -244,7 +244,7 @@ impl Drop for JobProgressPresentationLease {
     fn drop(&mut self) {
         if !self.terminal {
             let returned = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").return_lease(self.token);
-            assert!(returned, "job-progress presentation lease must return to its exact generation slot");
+            assert!(std::thread::panicking()||(returned), "job-progress presentation lease must return to its exact generation slot");
         }
     }
 }

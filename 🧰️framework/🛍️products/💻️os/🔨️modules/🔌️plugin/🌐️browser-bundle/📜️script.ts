@@ -1,5 +1,5 @@
 import { readNativeCallerAuthorityV1, bundleVirtualJavaScript } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
-import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -497,7 +497,7 @@ export async function buildClosedBrowserActorArtifactOwned(component: Uint8Array
         writeFileSync(join(outputRoot, name), bytes, { mode: 0o600 });
       }
       process.stdout.write(JSON.stringify({ version, runtime: ${JSON.stringify(runtimeIdentityV1().id)} + "@" + process.versions[${JSON.stringify(runtimeDetectKeyV1())}], importInterfaces: result.imports.sort(), files: files.map(([name]) => name).sort() }));
-    `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(componentByteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: compilerAdmissionBudgetV1(phase), maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
+    `, componentPath, codegenDirectory, JSON.stringify(browserActorInterfaces), JSON.stringify(browserActorAsyncImports), String(browserActorMaximumBytes), compiler.path, compiler.sha256, String(compiler.byteLength), componentSha256, String(componentByteLength)], { invocation:actual, cwd: browserActorRepoRoot, env: environment, budgetMs: 0, deadline: phase, maxOutputBytes: 64 * 1024, stdoutPath: join(codegenDirectory, "codegen.stdout.json"), stderrPath: join(codegenDirectory, "codegen.stderr") })));
     check();
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
     if (generated.status !== 0) throw new Error(`browser actor artifact: codegen ${generated.reason}: ${generated.stderr.slice(0, 4096)}`);

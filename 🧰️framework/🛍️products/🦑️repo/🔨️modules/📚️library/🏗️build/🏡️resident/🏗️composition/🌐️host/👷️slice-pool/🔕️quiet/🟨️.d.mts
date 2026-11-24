@@ -1,4 +1,5 @@
-export type ImplementationQuietPolicyV1={readonly milliseconds:number;readonly maximumMilliseconds:number};
+export type ImplementationQuietPolicyV1={readonly milliseconds:number;readonly maximumMilliseconds:number;readonly totalMaximumMilliseconds?:number;readonly floorMilliseconds?:number};
+export function quietBudgetV1(policy:ImplementationQuietPolicyV1,spentMilliseconds:number):ImplementationQuietPolicyV1;
 export type ImplementationQuietVerdictV1=Readonly<{quiet:boolean;quietForMilliseconds:number;newestPath?:string}>;
 export function implementationDriftPathsV1(cause:unknown):string[];
 export function implementationStampsV1(paths:Iterable<string>,stat?:(path:string)=>{ctimeMs:number}):Map<string,number|undefined>;

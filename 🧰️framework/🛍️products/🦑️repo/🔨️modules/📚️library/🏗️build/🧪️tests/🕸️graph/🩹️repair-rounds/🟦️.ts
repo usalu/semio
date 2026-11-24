@@ -11,7 +11,8 @@ import{withImplementationPinV1}from"../../../📥️inputs/🔏️revision/🟨�
 import{fileURLToPath}from"node:url";
 import{join,dirname}from"node:path";
 import ts from"typescript";
-import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
+import{graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1}from"../../../🕸️graph/📥️load/🧲️membership-follow/🟦️.ts";
+import{settleInventoryRoundsV1}from"../../../🕸️graph/📥️load/🔁️inventory-rounds/🟦️.ts";
 import{observeOwnerWithRetryV1,ownerWithheldTextV1}from"../../../🕸️graph/📥️load/🛟️owner-isolation/🟦️.ts";
 import{createPassReuseV1}from"../../../🕸️graph/📥️load/♻️pass-reuse/🟦️.ts";
 import{SLICE_RECYCLE_POLICY_V1,sliceRecycleEnvironmentV1,sliceRecycleOfV1}from"../../../🧠️memory/♻️recycle/🟨️.mjs";
@@ -63,16 +64,16 @@ const world=(owners:number,scenario:{discoveryFailure?:(owner:string,call:number
   readAdmissionMemoV1:async()=>{counts.memoReads++;return undefined;},writeAdmissionMemoV1:async()=>{counts.memoWrites++;},
   buildGraphProducerAuthorityV1:()=>true,loadedGraphModuleAuthorityV1:{implementation:"same",publication:"same"},loadedGraphAdmissionFormatV1:"same",selectedAdmissionFactsV1:{entries:()=>[],seed:()=>{}},packAdmissionMemoV1:(value:unknown)=>value,ownersOfAdmissionMemoV1:()=>[],
   closeBuildOwnerAdmissionV1:async(_selection:unknown,_registry:unknown,inspect:(owner:{name:string},targets:string[],inputs:string[])=>Promise<unknown>)=>{counts.closes++;for(const name of names)await inspect({name},[],[]);return admitted();},
-  buildGraphMembershipV1:async()=>{const failing=scenario.membershipFailures?.(++counts.memberships,tree);if(failing)throw Object.assign(new Error("Build membership changed during discovery: "+failing.join(", ")),{code:"BUILD_MEMBERSHIP_CHANGED",paths:failing});return scenario.digestAt?.(counts.discovered)??"membership";},buildGraphMembersV1:(files:string[])=>files,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
+  buildGraphMembershipV1:async(_root:string,_files:unknown,_invocation:unknown,_volatile:unknown,vanished?:(path:string)=>void)=>{const failing=scenario.membershipFailures?.(++counts.memberships,tree);if(failing&&vanished&&failing.length>0)for(const path of failing)vanished(path.replace("/owned/",""));else if(failing)throw Object.assign(new Error("Build membership changed during discovery: "+failing.join(", ")),{code:"BUILD_MEMBERSHIP_CHANGED",paths:failing});return scenario.digestAt?.(counts.discovered)??"membership";},buildGraphMembersV1:(files:string[])=>files,workspaceBuildFilesV1:async()=>[],inventoryDirectoriesV1:new WeakMap(),
   readFile:async()=>{throw Object.assign(Error("absent"),{code:"ENOENT"});},
   createPassReuseV1:scenario.passReuse??(()=>({memo:undefined,carried:{recycles:0,round:0,passes:0,owners:0,heapMegabytes:0},boundary:()=>{}})),discoverBuildGraphV1:async()=>{counts.discovered++;for(const name of names)observation.observedFs.readFileSync(name+"/src");if(scenario.sharedInferenceRead)observation.observedFs.readFileSync("tooling/shared.ts");scenario.onDiscover?.(counts.discovered,tree);if(scenario.pinned){scenario.pinned.before?.();observation.retainObservedRowsV1(scenario.pinned.rows);if(scenario.pinned.fail)throw Error("failed inference kept its original observations");}return{version:1,projects:Object.fromEntries(names.map(name=>[name,{root:name}])),dependencies:[]};},
   buildGraphSourceFactsHoldV1:async(rows:readonly Row[],_invocation?:unknown,onStale?:(row:Row)=>void)=>{counts.holds++;const stale=rows.filter(row=>row.fact.version!==undefined&&(tree.get(row.path)??0)!==row.fact.version);for(const row of stale)onStale?.(row);return stale.length===0&&await originalObservation.observationsHold(rows.filter(row=>row.fact.sha256!==undefined),64,new Set(),new Set(),undefined,onStale);},
   mkdir:async()=>{},writeFile:async(_path:string,text:string)=>{writes.push(text);},sealVerdictV1,reportSealV1,sliceReadStepV1:(_id:string,run:()=>unknown)=>run(),rename:async()=>{},rm:async()=>{},createHash:()=>({update:()=>({digest:()=>"digest"})}),randomUUID:()=>"nonce",
   graphSnapshotPolicyV1:{maximumSnapshotBytes:1<<30},portableInputs:async(_root:string,value:unknown)=>value,readBuildGraphV1:(value:unknown)=>value,
-  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:undefined as unknown,graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,membershipChangePathsV1,followedPathsV1,ownerWithheldTextV1,
+  GRAPH_LIMITS_V1:limits.definitions.Limits.const,observeOwnerFactsMemoizedV1:undefined as unknown,evictOwnerFactsReferencingV1:undefined as unknown,forgetOwnerFactsReferencingV1:undefined as unknown,graphInventoryTextV1,graphRetryTextV1,graphSettleTextV1,graphDirtyTextV1,graphVolatileTextV1,membershipChangePathsV1,followedPathsV1,untoleratedFollowedPathsV1,settleInventoryRoundsV1,awaitPlannerQuietV1:async()=>{},ownerWithheldTextV1,
  };
  if(source.includes("function observeOwnerFactsMemoizedV1"))bindings.observeOwnerFactsMemoizedV1=Function("ownerFactsMemoV1","GRAPH_LIMITS_V1","observeOwnerWithRetryV1",extract("rememberOwnerFactsV1")+";"+extract("observeOwnerFactsMemoizedV1")+";return observeOwnerFactsMemoizedV1;")(memo,limits.definitions.Limits.const,observeOwnerWithRetryV1);
- if(source.includes("function evictOwnerFactsReferencingV1")){const evict=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1",extract("evictOwnerFactsReferencingV1")+";return evictOwnerFactsReferencingV1;")(memo,"same") as(scope:string,paths:readonly string[])=>number;bindings.evictOwnerFactsReferencingV1=(scope:string,paths:readonly string[])=>evict(scope,paths.map(path=>path.replace("/owned/","")));}
+ if(source.includes("function forgetOwnerFactsReferencingV1")){const forget=Function("ownerFactsMemoV1","loadedGraphAdmissionFormatV1",extract("forgetOwnerFactsReferencingV1")+";return forgetOwnerFactsReferencingV1;")(memo,"same") as(scope:string,paths:readonly string[])=>string[],local=(paths:readonly string[])=>paths.map(path=>path.replace("/owned/",""));bindings.forgetOwnerFactsReferencingV1=(scope:string,paths:readonly string[])=>forget(scope,local(paths));bindings.evictOwnerFactsReferencingV1=(scope:string,paths:readonly string[])=>forget(scope,local(paths)).length;}
  const run=async()=>{const execute=Function(...Object.keys(bindings),extract("createGraphInventoryAwaitReportV1")+";"+extract("loadBuildGraphAttemptV1")+";return loadBuildGraphAttemptV1;")(...Object.values(bindings));return execute("/owned",{control:{signal:new AbortController().signal}},{},{selection:{kind:"tasks",tasks:[{project:"owner-0",target:"build"}]}},registry,"scope");};
  const seal=()=>JSON.parse(writes.at(-1)!).seal as{mode:string;rounds:number;sealedWithLaterChanges:number;laterChangedOwners:string[];membershipMoved:boolean;admissionMoved:boolean;owners:Record<string,string>};
  return{run,tree,observed,counts,names,lines,writes,seal};
@@ -222,7 +223,7 @@ test("a membership change in the tail follows in place: only the owner that read
  expect(state.names.map(name=>state.observed[name])).toEqual([1,1,2,1,1,1]);
  expect(state.counts).toMatchObject({closes:3,memberships:3,memoReads:2,memoWrites:2});
  const [retry,...more]=retryLines(state);expect(more).toEqual([]);
- expect(retry).toMatchObject({version:1,reason:"membership-changed",round:1,path:"owner-2/manifest",paths:1,evicted:1,memo:0,checkpoint:0,discovery:6});
+ expect(retry).toMatchObject({version:1,round:1,first:["owner-2/manifest"],paths:1,dirtyOwners:["owner-2"],dirtyCount:1,streak:1,memo:0,checkpoint:0,discovery:6});
  expect(retry.text.en.length).toBeGreaterThan(20);expect(retry.text.de.length).toBeGreaterThan(20);expect(retry.text.en).not.toBe(retry.text.de);
  expect(inventoryLines(state)).toMatchObject([{version:1,round:2,memo:5,checkpoint:0,discovery:1}]);
  expect(state.seal().mode).toBe("quiet");
@@ -232,24 +233,27 @@ test("a changed member whose rows still hold is forgotten by name and no other o
  const state=world(6,{membershipFailures:call=>call===1?["/owned/owner-4/manifest"]:undefined});
  expect(await state.run()).toBeDefined();
  expect(state.names.map(name=>state.observed[name])).toEqual([1,1,1,1,2,1]);
- expect(retryLines(state)[0]).toMatchObject({evicted:1});
+ expect(retryLines(state)[0]).toMatchObject({dirtyOwners:["owner-4"],dirtyCount:1});
 });
 
-test("a tree that keeps changing is followed round after round without a fixed retry budget",async()=>{
+test("a tree that keeps changing is followed with a fresh path each round until the inventory seals it lenient with the moved paths named volatile",async()=>{
  const rounds=limits.definitions.Limits.const.repairRounds*3;
- const state=world(4,{membershipFailures:(call,tree)=>{if(call>rounds)return undefined;const owner="owner-"+call%4;tree.set(owner+"/manifest",call+1);return["/owned/"+owner+"/manifest"];}});
+ const state=world(4,{membershipFailures:(call,tree)=>{if(call>rounds)return undefined;const owner="owner-"+call%4;tree.set(owner+"/file"+call,call+1);return["/owned/"+owner+"/file"+call];}});
  expect(await state.run()).toBeDefined();
- expect(state.counts.memberships).toBe(rounds+2);expect(state.counts.closes).toBe(rounds+2);
- expect(retryLines(state)).toHaveLength(rounds);
- expect(inventoryLines(state)).toMatchObject([{round:rounds+1,discovery:1}]);
+ const bound=limits.definitions.Limits.const.inventoryRounds*2,rest=rounds-bound;
+ expect(state.counts.memberships).toBe(rounds+1);expect(state.counts.closes).toBe(rounds+1);
+ expect(retryLines(state)).toHaveLength(rounds-1);
+ expect(inventoryLines(state).map(line=>line.round)).toEqual([bound+1,rest]);
+ const volatile=state.lines.filter(line=>line.startsWith("[graph-volatile] ")).map(line=>JSON.parse(line.slice(17)));
+ expect(volatile).toMatchObject([{version:1,rounds:bound+1}]);expect(volatile[0].pathCount).toBeGreaterThan(0);
  expect(state.counts.memoReads).toBe(2);expect(state.counts.memoWrites).toBe(2);
- expect(Object.values(state.observed).reduce((sum,count)=>sum+count,0)).toBe(4+rounds);
+ expect(Object.values(state.observed).reduce((sum,count)=>sum+count,0)).toBe(4);
 });
 
 test("the same members refused again after they were forgotten and observed again are a standing fault, not churn",async()=>{
  const state=world(4,{membershipFailures:()=>["/owned/owner-1/manifest"]});
  await expect(state.run()).rejects.toMatchObject({code:"BUILD_MEMBERSHIP_CHANGED",paths:["/owned/owner-1/manifest"]});
- expect(state.counts.memberships).toBe(3);expect(state.writes).toEqual([]);
+ expect(state.counts.memberships).toBe(limits.definitions.Limits.const.inventoryVolatileRounds+1);expect(state.writes).toEqual([]);
 });
 
 test("a refusal naming no member keeps the bounded repeat and fails when it stays",async()=>{
@@ -267,16 +271,16 @@ test("a directory that vanishes inside one owner follows in place: only that own
  expect(state.names.map(name=>state.observed[name])).toEqual([1,1,1,2,1,1]);
  expect(state.counts).toMatchObject({closes:3,memoReads:2,memoWrites:1});
  const [retry,...more]=retryLines(state);expect(more).toEqual([]);
- expect(retry).toMatchObject({version:1,reason:"path-moved",round:1,path:"owner-3/canvas/corners",paths:1,memo:0,discovery:3});
+ expect(retry).toMatchObject({version:1,round:1,first:["owner-3/canvas/corners"],paths:1,dirtyCount:0,streak:1,memo:0,discovery:3});
  expect(retry.text.en).not.toBe(retry.text.de);
  expect(inventoryLines(state)).toMatchObject([{round:2,memo:3,discovery:3}]);
  expect(state.seal().mode).toBe("quiet");
 });
 
-test("a vanished directory that stays gone is a standing fault: refused after three identical rounds with the original error",async()=>{
+test("a vanished directory that stays gone is a standing fault: refused after the volatile rounds with the owner failure that names the original error",async()=>{
  const raised=vanished("/owned/owner-1/canvas/corners"),state=world(4,{discoveryFailure:owner=>owner==="owner-1"?raised:undefined});
- await expect(state.run()).rejects.toBe(raised);
- expect(state.observed["owner-1"]).toBe(3);expect(state.observed["owner-0"]).toBe(1);expect(state.writes).toEqual([]);
+ await expect(state.run()).rejects.toMatchObject({code:"BUILD_OWNER_FAILED",owners:[{name:"owner-1"}],stable:true,cause:raised});
+ expect(state.observed["owner-1"]).toBe(limits.definitions.Limits.const.inventoryVolatileRounds+1);expect(state.observed["owner-0"]).toBe(1);expect(state.writes).toEqual([]);
 });
 
 test("an error that names no path of the tree is not followed",async()=>{

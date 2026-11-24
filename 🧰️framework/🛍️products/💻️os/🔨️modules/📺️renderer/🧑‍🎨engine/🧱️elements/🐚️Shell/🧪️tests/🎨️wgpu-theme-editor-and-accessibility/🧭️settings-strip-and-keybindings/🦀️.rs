@@ -145,15 +145,15 @@ fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions
             let mut overlay = None;
             let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
             let mut cursor = ShellChromeChildCursor { phase: 1, rect: Some(bounds), ..Default::default() };
-            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
-            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             for index in 0..shell.dock.dock_window_plan.len() {
                 cursor.item = index;
                 cursor.phase = 3;
-                caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+                caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             }
             cursor.phase = 5;
-            caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
+            caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world, cx));
             assert!(shell.chrome.presented_chrome_accessibility.is_empty());
             PanelsViewCtx::of(&mut shell).publish_retained_input_for_test(&mut input, &theme);
             let published = shell.chrome.presented_chrome_accessibility.clone();
@@ -226,7 +226,7 @@ fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
     while !with_chrome_control_names(|names| names.is_empty()) {
         turns += 1;
         assert!(turns <= SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY + 64, "the discarded chrome walk clears its names within one pass of its setup steps");
-        caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
+        caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world, cx)).expect("original fixture caller turn");
     }
     assert!(with_chrome_control_names(|names| names.is_empty()));
     assert_eq!(shell.chrome.presented_chrome_accessibility, accepted);

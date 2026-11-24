@@ -12,7 +12,8 @@ fn published_tree_handle_routes_through_shell_and_preserves_label_selection() {
     let theme = Theme::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let (mut document, item_key) = published_tree_pointer_document(&mut shell, surface);
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &document, body);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, body);
     assert_eq!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids(), vec![surface.to_string()], "the same completed retained-body publication owns the unnamed accessibility surface set");
 
     let handle_id = format!("tree.drag.transfer.{item_key}");
@@ -43,11 +44,13 @@ fn published_tree_handle_routes_through_shell_and_preserves_label_selection() {
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::publish_accessibility_visible_documents();
     assert!(semio_renderer_wgpu_ui_engine_dump::chrome_ledger::accessibility_visible_window_ids().is_empty(), "a later complete walk with no retained body removes the live document from production accessibility without retiring it");
     while !document.close_step() {}
+    turns.finish();
 }
 
 struct DisplayTransferHostFixture {
     shell: ShellState,
     document: UiDocumentLease,
+    turns: PointerFixtureTurns,
     input: InputState<ActionDescriptor>,
     theme: Theme,
     source: (f32, f32),
@@ -77,11 +80,12 @@ fn display_transfer_host_fixture() -> DisplayTransferHostFixture {
     shell.dock.anchor_state_mut(PanelAnchor::TopLeft).path = vec![surface.to_string()];
     shell.windows.active_window_id = Some("previous-app-window".into());
     let mut document = shell.windows.publish_surface_records(surface, records).expect("the projected Display document acquires a retained lease");
-    let input = paint_tree_pointer_document(&mut shell, surface, &document, body);
+    let mut turns = PointerFixtureTurns::default();
+    let input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, body);
     let transfer_control_id = format!("tree.drag.transfer.{projected_item_key}");
     let handle = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(transfer_control_id.as_str())).expect("the real Display producer paints a transfer handle");
     let source = (handle.rect.x + handle.rect.w * 0.5, handle.rect.y + handle.rect.h * 0.5);
-    DisplayTransferHostFixture { shell, document, input, theme, source }
+    DisplayTransferHostFixture { shell, document, turns, input, theme, source }
 }
 
 fn perform_display_transfer(fixture: &mut DisplayTransferHostFixture, drop: (f32, f32)) -> Result<(), String> {
@@ -93,6 +97,7 @@ fn perform_display_transfer(fixture: &mut DisplayTransferHostFixture, drop: (f32
 
 fn close_display_transfer_host_fixture(mut fixture: DisplayTransferHostFixture) {
     while !fixture.document.close_step() {}
+    fixture.turns.finish();
 }
 
 #[test]
@@ -211,7 +216,7 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
 /// retained reconciliation and paint, so the published Shell ingress starts a NewWindow dock drag.
 #[test]
 fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let _camera_owner = semio_renderer_wgpu_scene_state::camera_fixture_lease(semio_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "display-transfer-host-boundary";
     let body = Rect::new(19.0, 37.0, 420.0, 300.0);
@@ -241,7 +246,8 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     shell.dock.anchor_state_mut(PanelAnchor::TopLeft).path = vec![surface.to_string()];
     shell.windows.active_window_id = Some("previous-app-window".into());
     let mut document = shell.windows.publish_surface_records(surface, records).expect("the projected Display document acquires a retained lease");
-    let mut input = paint_tree_pointer_document(&mut shell, surface, &document, body);
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_tree_pointer_document(&mut turns, &mut shell, surface, &document, body);
     let handle = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(transfer_control_id.as_str())).expect("the reconciled and painted window kind publishes its transfer handle");
     assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(sort_control_id.as_str())), "a payload-bearing row never degrades to a sort handle");
     let drag_data = handle.drag_data.as_ref().expect("the transfer handle owns the producer's payload");
@@ -312,7 +318,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut cursor = ShellChromeChildCursor::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut body_input, &theme, bounds, &mut world_resources, cx)));
+    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(TEST_TURN_WORK, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut body_input, &theme, bounds, &mut world_resources, cx)));
     assert!(painted, "the canonical Shell window walk consumes the created instance's initial body");
     assert!(body_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d), "the canonical window walk stages the new instance's physical World3d hit target");
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut body_input);
@@ -343,14 +349,14 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
         if shell.surfaces.retired_world3d_states.is_empty() {
             break;
         }
-        shell.surfaces.advance_world3d_retirement_step();
+        caller.turn_funded(TEST_TURN_WORK, |cx| shell.surfaces.advance_world3d_retirement_step_in(cx));
     }
     assert!(shell.surfaces.retired_world3d_states.is_empty(), "the retired World3d owner reaches terminal empty under maintenance");
     for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
         if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2") {
             break;
         }
-        assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
+        assert!(caller.turn_funded(TEST_TURN_WORK, |cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
         shell = semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close(shell);
     }
     assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2"), "the presenter maintenance lane returns the closed retained surface before its identity is reused");
@@ -384,7 +390,7 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
     let mut refreshed_cursor = ShellChromeChildCursor::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let refreshed =
-        (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut refreshed_cursor, &mut refreshed_draw, &mut refreshed_overlay, &mut atlas, &icons, &mut refreshed_input, &theme, bounds, &mut world_resources, cx)));
+        (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(TEST_TURN_WORK, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut refreshed_cursor, &mut refreshed_draw, &mut refreshed_overlay, &mut atlas, &icons, &mut refreshed_input, &theme, bounds, &mut world_resources, cx)));
     assert!(refreshed, "the body returned by refresh_ui enters the canonical Shell paint walk");
     assert!(refreshed_input.staged_hits().iter().any(|hit| hit.kind == HitKind::World3d));
     PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut refreshed_input);
@@ -405,12 +411,21 @@ fn display_window_kind_reaches_shell_as_a_transfer_handle_and_new_window_drag() 
         if shell.surfaces.retired_world3d_states.is_empty() {
             break;
         }
-        shell.surfaces.advance_world3d_retirement_step();
+        caller.turn_funded(TEST_TURN_WORK, |cx| shell.surfaces.advance_world3d_retirement_step_in(cx));
     }
     assert!(shell.surfaces.retired_world3d_states.is_empty(), "the refreshed owner also reaches terminal retirement");
+    for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
+        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2") {
+            break;
+        }
+        assert!(caller.turn_funded(TEST_TURN_WORK, |cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
+        shell = semio_renderer_wgpu_host_winit::os_host::finish_world_fixture_component_close(shell);
+    }
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for("main-2"), "the refreshed retained surface returns to the caller that mounted it");
     caller.retire_world(&mut world_resources);
-    caller.finish();
     while !document.close_step() {}
+    turns.finish();
+    caller.finish();
 }
 
 /// ⚖️ LAW: two real `Component::Surface(Table)` documents publish into one Shell registry,
@@ -453,7 +468,9 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
     let mut destination_document = shell.windows.publish_surface_records(destination_id, vec![table_pointer_record(1, "destination-table", &destination_scene)]).expect("destination Table document publishes");
     let source_body = Rect::new(11.0, 17.0, 360.0, 240.0);
     let destination_body = Rect::new(411.0, 17.0, 360.0, 240.0);
-    let mut input = paint_component_pointer_documents(
+    let mut turns = PointerFixtureTurns::default();
+    let mut input = paint_component_pointer_documents_in(
+        &mut turns,
         &mut shell,
         &[(source_id, "controller.table-a", &source_document, source_body), (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().expect("destination controller"), &destination_document, destination_body)],
     );
@@ -474,7 +491,7 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
     let mut refreshed_document = if refresh {
         let document = shell.windows.publish_surface_records(source_id, vec![table_pointer_record(1, "source-table", &source_scene)]).expect("the source refresh publishes");
         input =
-            paint_component_pointer_documents(&mut shell, &[(source_id, "controller.table-a", &document, source_body), (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().unwrap(), &destination_document, destination_body)]);
+            paint_component_pointer_documents_in(&mut turns, &mut shell, &[(source_id, "controller.table-a", &document, source_body), (destination_id, destination_fixture["dropAction"]["controllerId"].as_str().unwrap(), &destination_document, destination_body)]);
         let refreshed_owner = semio_renderer_wgpu_ui_engine::retained_ui_engine::retained_scene_target_at(source_id, source_body.w * 0.5, source_body.h * 0.5).expect("refreshed component host");
         assert!(source_owner.same_component_host(&refreshed_owner), "ordinary publication preserves the mounted Table owner");
         Some(document)
@@ -493,4 +510,5 @@ fn table_transfer_through_the_shell_host(refresh: bool) {
     if let Some(document) = refreshed_document.as_mut() {
         while !document.close_step() {}
     }
+    turns.finish();
 }

@@ -9,10 +9,15 @@ pub fn commit_snapshot_fields<M>(mutations: Vec<M>) -> Result<Emit<M, NoConfigMu
     Ok(Emit::mutations(mutations))
 }
 
+/// 🔢️ A whole non-negative number whichever way the sender wrote it (`4`, `4.0`, `4e0`): shells and controls differ in the integer or float width they emit.
+fn whole_arg(value: &semio_framework_value::DslValue) -> Option<u64> {
+    value.as_u64().or_else(|| value.as_f64().filter(|float| float.is_finite() && float.fract() == 0.0 && (0.0..=u32::MAX as f64).contains(float)).map(|float| float as u64))
+}
+
 /// 🎯️ Builds the args-side of an app's `command_from_action` bridge for `selected-check` — the shells
 /// still speak `{action,args}` for chrome actions.
 pub fn selected_check_index_arg(args: Option<&semio_framework_value::DslValue>) -> Option<u32> {
-    args.and_then(|value| value.get("index")).and_then(semio_framework_value::DslValue::as_u64).map(|value| value as u32)
+    args.and_then(|value| value.get("index")).and_then(whole_arg).map(|value| value as u32)
 }
 
 /// 🎯️ Path argument used by `setField` / `insertItem` / `removeItem`.
@@ -24,14 +29,16 @@ pub fn path_arg(args: Option<&semio_framework_value::DslValue>) -> String {
 
 /// 🎯️ Index argument used by `insertItem` / `removeItem` / `applyRemedy.remedyIndex`.
 pub fn index_arg(args: Option<&semio_framework_value::DslValue>, key: &str) -> usize {
-    args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_u64).map(|value| value as usize).unwrap_or(0)
+    let snake: String = key.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['_', c.to_ascii_lowercase()] } else { vec![c] }).collect();
+    args.and_then(|value| value.get(key).or_else(|| value.get(&snake))).and_then(whole_arg).map(|value| value as usize).unwrap_or(0)
 }
 
-/// 🎯️ Optional value argument — host control merges under `value`; absent ⇒ JSON null.
+/// 🎯️ Optional value argument — host control merges under `value`; the typed command's own projection carries the JSON text as `valueJson` (or `value_json`); absent ⇒ JSON null.
 pub fn value_arg_json(args: Option<&semio_framework_value::DslValue>) -> String {
+    let text = |key: &str| args.and_then(|value| value.get(key)).and_then(semio_framework_value::DslValue::as_str).map(str::to_owned);
     match args.and_then(|value| value.get("value")) {
         Some(value) => semio_framework_pack_json::to_json_string(value),
-        None => "null".into(),
+        None => text("valueJson").or_else(|| text("value_json")).unwrap_or_else(|| "null".into()),
     }
 }
 

@@ -122,7 +122,7 @@ impl Puzzle3dActionPrologue {
         &mut self,
         session: &Puzzle3dSession,
         instance_owner: Option<&ArtifactInstanceOperationOwnerHandle>,
-        tool_run: Option<&semio_plugin::ToolRunView>,
+        tool_run: Option<semio_plugin::OriginalToolRunView<'_>>,
         authoring_seed: &str,
         command: &Puzzle3dCommand,
         window_id: Option<&str>,

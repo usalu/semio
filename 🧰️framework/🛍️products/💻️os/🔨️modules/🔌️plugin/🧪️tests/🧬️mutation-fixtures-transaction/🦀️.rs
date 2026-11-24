@@ -13,7 +13,8 @@ mod command_close_tests;
 // 🧪️ Proves the `🧫️fixtures` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_plugin_testing_laws::artifact_app_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app, settle_registered_typed_operation};
+use semio_plugin_testing_instance_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched};
+use semio_plugin_testing_laws::artifact_app_laws::{meta, new_registered_app, settle_registered_typed_operation};
 use semio_plugin_window_transient::built_text_to_component_tree;
 use semio_plugin_interaction::UiAssemblyResult;
 use semio_plugin_decl_app::ArtifactApp;

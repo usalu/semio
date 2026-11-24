@@ -75138,6 +75138,57 @@
             }
           },
           {
+            "id": "shoe-toe-l",
+            "kind": "loft",
+            "bone": "toe-l",
+            "material": "skin",
+            "role": "body",
+            "tone": 0.12,
+            "sections": [
+              {
+                "at": [
+                  -0.0036,
+                  0.03091,
+                  0
+                ],
+                "rx": 0.039,
+                "ry": 0.0077,
+                "exponent": 2.6,
+                "rotation": [
+                  0,
+                  -0.70711,
+                  0,
+                  0.70711
+                ]
+              },
+              {
+                "at": [
+                  0.0224,
+                  0.02891,
+                  0
+                ],
+                "rx": 0.037,
+                "ry": 0.0077,
+                "exponent": 2.6,
+                "rotation": [
+                  0,
+                  -0.70711,
+                  0,
+                  0.70711
+                ]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "transform": {
+              "translation": [
+                0.00022,
+                0.00771,
+                0
+              ]
+            }
+          },
+          {
             "id": "buttock-r",
             "kind": "ellipsoid",
             "bone": "pelvis",
@@ -76475,6 +76526,57 @@
             }
           },
           {
+            "id": "shoe-toe-r",
+            "kind": "loft",
+            "bone": "toe-r",
+            "material": "skin",
+            "role": "body",
+            "tone": 0.12,
+            "sections": [
+              {
+                "at": [
+                  -0.0036,
+                  0.03091,
+                  0
+                ],
+                "rx": 0.039,
+                "ry": 0.0077,
+                "exponent": 2.6,
+                "rotation": [
+                  0,
+                  -0.70711,
+                  0,
+                  0.70711
+                ]
+              },
+              {
+                "at": [
+                  0.0224,
+                  0.02891,
+                  0
+                ],
+                "rx": 0.037,
+                "ry": 0.0077,
+                "exponent": 2.6,
+                "rotation": [
+                  0,
+                  -0.70711,
+                  0,
+                  0.70711
+                ]
+              }
+            ],
+            "capStart": true,
+            "capEnd": true,
+            "transform": {
+              "translation": [
+                0.00022,
+                0.00771,
+                0
+              ]
+            }
+          },
+          {
             "id": "towel",
             "kind": "box",
             "bone": "towel",
@@ -76664,6 +76766,11 @@
             "region": "feet-skin"
           },
           {
+            "id": "th-shoe-toe-l",
+            "of": "shoe-toe-l",
+            "region": "feet-skin"
+          },
+          {
             "id": "th-buttock-r",
             "of": "buttock-r",
             "region": "swimsuit"
@@ -76781,6 +76888,11 @@
           {
             "id": "th-shoe-r",
             "of": "shoe-r",
+            "region": "feet-skin"
+          },
+          {
+            "id": "th-shoe-toe-r",
+            "of": "shoe-toe-r",
             "region": "feet-skin"
           },
           {

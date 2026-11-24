@@ -103,7 +103,7 @@ pub fn entity_kind_of(document: &model::En1997Snapshot, id: &str) -> Option<&'st
     found.iter().find(|(_, hit)| *hit).and_then(|(collection, _)| ENTITY_KINDS.iter().find(|k| k.collection == *collection))
 }
 
-/// 🔗️ The entities a projection of `id` reads besides itself, so a change of any of them re-projects `id`.
+/// 🔗️ The entities a projection of `id` reads besides itself, so a change of any of them re-projects `id`; a soil layer reads none (the site bounds it spans are its [`site_stamps`]), so the rows that read layers never read back through them.
 pub fn entity_dependencies(document: &model::En1997Snapshot, id: &str) -> Vec<String> {
     let base = base_id(id);
     let d = document;
@@ -141,14 +141,6 @@ pub fn entity_dependencies(document: &model::En1997Snapshot, id: &str) -> Vec<St
     }
     if d.piles.iter().any(|e| e.id == base) {
         out.extend(d.pile_groups.iter().filter(|g| g.pile_id == base).map(|g| g.id.clone()));
-    }
-    if d.layers.iter().any(|e| e.id == base) {
-        out.extend(d.lab_tests.iter().filter(|t| t.layer_id == base).map(|t| t.id.clone()));
-        out.extend(d.investigations.iter().map(|i| i.id.clone()));
-        out.extend(d.layer_waters.iter().filter(|w| w.layer_id == base).map(|w| w.id.clone()));
-        out.extend(d.characteristic_bases.iter().filter(|b| b.layer_id == base).map(|b| b.id.clone()));
-        out.extend(d.footings.iter().map(|f| f.id.clone()));
-        out.extend(d.slopes.iter().filter(|s| s.governing_layer_id == base).map(|s| s.id.clone()));
     }
     out.remove(base);
     out.into_iter().collect()
@@ -377,21 +369,27 @@ pub fn unit_dependencies(document: &model::En1997Snapshot, id: &str) -> Vec<Stri
     if id == UNIT_SETTLEMENT { document.footings.iter().map(|f| f.id.clone()).collect() } else { Vec::new() }
 }
 
-/// 📍️ What an entity's projection derives from other entities: its pose (default slots follow the row index), the site bounds the soil layers, waters and the groundwater plane span, and the layer top (the depth of all layers above).
+/// 📍️ What an entity's projection derives from other entities: its pose (default slots follow the row index), whether it is the sole row of its collection (the checks of a family without subject belong to it only then, see [`owner_entity`]) and the layer top (the depth of all layers above), which the rows below read.
 pub fn layout_stamps(document: &model::En1997Snapshot, layout: &Layout) -> std::collections::BTreeMap<String, String> {
-    let bounds = format!("{:?}|{:?}|{}", layout.min, layout.max, layout.depth);
     let mut cursor = 0.0_f64;
+    let sole_layer = document.layers.len() == 1;
     let layers = document.layers.iter().map(|l| {
         let top = cursor;
         cursor = l.depth_bottom.max(top + 1e-3);
-        (l.id.clone(), format!("{top}|{bounds}"))
+        (l.id.clone(), format!("{top}|{sole_layer}"))
     });
-    let posed = rows_of(document).into_iter().skip(1).flat_map(|(_, ids)| ids).map(|id| (id.to_owned(), format!("{:?}", layout.pose(id))));
-    let waters = document.layer_waters.iter().map(|w| (w.id.clone(), bounds.clone()));
-    let bases = document.characteristic_bases.iter().enumerate().map(|(i, b)| (b.id.clone(), format!("{bounds}|{i}")));
+    let posed = rows_of(document).into_iter().skip(1).flat_map(|(_, ids)| { let sole = ids.len() == 1; ids.into_iter().map(move |id| (id, sole)) }).map(|(id, sole)| (id.to_owned(), format!("{:?}|{sole}", layout.pose(id))));
     let logs = document.lab_tests.iter().map(|t| (t.id.clone(), format!("{:?}|{}", layout.pose(&t.id), document.investigation_depth)));
+    let bases = document.characteristic_bases.iter().enumerate().map(|(i, b)| (b.id.clone(), i.to_string()));
     let poses = document.footings.iter().map(|f| format!("{:?}", layout.pose(&f.id))).collect::<Vec<_>>().join("|");
-    layers.chain(posed).chain(logs).chain(waters).chain(bases).chain([(UNIT_WATER.to_owned(), bounds.clone()), (UNIT_SETTLEMENT.to_owned(), poses)]).collect()
+    layers.chain(posed).chain(logs).chain(bases).chain([(UNIT_SETTLEMENT.to_owned(), poses)]).collect()
+}
+
+/// 🌐️ What only the entity's own fragment reads of the site: the bounds the soil layers, layer waters, characteristic bases and the groundwater plane span. Dependents never read them, so moving a footing rebuilds these and not the footings below them.
+pub fn site_stamps(document: &model::En1997Snapshot, layout: &Layout) -> std::collections::BTreeMap<String, String> {
+    let bounds = format!("{:?}|{:?}|{}", layout.min, layout.max, layout.depth);
+    let ids = document.layers.iter().map(|e| e.id.as_str()).chain(document.layer_waters.iter().map(|e| e.id.as_str())).chain(document.characteristic_bases.iter().map(|e| e.id.as_str())).chain([UNIT_WATER]);
+    ids.map(|id| (id.to_owned(), bounds.clone())).collect()
 }
 
 /// 🏁️ The global parts of the merged scene: used layers, the utilisation and role legends in front of the field legends of the fragments, the site bounds and the description.
@@ -466,28 +464,16 @@ pub const CHECK_OWNERS: &[(&str, &str)] = &[
     ("en1997.anc-03.", "anchors"),
     ("en1997.anc-04.", "anchors"),
     ("en1997.dew-01.", "layerWaters"),
-    ("en1997.dew-02.", "layerWaters"),
     ("en1997.dew-03.", "embeddedWalls"),
     ("en1997.hyd-02.", "embeddedWalls"),
     ("en1997.hyd-03.", "embeddedWalls"),
     ("en1997.sls-02.", "labTests"),
     ("en1997.sls-03.", "labTests"),
     ("en1997.gi-01.", "footings"),
-    ("en1997.gi-02.", "cases"),
     ("en1997.gi-03.", "cases"),
-    ("en1997.gi-04.", "cases"),
-    ("en1997.gi-05.", "cases"),
-    ("en1997.gi-06.", "cases"),
-    ("en1997.gi-07.", "cases"),
-    ("en1997.gi-08.", "cases"),
-    ("en1997.gi-09.", "cases"),
     ("en1997.gi-10.", "labTests"),
     ("en1997.gi-11.", "labTests"),
     ("en1997.gi-12.", "labTests"),
-    ("en1997.gi-13.", "labTests"),
-    ("en1997.gi-14.", "cases"),
-    ("en1997.gi-15.", "cases"),
-    ("en1997.gi-16.", "cases"),
     ("en1997.gi-17.", "labTests"),
     ("en1997.rw-02.", "retainingWalls"),
     ("en1997.rw-03.", "embeddedWalls"),
@@ -498,6 +484,18 @@ pub const CHECK_OWNERS: &[(&str, &str)] = &[
     ("en1997.rw-09.", "retainingWalls"),
     ("en1997.rw-10.", "retainingWalls"),
     ("en1997.g-02.", "cases"),
+    ("en1997.dew-02.", "layerWaters"),
+    ("en1997.gi-02.", "cases"),
+    ("en1997.gi-04.", "cases"),
+    ("en1997.gi-05.", "cases"),
+    ("en1997.gi-06.", "cases"),
+    ("en1997.gi-07.", "cases"),
+    ("en1997.gi-08.", "cases"),
+    ("en1997.gi-09.", "cases"),
+    ("en1997.gi-13.", "labTests"),
+    ("en1997.gi-14.", "cases"),
+    ("en1997.gi-15.", "cases"),
+    ("en1997.gi-16.", "cases"),
 ];
 
 /// 🧭️ The collection that owns the check `check_id` (longest family prefix), `None` for a check outside the spec trace.
@@ -520,7 +518,7 @@ pub fn owner_entity(document: &model::En1997Snapshot, check: &norm::CheckResult)
 /// 📈️ The check families a dedicated diagram draws (profiles, factors, pressures, curves, sections and plans of their entity).
 pub const DRAWN_FAMILIES: &[&str] = &[
     "en1997.layer.model", "en1997.g-02.", "en1997.2.characteristic.", "en1997.2.4.2.investigation.", "en1997.gi-01.", "en1997.gi-02.", "en1997.gi-03.", "en1997.gi-04.", "en1997.gi-05.", "en1997.gi-06.", "en1997.gi-07.", "en1997.gi-08.", "en1997.gi-09.", "en1997.gi-14.", "en1997.gi-15.", "en1997.gi-16.",
-    "en1997.6.5.bearing.", "en1997.geo-f03.", "en1997.6.5.3.sliding.", "en1997.6.6.settlement.", "en1997.6.6.elastic.", "en1997.6.6.angular.", "en1997.6.6.tilt.",
+    "en1997.6.5.bearing.", "en1997.6.5.bearing.undrained.", "en1997.geo-f03.", "en1997.6.5.3.sliding.", "en1997.6.6.settlement.", "en1997.6.6.elastic.", "en1997.6.6.angular.", "en1997.6.6.tilt.",
     "en1997.9.earthPressure.", "en1997.9.overturning.", "en1997.9.sliding.", "en1997.rw-02.", "en1997.rw-04.", "en1997.rw-05.", "en1997.rw-10.",
     "en1997.rw-03.", "en1997.rw-07.", "en1997.hyd-02.", "en1997.hyd-03.", "en1997.10.upl.", "en1997.10.hyd.",
     "en1997.11.bishop.", "en1997.anc-01.", "en1997.anc-02.", "en1997.anc-03.", "en1997.anc-04.",
@@ -536,7 +534,7 @@ pub const OUTCOME_FAMILIES: &[&str] = &[
 ];
 
 /// 📄️ The check families that belong to the document as a whole (design situation, governing combination, integrity and link rules, missing-entity notes); they select the global badge.
-pub const DOCUMENT_CHECKS: &[&str] = &["en1997.design.", "en1997.governing.", "en1997.integrity.", "en1997.gk.", "en1997.link.", "en1997.footing.", "en1997.gi-01.points", "en1997.gi-01.spacing", "en1997.pile.na", "en1997.slope.na", "en1997.upl.na", "en1997.wall.na"];
+pub const DOCUMENT_CHECKS: &[&str] = &["en1997.design.", "en1997.governing.", "en1997.integrity.", "en1997.gk.", "en1997.link.", "en1997.footing.", "en1997.gi-01.points", "en1997.gi-01.spacing", "en1997.6.6.pairs.na", "en1997.pile.na", "en1997.slope.na", "en1997.upl.na", "en1997.wall.na"];
 
 /// 🧭️ Where a check is drawn: on one document row, or on the global badge.
 #[derive(Clone, Debug, PartialEq, Eq)]

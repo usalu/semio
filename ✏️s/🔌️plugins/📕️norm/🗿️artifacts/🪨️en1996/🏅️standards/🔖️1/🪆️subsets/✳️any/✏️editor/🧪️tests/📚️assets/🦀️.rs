@@ -9,6 +9,8 @@ use semio_s_plugin_norm_structural_scene::projection_kit::test_support::assert_p
 use semio_s_plugin_norm_structural_scene::EntityRef;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use semio_s_artifact_norm_en1996_editor::modes::edit::windows::checks;
+use semio_s_artifact_norm_en1996_editor::modes::edit::windows::diagrams;
 
 const FIXTURE_ONLY: &[&str] = &[];
 

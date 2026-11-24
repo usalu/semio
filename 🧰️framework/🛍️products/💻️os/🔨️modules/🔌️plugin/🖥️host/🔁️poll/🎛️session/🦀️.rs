@@ -15,18 +15,11 @@ pub struct GuestPollSession<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'sta
  next_place:OriginalCallerReturnPlace,next_result:ManuallyDrop<Option<Result<bool,OriginalTurnFailure>>>,
  diagnostic: GuestRelayFaultHome,
  guest:Option<GuestRelayGuestSubloan>,request:Option<GuestPollGuestLoan>,frozen:Option<GuestPollFrozenKind>,producer_id:Option<OriginalNativeRecipientIdentity>,history_id:Option<OriginalNativeRecipientIdentity>,witness:Option<OriginalNativeRetiredWitness>,stage:u8,capture:GuestFrozenHistoryCapture,close_phase:u8,opened:bool,closing:bool,closed:bool,delivered:bool,limits:Option<semio_framework_kernel_identity::OwnedCorePollLimits>,
- trace:Option<PollProgressTrace>,
-}
-#[derive(Default)]
-struct PollProgressTrace{driver_steps:usize,native_steps:usize,input_receipts:usize}
-fn poll_trace_sample(steps:&mut usize)->Option<usize>{
- *steps=steps.saturating_add(1);
- steps.is_power_of_two().then_some(*steps)
 }
 impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureReceiving> GuestPollSession<T,R>{
  pub fn new(driver:GuestRelayWakeDriver,actor:ActorId,origin:GuestRelayNativeOrigin,policy:OriginalNativeDecodePolicy,limits:JsonReadLimits,receiver:R)->Self{
   let(admission,unopened,failure)=match NativeHomeAdmission::new(actor,origin,GuestPoll::new(policy,limits,receiver)){Ok(admission)=>(Some(admission),None,None),Err((state,error))=>(None,Some(state),Some(GuestRelayAdmissionFailure::from(error)))};
-  Self{driver:ManuallyDrop::new(driver),admission:ManuallyDrop::new(admission),unopened:ManuallyDrop::new(unopened),producer:ManuallyDrop::new(None),history_input:ManuallyDrop::new(Some(GuestIssuedHistoryHome::empty())),history:ManuallyDrop::new(None),fault_input:ManuallyDrop::new(Some(semio_plugin_host_actor_failure::ActorFailureHome::empty())),fault:ManuallyDrop::new(None),fault_id:None,failure:ManuallyDrop::new(failure),cleanup_failure:ManuallyDrop::new(None),next_place:OriginalCallerReturnPlace::empty(),next_result:ManuallyDrop::new(None),diagnostic:GuestRelayFaultHome::empty(),guest:None,request:None,frozen:None,producer_id:None,history_id:None,witness:None,stage:0,capture:GuestFrozenHistoryCapture::default(),close_phase:0,opened:false,closing:false,closed:false,delivered:false,limits:None,trace:std::env::var_os("RUST_BACKTRACE").is_some().then(PollProgressTrace::default)}
+  Self{driver:ManuallyDrop::new(driver),admission:ManuallyDrop::new(admission),unopened:ManuallyDrop::new(unopened),producer:ManuallyDrop::new(None),history_input:ManuallyDrop::new(Some(GuestIssuedHistoryHome::empty())),history:ManuallyDrop::new(None),fault_input:ManuallyDrop::new(Some(semio_plugin_host_actor_failure::ActorFailureHome::empty())),fault:ManuallyDrop::new(None),fault_id:None,failure:ManuallyDrop::new(failure),cleanup_failure:ManuallyDrop::new(None),next_place:OriginalCallerReturnPlace::empty(),next_result:ManuallyDrop::new(None),diagnostic:GuestRelayFaultHome::empty(),guest:None,request:None,frozen:None,producer_id:None,history_id:None,witness:None,stage:0,capture:GuestFrozenHistoryCapture::default(),close_phase:0,opened:false,closing:false,closed:false,delivered:false,limits:None}
  }
  #[cfg(test)]
  pub(super) fn fixture_guest_request(&self)->Option<(bool,OriginalJobBudget,GuestPollGuestLoan)>{
@@ -100,9 +93,6 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   let producer=self.producer.as_mut().unwrap();let diagnostic=&mut self.diagnostic;let mut status=None;let mut request=None;let mut frozen=None;let mut awaiting_control=false;let mut result=self.driver.dispatch_operation_step(false,cleanup,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|_,_,_,poll,cx|{
    let actor_failure=poll.journal_identity.is_none()&&poll.actor_failure.is_some();
    if !cleanup&&(actor_failure||poll.scalar_progress().is_some_and(scalar_failed)||poll.failed&&poll.decoding_outcome().is_some()){
-    if std::env::var_os("RUST_BACKTRACE").is_some(){
-     eprintln!("[DEBUG] poll refusal in {:?}: actor={}, transport={:?}, input={:?}, scalar={:?}, decoding={}",poll.phase,poll.actor_failure.is_some(),poll.transport_failure(),poll.input_failure(),poll.scalar_progress().map(|progress|&progress.result),poll.decoding_outcome().is_some());
-    }
     status=Some(GuestPollSessionStatus::Refused);return Ok(())
    }
    if poll.transport_failure().is_some(){
@@ -141,11 +131,8 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   self.retain(result,cleanup);if let Some(frozen)=frozen{self.frozen=Some(frozen);self.stage=if matches!(frozen,GuestPollFrozenKind::Boot|GuestPollFrozenKind::CloseContext){9}else{10};}else if let Some(request)=request{self.request=Some(request);self.stage=1;}status
  }
  fn advance_native(&mut self,input:Option<&dyn JsonWriteSource>,cleanup:bool)->Option<GuestPollStatus>{
-  let sample=self.trace.as_mut().and_then(|trace|poll_trace_sample(&mut trace.native_steps));
-  let mut frontier=None;
   let mut returned_frame_demand=None;
   let producer=self.producer.as_mut().unwrap();let budget=self.guest.map(|loan|loan.budget());let mut status=None;let result=self.driver.dispatch_operation_step(true,cleanup,|cx|{producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,_,poll,cx|{
-   if sample.is_some(){frontier=Some((poll.phase,poll.scalar_started,poll.frozen,poll.awaiting_input_budget));}
    if poll.awaiting_input_budget{
     if cleanup&&poll.retire_interrupted_guest_step(runtime,instance,budget,cx)? { return Ok(()) }
     if let Some(budget)=budget{poll.repeat_input_step(runtime,instance,budget,cx)?;}
@@ -158,9 +145,6 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
      body=Some(match input{Some(input)=>poll.advance_step(runtime,instance,input,budget,Some(execution),cx),None=>poll.advance_retirement_step(runtime,instance,budget,Some(execution),cx)});
      poll.execution_receipt()
     });
-    if (settlement.is_err() || matches!(body, Some(Err(_) | Ok(GuestPollStatus::Refused)))) && std::env::var_os("RUST_BACKTRACE").is_some(){
-     eprintln!("[DEBUG] poll VM body: {body:?}, input failure: {:?}, scalar failure: {:?}, settlement: {settlement:?}",poll.input_failure(),poll.scalar_progress().and_then(|progress|progress.result.as_ref().err()));
-    }
     settlement?;
     status=Some(body.ok_or_else(||invalid("Poll VM callback did not execute"))??);
     if !cleanup&&budget.is_some()&&status==Some(GuestPollStatus::Pending){
@@ -168,16 +152,6 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
     }
    }else{
     let progress=match input{Some(input)=>poll.advance_step(runtime,instance,input,budget,None,cx)?,None=>poll.advance_retirement_step(runtime,instance,budget,None,cx)?};
-    if !cleanup&&progress==GuestPollStatus::Refused&&std::env::var_os("RUST_BACKTRACE").is_some(){
-     eprintln!("[DEBUG] poll non-VM refusal in {:?}: actor={}, input={:?}, scalar={:?}, fixed={}",poll.phase,poll.actor_failure.is_some(),poll.input_failure(),poll.scalar_progress().map(|progress|&progress.result),poll.fixed_receipt().is_some());
-     if poll.input_failure().is_some(){
-      if let Some(diagnostics)=instance.guest_diagnostics_text(){
-       if let Some((_,detail))=diagnostics.rsplit_once("[DEBUG] unresolved original input receipt"){
-        for line in detail.lines().skip(1).take(2){eprintln!("[DEBUG] poll guest Input: {line}");}
-       }
-      }
-     }
-    }
     status=Some(progress);
    }
    if !cleanup&&status==Some(GuestPollStatus::Refused)&&poll.input_failure().is_some(){
@@ -185,9 +159,6 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
    }
    Ok(())
   })?;Ok(())})?;Ok(())});
-  if let Some(step)=sample{
-   eprintln!("[DEBUG] poll native progress: step {step}, frontier {frontier:?}, guest loan epoch {:?}, VM fuel spent {:?}, status {status:?}",budget.map(|loan|loan.input.epoch),self.driver.original_execution_spent());
-  }
   let result=result.and_then(|progress|{
    if let Some(demand)=returned_frame_demand{
     if self.driver.original_operation_drive_grant()?.is_some_and(|grant|!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand)){
@@ -205,9 +176,6 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   self.drive_inner(Some(input),false,receive)
  }
  fn drive_inner(&mut self,input:Option<&dyn JsonWriteSource>,cleanup:bool,receive:&mut impl FnMut(&T,&mut R,&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>)->GuestPollSessionStatus{
-  if let Some(step)=self.trace.as_mut().and_then(|trace|poll_trace_sample(&mut trace.driver_steps)){
-   eprintln!("[DEBUG] poll driver progress: step {step}, stage {}, receipt {:?}, frozen {:?}, retirement {cleanup}, VM fuel spent {:?}",self.stage,self.capture,self.frozen,self.driver.original_execution_spent());
-  }
   let mut complete=false;
   match self.stage{
    0=>{match self.acknowledge(cleanup){Some(GuestPollSessionStatus::Pending) if self.stage==0=>self.stage=4,Some(GuestPollSessionStatus::Pending|GuestPollSessionStatus::Ready)|None=>{},Some(status)=>return status}},
@@ -240,18 +208,11 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
     if self.retain(result,cleanup){self.capture=GuestFrozenHistoryCapture::default();self.guest=None;self.request=None;self.stage=26}
    },
    26=>{
-    let mut ready=false;let mut input_receipt=None;
-    let trace_input=self.trace.is_some()&&self.frozen==Some(GuestPollFrozenKind::Input);
+    let mut ready=false;
     self.with_frozen(cleanup,|history,frozen,poll,cx|{GuestIssuedHistoryHome::with_journaled_receipt_step(history,&frozen,cx,|view,cx|{
      ready=poll.accept_journaled_step(&view,cx)?;
-     if ready&&trace_input{input_receipt=poll.fixed_receipt().copied();}
      Ok(())
     })?;Ok(())});
-    if let Some(call)=input_receipt{
-     if let Some(sample)=self.trace.as_mut().and_then(|trace|poll_trace_sample(&mut trace.input_receipts)){
-      eprintln!("[DEBUG] Input SRE1 settled: receipt {sample}, epoch {}, result {:?}, guest work {}",call.input.epoch,call.kind,call.work_units_spent);
-     }
-    }
     if ready{self.stage=27}
    },
    27=>{let producer=self.producer.as_mut().unwrap();let scalar=self.frozen!=Some(GuestPollFrozenKind::Input);let mut ready=false;let result=self.driver.dispatch_operation_step(false,cleanup,|cx|{let mut captured=false;producer.with_native_borrow(cx,|loan,cx|{captured=attest_actor_failure_if_needed(loan,scalar,cx,|poll|poll.needs_actor_failure_reference(),|poll|&mut poll.actor_failure)?;Ok(())})?;if !captured{return Ok(())}producer.with_native(cx,|home,cx|{home.with_native(cx,|runtime,instance,_,poll,cx|{if poll.fixed_receipt().is_some(){poll.acknowledge_fixed_step(cx)?;return Ok(())}ready=poll.resume_journaled_step(runtime,instance,cx)?;Ok(())})?;Ok(())})?;Ok(())});self.retain(result,cleanup);if ready{self.stage=29}},
@@ -355,16 +316,8 @@ impl<T:NativeReceive<DslValue>+RetireOwned+Send+Sync+'static,R:GuestPollFailureR
   }Ok(false)
  }
  pub async fn close(&mut self,mut receive:impl FnMut(&T,&mut R,&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>)->GuestPollSessionStatus{
-  let trace=std::env::var_os("RUST_BACKTRACE").is_some();
-  let mut previous=None;
-  let mut attempts=0usize;
   loop{
    let status=self.close_step(&mut receive);
-   attempts=attempts.saturating_add(1);
-   if trace && (previous!=Some(self.close_phase)||attempts.is_power_of_two()&&attempts>=64){
-    previous=Some(self.close_phase);
-    eprintln!("[DEBUG] poll close frontier: {}.{} in {attempts} steps, diagnostic empty {}, guest held {}, remaining {:?}, status {status:?}",self.close_phase,self.stage,self.diagnostic.terminal_is_empty(),self.guest.is_some(),self.driver.original_remaining());
-   }
    if matches!(status,GuestPollSessionStatus::Closed|GuestPollSessionStatus::Refused){return status}
    semio_framework_async::yield_once().await
   }

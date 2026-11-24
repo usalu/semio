@@ -33,18 +33,6 @@ pub mod standards {
                 pub mod io {
                     pub use semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::io::*;
                     #[path = "."]
-                    pub mod text {
-                        #[path = "."]
-                        pub mod snapshot {
-                            #[cfg(any(test, feature = "testing"))]
-                            #[path = "../../🦀️.rs"]
-                            pub mod serde_oracle;
-                            #[cfg(any(test, feature = "testing"))]
-                            #[path = "../../../🧪️semantic-cache-codec/🦀️.rs"]
-                            pub mod semantic_cache_codec;
-                        }
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "../../../../../📥️import/🦀️.rs"]
                         mod component;

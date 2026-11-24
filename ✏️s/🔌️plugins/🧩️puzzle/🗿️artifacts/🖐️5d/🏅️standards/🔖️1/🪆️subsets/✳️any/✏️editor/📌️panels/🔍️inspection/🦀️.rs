@@ -134,25 +134,29 @@ fn patch_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, verb: &
     push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(value.to_string()), action))
 }
 
+/// ✅️ The localized yes/no reading of a flag row.
+fn flag_text(labels: &Puzzle5dLabels, pressed: bool) -> &str {
+    if pressed { labels.yes.as_str() } else { labels.no.as_str() }
+}
 /// 🙈️ One `setSelectionFlag` toggle row — flips `hidden`/`locked` on every id in `ids`. `value` is the
 /// state the click ASKS FOR, always the inverse of the row's current one.
-fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, ids: &[String], field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
+fn flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, labels: &Puzzle5dLabels, ids: &[String], field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector flag map admission failed"))?;
     for (key, value) in [("entity", text_value(PUZZLE5D_GRANULARITY_PART)?), ("flag", text_value(field)?), ("ids", id_list_value(ids)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector flag entry admission failed"))?;
     }
     let action = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setSelectionFlag", Some(UiValue::Map(builder.finish())))?;
-    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(flag_text(labels, pressed).to_owned()), action))
 }
 /// 🧊️ A target volume's own flag toggle — `setTargetVolumeFlag {flag, id, value}`, 5G's verb, because
 /// `setSelectionFlag` only ever writes the part slice. Keys ascend: `flag`, `id`, `value`.
-fn volume_flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, volume_id: &str, field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
+fn volume_flag_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &str, labels: &Puzzle5dLabels, volume_id: &str, field: &'static str, pressed: bool) -> UiAssemblyResult<()> {
     let mut builder = semio_plugin::UiMapBuilder::try_new().ok_or_else(|| error("puzzle5d inspector volume flag map admission failed"))?;
     for (key, value) in [("flag", text_value(field)?), ("id", text_value(volume_id)?), ("value", UiValue::Bool(!pressed))] {
         builder.push(key.to_owned(), value).map_err(|_| error("puzzle5d inspector volume flag entry admission failed"))?;
     }
     let action = ActionFactory::new(PUZZLE5D_PLAY_CONTROLLER_ID).action("setTargetVolumeFlag", Some(UiValue::Map(builder.finish())))?;
-    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(pressed.to_string()), action))
+    push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, Some(flag_text(labels, pressed).to_owned()), action))
 }
 //#endregion 🔖️Rows
 
@@ -171,8 +175,8 @@ fn part_fields(part: &Puzzle5dPart, document: &Puzzle5dDocument, ids: &[String],
     read_only(&mut fields, "part.orientation", labels.orientation.as_str(), vec4(part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])))?;
     read_only(&mut fields, "part.scale", labels.scale.as_str(), vec3(part_scale_json(part)))?;
     read_only(&mut fields, "part.grips", labels.grips.as_str(), part.grips.len())?;
-    flag_row(&mut fields, "part.hidden", labels.hidden.as_str(), ids, "hidden", part.part_2d.hidden.unwrap_or(false))?;
-    flag_row(&mut fields, "part.locked", labels.locked.as_str(), ids, "locked", part.part_2d.locked.unwrap_or(false))?;
+    flag_row(&mut fields, "part.hidden", labels.hidden.as_str(), labels, ids, "hidden", part.part_2d.hidden.unwrap_or(false))?;
+    flag_row(&mut fields, "part.locked", labels.locked.as_str(), labels, ids, "locked", part.part_2d.locked.unwrap_or(false))?;
     Ok(fields)
 }
 
@@ -211,8 +215,8 @@ fn target_volume_fields(volume: &Puzzle5dTargetVolume, labels: &Puzzle5dLabels) 
     read_only(&mut fields, "target-volume.scale", labels.scale.as_str(), vec3(target_volume_scale_json(volume)))?;
     let rect = target_volume_flat_rect(volume);
     read_only(&mut fields, "target-volume.flat", labels.flat_x.as_str(), format!("{}, {}, {}, {}", rect[0], rect[1], rect[2], rect[3]))?;
-    volume_flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), &volume.id, "hidden", volume.hidden)?;
-    volume_flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), &volume.id, "locked", volume.locked)?;
+    volume_flag_row(&mut fields, "target-volume.hidden", labels.hidden.as_str(), labels, &volume.id, "hidden", volume.hidden)?;
+    volume_flag_row(&mut fields, "target-volume.locked", labels.locked.as_str(), labels, &volume.id, "locked", volume.locked)?;
     Ok(fields)
 }
 

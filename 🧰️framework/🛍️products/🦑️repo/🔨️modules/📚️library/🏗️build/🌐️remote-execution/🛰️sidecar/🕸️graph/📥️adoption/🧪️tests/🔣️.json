@@ -109,22 +109,22 @@
       "admit": 0
     },
     {
-      "id": "busy",
+      "id": "not-ready-running-stage",
       "change": {
         "ready": false,
         "state": "running",
         "stage": "workspace"
       },
       "offset": 0,
-      "admit": 0
+      "admit": 1
     },
     {
-      "id": "inconsistent",
+      "id": "stage-recorded-while-ready",
       "change": {
         "stage": "workspace"
       },
       "offset": 0,
-      "admit": 0
+      "admit": 1
     },
     {
       "id": "malformed",

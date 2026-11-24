@@ -7,7 +7,7 @@ impl ToValue for PdfObject{
             Self::Null=>return V::Object(vec![("kind".into(),V::String("null".into()))]),
             Self::Bool(value)=>("bool",value.to_value()),Self::Int(value)=>("int",value.to_value()),Self::Real(value)=>("real",value.to_value()),
             Self::Text(text)=>return V::Object(vec![("kind".into(),V::String("text".into())),("value".into(),text.to_value())]),Self::Date(date)=>return V::Object(vec![("kind".into(),V::String("date".into())),("value".into(),date.to_value())]),Self::Str(bytes)=>("str",pack::value::bytes::to_value(bytes)),Self::Name(value)=>("name",value.to_value()),Self::Array(value)=>("array",value.to_value()),Self::Dict(value)=>("dict",value.to_value()),Self::Ref(value)=>("ref",value.to_value()),
-            Self::Stream{dict,data,filters}=>return V::Object(vec![("kind".into(),V::String("stream".into())),("dict".into(),dict.to_value()),("data".into(),pack::value::bytes::to_value(data)),("filters".into(),filters.to_value())]),
+            Self::Stream{dict,data,filters}=>return V::Object(vec![("kind".into(),V::String("stream".into())),("dict".into(),dict.to_value()),("data".into(),pack::value::bytes::to_value(&data.to_vec_owner())),("filters".into(),filters.to_value())]),
         };
         let mut fields=vec![("kind".into(),V::String(tag.into()))];match payload{V::Object(values)=>fields.extend(values),value=>fields.push(("value".into(),value))};V::Object(fields)
     }
@@ -23,7 +23,7 @@ impl ToValue for PdfObject{
                 Self::Str(bytes)=>cos_output_bytes(fields.get_mut(),"value",bytes,control)?,
                 Self::Real(value)=>{cos_output(fields.get_mut(),"negative",&value.negative,control)?;cos_output(fields.get_mut(),"coefficient",&value.coefficient,control)?;cos_output(fields.get_mut(),"scale",&value.scale,control)?;},
                 Self::Ref(value)=>{cos_output(fields.get_mut(),"num",&value.num,control)?;cos_output(fields.get_mut(),"gen",&value.gen,control)?;},
-                Self::Stream{dict,data,filters}=>{cos_output(fields.get_mut(),"dict",dict,control)?;cos_output_bytes(fields.get_mut(),"data",data,control)?;cos_output(fields.get_mut(),"filters",filters,control)?;},
+                Self::Stream{dict,data,filters}=>{cos_output(fields.get_mut(),"dict",dict,control)?;cos_output_paged_bytes(fields.get_mut(),"data",data,control)?;cos_output(fields.get_mut(),"filters",filters,control)?;},
             }
             Ok(V::Object(fields.take()))
         }))
@@ -66,7 +66,7 @@ impl FromValue for PdfObject{
             }
             "stream" => Self::Stream {
                 dict: Vec::<PdfDictEntry>::from_value(take_field("dict")?)?,
-                data: pack::value::bytes::from_value(take_field("data")?)?,
+                data: PdfStreamBytes::try_from_slice(&pack::value::bytes::from_value(take_field("data")?)?)?,
                 filters: Vec::<PdfStreamFilter>::from_value(take_field("filters")?)?,
             },
             _ => return Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unknown PDF COS object kind")),
@@ -92,7 +92,7 @@ impl FromValue for PdfObject{
                 "dict"=>Self::Dict(cos_owned::<Vec<PdfDictEntry>>(get("value")?,control)?.take()),
                 "real"=>{let negative=cos_owned::<bool>(get("negative")?,control)?;let coefficient=cos_owned::<String>(get("coefficient")?,control)?;let scale=cos_owned::<u32>(get("scale")?,control)?;Self::Real(PdfDecimal{negative:negative.take(),coefficient:coefficient.take(),scale:scale.take()})},
                 "ref"=>{let num=cos_owned::<u32>(get("num")?,control)?;let gen=cos_owned::<u16>(get("gen")?,control)?;Self::Ref(ObjRef{num:num.take(),gen:gen.take()})},
-                "stream"=>{let dict=cos_owned::<Vec<PdfDictEntry>>(get("dict")?,control)?;let data=cos_bytes(get("data")?,control)?;control.step()?;let filters=cos_owned::<Vec<PdfStreamFilter>>(get("filters")?,control)?;Self::Stream{dict:dict.take(),data,filters:filters.take()}},
+                "stream"=>{let dict=cos_owned::<Vec<PdfDictEntry>>(get("dict")?,control)?;let data=cos_stream_bytes(get("data")?,control)?;control.step()?;let filters=cos_owned::<Vec<PdfStreamFilter>>(get("filters")?,control)?;Self::Stream{dict:dict.take(),data,filters:filters.take()}},
                 _=>unreachable!(),
             })
         }))
@@ -116,6 +116,16 @@ pub fn document_id_from_value_controlled(value:&V,control:&mut semio_framework_v
 
 fn cos_output<T:ToValue+?Sized>(fields:&mut Vec<(String,V)>,key:&str,value:&T,control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
     let key_owned=control.copy_text(key)?;let value=value.to_value_controlled(control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()
+}
+fn cos_output_paged_bytes(fields:&mut Vec<(String,V)>,key:&str,bytes:&PdfStreamBytes,control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
+    let key_owned=control.copy_text(key)?;let value=V::Bytes(bytes.to_vec_owner_controlled(control).map_err(|error|error.under(key))?);fields.push((key_owned,value));control.step()
+}
+fn cos_stream_bytes(value:&V,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PdfStreamBytes,E>{
+    match value{
+        V::Bytes(bytes)=>control.scoped_stage(|control|{control.begin_stage(bytes.len())?;let mut output=PdfStreamBytes::default();for byte in bytes{output.push_decoded(*byte,control)?;control.step()?;}Ok(output)}),
+        V::Array(_)=>PdfStreamBytes::try_from_slice(&Vec::<u8>::from_value_controlled(value,control)?),
+        _=>Err(E::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF intrinsic octet string requires bytes or canonical octets")),
+    }
 }
 fn cos_output_bytes(fields:&mut Vec<(String,V)>,key:&str,bytes:&[u8],control:&mut pack::value::NativeEncodeControl<'_>)->Result<(),E>{
     let key_owned=control.copy_text(key)?;let value=pack::value::bytes::to_value_controlled(bytes,control).map_err(|error|error.under(key))?;fields.push((key_owned,value));control.step()

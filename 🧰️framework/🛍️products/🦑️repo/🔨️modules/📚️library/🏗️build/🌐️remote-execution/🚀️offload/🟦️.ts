@@ -10,16 +10,16 @@ import {executeOffloadRidingThroughV1,offloadExecuteBudgetMillisecondsV1,readOff
 import {classifyOffloadExitV1,offloadIncompleteDetailV1} from "./🩺️failure/🟦️.ts";
 import {resolveRemoteExecutionEndpointV1} from "../🧭️endpoint/🟦️.ts";
 import {offloadRealTextV1,planOffloadV1} from "./🗺️paths/🟦️.ts";
-import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
+import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadKilledPeakMegabytesV1,offloadPeakMegabytesV1,offloadPinV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
 import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
 import {bumpOffloadCountersV1} from "./📊️counters/🟦️.ts";
-import {readOffloadMemoV1,readUnitCostV1,writeOffloadMemoV1} from "./🚦️admission/🟦️.ts";
+import {readOffloadMemoV1,readUnitCostV1,readUnitExpenseV1,readUnitPeakV1,writeOffloadMemoV1,writeOffloadOverheadV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
 import {releaseImplicitTokenV1} from "./🎟️token/🟦️.ts";
 import {offloadSdkIdentityV1,rustcVersionTextV1} from "./🧰️toolchain/🟦️.ts";
 import {COMMAND_POLICY_V1,commandProgramV1,commandTextsV1,commandToolPeakMegabytesV1,commandToolPropertyV1,commandToolSourceV1} from "./🧰️command/📐️policy/🟦️.ts";
 
 export {offloadModeV1,offloadPinV1,offloadSettingV1,OFFLOAD_POLICY_V1} from "./📐️policy/🟦️.ts";
-export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readUnitCostV1,writeUnitCostV1,offloadFanOutJobsV1,offloadGateV1} from "./🚦️admission/🟦️.ts";
+export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readOffloadOverheadV1,writeOffloadOverheadV1,readUnitCostV1,writeUnitCostV1,readUnitPeakV1,writeUnitPeakV1,readFamilyPeakV1,readFamilyCostV1,readUnitExpenseV1,awaitFleetFitV1,offloadFanOutJobsV1,offloadGateV1} from "./🚦️admission/🟦️.ts";
 export {detectWorkerRustcV1} from "./🧰️toolchain/🟦️.ts";
 export {COMMAND_POLICY_V1,commandProgramV1,commandToolKeyV1,commandToolPropertyV1} from "./🧰️command/📐️policy/🟦️.ts";
 
@@ -52,9 +52,14 @@ export function emitOffloadProgressV1(root:string,text:string):void{
  try{const directory=join(root,"x");mkdirSync(directory,{recursive:true});appendFileSync(join(directory,"offload.progress"),text+"\n");}catch{}
 }
 
+/** 🎟️ Gives the implicit job token back to the pool of the build while a unit runs on a worker, unless the build's pool is already sized for the fleet (`SEMIO_UNIT_CACHE_LIGHT_SLOTS` is set: its tokens count the units that are away, the light slots bound them, and taking a token back at the end would wait behind the units that started in the meantime for as long as `tokenWaitMilliseconds`). */
+function tokenLeaseV1(environment:Environment):ReturnType<typeof releaseImplicitTokenV1>{
+ return Number(environment.SEMIO_UNIT_CACHE_LIGHT_SLOTS??0)>0?undefined:releaseImplicitTokenV1(environment);
+}
+
 /** 🧾️ The bookkeeping of one offload attempt, the same for a rustc unit and a command: the clock, the time marks and byte counts of its phases, the local answer with its reason and the settling of an outcome (event line, progress line, machine counters). `describe` renders the progress line of a kind in both languages; without it the line is the rustc unit's. */
 function offloadRecorderV1(input:Readonly<{root:string;lane?:string;crate:string;key:string|null;environment:Environment;describe?:(kind:"offloaded"|"declined"|"fallback",variables:Readonly<Record<string,string|number>>)=>string}>){
- const marks:number[]=[],bytes:{shipped?:number;uploaded?:number;returned?:number}={},started=Date.now(),{environment}=input,pin=offloadPinV1(environment),local=(reason:OffloadReasonV1,detail=""):OffloadOutcomeV1=>({kind:"local",reason,detail});
+ const marks:number[]=[],bytes:{shipped?:number;uploaded?:number;returned?:number;worker?:string}={},started=Date.now(),{environment}=input,pin=offloadPinV1(environment),local=(reason:OffloadReasonV1,detail=""):OffloadOutcomeV1=>({kind:"local",reason,detail});
  const pinned=new Set<OffloadReasonV1>(["no-idle-machine","queue-timeout","infrastructure","incomplete-inputs","worker-policy","path-dependent-output","unreadable-input","inputs-too-large","no-endpoint","no-credential","toolchain-missing"]);
  const line=(kind:"offloaded"|"declined"|"fallback",variables:Readonly<Record<string,string|number>>):string|undefined=>input.describe?.(kind,variables);
  const settle=(given:OffloadOutcomeV1,origin?:string):OffloadOutcomeV1=>{
@@ -68,7 +73,7 @@ function offloadRecorderV1(input:Readonly<{root:string;lane?:string;crate:string
   if(workspace_!==undefined&&outcome.kind==="local"&&outcome.reason==="infrastructure"){const cause=/^deadline\b/u.test(outcome.detail)?"deadline":outcome.detail==="operation lost"?"operation-lost":/^silent\b/u.test(outcome.detail)?"silent":undefined;if(cause!==undefined)bumpOffloadCountersV1(workspace_,{},cause);}
   if(outcome.kind==="done"){
    const shown=origin??outcome.origin,progress=line("offloaded",{crate:input.crate,origin:shown,milliseconds:Math.round(outcome.milliseconds)});
-   emitOffloadEventV1(input.root,{...input.lane?{lane:input.lane}:{},kind:"offload-run",crate:input.crate,key:input.key,origin:shown,milliseconds:outcome.milliseconds,...bytes.shipped!==undefined?{bytesShipped:bytes.shipped,bytesUploaded:bytes.uploaded??0,bytesReturned:bytes.returned??0}:{},...marks.length>=3?{detail:`plan ${marks[0]!-started} ms, upload ${marks[1]!-marks[0]!} ms, queue and execute ${marks[2]!-marks[1]!} ms, download and write ${Date.now()-marks[2]!} ms`}:{},...progress===undefined?{}:{progress}});
+   emitOffloadEventV1(input.root,{...input.lane?{lane:input.lane}:{},kind:"offload-run",crate:input.crate,key:input.key,origin:shown,milliseconds:outcome.milliseconds,...bytes.shipped!==undefined?{bytesShipped:bytes.shipped,bytesUploaded:bytes.uploaded??0,bytesReturned:bytes.returned??0}:{},...marks.length>=3?{detail:`plan ${marks[0]!-started} ms, upload ${marks[1]!-marks[0]!} ms, queue and execute ${marks[2]!-marks[1]!} ms, download and write ${Date.now()-marks[2]!} ms${bytes.worker===undefined?"":", "+bytes.worker}`}:{},...progress===undefined?{}:{progress}});
   }
   return outcome;
  };
@@ -118,7 +123,7 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   const toolchain:OffloadToolchainV1={...toolchainParsed,targets:[]};
   const sdk=offloadLinksNativelyV1(offloadCrateTypesOfV1(plan.arguments),plan.target)?offloadSdkIdentityV1(environment):undefined;
   if(sdk===undefined&&offloadLinksNativelyV1(offloadCrateTypesOfV1(plan.arguments),plan.target)&&process.platform==="darwin")return settle(local("not-portable","the SDK of this link is unknown"));
-  const types=offloadCrateTypesOfV1(plan.arguments),peak=input.peakMegabytes??offloadPeakMegabytesV1(types,plan.target),platform=offloadPlatformV1(remoteExecutionHostPropertiesV1(),toolchain,plan.target,(workspace===undefined?undefined:remoteExecutionOriginV1(workspace,environment)),peak,{queue,...pin===undefined?{}:{pin},...sdk===undefined?{}:{sdk}}),cancelled=input.signal??new AbortController().signal;
+  const types=offloadCrateTypesOfV1(plan.arguments),linked=offloadPeakMegabytesV1(types,plan.target)>0,learned=readUnitPeakV1(input.root,input.crate),peak=input.peakMegabytes??readUnitExpenseV1(input.root,input.crate,types,plan.target).peak,platform=offloadPlatformV1(remoteExecutionHostPropertiesV1(),toolchain,plan.target,(workspace===undefined?undefined:remoteExecutionOriginV1(workspace,environment)),peak,{queue,...pin===undefined?{}:{pin},...sdk===undefined?{}:{sdk}}),cancelled=input.signal??new AbortController().signal;
   marks.push(Date.now());
   const phase=await runBoundedOffloadPhaseV1(signal=>buildOffloadActionV1({plan,content,instance,platform,signal,...input.digest?{digest:input.digest}:{}}),{cancelled,milliseconds:ports?.uploadMilliseconds??policy.timeouts.uploadMilliseconds});
   if(phase.kind==="timeout")return settle(local("infrastructure","upload"));
@@ -126,27 +131,35 @@ export async function offloadRustcUnitV1(input:Readonly<{args:readonly string[];
   const built=phase.value;
   if("declined" in built)return settle(local(built.declined,built.detail));
   marks.push(Date.now());bytes.shipped=built.bytes;bytes.uploaded=built.uploaded;
-  const lease=releaseImplicitTokenV1(environment);
+  const lease=tokenLeaseV1(environment);let tokenMilliseconds=0;
   let execution,seen:OffloadStageV1|undefined;
   const staged=(stage:OffloadStageV1):void=>{if(stage===seen)return;seen=stage;emitOffloadStageV1(input.root,input.crate,stage);try{input.onStage?.(stage);}catch{}};
-  try{execution=await executeOffloadRidingThroughV1({deadlineMilliseconds:offloadDeadlineMillisecondsV1(readUnitCostV1(input.root,input.crate),peak>0),executeMilliseconds:offloadExecuteBudgetMillisecondsV1(offloadActionSecondsV1(types,plan.target))+waitMs,...queue?{queueMilliseconds:waitMs}:{},endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
-  finally{await lease?.reacquire();lease?.close();}
+  try{execution=await executeOffloadRidingThroughV1({deadlineMilliseconds:offloadDeadlineMillisecondsV1(readUnitCostV1(input.root,input.crate),linked),executeMilliseconds:offloadExecuteBudgetMillisecondsV1(offloadActionSecondsV1(types,plan.target))+waitMs,...queue?{queueMilliseconds:waitMs}:{},endpoint,token,...(workspace===undefined||token!==undefined?{}:{sign:(method,content)=>fleetHeadersV1(workspace,"submit","execution","POST",`http://x/${method}`,content)}),instance,action:built.digest,signal:cancelled,onStage:staged},policy.timeouts.rideThroughMilliseconds);}
+  finally{const waiting=Date.now();await lease?.reacquire();tokenMilliseconds=Date.now()-waiting;lease?.close();}
   if(execution.kind==="declined"){
-   if(!queue&&peak<=0&&(execution.reason==="no-idle-machine"||execution.reason==="queue-timeout"||execution.reason==="worker-policy"))writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:execution.reason,detail:execution.detail.slice(0,120)});
+   if(!queue&&!linked&&(execution.reason==="no-idle-machine"||execution.reason==="queue-timeout"||execution.reason==="worker-policy"))writeOffloadMemoV1(input.root,"declined",{atMs:Date.now(),reason:execution.reason,detail:execution.detail.slice(0,120)});
    return settle(local(execution.reason,execution.detail));
   }
   const downloading=AbortSignal.any([cancelled,AbortSignal.timeout(policy.timeouts.downloadMilliseconds)]);
   marks.push(Date.now());
   const outputs=await readOffloadOutputsV1(content,instance,execution.actionResult,policy.virtual.out,[policy.virtual.root],downloading);
   bytes.returned=[...outputs.directory.values()].reduce((sum,file)=>sum+file.digest.size_bytes,0)+outputs.stdout.length+outputs.stderr.length;
+  const phases=outputs.phases;
+  if(phases!==undefined)bytes.worker=`worker fetch ${phases.fetchMilliseconds} ms, run ${phases.executeMilliseconds} ms, upload ${phases.uploadMilliseconds} ms, away from it ${Math.max(0,marks[2]!-marks[1]!-phases.workerMilliseconds)} ms of which token wait ${tokenMilliseconds} ms${outputs.threads===undefined?"":`, ${outputs.threads} codegen threads`}`;
   const root_=Buffer.from(outputs.files.get(policy.virtual.root)??new Uint8Array(0)).toString("utf8")||undefined,translate=(bytes:Buffer):string=>offloadRealTextV1(bytes.toString("utf8"),plan.mappings,root_,cwd);
   const stdout=translate(outputs.stdout),stderr=translate(outputs.stderr);
   if(outputs.exitCode!==0){
    const kind=classifyOffloadExitV1({exitCode:outputs.exitCode,stderr});
    if(kind==="incomplete-inputs")return settle(local("incomplete-inputs",offloadIncompleteDetailV1(stderr)));
-   if(kind==="infrastructure")return settle(local("infrastructure",`exit ${outputs.exitCode}`));
+   if(kind==="infrastructure"){
+    const taught=offloadKilledPeakMegabytesV1(outputs.exitCode,peak,learned);
+    if(taught!==undefined){writeUnitPeakV1(input.root,input.crate,taught,true);return settle(local("infrastructure",`exit ${outputs.exitCode}: killed on ${execution.origin} with ${peak} MB placed, now ${taught} MB`));}
+    return settle(local("infrastructure",`exit ${outputs.exitCode}`));
+   }
    return settle({kind:"done",status:outputs.exitCode,stdout,stderr,origin:execution.origin,milliseconds:Date.now()-started,cached:execution.cached});
   }
+  if(outputs.peakMegabytes!==undefined)writeUnitPeakV1(input.root,input.crate,outputs.peakMegabytes);
+  if(phases!==undefined)writeOffloadOverheadV1(input.root,Math.max(0,Date.now()-started-phases.executeMilliseconds));
   const outDir=resolve(cwd,plan.outDir),marker=root_===undefined?undefined:Buffer.from(root_);
   let written:readonly string[]=[];
   try{
@@ -202,7 +215,7 @@ export async function offloadCommandV1(input:OffloadCommandInputV1):Promise<Offl
   const built=phase.value;
   if("declined" in built)return settle(local(built.declined,built.detail));
   marks.push(Date.now());bytes.shipped=built.bytes;bytes.uploaded=built.uploaded;
-  const lease=releaseImplicitTokenV1(environment);
+  const lease=tokenLeaseV1(environment);
   let execution,seen:OffloadStageV1|undefined;
   const staged=(stage:OffloadStageV1):void=>{
    if(stage===seen)return;seen=stage;

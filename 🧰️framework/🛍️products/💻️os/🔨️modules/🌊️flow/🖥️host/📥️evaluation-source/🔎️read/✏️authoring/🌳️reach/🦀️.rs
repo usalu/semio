@@ -45,4 +45,4 @@ impl ReachWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.fields.visited.capacity()==0&&self.fields.stack.capacity()==0&&self.retirement.is_empty()&&self.binding.is_none()&&self.origin.is_none()}
 }
-impl Drop for ReachWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original reachability requires terminal stack closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ReachWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original reachability requires terminal stack closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

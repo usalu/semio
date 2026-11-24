@@ -8157,8 +8157,7 @@
               }
             ],
             "capStart": true,
-            "capEnd": true,
-            "slender": true
+            "capEnd": true
           },
           {
             "id": "rail-b",
@@ -8242,8 +8241,7 @@
               }
             ],
             "capStart": true,
-            "capEnd": true,
-            "slender": true
+            "capEnd": true
           },
           {
             "id": "post-a-run-1",

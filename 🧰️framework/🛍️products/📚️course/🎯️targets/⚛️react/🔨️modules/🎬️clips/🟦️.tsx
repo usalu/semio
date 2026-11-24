@@ -7,6 +7,7 @@ import { createContext, useContext, useId, type ReactElement, type ReactNode } f
 import type { Clip } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { BodyButton, CELL, CardIcon, CardLink, CardSection, CourseCard, Glyph, PageFrame, RowLink } from "../🪟️chrome/🟦️.tsx";
+import { UnavailableTint } from "../🔓️access/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/👁️view/🟦️.ts";
 import { HOME_PAGES } from "../🧭️session/🧮️state/🟦️.ts";
 import type { CourseSession } from "../🧭️session/🟦️.ts";
@@ -26,12 +27,14 @@ export function clipUrl(clip: Clip, locale: CourseLocale): string | undefined {
   return clip.urls?.[locale];
 }
 
-function Poster(props: { readonly clip: Clip; readonly enabled?: boolean }): ReactElement {
+/** 🖼️ The poster of a clip. `fill` takes the whole card instead of the poster's own shape, showing the whole picture: it is edgeless content (`data-window-content-layout`), so it reaches every edge of the card and the card's chips lie on top of it; `available` false keeps the picture loaded behind the tint every content not available yet wears. */
+function Poster(props: { readonly clip: Clip; readonly enabled?: boolean; readonly fill?: boolean; readonly available?: boolean }): ReactElement {
   const posters = useContext(ClipPostersContext);
   const url = props.enabled === false ? undefined : posters[props.clip.poster.file];
   return (
-    <div data-clip-poster="" {...CELL} className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-background">
-      {url === undefined ? <Glyph emoji={props.clip.emoji} className="text-2xl" /> : <img src={url} alt="" width={640} height={360} loading="lazy" decoding="async" className="size-full object-cover" />}
+    <div data-clip-poster="" data-window-content-layout={props.fill ? "edgeless" : undefined} data-unavailable={props.available === false ? "" : undefined} {...CELL} className={`relative flex w-full items-center justify-center overflow-hidden bg-background ${props.fill ? "min-h-0 flex-1" : "aspect-video"}`}>
+      {url === undefined ? <Glyph emoji={props.clip.emoji} className="text-2xl" /> : <img src={url} alt="" width={640} height={360} loading="lazy" decoding="async" className={props.fill ? "size-full object-contain" : "size-full object-cover"} />}
+      {props.available === false ? <UnavailableTint /> : null}
     </div>
   );
 }
@@ -40,17 +43,17 @@ function WatchRow(props: { readonly clip: Clip; readonly locale: CourseLocale; r
   const { clip, locale, text } = props;
   const url = clipUrl(clip, locale);
   if (url === undefined) return <CardSection><span data-clip-state="soon" className="inline-flex items-center gap-single text-xs font-semibold text-muted-foreground"><CardIcon icon="clock" />{text("course.clips.soon")}</span></CardSection>;
-  return <RowLink primary external href={url} label={text("course.clips.watchTitle", { title: localized(clip.title, locale) })}>{text("course.clips.watch")}</RowLink>;
+  return <RowLink icon="play" primary external href={url} label={text("course.clips.watchTitle", { title: localized(clip.title, locale) })}>{text("course.clips.watch")}</RowLink>;
 }
 
 function Watch(props: { readonly clip: Clip; readonly locale: CourseLocale; readonly text: CourseText }): ReactElement {
   const { clip, locale, text } = props;
   const url = clipUrl(clip, locale);
   if (url === undefined) return <span data-clip-state="soon" className="inline-flex items-center gap-single text-xs font-semibold text-muted-foreground"><CardIcon icon="clock" />{text("course.clips.soon")}</span>;
-  return <CardLink primary external href={url} label={text("course.clips.watchTitle", { title: localized(clip.title, locale) })}>{text("course.clips.watch")}</CardLink>;
+  return <CardLink icon="play" primary external href={url} label={text("course.clips.watchTitle", { title: localized(clip.title, locale) })}>{text("course.clips.watch")}</CardLink>;
 }
 
-/** 🃏️ The card of a clip on the clips page: its poster, description and either the link to the hosted clip or that it is coming soon; its heading opens the clip's page (`#<clip>`). */
+/** 🃏️ The card of a clip on the clips page: its poster filling the whole card, with the title chip and the chip that links to the hosted clip or says it is coming soon on top of it, nothing else; a clip not hosted yet shows its poster tinted. Its heading opens the clip's page (`#<clip>`), which holds the description. */
 export function ClipCardView(props: { readonly clip: Clip; readonly locale: CourseLocale; readonly text: CourseText; readonly revealed?: boolean; readonly onOpen?: () => void; readonly showPoster?: boolean }): ReactElement {
   const { clip, locale, text, revealed, onOpen } = props;
   const id = useId();
@@ -67,10 +70,7 @@ export function ClipCardView(props: { readonly clip: Clip; readonly locale: Cour
       title={localized(clip.title, locale)}
       footerRight={<Watch clip={clip} locale={locale} text={text} />}
     >
-      <Poster clip={clip} enabled={props.showPoster} />
-      <CardSection>
-        <p className="m-0 text-xs leading-normal text-foreground">{localized(clip.description, locale)}</p>
-      </CardSection>
+      <Poster clip={clip} enabled={props.showPoster} fill available={clipUrl(clip, locale) !== undefined} />
     </CourseCard>
   );
 }
@@ -85,12 +85,11 @@ export function ClipPage(props: { readonly clip: Clip; readonly session: CourseS
         <CardSection>
           <p className="m-0 text-sm leading-normal">{localized(clip.description, locale)}</p>
         </CardSection>
-        <BodyButton row onClick={() => session.open({ screen: "home", page: HOME_PAGES.clips })}>
-          <CardIcon icon="arrow-left" />
+        <BodyButton icon="arrow-left" row onClick={() => session.open({ screen: "home", page: HOME_PAGES.clips })}>
           {text("course.clips.back")}
         </BodyButton>
         <WatchRow clip={clip} locale={locale} text={text} />
-        <Poster clip={clip} />
+        <Poster clip={clip} available={clipUrl(clip, locale) !== undefined} />
       </CourseCard>
     </PageFrame>
   );

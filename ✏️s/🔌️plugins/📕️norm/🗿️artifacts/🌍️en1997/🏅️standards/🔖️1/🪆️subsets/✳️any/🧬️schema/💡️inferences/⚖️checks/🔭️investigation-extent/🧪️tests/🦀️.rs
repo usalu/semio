@@ -43,12 +43,12 @@ fn the_widest_gap_is_the_largest_nearest_neighbour_distance() {
     assert_eq!(widest_gap(&points[..1]), None);
 }
 
-/// 📏️ GK2 allows 40 m: a gap of 40 m is utilisation 1 and passes, 50 m fails with the advice to add a point at the midpoint; GK3 allows 25 m, so 40 m fails there (limits are the unverified registry rows).
+/// 📏️ GK2 allows 40 m: a gap of 40 m is utilisation 1 and would pass, but the limit is an unverified registry row, so the verdict is an unverified basis, not a pass; 50 m fails with the advice to add a point at the midpoint; GK3 allows 25 m, so 40 m is utilisation 1.6.
 #[test]
 fn the_spacing_check_follows_the_category_limit_and_advises_a_point_at_the_midpoint() {
     let ok = extent(vec![point("a", 0.0, 0.0, 20.0), point("b", 30.0, 0.0, 20.0), point("c", 30.0, 40.0, 20.0)], 2);
     let spacing = find(&ok, "en1997.gi-01.spacing");
-    assert_eq!(spacing.status, CheckStatus::Pass);
+    assert_eq!(spacing.status, CheckStatus::UnverifiedBasis);
     assert!((spacing.utilization - 1.0).abs() < 1e-12 && spacing.subject.entity_id == "c");
     assert!(spacing.ndps.iter().any(|id| id == "ndp.en1997.2.4.2.spacing.gc12.max"));
     let wide = extent(vec![point("a", 0.0, 0.0, 20.0), point("b", 30.0, 0.0, 20.0), point("c", 30.0, 50.0, 20.0)], 2);
@@ -86,7 +86,7 @@ fn the_pile_depth_check_asks_for_the_depth_below_the_pile_base_and_deepens_the_d
     assert_eq!(find(&deep, "en1997.gi-01.pile.pile-P1").subject.entity_id, "pile-P1");
 }
 
-/// 🔩️ An entered N_kt of 17 lies in the range 15…20; 25 and 12 are warnings that set the nearest end; no entered value gives no check.
+/// 🔩️ An entered N_kt of 17 lies in the range 15…20; 25 and 12 would be warnings that set the nearest end but rest on an unverified registry range, so they read as an unverified basis; no entered value gives no check.
 #[test]
 fn an_entered_cone_factor_outside_the_plausible_range_is_a_warning_with_the_nearest_end() {
     let layer = |nkt: f64| SoilLayer { cpt_nkt: nkt, ..compliant_demo().layers[0].clone() };
@@ -95,7 +95,7 @@ fn an_entered_cone_factor_outside_the_plausible_range_is_a_warning_with_the_near
     assert_eq!((inside.status, inside.remedies.len()), (CheckStatus::Info, 0));
     for (value, nearest) in [(25.0, 20.0), (12.0, 15.0)] {
         let check = cone_factor_check(&layer(value), AnnexChoice::De).unwrap();
-        assert_eq!(check.status, CheckStatus::Warning);
+        assert_eq!(check.status, CheckStatus::UnverifiedBasis);
         assert_eq!((check.remedies[0].bound, check.remedies[0].required.value), (RemedyBound::Exactly, nearest));
         assert!(check.remedies[0].target.path.ends_with(".cptNkt") && check.ndps.iter().any(|id| id == "ndp.en1997.2.cpt-nkt-range.max"));
     }

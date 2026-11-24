@@ -2,7 +2,7 @@
 
 use semio_framework_io_base64::{base64_standard_decode_controlled, base64_standard_encode_controlled, Base64Control};
 use semio_plugin::Fault;
-use semio_s_artifact_stdio_pdf_editor_document::{cancelled, fault, none_if_empty, refuse};
+use semio_s_artifact_stdio_pdf_editor_document::{cancelled, fault, none_if_empty, page_of, refuse, resolve_page};
 use semio_s_artifact_stdio_pdf_io_export::standards::v1_7::subsets::base::io::{export::encode_pdf, import::decode_pdf, mutation_bridge::apply_pdf_mutation};
 use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::schema::mutations::{InsertAnnotation, InsertPage, PdfMutation, RemoveCatalogEntry, RemoveTrailerEntry, SetCatalogEntry, SetInfo, SetTrailerEntry, SetViewerPreferences, RemoveNamedDestination, ReplacePage, SetNamedDestination, SetOutlines, SetAcroForm, SetAnnotation, SetColorSpace, SetExtGState, SetFont, SetForm, SetImage, SetPattern, SetProperties, SetShading};
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::{
@@ -81,7 +81,7 @@ fn ink_of(extra: &str) -> Result<(Vec<Vec<f64>>, PdfRect), Fault> {
 
 /// 📌 Creates one annotation (note, highlight, underline, strike-out, ink or link) at the end of the page's annotation list; see [`InsertAnnotation`].
 pub fn create_annotation(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, extra: &str, x: f64, y: f64, width: f64, height: f64, color: [f64; 3]) -> Result<Vec<PdfMutation>, Fault> {
-    let target = snapshot.pages.get(page).ok_or_else(|| fault(format!("pdf page {page} does not exist")))?;
+    let target = page_of(snapshot, page)?;
     let tinted = |fallback: [f64; 3]| (if color == [0.0; 3] { fallback } else { color }).to_vec();
     let mut annotation = match kind {
         "note" => {
@@ -114,8 +114,8 @@ pub fn create_annotation(snapshot: &PdfSnapshot, page: usize, kind: &str, text: 
         "link" => {
             let mut link = PdfAnnotation::link(rect_of(x, y, width, height)?, text);
             if let Some(number) = text.strip_prefix("page:") {
-                let destination = number.trim().parse::<usize>().ok().filter(|number| (1..=snapshot.pages.len()).contains(number)).ok_or_else(|| fault("a page link needs an existing page number"))?;
-                link.kind = PdfAnnotationKind::Link { action: None, destination: Some(PdfDestination::Page { page: (destination - 1) as u32, fit: PdfDestinationFit::Fit }), highlight: None, quad_points: Vec::new() };
+                let destination = resolve_page(snapshot.pages.len(), number.trim().parse::<u64>().map_err(|_| fault("a page link needs an existing page number"))?)?;
+                link.kind = PdfAnnotationKind::Link { action: None, destination: Some(PdfDestination::Page { page: destination as u32, fit: PdfDestinationFit::Fit }), highlight: None, quad_points: Vec::new() };
             } else if text.is_empty() {
                 return Err(fault("a link needs an address or page:N"));
             }
@@ -1011,11 +1011,16 @@ pub struct Fields {
     pub height: f64,
 }
 
-pub fn fields(payload: &str) -> Result<Fields, Fault> {
+/// 🧾 Reads the retained work's payload; the one-based page number it carries becomes the page index among `slots`.
+pub fn fields(payload: &str, slots: usize) -> Result<Fields, Fault> {
     let value: serde_json::Value = serde_json::from_str(payload).map_err(|error| fault(error.to_string()))?;
     let text = |key: &str| value.get(key).and_then(serde_json::Value::as_str).unwrap_or("").to_string();
     let number = |key: &str| value.get(key).and_then(serde_json::Value::as_f64).unwrap_or(0.0);
-    Ok(Fields { page: number("page") as usize, text: text("text"), extra: text("extra"), width: number("width"), height: number("height") })
+    let page = match value.get("page").and_then(serde_json::Value::as_u64) {
+        Some(page) => resolve_page(slots, page)?,
+        None => 0,
+    };
+    Ok(Fields { page, text: text("text"), extra: text("extra"), width: number("width"), height: number("height") })
 }
 
 /// ✂️ Extracts each `;`-separated page selection into its own PDF download.
@@ -1027,8 +1032,8 @@ pub fn extract_effects(snapshot: &PdfSnapshot, selections: &str) -> Result<Vec<s
     groups.iter().enumerate().map(|(number, group)| download_effect(&extract_file_name(number, group), &extract_pdf(snapshot, &parse_page_selection(group, snapshot.pages.len())?)?)).collect()
 }
 
-/// 📥 Asks the host for a PDF and re-dispatches `action` with its data URL and `page`.
-pub fn pick_source_effect(action: &str, page: usize, selection: &str) -> semio_plugin::Effect {
+/// 📥 Asks the host for a PDF and re-dispatches `action` with its data URL and the one-based page number `page`.
+pub fn pick_source_effect(action: &str, page: u64, selection: &str) -> semio_plugin::Effect {
     semio_plugin::Effect::RequestFileOpen {
         req: semio_plugin::RequestId(0x5044_4650),
         accept: "application/pdf,.pdf".into(),
@@ -1049,7 +1054,7 @@ pub fn merge_document(snapshot: &PdfSnapshot, page: usize, payload: &str, select
 
 /// 🪄 Replaces page `page` with a blank page, or with one page of the PDF in `payload`.
 pub fn replace_page_with(snapshot: &PdfSnapshot, page: usize, payload: &str, selection: &str, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
-    let existing = snapshot.pages.get(page).ok_or_else(|| fault(format!("pdf page {page} does not exist")))?;
+    let existing = page_of(snapshot, page)?;
     if payload.is_empty() {
         let (width, height) = (if width > 0.0 { width } else { existing.width() }, if height > 0.0 { height } else { existing.height() });
         return Ok(vec![PdfMutation::ReplacePage(ReplacePage { index: page, page: PdfPage::new(width, height) })]);
@@ -1166,7 +1171,7 @@ impl<A: ArtifactApp<Snapshot = PdfSnapshot, Mutation = PdfMutation>> ArtifactCom
         cx.consume_fuel(UNITS as u64);
         let snapshot = input.snapshot;
         let outcome: Result<ArtifactCommandWorkStep<A>, semio_plugin::Fault> = (|| {
-            let Fields { page, text, extra, width, height } = fields(payload)?;
+            let Fields { page, text, extra, width, height } = fields(payload, snapshot.pages.len() + usize::from(self.tool != "replace-page"))?;
             if self.job.is_none() {
                 self.job = Some(match self.tool {
                     "extract-pages" => Job::Extract { groups: extra.split(';').map(str::trim).filter(|group| !group.is_empty()).map(str::to_string).enumerate().collect(), current: None, effects: Vec::new() },

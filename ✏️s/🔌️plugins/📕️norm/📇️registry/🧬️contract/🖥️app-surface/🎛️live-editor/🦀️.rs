@@ -36,6 +36,12 @@ pub use viewer_surface::*;
 pub mod retained_disposition_oracle;
 //#endregion 🧵️RetainedDispositionOracle
 
+/// 🏟️ The UI arena registration a law holds while it builds and projects UI nodes: the arena refuses a node built outside a registered lifetime, and a norm editor's own test crate does not depend on the UI values crate.
+#[cfg(any(test, feature = "compliance-testing"))]
+pub fn law_ui_arena() -> semio_ui_contract_values::testkit::UiArenaFixture {
+    semio_ui_contract_values::testkit::UiArenaFixture::new()
+}
+
 #[cfg(any(test, feature = "compliance-testing"))]
 #[path = "../🧪️tests/🔬️live-acceptance/🦀️.rs"]
 mod live_acceptance;

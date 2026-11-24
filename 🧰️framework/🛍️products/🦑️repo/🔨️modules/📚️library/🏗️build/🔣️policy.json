@@ -43,6 +43,7 @@
       "maximumActionResultBytes": 4194304,
       "maintenanceSeconds": 300,
       "blobSharePercent": 50,
+      "graph": { "sharePercent": 10, "supersedeGraceSeconds": 1800 },
       "graceSeconds": 600,
       "staleness": {
         "mode": "dry-run",
@@ -561,7 +562,8 @@
       "refusalCooldownSeconds": 10,
       "keepAliveSeconds": 5,
       "cancelGraceSeconds": 20,
-      "stuckSeconds": 600
+      "stuckSeconds": 600,
+      "chargeRampSeconds": 120
     },
     "worker": {
       "concurrency": 0,
@@ -581,6 +583,11 @@
         "reserveGigabytes": 0.5,
         "hostReserveGigabytes": 3,
         "perActionGigabytes": 0.5
+      },
+      "codegen": {
+        "maximumThreads": 8,
+        "reserveCores": 1,
+        "extraMegabytesPerThread": 512
       }
     }
   }

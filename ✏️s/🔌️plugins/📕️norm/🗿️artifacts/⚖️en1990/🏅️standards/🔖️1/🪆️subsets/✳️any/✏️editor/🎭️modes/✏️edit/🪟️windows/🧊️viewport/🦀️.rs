@@ -73,7 +73,4 @@ pub fn render_with(document: &En1990Snapshot, report: &CheckReport, selection: &
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

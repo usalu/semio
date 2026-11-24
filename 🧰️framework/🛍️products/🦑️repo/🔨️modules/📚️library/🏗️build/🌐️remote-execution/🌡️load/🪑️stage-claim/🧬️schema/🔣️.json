@@ -13,20 +13,23 @@
         "samples": 16,
         "freshMilliseconds": 120000,
         "writeMilliseconds": 5000,
-        "changeMegabytes": 64
+        "changeMegabytes": 64,
+        "reservePercent": 125,
+        "floorMegabytes": 256
       }
     },
     "Claim": {
-      "description": "What the readiness stage of this machine is entitled to hold and holds now: the one fact the owner puller and the remote-execution agent need to keep the sum of their admissions inside the machine while the stage grows.",
+      "description": "What the readiness stage of this machine may grow to (its ceiling: the learned peak), holds now and whether it waits: the one fact the owner puller and the remote-execution agent need to keep the sum of their admissions inside the machine while the stage grows.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "stage", "pid", "entitlementMegabytes", "observedMegabytes", "atMs"],
+      "required": ["version", "stage", "pid", "entitlementMegabytes", "observedMegabytes", "waiting", "atMs"],
       "properties": {
         "version": { "const": 1 },
         "stage": { "type": "string", "minLength": 1 },
         "pid": { "type": "integer", "minimum": 1 },
         "entitlementMegabytes": { "type": "integer", "minimum": 0 },
         "observedMegabytes": { "type": "integer", "minimum": 0 },
+        "waiting": { "type": "boolean", "description": "The stage waits (queued on a lease, an admission or another build) and uses little: it keeps nothing back for growth until it runs again." },
         "atMs": { "type": "integer", "minimum": 0 }
       }
     }

@@ -14,23 +14,31 @@ macro_rules! __semio_actor_exports {
                 $ensure();
                 $crate::__async::poll::resolve_ready($crate::reactor::stage_command_page(cursor, bytes)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn stage_cold_pair_page(page: $crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
+            fn stage_cold_pair_page(page: $crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
                 $ensure();
                 $crate::__async::poll::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn admit_actor_context(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
+            fn stage_actor_context_budget(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) {
+                $crate::reactor::original_actor_context::exports::stage_actor_context_budget(budget)
+            }
+            async fn admit_actor_context() -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $crate::reactor::original_actor_context::exports::admit_wit(budget,|_|{$ensure();Ok(())})
             }
-            async fn admit_actor_input(wire: Option<Vec<u8>>, budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorInputAdmissionCall {
+            async fn admit_actor_input(wire: Option<Vec<u8>>) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorInputAdmissionCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $crate::reactor::original_actor_context::exports::admit_input_wit(wire, budget)
             }
-            async fn close_actor_context(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+            async fn close_actor_context() -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $crate::reactor::original_actor_context::exports::close_wit(budget)
             }
-            async fn close_actor_output(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+            async fn close_actor_output() -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $crate::reactor::original_actor_context::exports::close_output_wit(budget)
             }
-            async fn poll(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::reactor::TurnResult, $crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal> {
+            async fn poll() -> Result<$crate::component::wasip2::exports::semio::framework::reactor::TurnResult, $crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $ensure();
                 $runtime.with(|runtime| $crate::reactor::original_actor_context::exports::poll_wit(runtime, budget))
             }
@@ -40,35 +48,47 @@ macro_rules! __semio_actor_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         impl $crate::component::wasip2::exports::semio::framework::jobs::Guest for $guest {
-            async fn start_job(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobStartCall {
+            fn stage_job_budget(budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) {
+                $crate::reactor::original_actor_context::exports::stage_job_budget(budget)
+            }
+            async fn start_job(job: u64) -> $crate::component::wasip2::exports::semio::framework::jobs::JobStartCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $ensure();
                 $crate::reactor::original_actor_context::exports::start_job_wit(job, budget)
             }
-            async fn step_job(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobStepCall {
+            async fn step_job(job: u64) -> $crate::component::wasip2::exports::semio::framework::jobs::JobStepCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $ensure();
                 $crate::reactor::original_actor_context::exports::step_job_wit(job, budget)
             }
-            async fn read_job_output(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputCall {
+            async fn read_job_output(job: u64) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $ensure();
                 $crate::reactor::original_actor_context::exports::read_job_output_wit(job, budget)
             }
-            async fn acknowledge_job_output(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputAckCall {
+            async fn acknowledge_job_output(job: u64) -> $crate::component::wasip2::exports::semio::framework::jobs::JobOutputAckCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $ensure();
                 $crate::reactor::original_actor_context::exports::acknowledge_job_output_wit(job, budget)
             }
-            async fn cancel_job(job: u64, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
+            async fn cancel_job(job: u64) -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $crate::reactor::original_actor_context::exports::cancel_job_wit(job, budget)
             }
-            async fn publish_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailurePublishCall {
+            async fn publish_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailurePublishCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $crate::reactor::original_actor_context::exports::publish_actor_failure_wit(reference, budget)
             }
-            async fn read_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureReadCall {
+            async fn read_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureReadCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $crate::reactor::original_actor_context::exports::read_actor_failure_wit(reference, budget)
             }
-            async fn acknowledge_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference, budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureAckCall {
+            async fn acknowledge_actor_failure(reference: $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureCallReference) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorFailureAckCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $crate::reactor::original_actor_context::exports::acknowledge_actor_failure_wit(reference, budget)
             }
-            async fn close_jobs(budget: $crate::component::wasip2::exports::semio::framework::jobs::JobBudget) -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
+            async fn close_jobs() -> $crate::component::wasip2::exports::semio::framework::jobs::JobCancelCall {
+                let budget = $crate::reactor::original_actor_context::exports::staged_job_budget();
                 $ensure();
                 $crate::reactor::original_actor_context::exports::close_jobs_wit(budget)
             }
@@ -80,12 +100,14 @@ macro_rules! __semio_actor_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         impl $crate::component::wasip2::exports::semio::framework::checkpoint::Guest for $guest {
-            async fn checkpoint(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn checkpoint() -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $crate::reactor::original_actor_context::exports::codec_input_plugin_none(&budget)?;
                 $ensure();
                 $runtime.with(|runtime| $crate::__async::poll::resolve_ready($crate::reactor::checkpoint_now(runtime))).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn restore(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn restore() -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
             use $crate::reactor::original_actor_context::exports as wire;
             use $crate::actor_input_wire::ActorInputWire;
             let ActorInputWire::Restore{state} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -95,22 +117,24 @@ macro_rules! __semio_actor_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         impl $crate::component::wasip2::exports::semio::framework::describe::Guest for $guest {
-            async fn describe(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Vec<u8> {
+            async fn describe() -> Vec<u8> {
+                let _ = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 $ensure();
-                let _ = budget;
                 $describe()
             }
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         impl $crate::component::wasip2::exports::semio::framework::codec::Guest for $guest {
-            async fn sqlite_schema(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<String, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn sqlite_schema() -> Result<String, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteSchema{dialect} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
                 $ensure();
                 $crate::plugin_runtime::plugin_snapshot_sqlite_schema(&dialect).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn sqlite_export(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn sqlite_export() -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteExport{input} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -133,7 +157,8 @@ macro_rules! __semio_actor_exports {
                     })
                     .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn sqlite_import(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn sqlite_import() -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteImport{input} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -164,25 +189,29 @@ macro_rules! __semio_actor_exports {
                     })
                     .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn sqlite_take_file(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget)->Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult,$crate::component::wasip2::semio::framework::types::PluginError>{
+            async fn sqlite_take_file() ->Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotFileResult,$crate::component::wasip2::semio::framework::types::PluginError>{
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteTakeFile{ticket} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
                 $crate::operation_authority::snapshot_take::<$crate::sqlite_wire::SnapshotFileResult>(ticket,true).map_err(|error|$crate::component::wasip2::semio::framework::types::PluginError::OperationRefusal($crate::operation_authority::refusal_code(error.kind)))?.map($crate::component::wasip2::sqlite_file).map_err(|fault|$crate::component::wasip2::plugin_error(&fault))
             }
-            async fn sqlite_take_payload(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget)->Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult,$crate::component::wasip2::semio::framework::types::PluginError>{
+            async fn sqlite_take_payload() ->Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotPayloadResult,$crate::component::wasip2::semio::framework::types::PluginError>{
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteTakePayload{ticket} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
                 $crate::operation_authority::snapshot_take::<$crate::sqlite_wire::SnapshotPayloadResult>(ticket,true).map_err(|error|$crate::component::wasip2::semio::framework::types::PluginError::OperationRefusal($crate::operation_authority::refusal_code(error.kind)))?.map($crate::component::wasip2::sqlite_payload).map_err(|fault|$crate::component::wasip2::plugin_error(&fault))
             }
-            async fn sqlite_retirement(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotRetirement,u32> {
+            async fn sqlite_retirement() -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotRetirement,u32> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteRetirement{copy_bytes} = wire::codec_input(&budget)? else { return Err(wire::wrong_codec_code()) };
                 $crate::operation_authority::snapshot_retirement(usize::try_from(copy_bytes).map_err(|_|2u32)?).map($crate::component::wasip2::sqlite_retirement).map_err(|error| $crate::operation_authority::refusal_code(error.kind))
             }
-            async fn sqlite_close(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotCloseReceipt,u32> {
+            async fn sqlite_close() -> Result<$crate::component::wasip2::exports::semio::framework::codec::SnapshotCloseReceipt,u32> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::SqliteClose{input} = wire::codec_input(&budget)? else { return Err(wire::wrong_codec_code()) };
@@ -193,7 +222,8 @@ macro_rules! __semio_actor_exports {
                     progress:$crate::component::wasip2::semio::framework::types::RetainedCloneProgress{copied_items:progress.copied_items as u64,copied_bytes:progress.copied_bytes as u64,retained_capacity_bytes:progress.retained_capacity_bytes as u64,released_bytes:progress.released_bytes as u64},refusal,
                 }).map_err(|error| $crate::operation_authority::refusal_code(error.kind))
             }
-            async fn pack_schema_hash(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn pack_schema_hash() -> Result<Vec<u8>, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::PackSchemaHash{artifact_schema} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -203,7 +233,8 @@ macro_rules! __semio_actor_exports {
                     .map(|hash| hash.to_vec())
                     .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn genesis(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn genesis() -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::Genesis{artifact_schema, document_id} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -213,7 +244,8 @@ macro_rules! __semio_actor_exports {
                     .map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr })
                     .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn print_mirror(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<(String, String), $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn print_mirror() -> Result<(String, String), $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::PrintMirror{artifact_schema, pair} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -223,7 +255,8 @@ macro_rules! __semio_actor_exports {
                     .map(|files| (files.dsl, files.ops))
                     .map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn apply_ops(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn apply_ops() -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::ApplyOps{artifact_schema, pair, ops} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };
@@ -231,7 +264,8 @@ macro_rules! __semio_actor_exports {
                 $runtime
                     .with(|runtime| $crate::operation_authority::with_wit_operation_authority(|identity| $crate::__async::poll::resolve_ready($crate::plugin_runtime::plugin_artifact_apply_ops(runtime, &artifact_schema, &pair.pack, &pair.spr, &ops , identity)).map(|files| $crate::component::wasip2::exports::semio::framework::codec::DocumentPair { pack: files.pack, spr: files.spr }),$crate::operation_authority::return_walk::walk_document_pair))
             }
-            async fn replay_envelopes(budget: $crate::component::wasip2::exports::semio::framework::reactor::ActorContextBudget) -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+            async fn replay_envelopes() -> Result<$crate::component::wasip2::exports::semio::framework::codec::DocumentPair, $crate::component::wasip2::semio::framework::types::PluginError> {
+                let budget = $crate::reactor::original_actor_context::exports::staged_actor_context_budget();
                 use $crate::reactor::original_actor_context::exports as wire;
                 use $crate::actor_input_wire::ActorInputWire;
                 let ActorInputWire::ReplayEnvelopes{artifact_schema, pair, envelopes} = wire::codec_input_plugin(&budget)? else { return Err(wire::wrong_codec_operation()) };

@@ -47,39 +47,9 @@ fn close_cancellation_presence_publication(
     }).unwrap();
 }
 
-pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
-        let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
-        let cx = original_scope.cx();
-        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
-        let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
-        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
-        assert_eq!(grant.maximum_items, 1);
-        assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
-        for case in fixture["publicationCases"].as_array().unwrap() {
-            let boundary = case["cancelAt"].as_str().unwrap();
-            let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
-        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
-        let identity_started=std::time::Instant::now();
-        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
-        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await.expect("the reference snapshot births");
-            let revision = app.stores.store.content_revision_now();
-            let operation = semio_framework_job::Operation::new(
-                semio_framework_job::allocate_operation_id(),
-                semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
-                semio_framework_job::Generation(app.stores.store.generation_now()),
-                17,
-            );
-            artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app, cx).unwrap();
-            let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
-            let mut lease = None;
-            for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
-                lease = app.tools.tool_cancellations.begin(&key, cx).unwrap();
-                if lease.is_some() { break; }
-            }
-            let lease = lease.expect("original publication cancellation lease admitted");
-            let before = app.stores.presence_store.local_read().unwrap();
-            let mut mounted = MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
+/// 🧱️ One `Publishing` presence operation that owns no publication yet: the fixture every cancellation and closing law mounts its pending publication on.
+fn presence_publication_operation<A: ArtifactApp>(operation: semio_framework_job::Operation, revision: [u8; 32], lease: semio_plugin_operation::ToolCancellationLease, cx: &semio_framework_job::StepContext<'_>) -> MountedTypedCommandFullOperation<A> {
+    MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
                     source_identity: semio_framework_job::OriginalSourceBinding::borrow(cx),
                     original_emission_caller: None,
                     original_emission_decoder: None,
@@ -131,7 +101,43 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
                 interaction_revalidated: false,
                 retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None,
                 stage: MountedTypedCommandFullOperationStage::Publishing,
-            };
+            }
+}
+
+pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
+        let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
+        let cx = original_scope.cx();
+        let fixture: Value = serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🧪️tests/🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
+        let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
+        assert_eq!(grant.maximum_items, 1);
+        assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
+        for case in fixture["publicationCases"].as_array().unwrap() {
+            let boundary = case["cancelAt"].as_str().unwrap();
+            let mounted_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
+        let identity_started=std::time::Instant::now();
+        let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await.expect("the reference snapshot births");
+        semio_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, 7).await;
+            let revision = app.stores.store.content_revision_now();
+            let operation = semio_framework_job::Operation::new(
+                semio_framework_job::allocate_operation_id(),
+                semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())),
+                semio_framework_job::Generation(app.stores.store.generation_now()),
+                17,
+            );
+            artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app, cx).unwrap();
+            let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
+            let mut lease = None;
+            for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+                lease = app.tools.tool_cancellations.begin(&key, cx).unwrap();
+                if lease.is_some() { break; }
+            }
+            let lease = lease.expect("original publication cancellation lease admitted");
+            let before = app.stores.presence_store.local_read().unwrap();
+            let mut mounted = presence_publication_operation::<A>(operation, revision, lease, cx);
             if boundary != "producer" {
                 let pending =
                     app.stores.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap();
@@ -166,8 +172,13 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
                 assert!(mounted.acknowledge_result_page(crate::app_testing::artifact_app_laws::close_fixture_result_page(&mut page,crate::app_testing::artifact_app_laws::fixture_mounted_policy().close)).unwrap());
                 retire_acknowledged_mounted_page(&mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, cx);
             }
-            publish_mounted_fixture_unit(&mut app, &mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance, cx);
-            assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
+            let mut units = 0;
+            loop {
+                publish_mounted_fixture_unit(&mut app, &mut mounted, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance, cx);
+                units += 1;
+                if mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck { break; }
+                assert!(units < 256, "the cancelled publication must reach its result page within a bounded number of publication units: {boundary}");
+            }
             let mut cancelled = present_mounted_page(&mut mounted, mounted_policy.preparation, cx).expect("cancelled result page presented");
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
             assert!(std::str::from_utf8(cancelled.bytes()).unwrap().contains("cancelled"));
@@ -237,6 +248,8 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
             assert!(close.terminal_is_empty());
             cancellations.close();
         }
+        drop(original_scope);
+        retained_closing_publication_retires_through_the_publication_unit::<A>().await;
     }
 
     fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value_ordered::ordered::SharedOwner<String> {
@@ -312,3 +325,56 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
         drop(context);
         caller.retire(fuel).expect("original latest-wins key caller paid retirement");
     }
+
+/// ♻️ LAW: a pending publication its store already closed (here an acknowledged one) is retired by the publication unit itself, not by a maintenance turn the host may never grant. Before, the unit answered `Ok` with a wait note on every call until the stall ceiling faulted the operation (`typed operation 'setContributions' advanced 4096 publication units without moving its ladder: waiting on the pending publication is closing`).
+pub(super) async fn retained_closing_publication_retires_through_the_publication_unit<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
+    let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
+    let cx = original_scope.cx();
+    let mounted_policy = artifact_app_laws::fixture_mounted_policy();
+    let identity_started = std::time::Instant::now();
+    let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60);
+    let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture identity");
+    let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
+    semio_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, 7).await;
+    let revision = app.stores.store.content_revision_now();
+    let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.stores.store.generation_now()), 17);
+    artifact_app_laws::ensure_fixture_cancellation_issuer(&mut app, cx).unwrap();
+    let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation };
+    let mut lease = None;
+    for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+        lease = app.tools.tool_cancellations.begin(&key, cx).unwrap();
+        if lease.is_some() { break; }
+    }
+    let mut mounted = presence_publication_operation::<A>(operation, revision, lease.expect("original closing lease admitted"), cx);
+    mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(app.stores.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.stores.presence_local_root_retirement_factory.clone()).unwrap()));
+    for _ in 0..8 {
+        let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else { panic!("exact pending presence owner") };
+        if pending.phase() == store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::AwaitingAck { break; }
+        publish_mounted_fixture_unit(&mut app, &mut mounted, mounted_policy.maintenance, cx);
+    }
+    assert!(mounted.pending_artifact_publication.as_mut().unwrap().acknowledge(), "the published presence acknowledges");
+    assert!(mounted.pending_artifact_publication.as_ref().unwrap().is_closing(), "the acknowledged publication is closing");
+    mounted.ui_pending = false;
+    let mut units = 0;
+    while mounted.pending_artifact_publication.is_some() {
+        publish_mounted_fixture_unit(&mut app, &mut mounted, mounted_policy.close, cx);
+        units += 1;
+        assert!(units < 256, "the closing publication must retire within a bounded number of publication units");
+    }
+    assert!(mounted.terminal_fault.is_none(), "an acknowledged publication retires without a fault");
+    mounted.cancellation_lease.as_ref().unwrap().cancel();
+    let mut units = 0;
+    while mounted.stage != MountedTypedCommandFullOperationStage::AwaitingAck {
+        publish_mounted_fixture_unit(&mut app, &mut mounted, mounted_policy.maintenance, cx);
+        units += 1;
+        assert!(units < 256, "the cancelled operation must reach its result page within a bounded number of publication units");
+    }
+    let mut page = present_mounted_page(&mut mounted, mounted_policy.preparation, cx).expect("the cancelled result page presents");
+    let token = artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
+    assert!(mounted.acknowledge_result_page(token).unwrap());
+    retire_acknowledged_mounted_page(&mut mounted, mounted_policy.close, cx);
+    close_mounted(&mut mounted, "closing", mounted_policy.close, cx);
+    assert!(mounted.terminal_is_empty());
+    close_app(&mut app, "closing", cx);
+    assert!(app.close_terminal_is_empty());
+}

@@ -1,0 +1,25 @@
+humans	barista	1:100 front Hausdorff: expected 0.0375 to be less than or equal to 0.03
+humans	basketball-player	1:50 plan Hausdorff: expected 0.03 to be less than or equal to 0.015
+humans	child-on-kick-scooter	1:200 elevation Hausdorff: expected 0.08800593711585926 to be less than or equal to 0.06
+humans	construction-worker-with-shovel	1:50 front Hausdorff: expected 0.025015620120236875 to be less than or equal to 0.015
+humans	courier-with-hand-truck	1:500 plan: expected 0.8848212743912969 to be greater than or equal to 0.92
+humans	cyclist	1:500 elevation: expected 0.9048786717752235 to be greater than or equal to 0.92
+humans	dancer	1:500 front: expected 0.9055993531433192 to be greater than or equal to 0.92
+humans	elderly-with-cane	1:50 axis 0: 0.4704904977110541 m against 0.48 m: expected 0.00950950228894587 to be less than or equal to 0.0075
+humans	jogger	1:100 front Hausdorff: expected 0.04562071897723664 to be less than or equal to 0.03
+humans	kneeling-gardener	1:50 axis 1: 1.0248201968596147 m against 1.033 m: expected 0.008179803140385244 to be less than or equal to 0.0075
+humans	leaning-person	1:200 front Hausdorff: expected 0.06157766968407532 to be less than or equal to 0.06
+humans	painter-at-easel	1:50 elevation Hausdorff: expected 0.017286645857424163 to be less than or equal to 0.015
+humans	parent-carrying-toddler	1:50 axis 1: 1.7571993255971314 m against 1.744 m: expected 0.01319932559713144 to be less than or equal to 0.0075
+humans	parent-with-stroller	1:500 elevation: expected 0.8990735945681569 to be greater than or equal to 0.92
+humans	person-carrying-ladder	1:500 elevation Hausdorff: expected 0.16209353960033074 to be less than or equal to 0.15
+humans	person-carrying-shopping-bags	1:50 front Hausdorff: expected 0.025502757203878956 to be less than or equal to 0.015
+humans	person-checking-watch	1:50 plan Hausdorff: expected 0.0278738789012222 to be less than or equal to 0.015
+humans	person-cooking	1:50 elevation Hausdorff: expected 0.021213203435596427 to be less than or equal to 0.015
+humans	person-drinking-coffee	1:50 axis 2: 0.5514731728520788 m against 0.564 m: expected 0.012526827147921193 to be less than or equal to 0.0075
+humans	person-eating-standing	1:50 elevation Hausdorff: expected 0.01957557470420728 to be less than or equal to 0.015
+humans	person-hanging-laundry	1:100 plan Hausdorff: expected 0.03354101966249685 to be less than or equal to 0.03
+humans	person-on-crutches	1:50 elevation Hausdorff: expected 0.03005853664102762 to be less than or equal to 0.015
+humans	person-pushing-bicycle	1:50 plan Hausdorff: expected 0.031875 to be less than or equal to 0.015
+humans	person-signing	1:100 axis 2: 0.522942725758124 m against 0.548 m: expected 0.025057274241876093 to be less than or equal to 0.015
+humans	person-stretching	1:500 elevation: expected 0.9090248962655602 to be greater than or equal to 0.92

@@ -76,7 +76,7 @@ impl semio_framework_value::retirement::RetireOwned for ChildContentView {
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ChildContentReadRetirement>())}
  fn controlled_retirement_supported()->bool{true}
 }
-impl Drop for ChildContentReadRetirement{fn drop(&mut self){assert!(self.terminal_is_empty(),"original child view abandoned exact read registry custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.view);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.returned);ManuallyDrop::drop(&mut self.metadata);}}}}
+impl Drop for ChildContentReadRetirement{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original child view abandoned exact read registry custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.view);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.returned);ManuallyDrop::drop(&mut self.metadata);}}}}
 
 #[cfg(test)]
 mod shared_root_laws{

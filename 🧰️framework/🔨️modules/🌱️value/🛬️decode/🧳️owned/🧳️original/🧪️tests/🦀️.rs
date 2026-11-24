@@ -176,6 +176,18 @@ fn a_derived_record_receiver_seeds_in_field_parts_instead_of_one_indivisible_cop
  assert_eq!(parts,template.part_count());close_all(owner,&mut wallet,&mut payer,&mut control,&mut Vec::new());
 }
 
+/// ⚓️ A record receiver seeded part by part from its template anchors every shared frame, so it stays usable after the owner moves.
+#[test]fn a_template_seeded_record_receiver_anchors_its_shared_frames_and_survives_a_move(){
+ let mut wallet=stock();let mut bank=scratch();let mut owner=Owner::new(row_source(&mut bank));let mut payer=Authorities::new();let mut allow=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut allow);
+ while !owner.receiver.initialized(){let demand=owner.demands(BODY,wallet.remaining_work()).unwrap();let grant=RetainedCloneGrant{maximum_items:1,..quoted(&wallet,demand)};let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,grant);wallet.post(progress(&turn),turn.work,grant,heap);turn.result.unwrap();}
+ let mut owner=*std::hint::black_box(Box::new(owner));let mut turns=0;
+ while !owner.output_ready(){assert!(turns<4096,"seeded record receiver stalled");let fuel=wallet.remaining_work();let demand=owner.demands(BODY,fuel).unwrap();let grant=quoted(&wallet,demand);let(turn,heap)=advance(&mut owner,&mut control,&mut payer,&wallet,grant);wallet.post(progress(&turn),turn.work,grant,heap);turn.result.unwrap();turns+=1;}
+ settle_pending(&mut owner,&mut control,&mut payer,&mut wallet);
+ let grant=quoted(&wallet,owner.take_demand().unwrap());let mut taken=None;let(turn,heap)=take(&mut owner,&mut bank,grant,&mut taken);wallet.post(progress(&turn),turn.work,grant,heap);turn.result.unwrap();
+ let row=taken.expect("funded publication fills the caller slot");assert_eq!(row.value.as_str(),"Original receiving owner🧱");close_owned(row,&mut payer,&mut control);
+ close_all(owner,&mut wallet,&mut payer,&mut control,&mut Vec::new());
+}
+
 #[test]fn native_persistent_list_original_vector_owner_batches_actions_under_a_wide_grant(){
  use semio_framework_value_persistent::list::persistent::PersistentList;
  type ListOwner=NativeReceivingOriginal<Vec<DslValue>,PersistentList<Row>>;

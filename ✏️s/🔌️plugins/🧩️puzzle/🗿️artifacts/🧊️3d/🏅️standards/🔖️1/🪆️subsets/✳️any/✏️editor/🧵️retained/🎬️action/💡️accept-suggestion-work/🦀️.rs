@@ -93,6 +93,22 @@ impl Puzzle3dAcceptSuggestionWork {
             .or_else(|| interaction.selection.get(PUZZLE3D_INTERACTION_DOMAIN).filter(|selection| selection.granularity == PUZZLE3D_GRANULARITY_VORTEX).and_then(|selection| selection.ids.first().cloned()))
     }
 
+    /// 🧹️ Ends the popup on every outcome, placed or refused: the brush link releases the menu target and the addressed window's transient drops its menu.
+    fn finish<A: Puzzle3dEditor>(&mut self, view_state: Option<&semio_plugin::ViewModel>, transient: &window_ownership::Puzzle3dWindowTransient, emit: Emit<Puzzle3dMutation, Puzzle3dConfigMutation>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+        self.stage = Puzzle3dAcceptSuggestionStage::Complete;
+        if let Some(owner) = self.instance_owner.as_ref() {
+            owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| {
+                owner.brush_suggestions.close_menu();
+                Ok(())
+            }).ok();
+        }
+        let window_transient = match view_state.filter(|_| transient.suggestion_menu.is_some()) {
+            Some(view) => vec![window_ownership::addressed_transient(view, window_ownership::Puzzle3dWindowTransient { suggestion_menu: None, ..transient.clone() })?],
+            None => Vec::new(),
+        };
+        Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: semio_plugin::app::EphemeralEmit { window_transient, ..Default::default() } })
+    }
+
     /// 🪪️ Binds the admission's retained operation owner.
     pub fn bound(mut self, instance: Puzzle3dInstanceBinding) -> Self {
         self.instance_owner = Some(instance.owner);
@@ -132,18 +148,15 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         let document = snapshot.typed();
         let transient = window_ownership::transient_from_snapshot(window_transient_snapshot);
         let Some(catalogs) = document.meta.kind_catalogs.as_ref() else {
-            self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-            return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));
+            return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str()));
         };
         match self.stage {
             Puzzle3dAcceptSuggestionStage::Target => {
                 let Some(requested) = Self::requested_target(command, &transient, interaction) else {
-                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));
+                    return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str()));
                 };
                 let Some(object) = document.objects.get(self.object_cursor) else {
-                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));
+                    return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str()));
                 };
                 if object.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
                     return Err(Fault::from("puzzle3d-accept-target-vortex-capacity"));
@@ -175,8 +188,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                         .flatten()
                 });
                 let Some((index, candidate)) = candidate.and_then(|candidate| catalogs.objects.iter().position(|kind| kind.id == candidate.object_kind_id).map(|index| (index, candidate))) else {
-                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));
+                    return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str()));
                 };
                 let kind = &catalogs.objects[index];
                 if kind.representations.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT || kind.vortices.len() > PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT {
@@ -199,8 +211,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 let kind = catalogs.objects.get(self.kind_index.ok_or_else(|| Fault::from("puzzle3d-accept-kind-owner"))?).ok_or_else(|| Fault::from("puzzle3d-accept-kind-cursor"))?;
                 let Some(template) = kind.vortices.get(self.vortices.len()) else {
                     if self.vortices.is_empty() {
-                        self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                        return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str())));
+                        return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_unavailable.as_str()));
                     }
                     self.stage = Puzzle3dAcceptSuggestionStage::ExistingAttractions;
                     return Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-accept-existing", "Checking target ownership", "Zielinhaberschaft wird geprüft"));
@@ -227,8 +238,7 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 };
                 self.attraction_cursor += 1;
                 if attraction.attracting == *target || attraction.attracted == *target {
-                    self.stage = Puzzle3dAcceptSuggestionStage::Complete;
-                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle3d_notice_emit(view_state, |labels| labels.placement_occupied.as_str())));
+                    return self.finish::<A>(view_state, &transient, puzzle3d_notice_emit(view_state, |labels| labels.placement_occupied.as_str()));
                 }
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-accept-existing", "Scanning existing attraction", "Bestehende Anziehung wird geprüft"))
             }
@@ -262,15 +272,15 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
                 Ok(semio_s_plugin_puzzle_retained::puzzle_progress_step!("puzzle3d-accept-publish-attraction", "Transferring suggested attraction", "Vorschlagsanziehung wird übertragen"))
             }
             Puzzle3dAcceptSuggestionStage::PublishResult => {
-                self.stage = Puzzle3dAcceptSuggestionStage::Complete;
                 let placed = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
-                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                let emit = Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
                     config_mutations: Vec::new(),
                     ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("acceptSuggestion")),
                     interaction_writes: vec![InteractionWrite::replace(PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_GRANULARITY_OBJECT, [placed])],
                     ..Default::default()
-                }))
+                };
+                self.finish::<A>(view_state, &transient, emit)
             }
             Puzzle3dAcceptSuggestionStage::Complete => Err(Fault::from("puzzle3d-accept-complete-repolled")),
             Puzzle3dAcceptSuggestionStage::Closing => Err(Fault::from("puzzle3d-accept-closing")),

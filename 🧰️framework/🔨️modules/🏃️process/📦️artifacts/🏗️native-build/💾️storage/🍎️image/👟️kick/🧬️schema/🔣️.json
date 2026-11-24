@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "description": "Returns the blocks a mounted image holds although its filesystem freed them, WHILE the image stays mounted and in use. macOS (measured, see the ticket note): a DiskImages2 image attached with `diskutil image attach` forwards APFS trim to the backing file as hole punching, but APFS flushes the trim of its container only when a volume of that container unmounts. A sibling APFS volume `semio-trim` in the same container, created, mounted and unmounted again and deleted at the end of the cycle (a second volume would make `diskutil image attach --mountPoint` fail for the image on its next attach: it works only for an image with a single mountable entity), therefore returns every freed block in about two seconds without touching the busy main volume (open files, working directories and concurrent writers are unaffected; fsck_apfs is clean). The legacy `hdiutil attach` stack never unmaps. `hdiutil compact` of a sparse bundle or sparse image refuses while attached. Linux: the backing is a sparse loop file; `fstrim` on the mounted filesystem punches holes (FALLOC_FL_PUNCH_HOLE). Windows has no in-place return: a dynamic VHDX compacts only while dismounted or mounted read-only, so the platform is `offline-only` and relies on the drain window of the exclusive reclaim cycle.",
+        "settlePollMilliseconds": 500,
+        "settleStablePolls": 3,
+        "maximumSettleMilliseconds": 20000,
+        "minimumIntervalMilliseconds": 60000,
+        "commandMilliseconds": 60000,
+        "scratchPrefix": "semio-kick-",
+        "canaryFile": ".semio-canary",
+        "canaryBytes": 268435456,
+        "canaryReturnedPercent": 50,
+        "canaryHostFreeMultiplier": 8,
+        "maximumEffectiveContainerBytes": 34359738368,
+        "messages": {
+          "ineffective": {
+            "en": "Image {image} did not give back a 256 MiB test file after the in-place kick ({returned} of {written} returned). macOS only unmaps containers up to 32 GiB (measured: 34.36 GB works, 35.43 GB never does, in place or by detach and attach), so this image cannot return freed blocks. Split it into images of at most 32 GiB or accept its high-water size.",
+            "de": "Das Image {image} gab nach dem direkten Anstoß eine 256-MiB-Testdatei nicht zurück ({returned} von {written} zurückgegeben). macOS gibt nur bei Containern bis 32 GiB Blöcke frei (gemessen: 34,36 GB funktionieren, 35,43 GB nie, weder direkt noch durch Lösen und Anhängen), dieses Image kann freie Blöcke also nicht zurückgeben. Teile es in Images von höchstens 32 GiB oder akzeptiere seine Höchstgröße."
+          }
+        },
+        "progressSteps": 3,
+        "mechanisms": {
+          "darwin": {
+            "kind": "sibling-volume",
+            "program": "/usr/sbin/diskutil",
+            "volumeName": "semio-trim",
+            "filesystem": "Case-sensitive APFS",
+            "minimumContainerBytes": 536870912,
+            "infoArguments": ["info", "-plist", "<mountPoint>"],
+            "containerKey": "APFSContainerReference",
+            "ownerProgram": "/usr/bin/hdiutil",
+            "ownerArguments": ["info", "-plist"],
+            "imagesKey": "images",
+            "imagePathKey": "image-path",
+            "entitiesKey": "system-entities",
+            "entryKey": "dev-entry",
+            "listArguments": ["apfs", "list", "-plist", "<container>"],
+            "containersKey": "Containers",
+            "volumesKey": "Volumes",
+            "nameKey": "Name",
+            "deviceKey": "DeviceIdentifier",
+            "addArguments": ["apfs", "addVolume", "<container>", "<filesystem>", "<name>", "-nomount"],
+            "mountArguments": ["mount", "nobrowse", "-mountPoint", "<scratch>", "<device>"],
+            "unmountArguments": ["unmount", "<device>"],
+            "forceUnmountArguments": ["unmount", "force", "<device>"],
+            "deleteArguments": ["apfs", "deleteVolume", "<device>"]
+          },
+          "linux": {
+            "kind": "fstrim-mounted",
+            "program": "/usr/sbin/fstrim",
+            "trimArguments": ["--verbose", "<mountPoint>"]
+          },
+          "windows": {
+            "kind": "offline-only"
+          }
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "allocatedBytes", "usedBytes", "hostFreeBytes", "sinceLastKickMilliseconds", "due"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "allocatedBytes": {"type": "integer", "minimum": 0},
+        "usedBytes": {"type": "integer", "minimum": 0},
+        "hostFreeBytes": {"type": "integer", "minimum": 0},
+        "sinceLastKickMilliseconds": {"type": "integer", "minimum": 0},
+        "due": {"type": "boolean"}
+      }
+    },
+    "Script": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "platform", "image", "outputs", "expected"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "platform": {"enum": ["darwin", "linux"]},
+        "image": {"type": "string", "minLength": 1},
+        "outputs": {"type": "object", "description": "Successive stdout values of a command keyed by `<program name> <first argument>`; the last value repeats; an absent key prints nothing.", "additionalProperties": {"type": "array", "items": {"type": "string"}}},
+        "expected": {"type": "array", "items": {"type": "string"}, "description": "The commands run in order, each `<program name> <arguments joined by one space>`, `<scratch>` standing for the private scratch mount point."}
+      }
+    },
+    "Corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "cases", "scripts"],
+      "properties": {
+        "$comment": {"type": "string"},
+        "rule": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["reclaimFloorBytes", "reclaimRatioPercent", "reclaimTightHostFreeBytes"],
+          "properties": {
+            "reclaimFloorBytes": {"type": "integer", "minimum": 1},
+            "reclaimRatioPercent": {"type": "integer", "minimum": 101},
+            "reclaimTightHostFreeBytes": {"type": "integer", "minimum": 0}
+          }
+        },
+        "minimumIntervalMilliseconds": {"type": "integer", "minimum": 0},
+        "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Case"}},
+        "scripts": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/Script"}}
+      }
+    }
+  }
+}

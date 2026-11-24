@@ -105,11 +105,11 @@ function partsOf(c: Chair, s: Scale): Part[] {
   if (s === 200)
     return [
       { key: "seat", bone: "seat", prim: { kind: "slab", c: ringC, r: SEAT.ro, y0: SEAT.y0, y1: SEAT.y1, dish: { r: SEAT.ri, depth: SEAT.y1 - CANE.y1 } }, ...wood, tone: 0.5, draw: FILL },
-      { key: "frame-bow", bone: "back", prim: wholeBow(2, 2, 6), ...wood, slender: true, draw: STROKE },
-      { key: "inner-loop", bone: "back", prim: innerLoop(1, 4), ...wood, tone: 0.46, slender: true, draw: STROKE, penMm: 0.13 },
+      { key: "frame-bow", bone: "back", prim: wholeBow(2, 2, 6, FRONT.rTop), ...wood, draw: FILL },
+      { key: "inner-loop", bone: "back", prim: innerLoop(1, 4, FRONT.rTop), ...wood, tone: 0.46, draw: FILL },
       { key: "front-leg-l", bone: "front-legs", prim: frontLeg(1, [FRONT.rTop, FRONT.rTop]), ...wood, draw: { elevation: "fill", front: "fill", plan: "fill" }, merge: "front-legs" },
       { key: "front-leg-r", bone: "front-legs", prim: frontLeg(-1, [FRONT.rTop, FRONT.rTop]), ...wood, draw: { elevation: "fill", front: "fill", plan: "fill" }, merge: "front-legs" },
-      { key: "leg-ring", bone: "leg-ring", prim: { kind: "hoop", c: legRingC, ri: RING.R - LEG_RING.w / 2, ro: RING.R + LEG_RING.w / 2, h: LEG_RING.h, chamfer: 0 }, ...wood, tone: 0.46, slender: true, draw: STROKE, penMm: 0.13 },
+      { key: "leg-ring", bone: "leg-ring", prim: { kind: "hoop", c: legRingC, ri: RING.R - FRONT.rTop, ro: RING.R + FRONT.rTop, h: 2 * FRONT.rTop, chamfer: 0 }, ...wood, tone: 0.46, draw: FILL },
     ];
   return [
     { key: "seat", bone: "seat", prim: { kind: "slab", c: ringC, r: SEAT.ro, y0: SEAT.y1 - 0.075, y1: SEAT.y1 }, ...wood, tone: 0.5, draw: FILL },
@@ -251,14 +251,15 @@ function partPolys(c: Chair, v: View, part: Part): { outer: Ring2[]; holes: Ring
   return { outer: [prof.map((q) => project(c, v, q))], holes: [] };
 }
 
-/** 〰️ The centre line a slender part shows as a stroke in a view (open), or the centre circle of a hoop in plan (closed). */
-function partStroke(c: Chair, v: View, part: Part): { pts: Ring2; closed: boolean } {
+/** 〰️ The centre line a slender part shows as a stroke in a view (open), or the centre circle of a hoop in plan (closed). With `edge` a hoop seen edge-on is drawn from outer edge to outer edge (1:500, where the rings of the two stacks touch in the body: a stroke has no caps, and drawn only between the centres of the rod it ended half a rod short on both sides, so the two stacks stood apart in the drawing; silhouette repair SF of 2026-11-23, `catalog-silhouette` 375.9 mm in the front elevation of 1:500). */
+function partStroke(c: Chair, v: View, part: Part, edge = false): { pts: Ring2; closed: boolean } {
   const p = part.prim;
   if (p.kind === "tube") return { pts: p.pts.map((q) => project(c, v, q)), closed: false };
   if (p.kind === "hoop") {
     const R = (p.ri + p.ro) / 2;
+    const E = edge ? p.ro : R;
     if (v === "plan") return { pts: circle(R, 48, p.c[0], p.c[2]).map(([x, z]) => project(c, v, [x, p.c[1], z])), closed: true };
-    return { pts: v === "elevation" ? [project(c, v, [p.c[0] - R, p.c[1], 0]), project(c, v, [p.c[0] + R, p.c[1], 0])] : [project(c, v, [0, p.c[1], -R]), project(c, v, [0, p.c[1], R])], closed: false };
+    return { pts: v === "elevation" ? [project(c, v, [p.c[0] - E, p.c[1], 0]), project(c, v, [p.c[0] + E, p.c[1], 0])] : [project(c, v, [0, p.c[1], -E]), project(c, v, [0, p.c[1], E])], closed: false };
   }
   throw new Error(`no stroke for ${part.key}`);
 }
@@ -316,7 +317,7 @@ function geometryOf(s: Scale): Record<View, Json[]> {
           const id = `${c.id}-${v === "elevation" || set.length === group.length ? key : set[0]!.key}`;
           if (draw === "stroke") {
             for (const [j, p] of set.entries()) {
-              const st = partStroke(c, v, p);
+              const st = partStroke(c, v, p, s === 500);
               out[v].push({ id: set.length > 1 ? `${id}-${j}` : id, ...meta, z: z++, filled: false, kind: "poly", points: rnd(local(st.pts)), closed: st.closed, ...(p.penMm ? { penMm: p.penMm } : {}) });
             }
             return;
@@ -326,7 +327,7 @@ function geometryOf(s: Scale): Record<View, Json[]> {
           const holes = polys.flatMap((q) => q.holes).map((h) => simplify(h, tol));
           const rings = [...outer, ...holes].map(local);
           const shape = rings.length === 1 ? { kind: "poly", points: rnd(rings[0]), closed: true } : { kind: "path", d: pathOf(rings) };
-          out[v].push({ id, ...meta, z: z++, filled: true, ...shape, ...(s <= 100 ? { penMm: head.key === "seat-ring" || head.key === "seat" || head.key === "cane" ? (s === 50 ? 0.35 : 0.25) : pen } : {}) });
+          out[v].push({ id, ...meta, z: z++, filled: true, ...shape, ...(s <= 100 ? { penMm: head.key === "seat-ring" || head.key === "seat" || head.key === "cane" ? (s === 50 ? 0.35 : 0.25) : pen } : s === 200 && head.key !== "seat" ? { penMm: 0.13 } : {}) });
         });
       }
     }
@@ -412,13 +413,13 @@ const REP_DECISIONS: Record<Scale, Json> = {
     overlays: T("As 1:50.", "Wie 1:50."),
   },
   200: {
-    silhouette: T("Side elevation 4.5 x 4.7 mm: blanket, seat bands, frame bows and inner loops as strokes, front legs as narrow filled bands, leg rings as strokes.", "Seitenansicht 4,5 x 4,7 mm: Decke, Sitzbänder, Gestellbögen und Innenbögen als Striche, Vorderbeine als schmale gefüllte Bänder, Beinringe als Striche."),
+    silhouette: T("Side elevation 4.5 x 4.7 mm: blanket, seat bands, frame bows, inner loops, front legs and leg rings as narrow filled bands of 30 mm (0.15 mm).", "Seitenansicht 4,5 x 4,7 mm: Decke, Sitzbänder, Gestellbögen, Innenbögen, Vorderbeine und Beinringe als schmale gefüllte Bänder von 30 mm (0,15 mm)."),
     retained: T("Seat with cane, frame bow, inner loop, front legs, leg ring, blanket.", "Sitz mit Geflecht, Gestellbogen, Innenbogen, Vorderbeine, Beinring, Decke."),
-    merged: T("Seat ring and cane are one seat band; rear legs and back bow are one continuous stroke from foot to foot.", "Sitzring und Geflecht sind ein Sitzband; Hinterbeine und Lehnenbogen sind ein durchgehender Strich von Fuß zu Fuß."),
+    merged: T("Seat ring and cane are one seat band; rear legs and back bow are one continuous band from foot to foot.", "Sitzring und Geflecht sind ein Sitzband; Hinterbeine und Lehnenbogen sind ein durchgehendes Band von Fuß zu Fuß."),
     omitted: T("The tear and every trace of use (under 0.2 mm at 1:350).", "Der Riss und alle Gebrauchsspuren (unter 0,2 mm bei 1:350)."),
-    thinElements: T("The frame bows are 0.25 mm body strokes on their centre lines, the 20 mm inner loops and the 24 mm leg rings thinner 0.13 mm strokes (26 mm, their true width); the front legs keep their 30 mm top section as filled bands.", "Die Gestellbögen sind 0,25-mm-Körperstriche auf ihren Mittellinien, die 20-mm-Innenbögen und die 24-mm-Beinringe dünnere 0,13-mm-Striche (26 mm, ihre wahre Breite); die Vorderbeine behalten ihren 30-mm-Kopfquerschnitt als gefüllte Bänder."),
+    thinElements: T("Every rod is a filled band of one smallest feature (30 mm): the frame bows (24 to 29 mm), the 20 mm inner loops and the 20 x 24 mm leg rings are typified to it like the front legs, which keep their 30 mm top section; body and drawing have the same outline.", "Jeder Stab ist ein gefülltes Band von einem kleinsten Merkmal (30 mm): die Gestellbögen (24 bis 29 mm), die 20-mm-Innenbögen und die Beinringe von 20 x 24 mm sind wie die Vorderbeine darauf typisiert, die ihren 30-mm-Kopfquerschnitt behalten; Körper und Zeichnung haben denselben Umriss."),
     hatching: T("None.", "Keine."),
-    styles: T("Body 0.25, inner loops and leg rings 0.13.", "Körper 0,25, Innenbögen und Beinringe 0,13."),
+    styles: T("Body 0.25; the outlines of the rod bands 0.13, so a rod reads as one line of about 0.3 mm.", "Körper 0,25; die Umrisse der Stabbänder 0,13, sodass ein Stab als eine Linie von etwa 0,3 mm erscheint."),
     overlays: T("As 1:50; the cane is drawn as its own disc in plan.", "Wie 1:50; das Geflecht ist im Grundriss eine eigene Scheibe."),
   },
   500: {
@@ -534,7 +535,7 @@ const VOLUME_DECISIONS: Record<Scale, Json[]> = {
     T("Thermal references the body; structure references every rod and ring as members, joints of 16 mm radius, 60 mm pads, distributed masses as at 1:50.", "Thermik verweist auf den Körper; Tragwerk verweist auf jeden Stab und Ring als Glieder, Gelenke mit 16 mm Radius, 60-mm-Polster, verteilte Massen wie bei 1:50."),
   ],
   200: [
-    T("1:200 merges seat ring and cane into one seat body of 38 mm with a 3 mm dish; rear legs and bow become one slender frame rod from foot to foot at the true section (the 2D draws it as a stroke), the inner loop a slender rod, the leg ring a slender hoop; the front legs keep their 30 mm top section all along (one smallest feature) as filled bands.", "1:200 verschmilzt Sitzring und Geflecht zu einem 38-mm-Sitzkörper mit 3 mm Mulde; Hinterbeine und Bogen werden ein schlanker Gestellstab von Fuß zu Fuß im wahren Querschnitt (die 2D zeichnet ihn als Strich), der Innenbogen ein schlanker Stab, der Beinring ein schlanker Reif; die Vorderbeine behalten durchgehend ihren 30-mm-Kopfquerschnitt (ein kleinstes Merkmal) als gefüllte Bänder."),
+    T("1:200 merges seat ring and cane into one seat body of 38 mm with a 3 mm dish; rear legs and bow become one frame rod from foot to foot, the inner loop one rod and the leg ring one hoop, each typified to one smallest feature (30 mm round rod, 30 x 30 mm hoop) and drawn by its outline; the front legs keep their 30 mm top section all along as filled bands. A bent rod is not declared slender here: the silhouette guard takes the centre line of a slender solid from its mesh, and the one of a bent loft wanders by several millimetres (IoU 0.908 and 0.918 against 0.92 with the rods as strokes).", "1:200 verschmilzt Sitzring und Geflecht zu einem 38-mm-Sitzkörper mit 3 mm Mulde; Hinterbeine und Bogen werden ein Gestellstab von Fuß zu Fuß, der Innenbogen ein Stab und der Beinring ein Reif, jeder auf ein kleinstes Merkmal typisiert (Rundstab 30 mm, Reif 30 x 30 mm) und mit seinem Umriss gezeichnet; die Vorderbeine behalten durchgehend ihren 30-mm-Kopfquerschnitt als gefüllte Bänder. Ein gebogener Stab ist hier nicht als schlank erklärt: die Silhouettenprüfung nimmt die Mittellinie eines schlanken Körpers aus seinem Netz, und die eines gebogenen Lofts wandert um mehrere Millimeter (IoU 0,908 und 0,918 gegen 0,92 mit den Stäben als Strichen)."),
     T("Thermal references the body and adds the 3 mm cane skin in the dish of each seat; structure: true-size slender bars for rear legs, posts and arch halves, the seat, front legs and leg ring and inner loop referenced, four joints per chair, 60 mm pads, distributed masses.", "Thermik verweist auf den Körper und ergänzt die 3-mm-Geflechthaut in der Mulde jedes Sitzes; Tragwerk: schlanke Stäbe in wahrer Größe für Hinterbeine, Pfosten und Bogenhälften, Sitz, Vorderbeine, Beinring und Innenbogen referenziert, vier Gelenke je Stuhl, 60-mm-Polster, verteilte Massen."),
   ],
   500: [

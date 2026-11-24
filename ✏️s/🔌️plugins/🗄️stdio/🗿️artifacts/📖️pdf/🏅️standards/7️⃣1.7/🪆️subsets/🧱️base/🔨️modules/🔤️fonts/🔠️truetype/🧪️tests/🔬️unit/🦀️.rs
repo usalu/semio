@@ -30,7 +30,6 @@ fn subset_keeps_glyph_ids_and_drops_outlines() {
     let subset = TrueTypeFont::parse(&subset_bytes).unwrap();
     assert_eq!(subset.num_glyphs, 4);
     assert_eq!(subset.glyph_for_char('-'), Some(2));
-    assert_eq!(subset.glyph_location(1), Some((0, 0)).map(|_| subset.glyph_location(1).unwrap()));
     let (start, end) = subset.glyph_location(1).unwrap();
     assert_eq!(start, end, "glyph 1 was emptied");
     let (start, end) = subset.glyph_location(2).unwrap();

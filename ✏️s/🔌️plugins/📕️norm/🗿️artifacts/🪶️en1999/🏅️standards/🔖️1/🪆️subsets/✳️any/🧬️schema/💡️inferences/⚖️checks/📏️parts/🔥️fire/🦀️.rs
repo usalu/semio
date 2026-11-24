@@ -12,6 +12,14 @@ fn table() -> &'static [(f64, f64, f64); 10] {
     ROWS.get_or_init(|| TABLE_THETAS.map(|t| (t as f64, semio_s_plugin_norm_compliance::ndp_common(&format!("ndp.en1999.fire.k-0.2proof.{t}")), semio_s_plugin_norm_compliance::ndp_common(&format!("ndp.en1999.fire.k-e.{t}")))))
 }
 
+/// 🔁️ Logs the rows of the retention table as read on this thread: the table is cached after its first read, so a check that rests on it calls this right before it is built and cites the same rows whichever evaluation filled the cache.
+pub fn log_table_reads() {
+    for t in TABLE_THETAS {
+        let _ = semio_s_plugin_norm_compliance::ndp_common(&format!("ndp.en1999.fire.k-0.2proof.{t}"));
+        let _ = semio_s_plugin_norm_compliance::ndp_common(&format!("ndp.en1999.fire.k-e.{t}"));
+    }
+}
+
 fn interpolate(theta: f64, column: usize) -> f64 {
     let table = table();
     let pick = |r: &(f64, f64, f64)| if column == 1 { r.1 } else { r.2 };

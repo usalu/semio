@@ -1,0 +1,176 @@
+{
+  "title": "Architecture Course Redeploy Readiness",
+  "emoji": "🚀",
+  "status": "closed",
+  "description": "Get the Architektur und Technologie course ready to be redeployed. The course is German by default. Remove the huge how-it-works introduction text that exceeds the screen size.",
+  "summary": "The three rehearsal failures of the fourth round are resolved (the layered-home spec measures the grid's room beneath the bands, spec and README follow the reduced-motion rule the code and its unit test hold, the language spec waits for the pet cast) and the pan is mapped over the visible grid room; both-languages and first-visit pass on the static release build. The course is still not ready to redeploy: one layered-home pan check, all four phone specs and all four adaptive-layout specs fail on the rehearsal, several shards did not run, the graph route gives no result, the two energy PDFs are one edit behind, and the course product unit suite fell from 4 to 26 failures within two hours while peers added icons to controls and reworked the sign-in radios and the challenge chooser without their tests. Details: 🚀️redeploy-readiness.md.",
+  "goal": "runningproducts",
+  "sessions": [
+    "2abfb7a1-06ba-4337-ba05-b71fbeabd8d3",
+    "9475f8af-98f1-463b-b1be-1b30426fae00",
+    "228615ea-cc73-4435-a985-2325fc18b733",
+    "9b759459-352c-42dc-8040-10da168561ee"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-23 18:58:28",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get the Architektur und Technologie course ready to be redeployed. The course is German by default. Remove the huge how-it-works introduction text that exceeds the screen size.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 22:13:49",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "The architecture course site speaks German by default through a required `site.language` in its deployment, which the course client resolves after the learner's stored choice and before the browser's list (`initialLocale`). The oversize welcome text (six paragraphs) is replaced by one short paragraph per language. Unit tests pass through `repo tools exec vitest` (language choice 29/29, site 149/149); the graph route `repo run` failed on a build-service internal error, so the Playwright gate and the release build did not run, the typecheck shows only errors in files of other owners, and one unrelated home-grid leaderboard test times out. Details in 🚀️redeploy-readiness.md.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️📰️hostdocument💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🚀️deploy⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🎭️e2e🗃️🚶️learner💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️🗣️bothlanguages💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course📃readme"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧫️fixtures🗃️🌍️languagechoice⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🚀️deploy🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️🚀️siteboot💻🟦️"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course🗃️🧪️tests🗃️🧪️deploy🗃️🐳️dockercontextandimage💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🌐️i18n💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🧪️tests🗃️🌍️languagechoice💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️📚️app💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-23 22:14:08",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Prove the release gate: get the typecheck, the unit tests, the release build and the e2e rehearsal of the architecture course green so the course is evidenced as ready to be redeployed.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 03:15:47",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "The architecture course defaults to German (site language in the deploy configuration, handed to the course client; stored choice still wins) and its welcome box is one short paragraph. Both typechecks are clean and the unit suites pass (site 876/876; course product 1174/1176 in a loaded full run, the two timeouts pass alone). On this host no graph service runs, so `repo run` never left the project graph read; the release site was built through the tool registry with the site's own Vite configuration (site-direct.ts), passed the publish verb's own artifact check and is staged as a CDN directory in the package's dist/pages/course; a dev page runs on port 6061 and the staged directory on 6062 (launch configurations added). Open: the staged assignment PDFs are the ones published on 2026-11-20 (the two energy PDFs are one edit behind; the release workflow compiles them afresh), the dev proctor does not compile while a peer splits semio-framework-value-native-owned (the dev script retries), and the Playwright rehearsal therefore did not run locally. Details: 🚀️redeploy-readiness.md.",
+      "files": [
+        {
+          "path": "🛅claude⚙️launch"
+        },
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️📚️course📃readme"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 04:42:58",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Fix the reported defects (introduction veil, sign-in before a quiz, border thickness, tint of unavailable content, clip cards, locked cards, ranking table), get a proctor running beside the dev page and rehearse the release build with Playwright.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 04:44:28",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Seven reported defects of the course UI are fixed and checked in the dev page: the introduction shows the introduced card crisp (stacking-context ancestors rise with it, the rest is veiled), a quiz asked for while signed out starts after sign-in, frame outlines are no longer clipped to half thickness, content not available yet wears one tint over its loaded content, clip cards are poster plus chips, locked cards fill their cell with their chips, and the full leaderboard is a table scrolling in both dimensions. The dev page runs with a proctor compiled from the live tree; the release site was rebuilt, passes the publish artifact check and is staged in dist/pages/course. A graph-free rehearsal (site-rehearsal.ts) ran 17 specs against the static release build: 14 passed, 3 failed (two layered-home checks, one preferences language parity), not settled. Still open: those three specs, the rehearsal shards not run, the graph route (stuck in the graph read even with the service running), the two energy PDFs one edit behind, and the pets' movement over the new borders. Details: 🚀️redeploy-readiness.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎨️styling🗃️🖌️ui💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🛅🖱️ui🗃️🎯️targets🗃️⚛️react🗃️📐️introductiongeometry💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🗃️recordtables💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏆️leaderboard💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🏠️home💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🔓️access💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🎨️styles🗃️🏠️chromeandhome💻🎨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🗃️📚️course🗃️🎯️targets🗃️⚛️react🗃️🔨️modules🗃️🎬️clips💻🟦️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 06:06:41",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Resolve the three failing rehearsal specs and run the remaining rehearsal shards and unit suites.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 06:13:07",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "The three rehearsal failures of the fourth round are resolved (the layered-home spec measures the grid's room beneath the bands, spec and README follow the reduced-motion rule the code and its unit test hold, the language spec waits for the pet cast) and the pan is mapped over the visible grid room; both-languages and first-visit pass on the static release build. The course is still not ready to redeploy: one layered-home pan check, all four phone specs and all four adaptive-layout specs fail on the rehearsal, several shards did not run, the graph route gives no result, the two energy PDFs are one edit behind, and the course product unit suite fell from 4 to 26 failures within two hours while peers added icons to controls and reworked the sign-in radios and the challenge chooser without their tests. Details: 🚀️redeploy-readiness.md."
+    }
+  ]
+}

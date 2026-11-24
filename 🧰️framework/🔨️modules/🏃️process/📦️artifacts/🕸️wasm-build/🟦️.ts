@@ -10,9 +10,10 @@ import sourceSchema from "../📤️publication/📥️sources/🧬️schema/�
 import {lstat} from "node:fs/promises";
 import {availableParallelism} from "node:os";
 import { progressDeadlinePolicyV1 } from "../../⏱️budget/🟦️.ts";
-import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, renewableCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
+import { acquireCompilerCapacityLeaseV1, renewableCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode,buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../🏗️native-build/🔒️lease/🟦️.ts";
+import { cargoJobsV1 } from "../🏗️native-build/🎰️jobserver/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve,relative } from "node:path";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -42,7 +43,7 @@ export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; workspaceRoo
  * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
 export type WasmPackWebBuildOptions = Readonly<{ storage:NativeStorageReservationV1;consume:(capture:ProducedWasmPackageV1)=>Promise<void>;environment:Readonly<Record<string,string|undefined>>; control: CompilerAdmissionControl;withCargoInputs?:CargoCompilerInputsPortV1; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; cargoConfigurationSelectors: readonly string[]; report?: (line: string) => void }>;
 /** 🔌️ Executes an explicitly selected compiler with bounded cancellation; `admit` refuses the exact Cargo selection before it compiles. */
-export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<AdmittedCargoSourceRosterV1&Readonly<{cargoWorkspace?:string}>> }>;
+export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<AdmittedCargoSourceRosterV1&Readonly<{cargoWorkspace?:string}>> }>;
 
 /** 📏️ Admits one wasm-bindgen Cargo selection through the one Source admission owner, keyed by the policy's repository root.
  * @see ../🏗️native-build/📥️source/🎟️admission/🟦️.ts */
@@ -86,9 +87,9 @@ export function wasmCompilerSelectionArgumentsV1(value:unknown):Readonly<{cargo:
  if(validateJsonSchemaSubset(wasmPolicySchema.definitions.CompilerSelection,value,wasmPolicySchema).length)throw Error("Closed finite WASM compiler selection required");const row=value as WasmCompilerSelectionV1,flags=[...(row.configuration?["--config",row.configuration]:[]),...(row.noDefaultFeatures?["--no-default-features"]:[]),...row.features.flatMap(value=>["--features",value])],cargo=appendCargoProfileConfigurationArgumentsV1(["build","--locked","--lib","--manifest-path",row.manifest,"--profile",row.mode,"--target","wasm32-unknown-unknown",...(row.threads?["-Z","build-std=std,panic_abort"]:[]),...flags],row.mode,row.selectors),wasmPackCargo=appendCargoProfileConfigurationArgumentsV1(["--locked","--manifest-path",row.manifest,"--target","wasm32-unknown-unknown",...flags],row.mode,row.selectors);return Object.freeze({cargo,wasmPackCargo});
 }
 
-/** 🗣️ Streams compiler diagnostics into the owning process's bounded job log under the original compiler deadline. */
+/** 🗣️ Streams compiler diagnostics into the owning process's bounded job log under the original compiler deadline itself: the caller's remaining time is never snapshotted into a fixed child budget, so a renewable progress window keeps renewing for the whole compile. */
 export const runWasmBuildCommandV1:WasmBuildExecutionPortV1["run"]=async(command,args,options)=>{
-  const control=requestedCompilerAdmissionControlV1(options.control,options.budgetMs);
+  const control=requestedCompilerAdmissionControlV1(options.control,0);
   const env=scriptResourceProcessEnvironmentV1(control,options.environment);
   try{
     await runOwnedCommand(command,[...args],options.cwd,options.label,0,{env,control,signal:control.signal,deadline:control,stdout:"stderr",output:wasmPolicySchema.definitions.CompilerOutput.const});
@@ -167,12 +168,12 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,retained:RetainedCargoSourcesV1|undefined,bodyFailed=false;
     try{
     const signal=control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control});checkResourceLeaseControl(control);
-    const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
+    const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(cargoJobsV1(capacity.parallelism,environment));
     const sources=await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control});
     retained=await RetainedCargoSourcesV1.admit(sources,{workspace:policy.workspaceRoot,directory:`${cargoOutput}-sources`,storage:opts.storage,control,maxSourceBytes:policy.sourceBoundary.maxSourceBytes});
     const held=retained,invoke=async(command:string,args:readonly string[],monitor?:AdmittedCargoSourceRosterV1)=>{
       checkResourceLeaseControl(control);
-      const options={cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(control),label:logPrefix,signal,control};
+      const options={cwd:componentDir,environment,label:logPrefix,signal,control};
       if(monitor)await runWasmCargoCommandV1(port.run,command,args,options,monitor,held);
       else await port.run(command,args,options);
       checkResourceLeaseControl(control);

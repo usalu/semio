@@ -40,6 +40,7 @@ THETA_T = math.degrees(math.atan2(T_PIVOT[3] - T_PIVOT[1], T_PIVOT[0] - T_PIVOT[
 L_BRACE_T = math.hypot(T_PIVOT[3] - T_PIVOT[1], T_PIVOT[0] - T_PIVOT[2])
 THETA_B = math.degrees(math.atan2(B_PIVOT[3] - B_PIVOT[1], B_PIVOT[0] - B_PIVOT[2]))
 L_BRACE_B = math.hypot(B_PIVOT[3] - B_PIVOT[1], B_PIVOT[0] - B_PIVOT[2])
+STRUT_EYE = 0.008
 
 BONES = [
     {"id": "ground", "parent": None, "title": T("Ground frame", "Bezugsrahmen"), "x": 0, "y": 0, "angleDeg": 0, "lengthM": 0, "joint": {"type": "fixed"}},
@@ -111,9 +112,9 @@ def trestle_parts(prefix, bone, half_top, up_in, up_out, foot, cap, length, scal
     return parts
 
 
-def brace_part(prefix, bone, length, w=0.0075):
-    """🥢 The folding strut of 15 x 15 x 1.5 mm square tube, pinned in its catch under the board and hooked behind the foot bar."""
-    return part(f"{prefix}-strut", bone, "sv", rect(0, length, -w, w), -0.0075, 0.0075, M_PAINT, "painted-steel", 0.3, fill=0.36, slender=True)
+def brace_part(prefix, bone, length, w=0.0075, eye=0.0):
+    """🥢 The folding strut of 15 x 15 x 1.5 mm square tube, pinned in its catch under the board and hooked behind the foot bar. `eye` is the length of tube beyond the pin: at 1:50 the 7.5 mm catch plate sits above the pin, and the tube end (`STRUT_EYE`) reaches into it, so strut and catch are one silhouette and not two parts 4 mm apart (silhouette repair SF of 2026-11-23, `catalog-silhouette` 32.7 mm in the end view)."""
+    return part(f"{prefix}-strut", bone, "sv", rect(-eye, length, -w, w), -0.0075, 0.0075, M_PAINT, "painted-steel", 0.3, fill=0.36, slender=True)
 
 
 def table_parts(scale):
@@ -149,7 +150,7 @@ def table_parts(scale):
         bone = f"table-trestle-{end}"
         if scale == "50":
             p += trestle_parts(f"table-trestle-{end}", bone, 0.19, 0.16, 0.19, 0.20, 0.02, TABLE_HINGE, scale, bowed=(end == "l"))
-            p.append(brace_part(f"table-brace-{end}", f"table-brace-{end}", L_BRACE_T))
+            p.append(brace_part(f"table-brace-{end}", f"table-brace-{end}", L_BRACE_T, eye=STRUT_EYE))
         elif scale == "100":
             p += trestle_parts(f"table-trestle-{end}", bone, 0.19, 0.16, 0.19, 0.20, 0.02, TABLE_HINGE, scale, bowed=(end == "l"))
             p.append(brace_part(f"table-brace-{end}", f"table-brace-{end}", L_BRACE_T))
@@ -198,7 +199,7 @@ def bench_parts(name, scale):
         missing = "l" if (name == "bench-rear" and end == "l") else None
         if scale in ("50", "100"):
             p += trestle_parts(bone, bone, 0.073, 0.043, 0.073, 0.105, 0.02, BENCH_HINGE, scale, bent=bent, cap_missing=missing)
-            p.append(brace_part(f"{name}-brace-{end}", f"{name}-brace-{end}", L_BRACE_B))
+            p.append(brace_part(f"{name}-brace-{end}", f"{name}-brace-{end}", L_BRACE_B, eye=STRUT_EYE if scale == "50" else 0.0))
         elif scale == "200":
             p += trestle_parts(bone, bone, 0.073, 0.043, 0.073, 0.125, 0, BENCH_HINGE, scale, thick=0.015)
             p.append(brace_part(f"{name}-brace-{end}", f"{name}-brace-{end}", L_BRACE_B))

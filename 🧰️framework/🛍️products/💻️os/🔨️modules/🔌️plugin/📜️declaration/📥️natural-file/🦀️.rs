@@ -15,7 +15,9 @@ use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_plugin_decl_app::NaturalFileDecodeCursor;
 use semio_plugin_decl_app::NaturalFileDecodeOwner;
+use semio_framework_value::retained_clone::retained_clone_grant_admits;
 use semio_plugin_decl_media::original_media::natural_source::NaturalFilePagedSource;
 use semio_plugin_decl_app::NaturalFileDecodeProgress;
 use semio_plugin_decl_app::NaturalFileDecodeStep;
@@ -158,7 +160,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
         let spent = fuel_before.saturating_sub(cx.fuel_remaining());
         self.publication_work = previous_work.saturating_add(spent);
         if publication_checkpoint_due(previous_work, self.publication_work,
-            self.contract.max_work_units_per_step, previous_stage != self.stage) {
+            self.contract.max_work_units_per_step.saturating_mul(PUBLICATION_STEPS_PER_CHECKPOINT), previous_stage != self.stage) {
             self.checkpoint();
         }
     }
@@ -175,7 +177,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
         if export.ready() {
             return export.take(cx, &mut self.verified_pack);
         }
-        for _ in 0..64 {
+        for _ in 0..PACK_EXPORT_ACTIONS_PER_STEP {
             let before = cx.retained_progress();
             if export.advance(source()?, epoch, cx)? || cx.should_yield() || cx.retained_progress() == before { break; }
         }
@@ -299,29 +301,8 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
 }
 
 impl<E: ArtifactEditor> NaturalFileImportJob<E> {
-    fn trace_original_file_worker(&self, cx: &semio_framework_job::StepContext<'_>) {
-        if !semio_framework_job::runtime_diagnostics_enabled() { return; }
-        thread_local! {
-            static WITNESS: std::cell::Cell<(u64, u64, u8, u64)> =
-                const { std::cell::Cell::new((0, 0, 255, 0)) };
-        }
-        let id = (cx.operation().0, cx.generation().0, self.stage as u8);
-        WITNESS.with(|witness| {
-            let (operation, generation, stage, calls) = witness.get();
-            let calls = if (operation, generation, stage) == id { calls.saturating_add(1) } else { 1 };
-            witness.set((id.0, id.1, id.2, calls));
-            if calls.is_power_of_two() {
-                let demand = self.pack_export.as_ref().map(|export| (export.ready(), export.advance_demands()));
-                eprintln!("[DEBUG] natural-file worker operation={} phase={:?} calls={calls} bytes={}/{} pack_work={} pending_checkpoint={} checkpoint_delivered={} next_pack_demand={demand:?} copy_left={} fuel_left={} yield={}",
-                    id.0, self.stage, self.byte_cursor, self.byte_length, self.publication_work, self.pending.is_some(),
-                    self.outcomes.is_delivered(), cx.retained_grant().maximum_copy_bytes, cx.fuel_remaining(), cx.should_yield());
-            }
-        });
-    }
-
     fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_plugin_decl_app::tool_contract::ReservedOutcomeKind;
-        self.trace_original_file_worker(cx);
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
@@ -365,8 +346,11 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
                     match step {
                         Ok(NaturalFileDecodeStep::Yield) => return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                         Ok(NaturalFileDecodeStep::Progress(progress)) => {
+                            let previous_work = self.decode_progress.completed_work_units;
                             match self.admit_controlled_progress(progress, false, cx) {
-                                Ok(()) => self.checkpoint(),
+                                Ok(()) if publication_checkpoint_due(previous_work, progress.completed_work_units,
+                                    self.contract.max_work_units_per_step.saturating_mul(PUBLICATION_STEPS_PER_CHECKPOINT), false) => self.checkpoint(),
+                                Ok(()) => {}
                                 Err(error) => self.fail(&error.message),
                             }
                         }
@@ -464,6 +448,12 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
         Ok(None)
     }
 }
+
+/// 📶 Job steps of byte-level Pack work one progress checkpoint covers; every stage change still publishes at once.
+const PUBLICATION_STEPS_PER_CHECKPOINT: u64 = 16;
+
+/// 🔁️ Pack export owner actions one job step may chain; the turn's items, copy, fuel and deadline end it earlier.
+const PACK_EXPORT_ACTIONS_PER_STEP: usize = 4_096;
 
 /// 📶 Coalesces byte-level Pack work by the existing contract quantum and publishes stage boundaries immediately.
 pub(crate) fn publication_checkpoint_due(previous: u64, current: u64, quantum: u64, changed_stage: bool) -> bool {
@@ -616,7 +606,7 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         if let Some(decoder)=self.decoder.as_mut(){match decoder{
             NaturalFileDecodeOwner::Controlled(owner)=>{
                 if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();let work=record_retirement_work(effect,1);return settled(work.map(|_|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})).map_err(|(error,_)|error),effect.performed_work())}
-                owner.begin_close();let step=owner.close_step(effect).map_err(|_|invariant("natural-file decoder close failed while retaining its original owner"));
+                owner.begin_close();let step=owner.close_chained(effect).map_err(|_|invariant("natural-file decoder close failed while retaining its original owner"));
                 let step=step.and_then(|step|{if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(invariant("natural-file decoder violated its original retirement grant or terminal witness"))}Ok(match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})});
                 let work=record_retirement_work(effect,1);return settled(work.map_err(|(error,_)|error).and_then(|_|step),effect.performed_work())
             },

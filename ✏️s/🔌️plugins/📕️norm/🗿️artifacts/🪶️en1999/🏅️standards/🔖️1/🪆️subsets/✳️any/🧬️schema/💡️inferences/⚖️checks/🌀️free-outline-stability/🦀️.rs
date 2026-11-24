@@ -30,7 +30,7 @@ pub fn free_stability(member: &AluminiumMember, k: &FreeConstants, r: &FreeResis
     let nc = (-gov.n_ed).max(0.0);
     let n_path = format!("members[id={}].actions[id={}].nK", member.id, gov.action_id);
     let mut out = Vec::new();
-    let rem = leaf_remedies("members", &member.id, &member.actions, nc / n_b_t.max(1e-18), &label, "Reduce the compression force (torsional-flexural buckling)", "Druckkraft senken (Biegedrillknicken, Drillknicken)", "nK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, nc / n_b_t.max(1e-18), &label, "Reduce the compression force (torsional-flexural buckling)", "Druckkraft senken (Biegedrillknicken, Drillknicken)", &[("nK", gov.n_ed.min(0.0))]);
     let text = format!("N_cr,T = {:.1} kN, N_cr,TF = {:.1} kN (shear centre offset y0 = {:.2} mm, z0 = {:.2} mm), λ̄_T = {lam_t:.4}, χ_T = {chi_t:.4}, N_b,T,Rd = {:.1} kN", n_cr_t.min(1.0e12) / 1e3, n_cr_tf.min(1.0e12) / 1e3, k.frames.near.y0 * 1e3, k.frames.near.z0 * 1e3, n_b_t / 1e3);
     out.push(utilization_check(format!("en1999.6.3.1.tb.{}", member.id), "DIN EN 1999-1-1", clause("6.3.1.4"), SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthT", member.id), label.clone()), loc("Torsional and torsional-flexural buckling N_b,T,Rd", "Drill- und Biegedrillknicken N_b,T,Rd"), q_force(nc), q_force(n_b_t), annex, loc(&format!("{text}{tag}"), &format!("{text}{tag_de}")), rem));
     let (n_y, n_z) = (r.n_b_y.min(n_b_t), r.n_b_z.min(n_b_t));
@@ -38,7 +38,7 @@ pub fn free_stability(member: &AluminiumMember, k: &FreeConstants, r: &FreeResis
     let eq59 = ratio(nc, n_y).powf(eta_c) + ratio(gov.m_y_ed, r.omega_lt * r.m_rd_y).powf(gamma_c) + ratio(gov.m_z_ed, r.m_rd_z).powf(xi_c);
     let eq60 = ratio(nc, n_z).powf(eta_c) + ratio(gov.m_y_ed, r.m_b_rd).powf(gamma_c) + ratio(gov.m_z_ed, r.m_rd_z).powf(xi_c);
     let u = eq59.max(eq60);
-    let rem = leaf_remedies("members", &member.id, &member.actions, u, &label, "Reduce the combined compression and bending demand", "Druck und Biegung gemeinsam senken", "nK");
+    let rem = leaf_remedies("members", &member.id, &member.actions, u, &label, "Reduce the combined compression and bending demand", "Druck und Biegung gemeinsam senken", &[("nK", gov.n_ed.min(0.0)), ("mYK", gov.m_y_ed), ("mZK", gov.m_z_ed)]);
     let text_en = format!("Eq. 6.59 = {eq59:.3}, Eq. 6.60 = {eq60:.3} with η_c = {eta_c:.2}, γ_c = {gamma_c:.2}, ξ_c = {xi_c:.2} (η_0, γ_0, ξ_0 unverified), N_b,Rd = min(flexural, N_b,T,Rd = {:.1} kN)", n_b_t / 1e3);
     let text_de = format!("Gl. 6.59 = {eq59:.3}, Gl. 6.60 = {eq60:.3} mit η_c = {eta_c:.2}, γ_c = {gamma_c:.2}, ξ_c = {xi_c:.2} (η_0, γ_0, ξ_0 ungeprüft), N_b,Rd = min(Biegeknicken, N_b,T,Rd = {:.1} kN)", n_b_t / 1e3);
     out.push(utilization_check(format!("en1999.6.3.3.int.{}", member.id), "DIN EN 1999-1-1", clause("6.3.3"), SubjectRef::new(&member.id, n_path, label), loc("Member interaction (6.59/6.60)", "Bauteilinteraktion (6.59/6.60)"), q_dim(u), q_dim(1.0), annex, loc(&format!("{text_en}{tag}"), &format!("{text_de}{tag_de}")), rem));

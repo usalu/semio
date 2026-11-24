@@ -1,11 +1,11 @@
 //! 🔎️ Re-loans an admitted native DCT stream from its revision-pinned PDF graph.
 use super::{dct_view::{PdfDctImageColor, PdfDctImageView}, PdfDctResourceIdentity};
 use crate::standards::v1_7::subsets::base::schema::{
-    snapshot::{ObjRef, PdfColorSpace, PdfImageBody, PdfObject, PdfSnapshot, PdfStreamFilter},
+    snapshot::{ObjRef, PdfColorSpace, PdfImageBody, PdfObject, PdfSnapshot, PdfStreamBytes, PdfStreamFilter},
     stream_roles::PdfStreamRoleValue,
 };
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_value::paged::PAGED_BYTES_CHUNK_BYTES;
+use semio_framework_value::{paged::PAGED_BYTES_CHUNK_BYTES, ByteReadSource};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum DctLookupError {
@@ -33,7 +33,7 @@ struct DctBinding {
 }
 
 impl DctBinding {
-    fn encoded(self, snapshot: &PdfSnapshot) -> Result<&Vec<u8>, DctLookupError> {
+    fn encoded(self, snapshot: &PdfSnapshot) -> Result<&PdfStreamBytes, DctLookupError> {
         let retained = snapshot.objects.get(self.slot).filter(|retained| retained.id == self.object)
             .ok_or(DctLookupError::MissingObject)?;
         match &retained.value {
@@ -148,7 +148,7 @@ fn object_binding(slot: usize, owner: ObjRef, object: &PdfObject, geometry: DctG
         || object.dict_get("Width") != Some(&PdfObject::Int(i64::from(width)))
         || object.dict_get("Height") != Some(&PdfObject::Int(i64::from(height)))
         || object.dict_get("ColorSpace").and_then(PdfObject::as_name) != Some(space)
-        || !data.starts_with(&[0xff, 0xd8]) || !data.ends_with(&[0xff, 0xd9])
+        || data.len() < 4 || [data.byte_at(0), data.byte_at(1), data.byte_at(data.len() - 2), data.byte_at(data.len() - 1)] != [Some(0xff), Some(0xd8), Some(0xff), Some(0xd9)]
     {
         return Err(DctLookupError::UnsupportedShape);
     }

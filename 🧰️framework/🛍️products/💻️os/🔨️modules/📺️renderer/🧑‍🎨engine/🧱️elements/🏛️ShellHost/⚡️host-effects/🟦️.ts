@@ -5,6 +5,7 @@
 
 import { shellDialogOriginIsCurrentV1, shellDialogSessionIsCurrentV1 } from "../🗨️dialog-origin/🟦️.ts";
 import { useCallback } from "../../⚛️react-port/🟦️.ts";
+import { applyOnDemandRequestEffect } from "./🧭️on-demand-request/🟦️.ts";
 import { type Effect, type UiDirtyScope } from "@semio-tech/framework";
 // #region 🔌️Adapters
 import {
@@ -115,6 +116,7 @@ export function useApplyHostEffects(core: ShellCoreAfterSpawnedSession) {
           applyOpenDialogEffect({ shellStateRef, makeOwnedDialog, liveDialogRef, dispatch, effect, baseSession, effectOrigin });
           continue;
         }
+        if ("publishEvent" in effect && applyOnDemandRequestEffect(effect)) continue;
         if ("navigate" in effect) {
           navigateShellUri(effect.navigate.uri);
           continue;

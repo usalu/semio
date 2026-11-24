@@ -35,7 +35,7 @@ pub fn view_action_definitions() -> Vec<ActionDefinition> {
     let labels = [("Zoom In", "Vergrößern"), ("Zoom Out", "Verkleinern"), ("Fit Page", "Seite einpassen"), ("Fit Width", "Breite einpassen"), ("Actual Size", "Originalgröße"), ("Go To Page", "Gehe zu Seite"), ("Search Text", "Text suchen"), ("Match Case", "Groß-/Kleinschreibung"), ("Next Match", "Nächster Treffer"), ("Previous Match", "Vorheriger Treffer")];
     VIEW_ACTION_IDS.iter().zip(labels).map(|(id, (en, de))| {
         let args = match *id {
-            "go-to-page" => vec![ActionArgDef::number("page", LocalizedLabel::native("Page", "Seite")).required()],
+            "go-to-page" => vec![ActionArgDef::number("page", LocalizedLabel::native("Page number", "Seitenzahl")).required()],
             "set-query" => vec![ActionArgDef::text("text", LocalizedLabel::native("Query", "Suchbegriff")).min_length(0).required()],
             _ => Vec::new(),
         };

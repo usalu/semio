@@ -84,4 +84,4 @@ impl<'a> OriginalScratchWork<&'a Dictionary> for NativeParamReadWork{
  fn advance(&mut self,source:&mut &'a Dictionary,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{NativeParamReadWork::advance(self,source,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.progress}
 }
-impl Drop for NativeParamReadWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"native parameter reader retains original map lookups");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for NativeParamReadWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"native parameter reader retains original map lookups");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

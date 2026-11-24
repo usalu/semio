@@ -13,8 +13,12 @@ export { createTurnOutcomeBroadcast } from "../../📡️turn-outcome-broadcast/
 export type { TurnOutcome } from "../../📡️turn-outcome-broadcast/🟦️.ts";
 export type { PluginDispatchHintV1, PluginWasmHandle } from "../../🪝️plugin-wasm-handle/🟦️.ts";
 export { buildContributionsJson, consumedTopicsForApp, resolveLayoutForMode, scopeContributionsJson } from "../../🧾️contributions-json/🟦️.ts";
-export { expandPluginRegistry } from "../../🗂️plugin-registry/🟦️.ts";
-export type { PluginDependency, PluginRegistryEntry, VersionPin } from "../../🗂️plugin-registry/🟦️.ts";
+export { expandPluginRegistry, isActivatedOnDemand, onDemandActivationClosure, onDemandPluginEntries, requiredDependencies } from "../../🗂️plugin-registry/🟦️.ts";
+export type { PluginDependency, PluginDependencyActivation, PluginRegistryEntry, VersionPin } from "../../🗂️plugin-registry/🟦️.ts";
+export { admitOnDemandRequest, createOnDemandActivator, ON_DEMAND_STATUS_LABELS, onDemandStatusAnnouncement, onDemandStatusLabel, resolveOnDemandOwners } from "../../⏳️on-demand-activation/🟦️.ts";
+export type { OnDemandActivationContext, OnDemandActivator, OnDemandActivatorOptions, OnDemandOutcome, OnDemandPhase, OnDemandRequest, OnDemandStatus, OnDemandUnavailableReason } from "../../⏳️on-demand-activation/🟦️.ts";
+export { activateDocumentNodeKinds, documentActivationLabel, documentActivationNotice, documentExtensionOwners, DOCUMENT_ACTIVATION_LABELS, exampleDocumentText, guestActivationRequest, nodeKindRequests, ON_DEMAND_REQUEST_TOPIC, openDocumentAfterActivation, openExampleAfterActivation, scanNodeKinds } from "../../🧭️node-kind-trigger/🟦️.ts";
+export type { DocumentActivationOptions, DocumentActivationReport, DocumentHandoffContext, OpenDocumentOptions, OpenDocumentResult, UnavailableNodeKind } from "../../🧭️node-kind-trigger/🟦️.ts";
 export type {
   ArtifactContributionDescriptor,
   ContributedInferenceMetadata,
@@ -33,7 +37,7 @@ export {
   resolveOpeningApp
 } from "../../📖️opening-resolver/🟦️.ts";
 export type { DefaultApp, OpeningConfigMutation, OpeningPreferences } from "../../📖️opening-resolver/🟦️.ts";
-export { artifactKindActivationOwner, ON_ARTIFACT_KIND_ACTIVATION_PREFIX, ON_EXTENSION_REQUEST_ACTIVATION_PREFIX } from "../../📚️plugin-catalog/🟦️.ts";
+export { artifactKindActivationOwner, nodeKindActivationEvent, ON_ARTIFACT_KIND_ACTIVATION_PREFIX, ON_EXTENSION_REQUEST_ACTIVATION_PREFIX, ON_NODE_KIND_ACTIVATION_PREFIX } from "../../📚️plugin-catalog/🟦️.ts";
 export type { PlaygroundCatalogTarget, PluginCatalog, PluginCatalogTarget, PluginHostConfig } from "../../📚️plugin-catalog/🟦️.ts";
 export type {
   AppEvent,

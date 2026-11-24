@@ -133,9 +133,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         A::tool_measures(&doc, &cfg, view_state).await
     }
 
-    /// 🔒️ Polls the retained operation owner and live run against the committed document snapshot.
+    /// 🔒️ Polls the retained operation owner and live run against the committed document snapshot, after every mounted Window owns its config partition.
     pub async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<Effect>>,semio_framework_job::OriginalTurnFailure>{
         if self.ingest.document_blocks_pending_effects() || cx.should_yield() { return Ok(None); }
+        if !self.stores.window_config_store.ensure_for_roster(view, cx)? { return Ok(None); }
         self.refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let Some(grant)=semio_plugin_decl_views::MountedSnapshotReadPreparation::grant(self.mounted_policy.preparation,cx)else{return Ok(None)};

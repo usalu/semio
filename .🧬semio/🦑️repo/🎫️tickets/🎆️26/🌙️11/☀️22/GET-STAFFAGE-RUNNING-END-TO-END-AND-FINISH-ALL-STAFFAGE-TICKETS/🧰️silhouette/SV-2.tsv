@@ -1,0 +1,19 @@
+vegetation	ivy-on-trellis	1:200 front: expected 0.9124378109452737 to be greater than or equal to 0.92
+vegetation	japanese-cherry	1:200 front Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.06
+vegetation	japanese-maple	1:500 front Hausdorff: expected 0.5450415695155737 to be less than or equal to 0.15
+vegetation	lombardy-poplar	1:200 axis 0: 4.402543665182144 m against 4.464 m: expected 0.06145633481785673 to be less than or equal to 0.03
+vegetation	london-plane-pollarded	1:100 axis 1: 8.614540793055658 m against 8.634 m: expected 0.019459206944342 to be less than or equal to 0.015
+vegetation	miscanthus-grass	1:100 axis 0: 2.124781008593139 m against 2.14 m: expected 0.015218991406861004 to be less than or equal to 0.015
+vegetation	multi-stem-birch	1:500 elevation: expected 0.9002776736622609 to be greater than or equal to 0.92
+vegetation	norway-maple	1:100 axis 2: 14.160915689951532 m against 14.182 m: expected 0.02108431004846878 to be less than or equal to 0.015
+vegetation	olive-tree	1:500 elevation Hausdorff: expected 0.16978847134007657 to be less than or equal to 0.15
+vegetation	red-oak	1:500 axis 0: 18.709882366058594 m against 18.394 m: expected 0.3158823660585952 to be less than or equal to 0.075
+vegetation	rowan	1:200 elevation Hausdorff: expected 0.2520044642461716 to be less than or equal to 0.06
+vegetation	saucer-magnolia	1:100 front Hausdorff: expected 0.04889401803901987 to be less than or equal to 0.03
+vegetation	scots-pine	1:200 axis 0: 12.04128452611754 m against 12.076 m: expected 0.03471547388246066 to be less than or equal to 0.03
+vegetation	small-leaved-lime	1:200 elevation Hausdorff: expected 0.255 to be less than or equal to 0.06
+vegetation	stone-pine	1:500 axis 1: 20.61579872339632 m against 20.494 m: expected 0.1217987233963207 to be less than or equal to 0.075
+vegetation	sweetgum	1:500 elevation Hausdorff: expected 0.4275657844121767 to be less than or equal to 0.15
+vegetation	sycamore-maple	1:200 elevation Hausdorff: expected 0.07386643351347078 to be less than or equal to 0.06
+vegetation	tulip-tree	1:500 axis 0: 13.768771371411031 m against 13.509 m: expected 0.25977137141103057 to be less than or equal to 0.075
+vegetation	weeping-willow	1:500 axis 2: 13.8520832 m against 14 m: expected 0.14791680000000085 to be less than or equal to 0.075

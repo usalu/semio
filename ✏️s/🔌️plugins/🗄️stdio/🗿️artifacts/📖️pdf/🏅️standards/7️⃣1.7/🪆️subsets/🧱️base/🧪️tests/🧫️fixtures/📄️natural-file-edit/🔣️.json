@@ -9,7 +9,7 @@
   },
   "action": {
     "id": "set-page-rotation",
-    "page": 1,
+    "page": 2,
     "x": 90
   },
   "mutation": {

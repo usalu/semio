@@ -1,7 +1,8 @@
 import {countedCompilerCapacityRequestV1} from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { basename,dirname,join,resolve } from "node:path";
 import { mkdirSync,mkdtempSync,rmSync } from "node:fs";
-import { withCompilerCapacityScopeV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
+import { progressDeadlinePolicyV1 } from "../../⏱️budget/🟦️.ts";
+import { withCompilerCapacityScopeV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, renewableCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode,type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
 import { runOwnedCommand } from "../../🎛️owned-execution/🟦️.ts";
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
@@ -24,7 +25,7 @@ export async function buildGoArtifactsV1(input:readonly string[],policy:GoArtifa
  compilerAdmissionBudgetV1(options.control);
  const args:string[]=[];let output:string|undefined;
  for(let index=0;index<input.length;index++){const argument=input[index]!;if(argument==="-o"){if(output||!input[index+1])throw Error("Go build requires one output");output=resolve(policy.cwd,input[++index]!);}else if(argument.startsWith("-o=")){if(output)throw Error("Go build requires one output");output=resolve(policy.cwd,argument.slice(3));}else args.push(argument);}
- const configured=goBuildArgumentsV1(policy.mode,args),control=requestedCompilerAdmissionControlV1(options.control,policy.budgetMs),signal=control.signal;
+ const configured=goBuildArgumentsV1(policy.mode,args),control=policy.budgetMs===0?requestedCompilerAdmissionControlV1(options.control,0):renewableCompilerAdmissionControlV1(options.control,progressDeadlinePolicyV1("native-child",0,options.environment??process.env,{maximumMilliseconds:policy.budgetMs}),0),signal=control.signal;
  mkdirSync(policy.captureDirectory,{recursive:true});const staging=mkdtempSync(join(policy.captureDirectory,"go-")),artifact=output?join(staging,basename(output)):undefined;
  try{
   await withCompilerCapacityScopeV1({request:countedCompilerCapacityRequestV1(),directory:policy.leaseDirectory,control,environment:options.environment},async(capacity,control)=>{const environment={...(options.environment??process.env),SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),GOMAXPROCS:String(capacity.parallelism),GOTMPDIR:staging};

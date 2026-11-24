@@ -529,7 +529,7 @@ pub fn output_intent_rows(base: &PdfSnapshot, subtype: &str, identifier: &str, d
     let mut profile = None;
     let mut entries = vec![("Type", PdfObject::Name("OutputIntent".to_string())), ("S", PdfObject::Name(subtype.to_string())), ("OutputConditionIdentifier", literal(identifier)), ("Info", literal(identifier))];
     if dest_profile {
-        let stream = PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }], data: format!("ICC destination output profile for {identifier}").into_bytes(), filters: Vec::new() };
+        let stream = PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".to_string(), value: PdfObject::Int(3) }], data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(format!("ICC destination output profile for {identifier}").as_bytes()), filters: Vec::new() };
         profile = Some((insertion.push(stream.clone()), stream));
         entries.push(("DestOutputProfile", PdfObject::Ref(profile.as_ref().map_or(ObjRef { num: 0, gen: 0 }, |(id, _)| *id))));
     }
@@ -543,7 +543,7 @@ pub fn output_intent_rows(base: &PdfSnapshot, subtype: &str, identifier: &str, d
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn insert_file_spec_rows(base: &PdfSnapshot, file_name: &str, placements: &[ObjectPlacement]) -> PdfDiff {
     let mut insertion = Insertion::after(base, placements);
-    let payload = insertion.push(PdfObject::Stream { dict: Vec::new(), data: format!("attached payload for {file_name}").into_bytes(), filters: Vec::new() });
+    let payload = insertion.push(PdfObject::Stream { dict: Vec::new(), data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(format!("attached payload for {file_name}").as_bytes()), filters: Vec::new() });
     insertion.push(dict(vec![("Type", PdfObject::Name("Filespec".to_string())), ("F", literal(file_name)), ("UF", literal(file_name)), ("EF", single_entry_dict("F", PdfObject::Ref(payload)))]));
     insertion.rows()
 }

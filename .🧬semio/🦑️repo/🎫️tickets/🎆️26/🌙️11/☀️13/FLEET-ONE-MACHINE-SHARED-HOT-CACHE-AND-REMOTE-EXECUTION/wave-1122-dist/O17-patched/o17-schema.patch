@@ -1,0 +1,68 @@
+--- a/schema.json
++++ b/schema.json
+@@ -33,6 +33,7 @@
+         "cheap",
+         "local-slot",
+         "unmeasured",
++        "final-wait",
+         "pin-failed",
+         "cancelled"
+       ]
+@@ -54,6 +55,7 @@
+         "crateTypes",
+         "wasm",
+         "peak",
++        "finals",
+         "link"
+       ],
+       "properties": {
+@@ -502,6 +504,19 @@
+                 "minimumCrates": {"type": "integer", "minimum": 1}
+               }
+             }
++          }
++        },
++        "finals": {
++          "type": "object",
++          "additionalProperties": false,
++          "description": "The expensive units: a unit whose predicted local cost reaches `minimumMilliseconds` (its recorded local compile time; for a linked wasm unit never measured here the family estimate, the `peak.family.quantilePercent` quantile of the recorded compile times of the crates of its family, else `seedMilliseconds`) or `minimumMegabytes` (its learned peak, else for a linked wasm unit the family or cold peak) prefers a worker that has the memory for it even when a compile slot of this machine is free: it frees this machine for the next unit and runs with the cores of the worker. It asks the scheduler for such a worker for up to `waitMilliseconds` (every `pollMilliseconds`) and compiles here when none fits in that time; a cheaper unit never asks.",
++          "required": ["minimumMilliseconds", "minimumMegabytes", "seedMilliseconds", "waitMilliseconds", "pollMilliseconds"],
++          "properties": {
++            "minimumMilliseconds": {"type": "integer", "minimum": 1},
++            "minimumMegabytes": {"type": "integer", "minimum": 1},
++            "seedMilliseconds": {"type": "integer", "minimum": 0},
++            "waitMilliseconds": {"type": "integer", "minimum": 0},
++            "pollMilliseconds": {"type": "integer", "minimum": 1}
+           }
+         },
+         "wasm": {
+@@ -961,6 +976,13 @@
+         "minimumCrates": 3
+       }
+     },
++    "finals": {
++      "minimumMilliseconds": 120000,
++      "minimumMegabytes": 4096,
++      "seedMilliseconds": 900000,
++      "waitMilliseconds": 30000,
++      "pollMilliseconds": 2000
++    },
+     "wasm": {
+       "targets": [
+         "wasm32-unknown-unknown",
+@@ -1081,6 +1103,7 @@
+       "reason.cheap": "it compiles faster than a round trip",
+       "reason.local-slot": "a compile slot of this machine is free",
+       "reason.unmeasured": "its local cost is not measured yet, so it compiles here first",
++      "reason.final-wait": "it is expensive but no other machine had the memory for it in time",
+       "reason.pin-failed": "the pinned machine could not take or finish it"
+     },
+     "de": {
+@@ -1109,6 +1132,7 @@
+       "reason.cheap": "sie ist schneller kompiliert als ein Hin und Zurück",
+       "reason.local-slot": "ein Kompilierplatz dieser Maschine ist frei",
+       "reason.unmeasured": "ihre lokalen Kosten sind noch nicht gemessen, daher wird sie zuerst hier kompiliert",
++      "reason.final-wait": "sie ist teuer, aber keine andere Maschine hatte rechtzeitig den Speicher dafür",
+       "reason.pin-failed": "die festgelegte Maschine konnte sie nicht annehmen oder nicht beenden"
+     }
+   }

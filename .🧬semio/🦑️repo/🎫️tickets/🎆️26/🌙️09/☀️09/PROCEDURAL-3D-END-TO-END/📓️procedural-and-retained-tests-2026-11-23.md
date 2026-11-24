@@ -66,3 +66,59 @@ Peer breakage met and cleared: `semio-os-store-initialization-replay` briefly fa
 - `.../🎛️input/📚️params/✏️patch/🧪️.rs`
 - `.../🎛️input/💎️literal/🧪️.rs`
 - `.../🧭️transform/🧪️laws/📁️cases.json`
+
+## Run 4
+
+Fix of the 123 `E0277` errors in `semio-s-artifact-stdio-gltf-model-snapshot` (generation3d dev-dependency `features = ["testing"]`).
+
+Cause: the snapshot crate (the type owner of `GltfJson`, `GltfCamera`, `GltfCameraProjection`) derives serde under `cfg(any(test, feature = "testing"))`, but the hand-written serde impls for those three types were mounted only in the `semio-s-artifact-stdio-gltf-model-schema` crate (`🚪️io/📝️text/📸️snapshot/🧪️serde-oracle`), a downstream crate. That is an orphan-rule violation for the impls, and left the snapshot crate's own derives unsatisfied.
+
+Fix (crate-ownership rule, impls move to the type owner):
+- `🧬️schema/📸️snapshot/📦️packages/🦀️rust/🦀️.rs`: mounts `serde-oracle/🦀️.rs` and `semantic-cache-codec/🦀️.rs` as `serde_oracle` / `semantic_cache_codec` inside `schema::snapshot`, both under `cfg(any(test, feature = "testing"))`.
+- `🚪️io/📝️text/📸️snapshot/🧪️serde-oracle/📦️packages/🦀️rust/🦀️.rs`: removed the `io::text::snapshot` mounts (the schema crate keeps its `testing` feature, which forwards to the snapshot crates).
+- `🧪️semantic-cache-codec/🦀️.rs`: dropped four unused imports (`snapshot_root`, `ArtifactSchema`, two redundant type imports) that would have required a dependency on the downstream root crate.
+The `testing` feature stays; the io round-trip tests still get their serde oracles through it.
+
+Results:
+- `check --features testing` of the snapshot crate: 0 errors (`🗑️generated/proc-run6-snap.log`, 25 min cold).
+- `check --tests` of generation3d (`proc-run7-tests.log`): the gltf `E0277` errors are gone (0 of 123). 38 other errors remain, none from gltf:
+  - `semio-plugin-composition-publication` lib, 3x `E0599`: `digest_witness` is called on `ArtifactStoreBatchPublication`, which no longer has it (it exists only in `store/📬️one-item-owners/📥️lifted/📬️publication`). A peer's in-flight move; it blocks every generation3d test target.
+  - `editor-routes` test target, 16 errors: `ArtifactCommandInputs` gained `snapshot_read`, `OriginalTurnFailure` lost `.code`, and a call arity change; test code needs adapting once the peer API settles.
+- `action-producer` was therefore not run; still to do once those two settle (3 passed expected, and if `occupied` appears follow note item 4 / `Location::caller()` plan).
+
+## Run 5
+
+Result: `action-producer` 3 passed, 0 failed (`🗑️generated/proc-run18-action-producer.log`); `check --tests` of generation3d 0 errors (`proc-run9-tests.log`). The full `test --no-fail-fast` run was stopped on request while the host disk was low; per-target counts for the other generation3d targets are still pending.
+
+Fixes since Run 4 (the 38 remaining errors):
+- `composition-publication` (3x `E0599`): no caller change; the peer's `digest_witness` on `ArtifactStoreBatchPublication` (`store/📬️one-item-owners/📥️lifted/📬️publication`) is reached through `store::os_store::one_item_publication`.
+- `editor-routes` (16 errors, then 2 follow-ups): `snapshot_read: ArtifactCommandSnapshotRead::unavailable(&operation)` at every `ArtifactCommandInputs` site, passed explicitly beside `..inputs` because the field is not `Copy`; `OriginalTurnFailure.code` replaced by `primary_value()` / `primary_fault()`; the eval-source lease test moved to `SharedOwner<String>` (`from_cold`, `set_eval_json(&mut Option, effect)`, `same_original`, `elect_cold`); the reply-command test compares the decoded fault message text because production now carries the fault as a `DslValue`; close driven by `close_original_effect_step`; `Generation3dPreviewCommandWork::new` is `pub`; `command_from_action(.., &mut Some(args), &mut None)` in node-graph-edit.
+- Link/compile blockers outside the crate: `semio-plugin-document-media` read the now private `ChildMemberRegistry.slots`; moved to `EmptyBacking::release_bytes` / `release(grant)`.
+- "original page allocation attempt is occupied" no longer appears: `widget_value_edit_and_undo_reach_the_command_through_the_editor_producer` passes. No second-allocation loop was found beyond the seal-cursor guard already in HEAD.
+- `a_pack_wider_than_the_ordinary_runtime_wire_reaches_its_command` failed with "registered fixture preparation receipt grant exceeds its original caller authority". Root cause: the fixture restored the native per-turn grant every turn, wiping the depth the test had set by hand on `cx`, so the receipt depth (4096) exceeded the 64-deep policy. The test now arms the host turn grant (`arm_host_turn_grant(policy.preparation)`) instead.
+- Source budget: `semio-plugin-testing-laws` exceeded its 262144-byte budget (blocked the flow hub component at source admission). Split into `semio-plugin-testing-instance-laws` (declared-verb probing, paired-apps history and convergence, pane smoke, fixture-tree projection); testing-laws is now 175412 bytes. The `semio_plugin::artifact_app_laws` facade merges both crates, so dependents are unchanged. `verify build-owners sync` passed.
+
+### Run 5 addendum: full `test --no-fail-fast` (`🗑️generated/proc-run20-all.log`, 2026-11-24, after the disk recovered to 32 GiB)
+
+Per target (ok / failed):
+- unit tests: 0 / 0.
+- `action-producer`: process aborted (SIGABRT). 1 ok (`a_pack_wider_...`); `widget_value_edit_and_undo_...` failed with `interactive-job.publication-stalled` ("typed operation 'patchFlowWidgets' abandoned its pending publication without a retained cause"), then `FlowOperatorCatalogueOwner` dropped non-empty ("instance catalogue must close actual derivation and every published generation") and aborted the binary, so the third test did not report. This passed 3/3 in `proc-run18-action-producer.log` a few hours earlier; between the two runs peers changed code, so treat it as a new regression, not yet root-caused.
+- `editor-routes`: 6 ok / 2 failed (`document_io_eval_source_lease_...`, `conflict_history_edits_end_to_end`) before another test aborted the binary on the same catalogue-owner drop (`document_io_import_continuation_...`).
+- `host-laws`: 3 / 7. Causes: "generation3d-mutation.format" ingress grant refused, owned vs Arc document backing 18834 vs 19098, ordered-map root dropped unretired, "original caller has no parent source supplier".
+- `io-round-trip`: 55 / 7. Causes: "widgets.0.missing tag field `kind`", `dwg` declares a representation its artifact does not publish.
+- `mutation-laws`: 36 / 7, then SIGABRT on the same catalogue-owner drop (`graph_editor_replay_reaches_the_host_snapshot_for_a_reorganisation`).
+- `pane-smoke`: 0 / 0, SIGABRT on the same catalogue-owner drop (`example_configuration_publishes_before_the_document_load`).
+- doc-tests: 0 / 0.
+
+Common thread: a failed test panics, the flow catalogue owner is dropped before it is terminal-empty, and the destructor panic aborts the test binary. The first failure per binary is the real cause. Not rerun: the host disk is at 10 GiB free (below the 25 GiB restart threshold).
+
+## Run 6
+
+Item 1, abort pattern (done in source, not yet compiled): a failing test panicked, `FlowOperatorCatalogueOwner` dropped while not terminal-empty, and its Drop assertion panicked during unwinding (double panic, SIGABRT). Rule applied across the framework and plugins: a Drop-time terminal or empty assertion must read `assert!(std::thread::panicking()||(COND),msg)`; the body still runs its cleanup, only the assertion is skipped while unwinding (the first panic already reports). `semio_framework_value`'s `unsettled_drop_allowed()` already implements this for the retirement owners. A single shared helper was not possible: the Drop sites live in leaf crates that `semio-framework-value` itself depends on, so a macro there would be cyclic, and a new leaf crate would need a dependency edge in about 100 manifests. The idiom is the shared rule.
+- A scripted rewrite (`/private/tmp/claude-501/scratch/rewrite.py`) guarded every unguarded `assert!(` inside `impl Drop` in `🧰️framework` and `✏️s`: 137 files (test-only files excluded). Hand edits: `FixedOperationRegistry` (`assert_eq!(occupied,0)` became a guarded `assert!`) and `UiValueRetirement` (trailing `panic!` became `assert!(std::thread::panicking(),..)`).
+- Left as is on purpose (invariants, not terminal-state laws): `assert_eq!` epoch/ticket/generation checks in the job return slots and the progress overlay checkout, and `panic!`/`unreachable!` recovery paths in the FEM plugin.
+- New law: `a_panicking_body_with_a_non_empty_owner_unwinds_without_aborting` in `📇️catalogue-owner/🧪️laws/🦀️.rs` (non-empty owner dropped in a panicking body must not abort; outside unwinding the drop still panics).
+
+Item 2, regression `widget_value_edit_and_undo_...`: the log message ("abandoned its pending publication without a retained cause") no longer exists in the source; `deterministic_preparation_refusal` in `🔌️plugin/🧵️retained-command/🔄️full-operation/🦀️.rs` now returns `None` when an abandoned publication has no fault. Peer edits after the proc-run18 log: `🧩️composition/📬️publication/🦀️.rs` (00:04, `digest_witness` move), `🧾️typed-operations/📥️staging/📬️publication/📬️typed-operation-unit` (00:18), `app-typed-command-full-operation/🚫️cancellation-publication-boundaries` tests (00:20), `registered-app-construction-and-typed-operation-settlement` (00:32). The run20 binary predates them, so the failure is probably already changed; this is NOT confirmed and not root-caused.
+
+Item 3, reruns: NOT completed. `proc-run21-action-producer.log` started a build (about 137 touched files force a large rebuild) and was stopped (exit 143) when free space fell to 17 GiB, under the 20 GiB limit, with a peer cargo running. Counts: `action-producer`, `editor-routes`, `mutation-laws`, `pane-smoke`: not run. Next: rerun when at least 20 GiB are free; the first failure per binary is now reported instead of aborting.

@@ -77,7 +77,7 @@ impl FlowChildPublicationWork{
  pub fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.owners.terminal_is_empty(){return poll_outcome(self.owners.step(g.maximum_copy_bytes,effect))}let d=RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.stamp=None;self.origin=None;self.references=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.terminal_is_empty()&&self.stamp.is_none()&&self.origin.is_none()&&self.references.is_none()}
 }
-impl Drop for FlowChildPublicationWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow child publication requires terminal original source and native leaf custody")}}
+impl Drop for FlowChildPublicationWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow child publication requires terminal original source and native leaf custody")}}
 
 #[path="🔤️param-json/🦀️.rs"]
 mod param_json;

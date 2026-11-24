@@ -219,7 +219,8 @@ pub struct Moved {
     regenerate: bool,
 }
 impl Moved {
-    fn between(read: &PdfSnapshot, typed: &PdfSnapshot) -> Self {
+    /// 🧭 Which typed lanes `typed` moved away from what `read` spells.
+    pub fn between(read: &PdfSnapshot, typed: &PdfSnapshot) -> Self {
         Self {
             pages: read.pages != typed.pages,
             info: read.info != typed.info,
@@ -228,6 +229,9 @@ impl Moved {
             regenerate: read.declared_version != typed.declared_version || read.embedded_files != typed.embedded_files || read.acro_form != typed.acro_form || read.optional_content != typed.optional_content,
         }
     }
+
+    /// 🔁 Whether a moved lane (version, embedded files, forms, optional content) only a regeneration can state.
+    pub fn regenerates(&self) -> bool { self.regenerate }
 
     pub fn is_empty(&self) -> bool {
         !self.pages && !self.info && !self.resources && self.catalog.is_empty() && !self.regenerate

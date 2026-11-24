@@ -1,0 +1,130 @@
+{
+  "title": "Fleet Memory Watchdog Admission and Unit Carving",
+  "emoji": "🚨",
+  "status": "open",
+  "description": "Mac workers constantly run out of application memory and macOS pauses programs, blocking the whole worker. (1) Every memory-relevant process the repo launches is admitted against measured free memory with a predicted peak, watched while running and throttled/suspended/cancelled-and-requeued by a repo-owned watchdog in a declared order before the OS acts, with an alarm naming process, owner and action; per-worker swap visible in fleet status. (2) Carve packages so every compile unit fits a 16 GB worker, with a schema-declared per-unit memory ceiling and a law that fails when exceeded. (3) Prove with numbers on a real worker, language-agnostic tests with independent oracle, watchdog overhead measured.",
+  "summary": "Observe-only tick shortened from 15 s to 8 s so the Windows worker's record stays inside the 30 s freshness bound; results.md gained the four live interventions on g1-m10, g1-m02 and g1-m01 (all at OS pressure critical with heavy swap traffic, all back to calm after one or two cancels).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2798"
+  },
+  "goal": "🎯repomechanisms",
+  "sessions": [
+    "4b097e7e-8157-42fb-9d51-5ab6cce5ae0d",
+    "1f33d411-b4b7-42f8-b402-22103fc6883a",
+    "4af6d389-fd5a-4e64-8e9d-566fb16a18a2",
+    "6e01d7b7-4806-485e-8400-587dba0b4ae8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-24 02:19:50",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Mac workers constantly run out of application memory and macOS pauses programs, blocking the whole worker. (1) Every memory-relevant process the repo launches is admitted against measured free memory with a predicted peak, watched while running and throttled/suspended/cancelled-and-requeued by a repo-owned watchdog in a declared order before the OS acts, with an alarm naming process, owner and action; per-worker swap visible in fleet status. (2) Carve packages so every compile unit fits a 16 GB worker, with a schema-declared per-unit memory ceiling and a law that fails when exceeded. (3) Prove with numbers on a real worker, language-agnostic tests with independent oracle, watchdog overhead measured.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 03:42:38",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Host warden added (process-table classified subjects; hold → suspend → cancel-and-requeue ladder with EN/DE alarms; pure decision with Python oracle; mounted tests on real processes), wired into the capacity gate, remote-execution worker, Ready supervisor and test-file; per-worker memory mirrored to the group store and shown with findings in repo fleet status; unit ceiling (4096 MB) with closed carving list and law. Fleet runs enforce on 11 workers (coordinator observe, play clone protected); overhead 0.4–0.9 % of one core. Open: no live intervention occurred yet on a worker; cad/puzzle finals (thin LTO over 1,041+ crates) not measured or reduced because the coordinator's Rust cache image does not mount. See results.md.",
+      "files": [
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🎫️gate💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🎟️admission💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️📏️decision💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️🏗️build🗃️🌡️hostcapacity🗃️📡️sampling💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🎟️admission🗃️🧬️schema⚙️🔣️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🔨️modules🗃️🏃️process🗃️📦️artifacts🗃️🏗️nativebuild🗃️🧩️componentpass💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️👷️worker💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🌐️remoteexecution🗃️🛰️sidecar🗃️🚦️ready💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🔬️testfile🗃️🏃️run💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️inference🗃️🧭️scriptinputs🗃️🪆️heavyquestions💻🟨️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🕸️graph🗃️📥️load🗃️🛟️ownerisolation💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️📥️readers💻🟦️"
+        },
+        {
+          "path": "🛅🧰️framework🗃️🛍️products🛅🦑️repo🗃️🔨️modules🛅📚️library🗃️🏗️build🗃️🚢️fleetstatus🗃️🧬️schema⚙️🔣️"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 03:43:48",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Record the first live warden intervention on a worker (g1-m10, 03:43) in results.md."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 03:44:24",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Recorded the first live warden intervention in results.md: on g1-m10 (16 GB) at 03:43 the warden suspended and then cancelled two compile units during three seconds of OS pressure critical with swap traffic up to 243 MB/s, memory returned to calm seven seconds later and the third unit was resumed; the worker stayed responsive. Open items unchanged: finals cad/puzzle not reduced, alarm text does not name the swap/pressure trigger, short calm hysteresis."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 04:06:57",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Windows worker record flaps between absent and calm: the 15 s observe-only tick plus the slow process walk exceeds the 30 s freshness bound. Shorten the observe-only tick."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-24 04:07:32",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "Observe-only tick shortened from 15 s to 8 s so the Windows worker's record stays inside the 30 s freshness bound; results.md gained the four live interventions on g1-m10, g1-m02 and g1-m01 (all at OS pressure critical with heavy swap traffic, all back to calm after one or two cancels)."
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-24 04:08:35",
+      "author": "",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Live finding: on g1-m10 the final semio_hub_draw_component was cancelled by the warden a second time at about 2 GB after its pass restarted (cancel loop). The native-build broker admits against physical memory minus a reserve, not against measured available memory, so it restarts the same unit into the same shortage. Bound broker starts by measured available memory and by the warden's level."
+    }
+  ]
+}

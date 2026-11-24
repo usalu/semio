@@ -18,12 +18,19 @@ async function textAt(path:string,maximum:number,control:ResourceLeaseControl):P
 }
 /** 🎮️ Checks the exact live publication and returns copied session DATA while retaining the actual reader. */
 export async function withPlaygroundSessionV1<T>(workspace:string,invocation:ScriptInvocation,variant:string,body:(session:PlaygroundSession,projection:GeneratedCatalogProjection,control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+ return await withSessionV1(workspace,invocation,variant,false,body) as T;
+}
+/** ♻️ Returns the retained projection only while its Source is exactly what the current renderer emits for it, else undefined so the owner republishes. */
+export async function retainedPlaygroundSessionProjectionV1(workspace:string,invocation:ScriptInvocation,variant:string):Promise<GeneratedCatalogProjection|undefined>{
+ return withSessionV1(workspace,invocation,variant,true,async(_session,projection)=>projection);
+}
+async function withSessionV1<T>(workspace:string,invocation:ScriptInvocation,variant:string,tolerateStale:boolean,body:(session:PlaygroundSession,projection:GeneratedCatalogProjection,control:ResourceLeaseControl)=>Promise<T>):Promise<T|undefined>{
  const authority=readNativeCallerAuthorityV1(invocation.capabilities),mode=authority.original.buildMode,phase=scriptCompilerAdmissionControlV1(invocation,"browser:session-reader",0),policy=publicationSchema.definitions.Protocol.const;
  if(resolve(workspace)!==authority.repositoryRoot||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)||variant.length>64||typeof body!=="function")throw Error("Actual finite session consumer required");
  return withRepositoryCacheStoreV1(workspace,"products",invocation,phase,(store,storePhase)=>withRepositoryArtifactV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:storePhase,request:{version:1,path:join(playgroundSessionsRootV1(workspace,mode),variant),owner:"playground-session:"+variant,maximumBytes:(schema.definitions.Protocol.const.files.length+1)*policy.maximumManifestBytes,maximumFiles:schema.definitions.Protocol.const.files.length}},reader=>withRepositoryArtifactTaskV1(reader,invocation,async artifact=>{
   const names=[...schema.definitions.Protocol.const.files].sort();if(JSON.stringify([...artifact.files].sort())!==JSON.stringify(names))throw Error("Exact session publication roster required");
   const decode=async(name:string):Promise<unknown[]>=>{const value:unknown=JSON.parse(await textAt(join(artifact.path,name),policy.maximumManifestBytes,artifact.control));if(!Array.isArray(value))throw Error("Projected session rows required");return value;};
   const entries=(await decode("🔌️plugins.json")).map(parseDeployedRegistryEntryV1),playgrounds=(await decode("🎠️playgrounds.json")).map(parseProjectedPlaygroundV1);registryModuleDirectories(entries);const projection={entries,playgrounds},session=buildPlaygroundSession(variant,projection);
-  if(await textAt(join(artifact.path,PLAYGROUND_SESSION_ARTIFACT_KEY),policy.maximumManifestBytes,artifact.control)!==renderPlaygroundSessionTypeScript(variant,projection))throw Error("Session Source differs from its exact copied projection");await artifact.recheck();return body(session,projection,artifact.control);
+  if(await textAt(join(artifact.path,PLAYGROUND_SESSION_ARTIFACT_KEY),policy.maximumManifestBytes,artifact.control)!==renderPlaygroundSessionTypeScript(variant,projection)){if(tolerateStale)return undefined;throw Error("Session Source differs from its exact copied projection");}await artifact.recheck();return body(session,projection,artifact.control);
  })));
 }

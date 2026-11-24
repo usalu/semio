@@ -85,7 +85,7 @@
   "readers": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
-      "owner": "withComponentModelV1",
+      "owner": "readRetainedComponentModelV1",
       "selection": "intent.mode"
     },
     {
@@ -93,5 +93,9 @@
       "owner": "verifyModel",
       "selection": "mode"
     }
-  ]
+  ],
+  "storeEntry": {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+    "owner": "withComponentModelV1"
+  }
 }

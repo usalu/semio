@@ -2,6 +2,7 @@ import { statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { advanceScriptInvocation, SCRIPT_PROCESS_INVOCATION_ENV, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { pythonEnvironmentMissingV1 } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🧰️toolchains/🟦️.ts";
 import { resolveBuildHelpLanguageV1 } from "../../../🏗️build/⚙️operations/📖️help/🟦️.ts";
 import type { RootCommandGateV1, RootCommandRegistryV1, RootCommandV1 } from "../🟦️.ts";
 
@@ -15,7 +16,7 @@ export type DependencyProvisionPortsV1 = Readonly<{
 
 /** 🏃️ Runs the owner of provisioning as an owned child: its output is prefixed and goes to stderr like every line of the gate, because stdout belongs to the command that follows (an MCP server speaks JSON-RPC on it); its progress repeats every 10 s, and cancellation ends its process tree. */
 export const dependencyProvisionPortsV1: DependencyProvisionPortsV1 = {
-  available: (root) => statSync(join(root, "node_modules"), { throwIfNoEntry: false })?.isDirectory() ?? false,
+  available: (root) => (statSync(join(root, "node_modules"), { throwIfNoEntry: false })?.isDirectory() ?? false) && !pythonEnvironmentMissingV1(root),
   run: (command, args, cwd, label, environment, signal) => runOwnedCommand(command, [...args], cwd, label, 0, { env: environment, signal, outputStyle: "stream", stdout: "stderr" }),
   write: (line) => console.error(line),
   now: () => Date.now(),

@@ -5,7 +5,8 @@ use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{
     INLINE_IMAGE_SAMPLES_MAXIMUM_BYTES, PdfDctResourceIdentity, PdfSampledResourceIdentity, qualified_image_dictionary,
 };
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosReceipt, CosStatus};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImageBody};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfImageBody, PdfStreamBytes};
+use semio_framework_value::ByteReadSource;
 use super::sample_receipt;
 
 const DEPTH: u32 = 8;
@@ -56,7 +57,8 @@ impl ControlledImageCursor {
                 }
             }
             [PdfStreamFilter::Dct { color_transform }] => {
-                if !data.starts_with(&[0xff, 0xd8]) || !data.ends_with(&[0xff, 0xd9]) { return Ok(None); }
+                let length = data.len();
+                if length < 2 || [data.byte_at(0), data.byte_at(1), data.byte_at(length - 2), data.byte_at(length - 1)] != [Some(0xff), Some(0xd8), Some(0xff), Some(0xd9)] { return Ok(None); }
                 let Some(identity) = PdfDctResourceIdentity::new(*color_transform) else { return Ok(None); };
                 ImageBacking::Dct { identity, bytes: data.len() }
             }
@@ -90,7 +92,7 @@ impl ControlledImageCursor {
     }
 
     /// ▶️ Advances one lane while borrowing native stream bytes from the graph.
-    pub(super) fn advance(&mut self, data: &[u8], grant: CosGrant) -> CosReceipt {
+    pub(super) fn advance(&mut self, data: &PdfStreamBytes, grant: CosGrant) -> CosReceipt {
         match &mut self.backing {
             ImageBacking::Samples { cursors, next } => {
                 let Some(cursor) = cursors.get_mut(*next) else {

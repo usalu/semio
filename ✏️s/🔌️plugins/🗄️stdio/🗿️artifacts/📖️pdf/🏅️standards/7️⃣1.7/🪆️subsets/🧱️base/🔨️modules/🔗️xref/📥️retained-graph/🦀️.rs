@@ -3,7 +3,7 @@
 use semio_framework_value::{ByteReadRange, ByteReadSource};
 use crate::standards::v1_7::subsets::base::io::text::snapshot::retained_text::{RetainedTextCursor, RetainedTextGrant, RetainedTextReceipt, RetainedTextStatus};
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosLimits, CosReceipt, CosStatus, PdfCosCursor, PdfHeader, PdfIndirectLengthCursor, PdfStreamDictionaryCursor, StreamSpan};
-use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfStreamBytes, PdfStreamFilter};
 use crate::standards::v1_7::subsets::base::modules::xref::{GraphMaterializationEvent, NormalProjection, NormalProjectionCursor, NormalProjectionEvent, ObjectStreamCursor, ObjectStreamEvent, PdfFileStructure, PdfFileStructureCursor, PdfFileStructureEvent, PdfFileStructureReceipt, RetainedGraphBuilder, StructuredTrailer, XrefEntry, XrefFileOrderCursor, XrefFileOrderEvent, XrefIndex, XrefIndexLookup, XrefIndexReceipt, XrefIndexStatus, XrefStreamError, XrefTrailerCursor, WRITER_TRAILER_KEYS};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -65,12 +65,12 @@ enum Phase { Reserve, Order, Schedule(u32), Normal, TakeNormal, CloseNormal, Raw
 struct RawStream {
     span: StreamSpan,
     dictionary: PdfStreamDictionaryCursor,
-    bytes: Vec<u8>,
+    bytes: PdfStreamBytes,
 }
 
 struct ObjectStream {
     number: u32,
-    bytes: Vec<u8>,
+    bytes: PdfStreamBytes,
     header: ObjectStreamHeader,
     members: Option<ObjectStreamCursor>,
 }
@@ -103,7 +103,7 @@ mod compressed_length;
 use compressed_length::CompressedLength;
 
 struct RetiringValue {
-    body: Vec<u8>,
+    body: PdfStreamBytes,
     filters: Vec<PdfStreamFilter>,
     tree: PdfCosCursor,
 }
@@ -112,14 +112,14 @@ impl RetiringValue {
     fn new(value: PdfObject) -> Self {
         let (body, filters, tree) = match value {
             PdfObject::Stream { data, filters, dict } => (data, filters, PdfCosCursor::retire_dictionary(dict)),
-            value => (Vec::new(), Vec::new(), PdfCosCursor::retire_parsed_value(value)),
+            value => (PdfStreamBytes::default(), Vec::new(), PdfCosCursor::retire_parsed_value(value)),
         };
         Self { body, filters, tree }
     }
 
     fn advance(&mut self, grant: CosGrant) -> GraphImportReceipt {
         if !self.tree.terminal_is_empty() { return cos(self.tree.close_step(grant)); }
-        if self.body.capacity() != 0 { return release(&mut self.body, grant); }
+        if !self.body.retained_bytes().terminal_is_empty() { return release_paged(&mut self.body, grant); }
         if let Some(filter) = self.filters.last() {
             let bytes = match filter {
                 PdfStreamFilter::Jbig2 { globals: Some(bytes) } => bytes.capacity(),
@@ -305,11 +305,11 @@ impl GraphImportCursor {
         match cursor.take() {
             Some(NormalProjection::Value(value)) => self.pending = Some(value),
             Some(NormalProjection::ReferenceStream { dict, span }) => {
-                self.raw = Some(RawStream { span, dictionary: PdfStreamDictionaryCursor::new(dict, false), bytes: Vec::new() });
+                self.raw = Some(RawStream { span, dictionary: PdfStreamDictionaryCursor::new(dict, false), bytes: PdfStreamBytes::default() });
             }
             Some(NormalProjection::ObjectStream(PdfObject::Stream { dict, data, filters })) => {
                 self.stream = Some(ObjectStream { number: self.current.num, bytes: data, header: ObjectStreamHeader::new(dict), members: None });
-                self.retiring = Some(RetiringValue::new(PdfObject::Stream { dict: Vec::new(), data: Vec::new(), filters }));
+                self.retiring = Some(RetiringValue::new(PdfObject::Stream { dict: Vec::new(), data: PdfStreamBytes::default(), filters }));
             }
             Some(NormalProjection::Omitted) => {}
             _ => return failed("completed PDF graph object was not transferable"),
@@ -339,19 +339,22 @@ impl GraphImportCursor {
         let Some(bytes) = raw.span.end.checked_sub(raw.span.start).and_then(|length| ByteReadRange::new(source, raw.span.start, length)) else { return failed("raw PDF stream source was replaced"); };
         let length = bytes.byte_len();
         if length > self.maximum_stream_bytes { return failed("retained PDF stream exceeds the declared byte ceiling"); }
-        if raw.bytes.capacity() < length {
-            if length > grant.allocation_bytes { return report(Ok(GraphImportEvent::NeedsAllocation { bytes: length }), 0); }
-            if raw.bytes.try_reserve_exact(length).is_err() { return failed("unable to allocate retained PDF stream"); }
-            return GraphImportReceipt { allocated_bytes: raw.bytes.capacity(), ..more(1) };
-        }
         if raw.bytes.len() < length {
+            if raw.bytes.cold_free_slots() == 0 {
+                let page = match raw.bytes.cold_reservation_bytes() { Ok(page) => page, Err(error) => return report(Err(XrefStreamError::Decode(error)), 1) };
+                if page > grant.allocation_bytes { return report(Ok(GraphImportEvent::NeedsAllocation { bytes: page }), 0); }
+                return match raw.bytes.cold_reserve_page(page) {
+                    Ok((allocated_bytes, released_bytes)) => GraphImportReceipt { allocated_bytes, released_bytes, ..more(1) },
+                    Err(_) => failed("unable to allocate retained PDF stream"),
+                };
+            }
             let start = raw.bytes.len();
-            let count = (length - start).min(grant.work);
-            raw.bytes.resize(start + count, 0);
-            if bytes.read_bytes(start, &mut raw.bytes[start..]) != count {
-                raw.bytes.truncate(start);
+            let mut buffer = [0u8; 4096];
+            let count = (length - start).min(grant.work).min(raw.bytes.cold_free_slots()).min(buffer.len());
+            if bytes.read_bytes(start, &mut buffer[..count]) != count {
                 return report(Err(XrefStreamError::Structure("raw PDF stream source lost an admitted fragment")), count);
             }
+            raw.bytes.cold_push_slice(&buffer[..count]);
             return more(count);
         }
         let step = raw.dictionary.advance(grant, false);
@@ -436,7 +439,7 @@ impl GraphImportCursor {
         if self.compressed_length.is_some() { return self.close_compressed_length(grant); }
         if self.normal.is_some() { return self.retire_normal(grant); }
         if let Some(raw) = self.raw.as_mut() {
-            if raw.bytes.capacity() != 0 { return release(&mut raw.bytes, grant); }
+            if !raw.bytes.retained_bytes().terminal_is_empty() { return release_paged(&mut raw.bytes, grant); }
             let step = raw.dictionary.close_step(grant);
             if step.status == Ok(CosStatus::Closed) { self.raw = None; }
             return cos(step);
@@ -474,7 +477,7 @@ impl GraphImportCursor {
             self.retiring = retire_object_stream_header(&mut stream.header);
             return more(1);
         }
-        if stream.bytes.capacity() != 0 { return release(&mut stream.bytes, grant); }
+        if !stream.bytes.retained_bytes().terminal_is_empty() { return release_paged(&mut stream.bytes, grant); }
         self.stream = None;
         more(1)
     }
@@ -501,6 +504,16 @@ fn report(event: Result<GraphImportEvent, XrefStreamError>, work: usize) -> Grap
 fn more(work: usize) -> GraphImportReceipt { report(Ok(GraphImportEvent::More), work) }
 fn failed(reason: &'static str) -> GraphImportReceipt { report(Err(XrefStreamError::Structure(reason)), 1) }
 fn released(bytes: usize) -> GraphImportReceipt { GraphImportReceipt { released_bytes: bytes, ..more(1) } }
+
+fn release_paged(bytes: &mut PdfStreamBytes, grant: CosGrant) -> GraphImportReceipt {
+    match bytes.cold_retire_page(grant.release_bytes) {
+        Err(error) => report(Err(XrefStreamError::Decode(error)), 1),
+        Ok(step) => match step.needs_release {
+            Some(bytes) => report(Ok(GraphImportEvent::NeedsRelease { bytes }), 0),
+            None => GraphImportReceipt { released_bytes: step.released_bytes, ..more(step.work.max(1)) },
+        },
+    }
+}
 
 fn release<T>(source: &mut Vec<T>, grant: CosGrant) -> GraphImportReceipt {
     let bytes = source.capacity() * std::mem::size_of::<T>();
@@ -891,6 +904,14 @@ impl PdfFilePreparationCursor {
             }
             _ => unreachable!(),
         }
+    }
+
+    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output, which a bulk work grant may cover with one byte of copy each.
+    pub fn copying_identity_bytes(&self) -> bool {
+        matches!(self.phase, PreparePhase::Bytes) && self.bytes.as_ref().is_some_and(|file|
+            matches!(file.phase, BytePhase::Project) && file.projection.as_ref().is_some_and(|graph|
+                matches!(graph.phase, Phase::Normal) && graph.retiring.is_none() && graph.length.is_none() && graph.length_reference.is_none() && graph.compressed_length.is_none()
+                    && graph.normal.as_ref().is_some_and(|stream| stream.copies_identity_bytes())))
     }
 
     /// 🧵️ Quotes the next unit when it reserves empty retained slots or a fresh Flate history.

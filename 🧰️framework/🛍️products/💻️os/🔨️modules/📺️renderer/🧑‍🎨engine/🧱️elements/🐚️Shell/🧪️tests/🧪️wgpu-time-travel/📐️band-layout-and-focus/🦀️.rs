@@ -262,6 +262,7 @@ fn a_replay_and_a_review_focus_the_band_the_prompt_takes_focus_and_typing_elsewh
 /// that window the keyboard; nothing is left waiting.
 #[test]
 fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
         const SURFACE: &str = "framework.history.focus-law";
     let component = |wire: Value| serde_json::from_value::<ui_contract::Component>(wire).expect("history body component wire");
     let records = vec![
@@ -283,5 +284,7 @@ fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection(
     assert_eq!(focused.len(), 1, "one focused node: {focused:?}");
     assert!(projected_key_is(&focused[0].0, "framework.history.editor.input.dx") && focused[0].1 == "spinbutton", "the stepper itself, not its row: {focused:?}");
     assert_eq!(shell.chrome.chrome_build.focused_retained_surface.as_deref(), Some(SURFACE), "the history body holds the keyboard");
+    close_retained_body(SURFACE, vec![document]);
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
 }
 //#endregion 🎯️Focus

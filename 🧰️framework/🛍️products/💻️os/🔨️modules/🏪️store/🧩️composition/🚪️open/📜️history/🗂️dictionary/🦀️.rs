@@ -86,7 +86,7 @@ impl ErasedSnapshotRetirement for DictionaryOwners {
 
 impl Drop for DictionaryOwners {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "dictionary owners require bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "dictionary owners require bounded retirement");
     }
 }
 
@@ -483,7 +483,7 @@ impl ErasedSnapshotRetirement for MemberHistoryDictionaryOwner {
 
 impl Drop for MemberHistoryDictionaryOwner {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "dictionary operation requires retained close or handoff");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "dictionary operation requires retained close or handoff");
     }
 }
 
@@ -552,7 +552,7 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryDictionary {
 
 impl Drop for VerifiedMemberHistoryDictionary {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "semantic input witness requires bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "semantic input witness requires bounded retirement");
     }
 }
 

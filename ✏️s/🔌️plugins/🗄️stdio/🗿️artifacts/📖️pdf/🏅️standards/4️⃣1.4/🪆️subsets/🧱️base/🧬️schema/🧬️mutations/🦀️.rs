@@ -92,7 +92,7 @@ impl PdfMutation {
         store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<super::PdfSnapshot, Self>,
     > {
         semio_plugin::cold_replay_document_store_owners::<super::PdfSnapshot, Self>(grant).map(|(mut owners, progress)| {
-            owners.operation_wire = owners.operation_wire.with_original_receiving().with_original_target(Self::original_conflict_target);
+            owners.operation_wire = owners.operation_wire.with_original_pack_value_receiving().with_original_target(Self::original_conflict_target);
             (owners, progress)
         })
     }

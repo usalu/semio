@@ -27,6 +27,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -85,37 +86,18 @@ UNIT_FRAC = r"\frac{\mathrm{kWh}}{\mathrm{m^{2}\,a}}"
 STAGE_U = 0.0095
 MONTHS = 36
 
+
+def _count_label(value: float) -> str:
+    """🔢 Counted months as math text with the singular for exactly one — ``1 month`` / ``1 Monat``, else ``n months`` / ``n Monate``."""
+    count = round(value)
+    unit = tr("month", "Monat") if count == 1 else tr("months", "Monate")
+    return rf"{label_number(count)}\;\text{{{unit}}}"
+
+
 _SEASON = np.array([0.55 + 0.45 * np.cos(2 * np.pi * (m % 12) / 12) for m in range(MONTHS)])
 _RAW = np.clip(_SEASON * (1.0 + np.random.default_rng(6).uniform(-0.38, 0.38, MONTHS)), 0.06, 1.0)
 
 
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-
-
-def _regroup(scene, group):
-    """🧲 Make ``group`` the scene's own entry for its parts, so a transition that consumes it removes every part and not just the group object."""
-    family = set(group.get_family())
-    scene.remove(*[m for m in scene.mobjects if m is not group and family.intersection(m.get_family())])
-    scene.add(group)
 #endregion
 
 
@@ -358,7 +340,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Demand or consumption", "Bedarf oder Verbrauch"))
-        din = _din_ref(_references.cite(("gmodg", "p79-82")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p79-82")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -422,7 +404,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
         months, clean = ValueTracker(0.0), ValueTracker(0.0)
         bars = _month_bars(-3.4, base_y, months, clean, width=6.8, height=2.0, color=VERBRAUCH_ORANGE)
         bars_floor = Line(np.array([-3.4, base_y, 0.0]), np.array([3.4, base_y, 0.0]), color=P_WHITE, stroke_width=1.4)
-        month_read = math_readout(lambda: rf"{label_number(months.get_value())}\;\text{{{tr('months', 'Monate')}}}",
+        month_read = math_readout(lambda: _count_label(months.get_value()),
                                   np.array([-3.4, 0.98, 0.0]), size=LABEL_FONT_SIZE, color=VERBRAUCH_ORANGE,
                                   edge="left")
         corrected = body_text(tr("weather-corrected", "witterungsbereinigt"), font_size=LABEL_FONT_SIZE, color=BEDARF_CYAN).move_to(
@@ -561,7 +543,7 @@ class Beat2_DieSkala(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Reading the scale", "Die Skala lesen"))
-        din = _din_ref(_references.cite(("gmodg", "p86")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p86")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "skala"))
@@ -802,7 +784,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("What the certificate triggers", "Was der Ausweis auslöst"))
-        din = _din_ref(_references.cite(("gmodg", "p84-87")), subtitle)
+        din = reference_chip(_references.cite(("gmodg", "p84-87")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -847,7 +829,6 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         v_year.move_to(value_at[3]).align_to(value_at[3], LEFT)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "anzeige"))
-        _regroup(self, big_sheet)
         self.play(stage.transition("demand.certificate.mandatory.sheet-to-listing-size",source=big_sheet, target=small_sheet), run_time=1.4)
         self.play(Create(listing), FadeIn(listing_head), GrowArrow(into_ad), run_time=1.4)
         hold_for(self, self.NARRATION, "anzeige")

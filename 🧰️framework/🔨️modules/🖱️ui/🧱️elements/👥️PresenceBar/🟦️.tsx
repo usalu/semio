@@ -107,13 +107,13 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
             aria-label={peerTitle}
             className="relative justify-center p-tiny"
           >
-            <TableAvatar name={peer.label} className="border-0" style={{ boxShadow: `0 0 0 2px ${presencePaint(peer.color, appearance)}` }} />
+            <TableAvatar name={peer.label} className="border-0" style={{ outline: `2px solid ${presencePaint(peer.color, appearance)}` }} />
             {peer.isAgent === true ? (
               <span
                 aria-hidden="true"
                 data-row-id={`peer-agent-badge:${peer.actor}`}
                 className={cn(surfaceClass, "pointer-events-none absolute bottom-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
-                style={{ boxShadow: `0 0 0 1px ${presencePaint(peer.color, appearance)}` }}
+                style={{ outline: `1px solid ${presencePaint(peer.color, appearance)}` }}
               >
                 🤖
               </span>
@@ -123,7 +123,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
                 aria-hidden="true"
                 data-row-id={`peer-activity-badge:${peer.actor}`}
                 className={cn(surfaceClass, "pointer-events-none absolute top-0 right-0 flex size-3 items-center justify-center rounded-full text-[0.5rem] leading-none")}
-                style={{ boxShadow: `0 0 0 1px ${presencePaint(peer.color, appearance)}` }}
+                style={{ outline: `1px solid ${presencePaint(peer.color, appearance)}` }}
               >
                 {peer.activity.badge}
               </span>

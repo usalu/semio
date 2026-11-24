@@ -210,7 +210,8 @@ pub struct ArtifactStoreDisplacedRetirements {
 
 impl ArtifactStoreDisplacedRetirements {
     pub fn new() -> Self {
-        Self { owners: std::mem::ManuallyDrop::new(VecDeque::with_capacity(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY)), owner_reservations: [None; ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY], owner_generation: 0 }
+        let owners=VecDeque::with_capacity(ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY);semio_framework_value::birth_ledger::record_original_birth(owners.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>());
+        Self { owners: std::mem::ManuallyDrop::new(owners), owner_reservations: [None; ARTIFACT_STORE_DISPLACED_RESERVATION_CAPACITY], owner_generation: 0 }
     }
 
     pub fn reserve(&self, count: usize) -> Result<(), VcsError> {

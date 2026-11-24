@@ -39,7 +39,7 @@ fn undecodable_retained_streams_keep_their_encoding_declaration_and_bytes() {
     assert_eq!(restored.dict_get("Filter").and_then(PdfObject::as_name), Some("VendorFilter"));
     assert_eq!(restored.dict_get("DecodeParms").and_then(|p| p.dict_get("Mode")).and_then(PdfObject::as_i64), Some(2));
     let PdfObject::Stream { data, .. } = restored else { panic!("expected retained stream") };
-    assert_eq!(data, b"abc");
+    assert_eq!(data.to_vec_owner(), b"abc");
 }
 
 #[test]

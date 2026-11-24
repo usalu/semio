@@ -1,0 +1,4 @@
+[
+{"op":"dims","set":{"widthM":0.479,"depthM":1.115}},
+{"op":"shape-add","scale":"50","view":"elevation","after":"lid","shape":{"id":"lid-hinge-leaves","bone":"lid","role":"detail","z":2.6,"tone":0.3,"region":"top-lid","material":"powder-coat","filled":true,"kind":"poly","points":[[-0.004,0],[0.004,0],[0.004,0.0325],[-0.004,0.0325]],"closed":true}}
+]

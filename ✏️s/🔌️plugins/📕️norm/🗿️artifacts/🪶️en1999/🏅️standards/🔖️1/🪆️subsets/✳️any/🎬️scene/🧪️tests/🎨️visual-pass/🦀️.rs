@@ -351,8 +351,9 @@ fn gauges_write_the_current_value_move_by_steps_and_the_dragged_document_re_eval
     let member = document.members.iter().find(|m| m.id == "purlin-welded").expect("welded member");
     let gauge = all.iter().find(|h| h.id == "purlin-welded:gauge-buckling-t").expect("torsional buckling length gauge");
     assert_eq!(gauge.writes[0].path, "members[id=purlin-welded].bucklingLengthT");
-    assert!((gauge.writes_at(0.0)[0].value - member.buckling_length_t).abs() < 0.05, "zero drag keeps the value");
-    let dragged = gauge.writes_at(1.0)[0].value;
+    let rest = scene::projection_kit::handle_kit::rest_of(&gauge.kind, &gauge.anchor).expect("an along-axis gauge");
+    assert!((gauge.writes_at(rest)[0].value - member.buckling_length_t).abs() < 0.05, "resting at its anchor keeps the value");
+    let dragged = gauge.writes_at(rest + 1.0)[0].value;
     assert!((dragged - (member.buckling_length_t + 1.0)).abs() < 0.051, "one metre of drag is twenty steps of 0.05 m: {dragged}");
     let report = checks::evaluate_structure(&document);
     let mut moved = document.clone();

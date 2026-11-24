@@ -26,6 +26,30 @@ pub struct NativeReceivingChild<E:semio_framework_value_native_decoding::native_
  pub tag:u8,
 }
 impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> Default for NativeReceivingChild<E>{fn default()->Self{Self{effect:Default::default(),demand:None,grant:None,work:None,ceiling:None,request:None,tag:0}}}
+/// 🪢️ Where a receiving slot keeps its one resident original action: inline, or in the frame its owning record keeps once for every slot it ever uses.
+pub trait SlotFrame:Default+std::ops::DerefMut<Target=NativeReceivingChild<OriginalReceivingPrimary>>{
+ /// ⏳️ Reports an unsettled resident action; an unanchored shared frame holds none.
+ fn frame_pending(&self)->bool;
+ /// 🫙️ Reports that the resident action holds no custody.
+ fn frame_idle(&self)->bool{!self.frame_pending()}
+}
+/// 🏠️ The action is owned by its slot.
+#[derive(Default)]
+pub struct OwnedFrame(NativeReceivingChild<OriginalReceivingPrimary>);
+impl std::ops::Deref for OwnedFrame{type Target=NativeReceivingChild<OriginalReceivingPrimary>;fn deref(&self)->&Self::Target{&self.0}}
+impl std::ops::DerefMut for OwnedFrame{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
+impl SlotFrame for OwnedFrame{fn frame_pending(&self)->bool{self.0.pending()}}
+/// 🔗️ The action lives in the owning record's single frame at a fixed byte distance from this holder, so moving the whole record never invalidates it.
+pub struct SharedFrame{distance:isize,anchored:bool}
+impl Default for SharedFrame{fn default()->Self{Self{distance:0,anchored:false}}}
+impl SharedFrame{
+ /// ⚓️ Anchors this holder to the record frame it shares; both must stay inside one record receiver.
+ pub fn anchor(&mut self,frame:*mut NativeReceivingChild<OriginalReceivingPrimary>){self.distance=(frame as isize)-(std::ptr::from_mut(self) as isize);self.anchored=true}
+ fn target(&self)->*mut NativeReceivingChild<OriginalReceivingPrimary>{assert!(self.anchored,"a shared receiving frame is anchored before use");((std::ptr::from_ref(self) as isize)+self.distance) as *mut NativeReceivingChild<OriginalReceivingPrimary>}
+}
+impl std::ops::Deref for SharedFrame{type Target=NativeReceivingChild<OriginalReceivingPrimary>;fn deref(&self)->&Self::Target{unsafe{&*self.target()}}}
+impl std::ops::DerefMut for SharedFrame{fn deref_mut(&mut self)->&mut Self::Target{unsafe{&mut *self.target()}}}
+impl SlotFrame for SharedFrame{fn frame_pending(&self)->bool{self.anchored&&std::ops::Deref::deref(self).pending()}}
 impl<E:semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectError> NativeReceivingChild<E>{
  pub fn pending(&self)->bool{self.request.is_some()||self.demand.is_some()||self.effect.phase()!=semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectPhase::Empty}
  pub fn terminal_is_empty(&self)->bool{!self.pending()}

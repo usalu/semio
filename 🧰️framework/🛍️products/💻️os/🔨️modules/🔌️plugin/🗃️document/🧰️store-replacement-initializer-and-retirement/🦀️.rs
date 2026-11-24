@@ -1,6 +1,7 @@
 //! 🧰️ Store replacement initializer and retirement: the rejected member driver, the initializer driver, the retirement demands, the retained store driver, the drop guard, the admission target and the app projection cache. See [`super`].
 
 use super::*;
+use semio_plugin_ownership::bounded_ownership::EmptyBacking as _;
 use super::store_replacement_vocabulary::StoreInitializerOutcome;
 
 impl<P, Mutation, M> ActiveArtifactStoreReplacement<P, Mutation, M>
@@ -83,7 +84,7 @@ where
                 self.retiring_child_cursor = index;
                 return Ok(paid());
             }
-            if !children.slots.is_empty() { drop(std::mem::take(&mut children.slots)); children.allocation_admitted = false; return Ok(paid()); }
+            if children.release_bytes().is_some_and(|bytes| bytes != 0) { children.release(grant).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?; return Ok(paid()); }
             drop(self.candidate_children.take()); return Ok(paid());
         }
         if self.cancel.is_some() { let original = self.cancel.take().expect("original replacement cancellation remains retained"); *self.cancel_retirement = Some(semio_framework_async::CancelTokenRetirement::from_token(original)); return Ok(paid()); }

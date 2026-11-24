@@ -78,13 +78,13 @@ fn editor_module_links() {
 }
 
 #[test]
-fn the_manifest_declares_the_four_visual_windows_and_no_json_window() {
+fn the_manifest_declares_the_five_visual_windows_and_no_json_window() {
     let definition = create_en1999_app();
     let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
-    for expected in [properties::WINDOW_PROPERTIES, viewport::WINDOW_VIEWPORT, diagrams::WINDOW_DIAGRAMS, checks::WINDOW_CHECKS] {
+    for expected in [outliner::WINDOW_OUTLINER, properties::WINDOW_PROPERTIES, viewport::WINDOW_VIEWPORT, diagrams::WINDOW_DIAGRAMS, checks::WINDOW_CHECKS] {
         assert!(ids.contains(&expected), "window {expected} missing in {ids:?}");
     }
-    assert_eq!(ids.len(), 4);
+    assert_eq!(ids.len(), 5);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -93,7 +93,7 @@ async fn every_declared_body_key_renders_without_json() {
     for body_key in [outliner::BODY_OUTLINER, properties::BODY_PROPERTIES, viewport::BODY_VIEWPORT, diagrams::BODY_DIAGRAMS, checks::BODY_CHECKS] {
         let rendered = context::render(&mut app, body_key).await;
         assert!(!rendered.contains("Unknown body"), "{body_key} must render its own node");
-        assert!(!rendered.contains("\"annex\""), "{body_key} must not dump the document as JSON");
+        assert!(!rendered.contains("\"annex\":"), "{body_key} must not dump the document as JSON: {rendered}");
     }
     context::close(&mut app);
 }
@@ -102,7 +102,7 @@ async fn every_declared_body_key_renders_without_json() {
 #[semio_framework_async_macros::async_test]
 async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
     let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, En1999Command::SetField(set_field::SetField { path: "annex".into(), value_json: "\"de\"".into() })).await;
+    context::dispatch(&mut app, En1999Command::SetField(set_field::SetField { path: "annex".into(), value_json: "\"De\"".into() })).await;
     let edited = app.snapshot().expect("projection");
     let expected = semio_s_artifact_norm_en1999_inferences::evaluate(&edited);
     assert_eq!(*<En1999Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold");

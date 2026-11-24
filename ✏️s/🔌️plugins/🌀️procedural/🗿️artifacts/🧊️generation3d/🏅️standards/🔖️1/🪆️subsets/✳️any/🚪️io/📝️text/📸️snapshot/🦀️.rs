@@ -10,10 +10,6 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
-use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
-use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
-use std::collections::BTreeMap;
 
 //#region 🔖️Examples
 pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
@@ -89,46 +85,6 @@ pub fn example_document_json(example_id: &str) -> String {
 }
 }
 pub use source_examples::*;
-
-#[allow(unused_imports)]
-mod snapshot_codec {
-use super::*;
-use semio_s_artifact_procedural_3d_model::*;
-use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_s_artifact_procedural_3d_model::widget_id;
-use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-use semio_os_flow::forms_bridge::apply_generation_values_to_host_snapshot as apply_generation_values_to_host_snapshot_json;
-use ::semio_framework_schema::ArtifactSchema;
-use semio_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
-use semio_framework_value_derive::{FromValue, ToValue};
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_framework_artifact_flow_flow::CameraJson;
-use semio_framework_artifact_flow_flow::FlowHostSnapshot;
-use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_artifact_playbook_playbook::GenerationPlayState;
-
-/// 🌉️ Bridges a `FormGeneration.values` map (`semio_framework_artifact_playbook_playbook::PlaybookValues`, see `FormGeneration`
-/// in `📖️playbook/🦀️.rs`) into the `pack::json::Object` that `forms_bridge::apply_generation_values_to_host_snapshot`
-/// actually takes.
-pub(crate) fn generation_values_to_pack_object(values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> semio_framework_pack_json::Object {
-    values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect()
-}
-
-pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
-    let snapshot_json = semio_framework_pack_json::to_json_string(host_snapshot);
-    let patched = apply_generation_values_to_host_snapshot_json(&snapshot_json, &generation_values_to_pack_object(values));
-    let patched_fixture = FlowHost::parse_host_snapshot_json(&patched).unwrap_or_else(|_| host_snapshot.clone());
-    let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
-    host.set_neuron_kind_info_map(semio_os_flow::flow_neuron_kind_info_map());
-    let evaluated = host.evaluate().unwrap_or_default();
-    if host.retire_cold_or_park().is_err() {
-        return String::new();
-    }
-    evaluated
-}
-
-}
-pub use snapshot_codec::*;
 
 #[path = "🗂️catalogue/🦀️.rs"]
 pub mod catalogue;

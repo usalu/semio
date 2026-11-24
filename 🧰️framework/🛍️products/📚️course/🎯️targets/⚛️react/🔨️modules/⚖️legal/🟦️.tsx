@@ -31,11 +31,12 @@ export function legalLink(url: string | undefined): string | undefined {
   }
 }
 
-const LINK = "course-target inline-flex cursor-pointer items-center border-0 bg-transparent p-0 text-xs text-muted-foreground underline hover:text-foreground";
+const LINK = "course-target inline-flex cursor-pointer items-center gap-single border-0 bg-transparent p-0 text-xs text-muted-foreground underline hover:text-foreground";
 
 function ExternalLink(props: { readonly href: string; readonly children: ReactNode; readonly external: ReactNode }): ReactElement {
   return (
     <a href={props.href} target="_blank" rel="noopener noreferrer" {...sharedBorderlessBoxProps} className={LINK}>
+      <CardIcon icon="external-link" />
       {props.children}
       <span className="sr-only"> ({props.external})</span>
     </a>
@@ -59,7 +60,7 @@ export function PrivacyNotice(props: { readonly legal: CourseLegal | undefined; 
       describedBy={`${id}-body`}
       onEscape={onClose}
       footerRight={
-        <CardAction primary data-autofocus="" onClick={onClose}>
+        <CardAction icon="x" primary data-autofocus="" onClick={onClose}>
           {text("course.app.close")}
         </CardAction>
       }
@@ -102,13 +103,14 @@ export function LegalFooter(props: { readonly legal: CourseLegal | undefined; re
   const label = (key: CourseLabelKey): ReactNode => (text === undefined ? <EveryLanguage label={key} /> : text(key));
   if (text === undefined && imprint === undefined && policy === undefined) return null;
   return (
-    <footer ref={frame} data-shared-border-frame="" data-shared-border-edges="top" className="course-footer relative flex shrink-0 flex-wrap items-center gap-x-double px-double" lang={locale}>
+    <footer ref={frame} data-shared-border-frame="" data-shared-border-edges="top" data-level="panel" data-glass-chip="" data-elevation-root="" className="course-footer ui-glass relative flex shrink-0 flex-wrap items-center gap-x-double px-double" lang={locale}>
       {props.children}
       <nav className="ms-auto" aria-label={text === undefined ? everyLanguage("course.legal.label") : text("course.legal.label")}>
         <ul role="list" className="m-0 flex list-none flex-wrap items-center justify-end gap-x-double p-0">
           {text === undefined ? null : (
             <li>
               <button type="button" {...sharedBorderlessBoxProps} className={LINK} onClick={() => setReading(true)}>
+                <CardIcon icon="lock" />
                 {text("course.legal.privacy")}
               </button>
             </li>

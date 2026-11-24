@@ -114,7 +114,7 @@ impl ValueRetirement {
         RetirementPollExit::settle(effect,result)
     }
 }
-impl Drop for ValueRetirement {fn drop(&mut self) {assert!(self.terminal_is_empty(),"neural values must finish explicit domain retirement before drop");}}
+impl Drop for ValueRetirement {fn drop(&mut self) {assert!(std::thread::panicking()||(self.terminal_is_empty()),"neural values must finish explicit domain retirement before drop");}}
 /// 📥️ Records one settled native close poll in the caller-owned reply slot of its original invocation.
 pub fn close_reply<'reply>(poll:OriginalRetirementPoll,effect:&RetainedAllocationEffect<'_>,reply:CloseReply<'reply>)->Result<CloseComplete<'reply>,ValueError> {
     if effect.invocation().is_none() {return Err(ValueError::invariant("native retirement requires its original producer invocation"));}

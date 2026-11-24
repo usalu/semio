@@ -50,7 +50,7 @@ pub fn original_lifecycle_net_after(after:RetainedCloneProgress,reserved_before:
 
 /// 🧮️ Subtracts already posted child effects from the same original producer's full receipt.
 pub fn original_lifecycle_unposted(progress:RetainedCloneProgress,before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
- let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||{eprintln!("[DEBUG] unposted-origin whole={whole} earlier={earlier} later={later} progress={progress:?}\n{}",std::backtrace::Backtrace::force_capture());ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle child receipt differs from its whole producer receipt").with_retained_progress(progress)});
+ let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||{ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle child receipt differs from its whole producer receipt").with_retained_progress(progress)});
  Ok(RetainedCloneProgress{copied_items:difference(progress.copied_items,before.copied_items,after.copied_items)?,copied_bytes:difference(progress.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:difference(progress.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:difference(progress.released_bytes,before.released_bytes,after.released_bytes)?})
 }
 
@@ -66,10 +66,17 @@ fn debit_unposted(mut failure: PluginLifecycleFailure, before: RetainedCloneProg
         let after = original_lifecycle_net_after(cx.retained_progress(), reserved_before, cx.reserved_return_progress());
         failure.receipt_refusal = match original_lifecycle_unposted(failure.retained_progress(), before, after) {
             Ok(progress) => cx.consume_retained(progress).err(),
-            Err(error) => { eprintln!("[DEBUG] unposted mismatch whole={:?} before={:?} after={:?} primary={:?}\n{}", failure.retained_progress(), before, after, failure.primary, std::backtrace::Backtrace::force_capture()); Some(error) }
+            Err(error) => Some(error),
         };
     }
     failure
+}
+
+/// ⚖️ The retirement law of symmetric accounting: a release is charged to the ledger that recorded the birth of the freed backing, so the settled bytes leave the closing caller's receipt and its step receipt.
+fn settle_births(cx:&mut StepContext<'_>,step:PluginLifecycleStep,before:RetainedCloneProgress)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+ let Some(progress)=step.progress()else{return Ok(step)};
+ let settled=cx.settle_original_birth(progress.released_bytes,before).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;
+ Ok(step.with_progress(RetainedCloneProgress{released_bytes:progress.released_bytes-settled,..progress}))
 }
 
 /// ⏱️ One original owner action adopts nested effects and debits only its unposted physical receipt.
@@ -79,7 +86,7 @@ pub fn original_lifecycle_step(cx:&mut StepContext<'_>,loan:RetainedCloneGrant,d
  if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}let(step,terminal)=result.map_err(|failure|debit_unposted(failure.into(),before,reserved_before,cx))?;let progress=step.progress().unwrap_or_default();
  if !progress.fits(ceiling){return Err(debit_unposted(PluginLifecycleFailure::from(phase_loan_refusal(progress,grant,ceiling,loan,cx)),before,reserved_before,cx))}
  if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,reserved_before,cx))}
- let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
+ let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;settle_births(cx,step,before)
 }
 
 /// 🪙️ Like [`original_lifecycle_step`] but the owner runs inside the context's own performed-work effect; the performed work is debited once here, and a refused quote runs nothing and charges nothing.
@@ -101,7 +108,7 @@ fn original_lifecycle_effect_step_at(cx:&mut StepContext<'_>,loan:RetainedCloneG
  let(step,terminal)=result.map_err(|failure|debit_unposted(failure,before,reserved_before,cx))?;let progress=step.progress().unwrap_or_default();
  if !progress.fits(ceiling){return Err(debit_unposted(PluginLifecycleFailure::from(phase_loan_refusal(progress,grant,ceiling,loan,cx)),before,reserved_before,cx))}
  if matches!(step,PluginLifecycleStep::Complete(_))&&!terminal{return Err(debit_unposted(PluginLifecycleFailure::from(ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle completed without its terminal-empty witness").with_retained_progress(progress)),before,reserved_before,cx))}
- let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;Ok(step)
+ let remaining=original_lifecycle_unposted(progress,before,original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress()))?;cx.consume_retained(remaining).map_err(|error|PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;settle_births(cx,step,before)
 }
 
 /// 🧾️ Folds one finished retirement poll into the plain step lifecycle closers return; the effect already recorded the work and a pending poll made no physical progress.

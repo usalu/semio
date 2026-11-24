@@ -57,6 +57,6 @@ impl TimeTravelCommandCustody {
     }
     pub fn terminal_is_empty(&self)->bool{self.done&&self.original.is_none()&&self.retirement.is_none()}
 }
-impl Drop for TimeTravelCommandCustody{fn drop(&mut self){assert!(self.terminal_is_empty(),"pending command abandoned its original fields")}}
+impl Drop for TimeTravelCommandCustody{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"pending command abandoned its original fields")}}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,message)}

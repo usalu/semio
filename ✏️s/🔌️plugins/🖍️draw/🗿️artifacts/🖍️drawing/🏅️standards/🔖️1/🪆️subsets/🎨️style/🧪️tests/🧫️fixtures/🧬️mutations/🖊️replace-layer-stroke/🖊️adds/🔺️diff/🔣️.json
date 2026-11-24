@@ -25,23 +25,26 @@
           "stroke": {
             "value": {
               "color": [
-                0,
-                0,
-                0,
-                1
+                0.0,
+                0.0,
+                0.0,
+                1.0
               ],
-              "width": 2,
+              "width": 2.0,
               "cap": "round",
               "join": "bevel",
               "dash": [
-                4,
-                2
+                4.0,
+                2.0
               ]
             }
           },
           "traceParams": null,
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       }
     ]

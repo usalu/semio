@@ -1,0 +1,18 @@
+--- a/remote-execution-root.ts
++++ b/remote-execution-root.ts
+@@ -123,3 +123,15 @@
+  for(const entry of entries??[])if(entry.type_url===REMOTE_EXECUTION_PEAK_TYPE_URL_V1){const megabytes=Number(new TextDecoder().decode(entry.value));if(Number.isSafeInteger(megabytes)&&megabytes>0)return megabytes;}
+  return undefined;
+ }
++
++/** ⏱️ How a worker spent one action, from the timestamps of its `ExecutedActionMetadata` (differences of one clock, so no clock skew between machines enters): `workerMilliseconds` from taking the action to finishing, `fetchMilliseconds` to bring the input tree into the private root, `executeMilliseconds` of the command itself, `uploadMilliseconds` to hand the outputs to the store. */
++export type RemoteExecutionPhasesV1=Readonly<{workerMilliseconds:number;fetchMilliseconds:number;executeMilliseconds:number;uploadMilliseconds:number}>;
++
++/** ⏱️ The phases a worker reported in the execution metadata of an action result, or nothing when a timestamp is missing (a worker that does not report them). */
++export function remoteExecutionPhasesOfMetadataV1(metadata:Readonly<Record<string,unknown>>|undefined):RemoteExecutionPhasesV1|undefined{
++ if(metadata===undefined)return undefined;
++ const at=(name:string):number|undefined=>{const stamp=metadata[name] as {seconds?:number|bigint|string;nanos?:number}|undefined;if(stamp===undefined||stamp===null||stamp.seconds===undefined)return undefined;return Number(stamp.seconds)*1000+Math.round((stamp.nanos??0)/1e6);};
++ const start=at("worker_start_timestamp"),done=at("worker_completed_timestamp"),fetchStart=at("input_fetch_start_timestamp"),fetchDone=at("input_fetch_completed_timestamp"),run=at("execution_start_timestamp"),ran=at("execution_completed_timestamp"),uploadStart=at("output_upload_start_timestamp"),uploadDone=at("output_upload_completed_timestamp");
++ if(start===undefined||done===undefined||fetchStart===undefined||fetchDone===undefined||run===undefined||ran===undefined||uploadStart===undefined||uploadDone===undefined)return undefined;
++ return Object.freeze({workerMilliseconds:Math.max(0,done-start),fetchMilliseconds:Math.max(0,fetchDone-fetchStart),executeMilliseconds:Math.max(0,ran-run),uploadMilliseconds:Math.max(0,uploadDone-uploadStart)});
++}

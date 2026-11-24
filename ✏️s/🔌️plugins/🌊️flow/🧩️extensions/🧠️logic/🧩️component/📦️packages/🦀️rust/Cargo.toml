@@ -18,6 +18,7 @@ deployment-directory = "🔀️flow-extension-logic"
 component-kind = "extension"
 extends = "flow"
 contributes = ["flow.extension"]
+activates-on = ["on-node-kind:logic"]
 
 [lib]
 crate-type = ["cdylib"]

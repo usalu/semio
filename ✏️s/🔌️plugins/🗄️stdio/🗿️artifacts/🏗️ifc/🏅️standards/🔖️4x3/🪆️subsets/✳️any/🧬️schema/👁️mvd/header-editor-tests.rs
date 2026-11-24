@@ -7,6 +7,7 @@ fn header(values: &serde_json::Value) -> Vec<IfcValue> {
 
 #[test]
 fn native_view_variants_render_and_pass_existing_header_admission_and_reduction() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     use crate::details::Ifc4x3DetailsProvider;
     use crate::editor::{IFC4X3_CONTROLLER, Ifc4x3AnyEditor};
     use semio_ui_locale::Locale;
@@ -29,7 +30,7 @@ fn native_view_variants_render_and_pass_existing_header_admission_and_reduction(
         let next = protocol::apply_diff_cold(outcome.diff(), &base).unwrap();
         assert_eq!(next.header.file_description, header(&serde_json::json!([ifc4x3_mvd_header_text(IfcMvdView::Alignment), "Comment [keep] "])));
         let rendered = editing::render_snapshot_details_provider_revisioned(&provider, semio_ui_contract::UiPublicationRevision(42), locale, IFC4X3_CONTROLLER, &semio_plugin::TreeWindows::unhosted()).unwrap();
-        let serialization = serde_json::to_string(&rendered).unwrap();
+        let serialization = crate::editor::tree_probe::retired_tree_serialization(rendered);
         assert!(serialization.contains(expected_label));
         assert!(serialization.contains("Alignment-basedReferenceView"));
         assert!(serialization.contains(editing::SET_SNAPSHOT_VALUE_ACTION_ID));

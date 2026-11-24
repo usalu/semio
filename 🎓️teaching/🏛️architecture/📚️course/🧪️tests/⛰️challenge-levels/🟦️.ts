@@ -598,7 +598,7 @@ test("in German the chooser, the hints and the results of a challenge speak Germ
   await learner.page.evaluate((id) => (window.location.hash = id), physics.id);
   const page = pane(learner.page, physics.id);
   await expect(page).toHaveAttribute("data-opened", "");
-  const chooser = page.getByRole("group", { name: "Herausforderung" });
+  const chooser = page.getByRole("radiogroup", { name: "Herausforderung" });
   await expect(chooser.getByRole("radio")).toHaveCount(CHALLENGES.length);
   for (const challenge of CHALLENGES) await expect(chooser).toContainText(`${CHALLENGE_NAMES[challenge].de}`);
   for (const challenge of CHALLENGES) await expect(chooser).toContainText(`Höchstpunktzahl: ${PAR[challenge]}`);
@@ -644,7 +644,7 @@ test("choosing another challenge for a quiz with an open run asks first, and dis
   await goHome(learner);
 
   await chooseChallenge(learner, heating.id, "hard");
-  await primary(pane(learner.page, heating.id).locator('[data-card="quiz"]')).click();
+  await primary(pane(learner.page, heating.id).locator('[data-card="quiz-challenge"]')).click();
   const dialog = learner.page.getByRole("alertdialog");
   await expect(dialog).toContainText("Discard the open run?");
   await expect(dialog).toContainText("Your run on Medium is still open. Starting on Hard discards it with its answers.");

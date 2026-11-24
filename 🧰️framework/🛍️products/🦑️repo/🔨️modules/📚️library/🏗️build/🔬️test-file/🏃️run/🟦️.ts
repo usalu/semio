@@ -8,11 +8,13 @@ import {describeClampedBudgetV1,stretchedBudgetV1} from "../../../../../../../�
 import {genuineBirthLaunchersV1} from "../../../🧪️testing/🌱️genuine-birth/🚀️launchers/🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../📥️caller/📤️child/🟦️.ts";
 import {workspaceTestPythonEnvironmentV1} from "../../🗂️suites/🐍️python/🟦️.ts";
-import {readTestFileTablesV1,testFileBunCountsV1,testFileResultV1,testFileTailV1,type TestFilePolicyV1,type TestFileResultV1,type TestFileRouteV1,type TestFileRowV1} from "../🟦️.ts";
+import {readTestFileTablesV1,testFileBunCountsV1,testFileEnvelopeArgumentsV1,testFileNarrowedSuiteV1,testFileResultV1,testFileTailV1,type TestFilePolicyV1,type TestFileResultV1,type TestFileRouteV1,type TestFileRowV1} from "../🟦️.ts";
 import {testFileTextV1,type TestFileLanguageV1} from "../📖️texts/🟦️.ts";
 
-/** 🎛️ What a run touches besides the checkout: the clock, the notices, the policy and the suite tables; tests replace them. */
-export type TestFileRunPortsV1=Readonly<{now?:()=>number;notice?:(line:string)=>void;policy?:TestFilePolicyV1;tables?:ReadonlyMap<string,ProcessTestTableV1>}>;
+/** 🎛️ What a run touches besides the checkout: the clock, the notices, the policy, the suite tables and the host warden ensure (a test run bypasses the capacity gate, so each route makes sure the warden runs); tests replace them. */
+export type TestFileRunPortsV1=Readonly<{now?:()=>number;notice?:(line:string)=>void;policy?:TestFilePolicyV1;tables?:ReadonlyMap<string,ProcessTestTableV1>;ensureWarden?:()=>void}>;
+
+const ensureWardenV1=():void=>{void import("../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts").then(module=>module.ensureHostWardenV1()).catch(()=>undefined);};
 
 const toolPolicy=policy as TestFilePolicyV1,posix=(path:string)=>path.split(sep).join("/");
 
@@ -60,8 +62,9 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
    const identity={file:route.file,mode:route.mode,table:route.table,suite:route.suite};
    if(stopped){rows.push({...identity,status:"not-run",seconds:0});continue;}
    if(!route.runsOnHost){rows.push({...identity,status:"skipped",seconds:0});continue;}
+   (ports.ensureWarden??ensureWardenV1)();
    const owner=route.table===null?undefined:rules.tables.find(row=>row.id===route.table),declared=owner===undefined?undefined:tables.get(owner.id)?.suites.find(suite=>suite.id===route.suite),tableRoot=owner===undefined?resolve(root,route.file,".."):resolve(root,owner.root),module=posix(relative(tableRoot,resolve(root,route.file)));
-   const row:ProcessTestSuiteV1=declared===undefined?{id:rules.plain.id,budgetMs:rules.plain.budgetMs,typecheck:"none",files:[module]}:(({trees,files,typecheckFiles,...rest})=>({...rest,files:[module],...(rest.typecheck==="none"?{}:{typecheckFiles:[module]})}))(declared) as ProcessTestSuiteV1;
+   const row:ProcessTestSuiteV1=declared===undefined?{id:rules.plain.id,budgetMs:rules.plain.budgetMs,typecheck:"none",files:[module]}:testFileNarrowedSuiteV1(declared,module);
    const table:ProcessTestTableV1={version:1,suites:[row],codeSuites:[],helpers:[]},checkout=processTestCheckoutV1(tableRoot,root),environment={...base,SEMIO_WORKSPACE_ROOT:checkout};
    const project=owner?.project??rules.plain.project,launchers=owner?.launchers?genuineBirthLaunchersV1(resolve(root,rules.launcherScript),checkout):undefined;
    notice(testFileTextV1(options.language,"run.start",{index:index+1,total:routes.length,file:route.file,mode:route.mode,suite:route.suite}));
@@ -70,7 +73,7 @@ export async function runTestFileRoutesV1(root:string,routes:readonly TestFileRo
    const begun=now(),tee=teeOutputV1(options.json,rules.limits.tailCharacters);
    let failure:unknown,failed=false,cancelled:AbortSignal|undefined;
    try{
-    const capabilities=await createBuildBootstrapCapabilitiesV1(checkout,["run",project+":test-"+row.id],environment);
+    const capabilities=await createBuildBootstrapCapabilitiesV1(checkout,testFileEnvelopeArgumentsV1(project,row.id),environment);
     await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"test-file",maximumElapsedMilliseconds:funded.milliseconds+rules.elapsedSlackMs},capabilities,Date.now()),async invocation=>{
      cancelled=invocation.control.signal;
      await advanceScriptInvocation(invocation,"test-file:"+route.file,"running");

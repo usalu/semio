@@ -5,14 +5,16 @@ import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,renameSync,rmS
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import fixture from "./🔣️.json" with {type:"json"};
-import {captureFetchedV1,classifyFetchedLockV1,fetchedArchiveFilesV1,fetchedHoldsV1,fetchedLockedV1,fetchedSourcesV1,fetchedLockPathV1,fetchedPackagesV1,readFetchedReceiptV1,type FetchedPortV1,type FetchedReceiptV1} from "../🟦️.ts";
+import {captureFetchedV1,classifyFetchedLockV1,fetchedArchiveFilesV1,fetchedListingV1,fetchedHoldsV1,fetchedLockedV1,fetchedSourcesV1,fetchedLockPathV1,fetchedPackagesV1,readFetchedReceiptV1,type FetchedPortV1,type FetchedReceiptV1} from "../🟦️.ts";
 import {installUnpackedV1} from "../🧱️install/🟦️.ts";
 
 const request="a".repeat(64),pause=()=>new Promise<void>(done=>setTimeout(done,15));
-const portOf=(workspace:string,home:string):FetchedPortV1=>({
+const portOf=(workspace:string,home:string,listings:Map<string,string>=new Map(),reads:string[]=[]):FetchedPortV1=>({
+ listing:checksum=>listings.get(checksum),
+ remember:(checksum,listing)=>{listings.set(checksum,listing);},
  read:async path=>{try{return new Uint8Array(readFileSync(join(workspace,path)));}catch{return undefined;}},
  digest:async path=>{try{return createHash("sha256").update(readFileSync(path)).digest("hex");}catch{return undefined;}},
- archive:async path=>{try{return new Uint8Array(readFileSync(path));}catch{return undefined;}},
+ archive:async path=>{reads.push(path);try{return new Uint8Array(readFileSync(path));}catch{return undefined;}},
  unpacked:async path=>{try{const rows=new Map<string,string>();for(const entry of readdirSync(path,{withFileTypes:true,recursive:true})){if(!entry.isFile())continue;const full=join(entry.parentPath,entry.name);rows.set(full.slice(path.length+1).split("\\").join("/"),createHash("sha256").update(readFileSync(full)).digest("hex"));}return rows;}catch{return undefined;}},
  restore:(path,files)=>installUnpackedV1(path,files),
  list:path=>{try{return readdirSync(path,{withFileTypes:true}).filter(entry=>entry.isDirectory()).map(entry=>entry.name);}catch{return undefined;}},
@@ -109,5 +111,29 @@ test("fetched sources: a missing, partial or altered extracted registry source i
   rmSync(join(source,".cargo-ok"));expect(await sound()).toBe(false);expect(await repair()).toBe(true);expect(await sound()).toBe(true);
   writeFileSync(join(source,"extra.txt"),"tolerated");expect(await sound()).toBe(true);
   writeFileSync(crate,"corrupt");expect(await repair()).toBe(false);
+ }finally{rmSync(home,{recursive:true,force:true});rmSync(work,{recursive:true,force:true});}
+});
+
+const listingOracle=`
+import hashlib,json,sys
+rows=sorted(json.loads(sys.argv[1]).items())
+print(hashlib.sha256("".join(p+"\\0"+hashlib.sha256(t.encode()).hexdigest()+"\\n" for p,t in rows).encode()).hexdigest())
+`;
+test("fetched sources: a remembered archive listing answers without reading the archive and is recomputed after any change of the extracted files",async()=>{
+ if(!python)return;
+ const home=mkdtempSync(join(tmpdir(),"fetched-lst-home-")),work=mkdtempSync(join(tmpdir(),"fetched-lst-work-"));
+ try{
+  const{name,files}=fixture.sources,crate=join(home,"registry","cache","idx",name+".crate");mkdirSync(dirname(crate),{recursive:true});
+  expect(spawnSync(python,["-I","-c",archiveSource,name,JSON.stringify(files),crate]).status).toBe(0);
+  const bytes=readFileSync(crate),checksum=createHash("sha256").update(bytes).digest("hex"),locked=fetchedLockedV1(lockOf("registry").replace(fixture.checksum,checksum))!,listings=new Map<string,string>(),reads:string[]=[],port=portOf(work,home,listings,reads),source=join(home,"registry","src","idx",name);
+  const oracle=spawnSync(python,["-I","-c",listingOracle,JSON.stringify(files)],{encoding:"utf8"}).stdout.trim();
+  expect(fetchedListingV1(Object.entries(files).map(([path,text])=>[path,createHash("sha256").update(text).digest("hex")] as const))).toBe(oracle);
+  expect(await fetchedSourcesV1(home,port,locked,true)).toBe(true);expect(listings.get(checksum)).toBe(oracle);
+  reads.length=0;expect(await fetchedSourcesV1(home,port,locked,false)).toBe(true);expect(reads).toEqual([]);
+  writeFileSync(join(source,"Cargo.toml"),"tampered");expect(await fetchedSourcesV1(home,port,locked,false)).toBe(false);expect(reads.length).toBe(1);
+  expect(await fetchedSourcesV1(home,port,locked,true)).toBe(true);reads.length=0;expect(await fetchedSourcesV1(home,port,locked,false)).toBe(true);expect(reads).toEqual([]);
+  rmSync(join(source,"src","lib.rs"));expect(await fetchedSourcesV1(home,port,locked,false)).toBe(false);
+  expect(await fetchedSourcesV1(home,port,locked,true)).toBe(true);
+  listings.set(checksum,"0".repeat(64));writeFileSync(join(source,"extra.txt"),"tolerated");reads.length=0;expect(await fetchedSourcesV1(home,port,locked,false)).toBe(true);expect(reads.length).toBe(1);expect(listings.get(checksum)).toBe(oracle);
  }finally{rmSync(home,{recursive:true,force:true});rmSync(work,{recursive:true,force:true});}
 });

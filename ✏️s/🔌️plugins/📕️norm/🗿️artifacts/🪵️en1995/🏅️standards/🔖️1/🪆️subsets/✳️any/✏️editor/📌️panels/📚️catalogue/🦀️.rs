@@ -224,7 +224,4 @@ pub fn render(examples: Vec<semio_plugin::ExampleSource>, locale: Locale, contro
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

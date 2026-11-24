@@ -1,0 +1,7 @@
+[
+{"op": "shape-add", "scale": "500", "view": "front", "after": "gutter", "shape": {"id": "purlin-1", "bone": "beam-b", "role": "body", "z": 4.0842, "filled": true, "tone": 0.5, "kind": "poly", "points": [[-2.5, 2.3291], [2.5, 2.3291], [2.5, 2.4125], [-2.5, 2.4125]], "closed": true, "region": "steel-frame", "material": "galv-weathered"}},
+{"op": "shape-add", "scale": "500", "view": "front", "after": "purlin-1", "shape": {"id": "purlin-2", "bone": "beam-b", "role": "body", "z": 5.0147, "filled": true, "tone": 0.5, "kind": "poly", "points": [[-2.5, 2.4105], [2.5, 2.4105], [2.5, 2.4939], [-2.5, 2.4939]], "closed": true, "region": "steel-frame", "material": "galv-weathered"}},
+{"op": "shape-add", "scale": "500", "view": "front", "after": "purlin-2", "shape": {"id": "purlin-3", "bone": "beam-b", "role": "body", "z": 5.9452, "filled": true, "tone": 0.5, "kind": "poly", "points": [[-2.5, 2.4919], [2.5, 2.4919], [2.5, 2.5753], [-2.5, 2.5753]], "closed": true, "region": "steel-frame", "material": "galv-weathered"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "tyre-rear", "set": {"d": "M 0.3505 0.0 A 0.3505 0.3505 0 1 0 -0.3505 0.0 A 0.3505 0.3505 0 1 0 0.3505 0.0 Z M 0.311 0.0 A 0.311 0.311 0 1 0 -0.311 0.0 A 0.311 0.311 0 1 0 0.311 0.0 Z"}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "depot-tag", "set": {"role": "texture"}}
+]

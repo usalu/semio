@@ -35,6 +35,7 @@ fn published_keys(shell: &ShellState, tab_id: &str, node: &UiNode) -> Vec<String
 /// published nothing at all.
 #[test]
 fn both_display_leaves_are_shell_owned_and_publish_a_body() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let leaves = shell.docs.shell_owned_panel_leaves(&shell.chrome, &shell.plugins, &shell.prefs);
     for tab_id in [FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, FRAMEWORK_DISPLAY_LAYOUT_TAB_ID] {
@@ -49,6 +50,7 @@ fn both_display_leaves_are_shell_owned_and_publish_a_body() {
 /// surface — the whole `createWorldProjectionTemplates` taxonomy under React's nested id grammar.
 #[test]
 fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let keys = published_keys(&shell, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &shell.docs.build_display_windows_ui(&shell.prefs));
     assert!(keys.iter().any(|key| key.ends_with("framework.display.windows.main")), "🖥️ a section per window kind, got {keys:?}");
@@ -94,15 +96,15 @@ impl semio_ui_wgpu_hosting::scene_slots::SceneHost for DisplayTreeSceneHost {
     }
 }
 
-fn settle_display_tree(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, witness: u64) {
+fn settle_display_tree(engine: &mut semio_ui_wgpu_engine::testkit::UiFixture, atlas: &mut semio_ui_text::FontAtlas, witness: u64) {
     settle_tree_surface(engine, atlas, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, witness);
 }
 
-fn settle_tree_surface(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64) {
+fn settle_tree_surface(engine: &mut semio_ui_wgpu_engine::testkit::UiFixture, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64) {
     settle_tree_surface_at_height(engine, atlas, surface, witness, 240.0);
 }
 
-fn settle_tree_surface_at_height(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64, height: f32) {
+fn settle_tree_surface_at_height(engine: &mut semio_ui_wgpu_engine::testkit::UiFixture, atlas: &mut semio_ui_text::FontAtlas, surface: &str, witness: u64, height: f32) {
     engine.set_viewport(surface, 300.0, height);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
@@ -118,20 +120,7 @@ fn settle_tree_surface_at_height(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &
         }
     });
     assert!(reconciled, "Display's accepted interaction rebases into its next paint candidate");
-    for _ in 0..64 {
-        for _ in 0..16_384 {
-            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
-            if matches!(engine.step_layouts(&pool, atlas, &mut cx), semio_ui_wgpu_engine_surface::UiLayoutStep::Idle) {
-                break;
-            }
-        }
-        if !engine.layout_is_dirty(surface) {
-            break;
-        }
-        engine.request_layout(surface);
-    }
-    assert!(!engine.layout_is_dirty(surface), "retained Tree layout settles");
+    assert!(engine.settle_layout(surface, &pool, atlas), "retained Tree layout settles");
     for _ in 0..131_072 {
         match engine.frame_step::<DisplayTreeSceneHost>(surface, 300.0, height, atlas, None, None) {
             semio_ui_wgpu_engine_surface::UiFrameStep::Pending => {}
@@ -146,7 +135,7 @@ fn settle_tree_surface_at_height(engine: &mut semio_ui_wgpu_engine::Ui, atlas: &
     panic!("Display branch paint did not settle");
 }
 
-fn press_display_tree(engine: &mut semio_ui_wgpu_engine::Ui, rect: semio_ui_theme::geometry::Rect) {
+fn press_display_tree(engine: &mut semio_ui_wgpu_engine::testkit::UiFixture, rect: semio_ui_theme::geometry::Rect) {
     let x = rect.x + rect.w * 0.5;
     let y = rect.y + rect.h * 0.5;
     engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, semio_ui_wgpu_events::UiEvent::PointerDown { x, y, button: semio_ui_wgpu_events::PointerButton::Primary, modifiers: semio_ui_wgpu_events::EventModifiers::default() });
@@ -155,6 +144,7 @@ fn press_display_tree(engine: &mut semio_ui_wgpu_engine::Ui, rect: semio_ui_them
 
 #[test]
 fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its_children_when_closed() {
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     let mut shell = display_shell();
     shell.docs.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = semio_ui_declaration::ui::SurfaceKind::World3d;
     let mut body = shell.docs.build_display_windows_ui(&shell.prefs);
@@ -166,7 +156,6 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
     let child_id = "framework.display.windows.main.projection.parallel.orthographic";
     let chevron_id = format!("tree.chevron.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{parallel_id}");
     let child_label_id = format!("tree.label.{FRAMEWORK_DISPLAY_WINDOWS_TAB_ID}/{child_id}");
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     let records = panel_ui_records(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body).expect("Display's authored tree projects into retained records");
     let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
         generation: 1,
@@ -229,6 +218,7 @@ fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its
 
 #[test]
 fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     let fixture = display_order_fixture();
     let expected: Vec<&str> = fixture["displayResolvedOrder"]["topToBottomIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
     assert!(expected.iter().all(|id| semio_framework::is_element_id(id)), "🆔️ the shared order names element ids only: {expected:?}");
@@ -256,7 +246,6 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
     for record in records {
         document.try_upsert_record(record).expect("Display record admits");
     }
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, document));
     engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
     let mut atlas = semio_ui_text::FontAtlas::builtin();
@@ -274,6 +263,7 @@ fn the_expanded_display_taxonomy_paints_in_the_mounted_react_order() {
 /// list section, `groupPath` folding, and a user layout's own `framework.display.delete.<id>` action.
 #[test]
 fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     shell.dock.layout_save_label.clear();
     shell.dock.user_layouts = vec![semio_ui_layout::layout::NamedLayout { id: "user-7".into(), label: "Mine".into(), icon_id: None, layout: shell.dock.dock.to_window_layout(), origin: "user".into(), group_path: None }];
@@ -312,6 +302,7 @@ fn the_display_layout_leaf_publishes_the_save_box_and_both_layout_rosters() {
 /// the leaf carried since W2c ("never paints a conflict either").
 #[test]
 fn the_conflicts_leaf_paints_the_live_roster_and_reacts_resolution_pair() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.prefs.build_settings_conflicts_ui());
     assert!(keys.iter().any(|key| key.ends_with("framework.settings.conflicts.empty.row")), "⚖️ an empty roster is React's own unavailable row");
@@ -336,6 +327,7 @@ fn the_conflicts_leaf_paints_the_live_roster_and_reacts_resolution_pair() {
 /// not reach at all before the program bridge grew its `tool_measures_section` reader.
 #[test]
 fn a_tool_leaf_publishes_its_own_measures_under_their_own_ids() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let tab_id = format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}fill");
     let keys = published_keys(&shell, &tab_id, &shell.windows.build_tool_panel_ui("fill", &shell.prefs, &shell.docs));
@@ -385,6 +377,13 @@ fn marketplace_window_at(shell: &mut ShellState, plugin_id: &str) {
 /// program may never be uninstalled (React's `canUninstall`): its Uninstall paints and announces disabled.
 #[test]
 fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
+    let installable = "catalogue.installable";
+    let _catalogue = semio_renderer_wgpu_host_base::plugin_catalog::scope_plugin_catalog_v1(semio_os_kernel::native_catalog::NativeCatalogV1 {
+        version: 1,
+        plugins: vec![semio_os_kernel::native_catalog::NativePluginV1 { plugin_id: installable.into(), crate_path: "plugins/installable".into(), wasm_out: "installable.wasm".into(), role: "plugin".into(), extends: None, capabilities: Vec::new(), activation_events: vec!["on-artifact-kind:test.installable".into()], host: None }],
+        playgrounds: Vec::new(),
+    });
     let mut shell = display_shell();
     marketplace_window_at(&mut shell, "space");
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
@@ -394,7 +393,6 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
     assert_eq!((target["scope"].as_str(), target["args"]["pluginId"].as_str()), (Some("framework"), Some("space")), "🎯️ every verb fires on the row's one target: {target}");
     assert!(target.get("activation").is_none(), "🎯️ an action-only row has no activation verb");
 
-    let installable = semio_renderer_wgpu_program_bridge::plugin_artifact_kind_activations().iter().map(|(_, plugin_id)| *plugin_id).find(|plugin_id| *plugin_id != "space").expect("the catalogue claims a plugin this shell does not hold");
     marketplace_window_at(&mut shell, installable);
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let (_, row) = marketplace_row(&records, &format!("framework.marketplace.plugin.{installable}"));
@@ -430,6 +428,7 @@ fn the_marketplace_announces_a_disabled_uninstall_as_a_disabled_row_action_butto
 
 /// ♿️ The mounted Marketplace's retained accessibility projection, with the session program's row in view.
 fn marketplace_accessibility_nodes(mut shell: &mut ShellState) -> Vec<ui_contract::AccessibilityProjectionNode> {
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     marketplace_window_at(shell, "space");
     let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &SessionCtx::of(&mut shell).build_marketplace_ui()).expect("the marketplace body projects");
     let mut document = semio_ui_retained_tree::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
@@ -444,7 +443,6 @@ fn marketplace_accessibility_nodes(mut shell: &mut ShellState) -> Vec<ui_contrac
     for record in records {
         document.try_upsert_record(record).expect("marketplace record admits");
     }
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_MARKETPLACE_TAB_ID, document));
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_MARKETPLACE_TAB_ID, 1);
@@ -456,6 +454,7 @@ fn marketplace_accessibility_nodes(mut shell: &mut ShellState) -> Vec<ui_contrac
 /// reports is exactly the slice the leaf republishes (here: the roster's LAST row).
 #[test]
 fn the_marketplace_streams_its_roster_as_one_windowed_section() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let section_key = format!("{FRAMEWORK_MARKETPLACE_TAB_ID}/{MARKETPLACE_LOCAL_SECTION_ID}");
     let section = |records: &[ui_contract::UiNodeRecord]| -> (ui_contract::TreeWindow, usize) {
@@ -479,6 +478,7 @@ fn the_marketplace_streams_its_roster_as_one_windowed_section() {
 
 #[test]
 fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enablement_and_uninstall() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
     let host = shell.plugins.plugins.first().expect("fixture host").plugin_id.clone();
@@ -500,6 +500,7 @@ fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enable
 
 #[test]
 fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_executable_controls() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut shell = display_shell();
     let mut record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
     record.extends_host = "missing.host".into();
@@ -514,6 +515,7 @@ fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_exec
 
 #[test]
 fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.prefs.locale_id = "en".into();
@@ -555,6 +557,7 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
 
 #[test]
 fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️tests/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView producer fixture");
     let mut shell = display_shell();
     shell.prefs.locale_id = "en".into();
@@ -595,7 +598,6 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
@@ -606,6 +608,7 @@ fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
 
 #[test]
 fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
+    let mut engine = semio_ui_wgpu_engine::testkit::UiFixture::new(semio_ui_locale::Locale::En);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
     shell.prefs.locale_id = "en".into();
@@ -633,7 +636,6 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
     for record in records {
         document.try_upsert_record(record).expect("conflict record admits");
     }
-    let mut engine = semio_ui_wgpu_engine::Ui::new(semio_ui_locale::Locale::En);
     assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
     let mut atlas = semio_ui_text::FontAtlas::builtin();
     settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
@@ -668,7 +670,7 @@ fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
 
 #[test]
 fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let fixture = display_order_fixture();
     let mut shell = display_shell();
     let kind = shell.docs.session.as_mut().unwrap().app.window_kinds.first_mut();
@@ -696,7 +698,7 @@ fn display_projection_disclosures_reflow_the_actual_hugging_shell_panel() {
         let mut draw = DrawList::default();
         draw.set_screen_height(shell.chrome.screen_h);
         let mut cursor = ShellChromeChildCursor::default();
-        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn(|cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx))));
+        assert!((0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(&mut shell).render_panel_step(&mut cursor, anchor, &mut draw, None, &mut atlas, &icons, input, &theme, body, &mut resources, cx))));
         PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(input);
     };
     assert_eq!(fixture["displayBranchPublication"]["rules"]["huggingPanelReflowsBeforePublication"], true);

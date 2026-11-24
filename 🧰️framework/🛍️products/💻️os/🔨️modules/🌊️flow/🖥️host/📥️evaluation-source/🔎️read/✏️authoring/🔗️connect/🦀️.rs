@@ -101,4 +101,4 @@ impl ConnectWork{
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.reach.is_none()&&self.text.is_none()&&self.typed.is_none()&&self.synapse.is_none()&&self.retirement.is_empty()&&self.fields.id.is_none()&&self.fields.leaf_id.is_none()&&self.fields.wire.is_none()&&self.fields.output.is_none()&&self.fields.error.is_none()&&self.fields.error_text.iter().all(Option::is_none)&&self.fields.flags.capacity()==0}
 }
-impl Drop for ConnectWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original connection requires terminal child and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for ConnectWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original connection requires terminal child and output custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

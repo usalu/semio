@@ -4,6 +4,11 @@ use super::*;
 
 //#region 🎠️KernelRuntime
 //#region 🔖️KernelPoolState
+/// 🧱️ A fixed-capacity slot table built directly on the heap, so the pool state and its future stay small on the stack.
+fn empty_slots<T>(capacity: usize) -> Box<[Option<T>]> {
+    (0..capacity).map(|_| None).collect()
+}
+
 impl KernelPoolState {
     /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): every method in this
     /// state machine is genuinely asynchronous and the whole request loop is mounted once on the
@@ -35,15 +40,15 @@ impl KernelPoolState {
             rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
             rejected_events: None,
             job_progress: JobProgressOverlayStore::new(),
-            replay_routes: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
-            job_replays: std::array::from_fn(|_| None),
-            reserved_jobs: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
-            product_replay_claims: std::array::from_fn(|_| None),
-            product_replay_authorities: std::array::from_fn(|_| None),
-            rejected_job_progress: std::array::from_fn(|_| None),
-            pending_job_progress_presentations: std::array::from_fn(|_| None),
-            closing_apps: std::array::from_fn(|_| None),
-            fault_closing_actors: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
+            replay_routes: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            job_replays: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            reserved_jobs: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            product_replay_claims: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            product_replay_authorities: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            rejected_job_progress: empty_slots(64),
+            pending_job_progress_presentations: empty_slots(JOB_PROGRESS_PRESENTATION_CAPACITY),
+            closing_apps: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
+            fault_closing_actors: empty_slots(JOB_PROGRESS_ACTIVE_CAPACITY),
             realm_progress_close_started: false,
             semantic_close_document_lane: false,
             serving: Vec::with_capacity(2),

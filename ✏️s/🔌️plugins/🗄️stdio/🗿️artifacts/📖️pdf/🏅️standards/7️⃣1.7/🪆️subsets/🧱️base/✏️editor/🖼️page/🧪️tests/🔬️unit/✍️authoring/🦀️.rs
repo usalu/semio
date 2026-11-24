@@ -131,7 +131,7 @@ fn created_annotations_follow_the_fixture_and_round_trip_through_lopdf() {
         let outcome = run(
             &mut snapshot,
             "create-annotation",
-            vec![("page", number(0.0)), ("object", text(case["kind"].as_str().unwrap())), ("text", text(case["text"].as_str().unwrap_or(""))), ("extra", text(case["extra"].as_str().unwrap_or(""))), ("x", number(rect[0])), ("y", number(rect[1])), ("width", number(rect[2])), ("height", number(rect[3])), ("red", number(color[0])), ("green", number(color[1])), ("blue", number(color[2]))],
+            vec![("page", number(1.0)), ("object", text(case["kind"].as_str().unwrap())), ("text", text(case["text"].as_str().unwrap_or(""))), ("extra", text(case["extra"].as_str().unwrap_or(""))), ("x", number(rect[0])), ("y", number(rect[1])), ("width", number(rect[2])), ("height", number(rect[3])), ("red", number(color[0])), ("green", number(color[1])), ("blue", number(color[2]))],
         );
         if case.get("error").is_some() {
             assert!(outcome.is_err(), "{case}");
@@ -241,7 +241,7 @@ fn destination_document() -> PdfSnapshot {
 fn merging_inserts_picked_pages_with_renamed_used_resources_only() {
     let source = source_document();
     let mut snapshot = destination_document();
-    run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text(&data_url(&source))), ("extra", text("1-2"))]).unwrap();
+    run(&mut snapshot, "merge-document", vec![("page", number(2.0)), ("payload", text(&data_url(&source))), ("extra", text("1-2"))]).unwrap();
     assert_eq!(snapshot.pages.iter().map(|page| (page.width(), page.height())).collect::<Vec<_>>(), vec![(50.0, 50.0), (100.0, 100.0), (120.0, 80.0), (60.0, 60.0)]);
     assert_eq!(snapshot.fonts.iter().map(|font| font.id.as_str()).collect::<Vec<_>>(), vec!["F1", "m1_F1"]);
     assert_eq!(snapshot.images.iter().map(|image| image.id.as_str()).collect::<Vec<_>>(), vec!["m1_Im1"]);
@@ -255,16 +255,16 @@ fn merging_inserts_picked_pages_with_renamed_used_resources_only() {
     let theirs = oracle::reference_page_operator_names(&bytes).unwrap();
     let source_ops = oracle::reference_page_operator_names(&encode_pdf(&source).unwrap()).unwrap();
     assert_eq!((&theirs[1], &theirs[2]), (&source_ops[0], &source_ops[1]), "merged pages keep their content operators");
-    run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text(&data_url(&source))), ("extra", text("1"))]).unwrap();
+    run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text(&data_url(&source))), ("extra", text("1"))]).unwrap();
     assert!(snapshot.fonts.iter().any(|font| font.id == "m2_F1") && snapshot.pages.len() == 5);
 }
 
 #[test]
 fn merging_refuses_garbage_and_missing_pages() {
     let mut snapshot = destination_document();
-    assert!(run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text("data:application/pdf;base64,AAAA"))]).is_err());
-    assert!(run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text("***"))]).is_err());
-    assert!(run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("9"))]).is_err());
+    assert!(run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text("data:application/pdf;base64,AAAA"))]).is_err());
+    assert!(run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text("***"))]).is_err());
+    assert!(run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("9"))]).is_err());
     assert_eq!(snapshot.pages.len(), 2);
 }
 
@@ -275,7 +275,7 @@ fn merging_rewires_form_widgets_and_keeps_names_unique() {
     let mut snapshot = form_document();
     snapshot.pages.insert(0, PdfPage::new(200.0, 300.0));
     snapshot.acro_form.as_mut().unwrap().fields.iter_mut().for_each(|field| field.widgets.iter_mut().for_each(|widget| widget[0] += 1));
-    run(&mut snapshot, "merge-document", vec![("page", number(0.0)), ("payload", text(&data_url(&source)))]).unwrap();
+    run(&mut snapshot, "merge-document", vec![("page", number(1.0)), ("payload", text(&data_url(&source)))]).unwrap();
     let form = snapshot.acro_form.as_ref().unwrap();
     let merged = form.fields.iter().find(|field| field.name == "name_2").expect("renamed merged field");
     assert_eq!(merged.widgets, vec![[0, 0]]);
@@ -288,14 +288,14 @@ fn merging_rewires_form_widgets_and_keeps_names_unique() {
 fn replacing_a_page_keeps_the_others_and_drops_stale_widgets() {
     let mut snapshot = form_document();
     snapshot.pages.push(PdfPage::new(10.0, 10.0));
-    run(&mut snapshot, "replace-page", vec![("page", number(1.0)), ("width", number(30.0)), ("height", number(40.0))]).unwrap();
+    run(&mut snapshot, "replace-page", vec![("page", number(2.0)), ("width", number(30.0)), ("height", number(40.0))]).unwrap();
     assert_eq!((snapshot.pages[1].width(), snapshot.pages[1].height()), (30.0, 40.0));
-    run(&mut snapshot, "replace-page", vec![("page", number(0.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("2"))]).unwrap();
+    run(&mut snapshot, "replace-page", vec![("page", number(1.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("2"))]).unwrap();
     assert_eq!((snapshot.pages[0].width(), snapshot.pages[0].height()), (120.0, 80.0));
     assert!(snapshot.acro_form.as_ref().unwrap().fields.iter().all(|field| field.widgets.is_empty()));
     assert_eq!(snapshot.pages.len(), 2);
     assert!(run(&mut snapshot, "replace-page", vec![("page", number(5.0))]).is_err());
-    assert!(run(&mut snapshot, "replace-page", vec![("page", number(0.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("1-2"))]).is_err());
+    assert!(run(&mut snapshot, "replace-page", vec![("page", number(1.0)), ("payload", text(&data_url(&source_document()))), ("extra", text("1-2"))]).is_err());
 }
 
 #[test]
@@ -377,9 +377,9 @@ fn page_structure_actions_renumber_widgets_and_links_per_the_fixture() {
 #[test]
 fn page_structure_round_trips_through_the_independent_reader() {
     let mut snapshot = structure_document();
-    run(&mut snapshot, "insert-page", vec![("page", number(1.0)), ("width", number(30.0)), ("height", number(40.0))]).unwrap();
-    run(&mut snapshot, "move-page", vec![("page", number(0.0)), ("x", number(3.0))]).unwrap();
-    run(&mut snapshot, "remove-page", vec![("page", number(0.0))]).unwrap();
+    run(&mut snapshot, "insert-page", vec![("page", number(2.0)), ("width", number(30.0)), ("height", number(40.0))]).unwrap();
+    run(&mut snapshot, "move-page", vec![("page", number(1.0)), ("x", number(4.0))]).unwrap();
+    run(&mut snapshot, "remove-page", vec![("page", number(1.0))]).unwrap();
     let bytes = encode_pdf(&snapshot).unwrap();
     assert_eq!(oracle::reference_page_count(&bytes).unwrap(), snapshot.pages.len());
     assert_eq!(snapshot.pages.len(), 3);
@@ -420,7 +420,7 @@ fn a_selected_widget_shows_its_value_and_fills_through_the_inspector_action() {
     let (names, shown) = panel(&snapshot, Some("p0:a0"), semio_ui_locale::Locale::En);
     assert!(names.iter().any(|name| name == "fill-form-field"), "{names:?}");
     assert!(shown.iter().any(|value| value == "Ada"), "{shown:?}");
-    let commit = args(vec![("page", number(0.0)), ("object", text("name")), ("field", text("text")), ("value", text("Bob"))]);
+    let commit = args(vec![("page", number(1.0)), ("object", text("name")), ("field", text("text")), ("value", text("Bob"))]);
     let edit = edit_from_action("fill-form-field", Some(&commit)).unwrap();
     for mutation in apply_payload(&snapshot, &edit.action, &edit.payload).unwrap() {
         apply_pdf_mutation(&mut snapshot, &mutation);
@@ -499,15 +499,15 @@ fn page_edits_renumber_outline_entries_and_named_destinations() {
     snapshot.outlines = vec![item("one", 0, vec![item("child", 2, Vec::new())]), item("two", 1, Vec::new())];
     snapshot.named_destinations = vec![PdfNamedDestination { name: "last".into(), destination: go(2) }, PdfNamedDestination { name: "first".into(), destination: go(0) }];
     let mut inserted = snapshot.clone();
-    run(&mut inserted, "insert-page", vec![("page", number(0.0)), ("width", number(9.0)), ("height", number(9.0))]).unwrap();
+    run(&mut inserted, "insert-page", vec![("page", number(1.0)), ("width", number(9.0)), ("height", number(9.0))]).unwrap();
     assert_eq!(inserted.outlines[0].destination, Some(go(1)));
     assert_eq!(inserted.outlines[0].children[0].destination, Some(go(3)));
     assert_eq!(inserted.named_destinations.iter().find(|named| named.name == "last").unwrap().destination, go(3));
     let mut moved = snapshot.clone();
-    run(&mut moved, "move-page", vec![("page", number(0.0)), ("x", number(2.0))]).unwrap();
+    run(&mut moved, "move-page", vec![("page", number(1.0)), ("x", number(3.0))]).unwrap();
     assert_eq!((moved.outlines[0].destination.clone(), moved.outlines[1].destination.clone()), (Some(go(2)), Some(go(0))));
     let mut removed = snapshot;
-    run(&mut removed, "remove-page", vec![("page", number(1.0))]).unwrap();
+    run(&mut removed, "remove-page", vec![("page", number(2.0))]).unwrap();
     assert_eq!(removed.outlines[1].destination, None);
     assert_eq!(removed.outlines[0].children[0].destination, Some(go(1)));
     assert!(removed.named_destinations.iter().any(|named| named.name == "first" && named.destination == go(0)));

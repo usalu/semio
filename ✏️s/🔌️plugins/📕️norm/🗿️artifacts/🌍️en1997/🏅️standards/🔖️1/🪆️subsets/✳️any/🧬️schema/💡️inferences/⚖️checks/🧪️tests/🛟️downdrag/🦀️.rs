@@ -57,21 +57,21 @@ fn the_pile_modulus_is_the_explicit_override_else_the_class_modulus_else_zero() 
     }
 }
 
-/// 🧱️ PILE-09 reads the class: the demo pile with C30/37 and no explicit modulus gives the same settlement verdict as the explicit 33 GPa, and a lower class (C12/15, E_cm 27 GPa) shortens more, so the utilisation rises.
+/// 🧱️ PILE-09 reads the class: the demo pile with C30/37 and no explicit modulus gives the same elastic shortening (the figure of its `s_elastic` result, an information result without limit) as the explicit 33 GPa, and a lower class (C12/15, E_cm 27 GPa) shortens more.
 #[test]
 fn the_pile_settlement_verdict_follows_the_concrete_class_unless_an_explicit_modulus_overrides_it() {
-    let utilization = |class: PileConcreteClass, modulus: f64| {
+    let shortening = |class: PileConcreteClass, modulus: f64| {
         let mut document = semio_s_artifact_norm_en1997_model::compliant_demo();
         document.piles[0].concrete_class = class;
         document.piles[0].elastic_modulus = modulus;
         let report = check_project(&document);
-        let check = report.checks.iter().find(|check| check.id.starts_with("en1997.pile-09.")).expect("PILE-09 check").clone();
-        check.utilization
+        let check = report.checks.iter().find(|check| check.id.starts_with("en1997.pile-09.s_elastic.")).expect("PILE-09 elastic shortening result");
+        check.explanation.en.strip_prefix("s_elastic = ").and_then(|text| text.split_whitespace().next()).and_then(|figure| figure.parse::<f64>().ok()).expect("the shortening figure of the steps")
     };
-    let by_class = utilization(PileConcreteClass::C3037, 0.0);
-    let explicit = utilization(PileConcreteClass::NotGiven, 33.0e9);
-    let overridden = utilization(PileConcreteClass::C1215, 33.0e9);
+    let by_class = shortening(PileConcreteClass::C3037, 0.0);
+    let explicit = shortening(PileConcreteClass::NotGiven, 33.0e9);
+    let overridden = shortening(PileConcreteClass::C1215, 33.0e9);
     assert!((by_class - explicit).abs() <= 1e-12 * explicit.max(1.0), "{by_class} {explicit}");
     assert!((overridden - explicit).abs() <= 1e-12 * explicit.max(1.0), "{overridden} {explicit}");
-    assert!(utilization(PileConcreteClass::C1215, 0.0) > by_class);
+    assert!(shortening(PileConcreteClass::C1215, 0.0) > by_class);
 }

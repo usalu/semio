@@ -26,8 +26,9 @@ pub const LAYER_ANNOTATIONS: &str = "annotations";
 pub const LAYER_ANALYSES: &str = "analyses";
 pub const LAYER_CASES: &str = "cases";
 pub const LAYER_GAMMA: &str = "gamma-bands";
+pub const LAYER_SITE: &str = "site";
 
-const LAYERS: [(&str, &str, &str); 8] = [
+const LAYERS: [(&str, &str, &str); 9] = [
     (LAYER_MEMBERS, "Members", "Bauteile"),
     (LAYER_DECKS, "Bridge decks", "Brückenfahrbahnen"),
     (LAYER_LOADS, "Actions", "Einwirkungen"),
@@ -36,6 +37,7 @@ const LAYERS: [(&str, &str, &str); 8] = [
     (LAYER_ANALYSES, "Analyses", "Analysen"),
     (LAYER_CASES, "Design cases", "Bemessungsfälle"),
     (LAYER_GAMMA, "Permanent factor bands", "Bänder der ständigen Teilsicherheitsbeiwerte"),
+    (LAYER_SITE, "Site", "Standort"),
 ];
 
 /// 🏷️ One entity kind of the EN 1990 outliner, interaction domain and insert palette.
@@ -209,6 +211,11 @@ pub fn owner_entity(document: &model::En1990Snapshot, check: &norm::CheckResult)
     let collection = check_owner(&check.id)?;
     let rows = rows_of(document).into_iter().find(|(name, _)| *name == collection)?.1;
     (rows.len() == 1).then(|| rows[0].to_owned())
+}
+
+/// 🔖️ Per row id whether it is the only row of its collection: the checks of a family without subject belong to a row only then ([`owner_entity`]), so the flag is part of the row's fragment key.
+pub fn sole_rows(document: &model::En1990Snapshot) -> std::collections::BTreeMap<String, String> {
+    rows_of(document).into_iter().flat_map(|(_, ids)| { let sole = ids.len() == 1; ids.into_iter().map(move |id| (id.to_owned(), format!("sole={sole}"))) }).collect()
 }
 
 /// 🧭️ The route of `check`: its owner row, else the document when it sits in a document-level family; `None` is a check no entity or badge draws, which the routing law forbids.

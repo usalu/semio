@@ -1,17 +1,21 @@
+import {mkdirSync,readFileSync,renameSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
 import {freeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts";
 import {volumeMountOfV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/💽️disk-full/🟦️.ts";
 import {machineHostFloorV1} from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🟦️.ts";
 import machinePolicy from "../../../⚡️caching/💾️storage/🧾️ledger/🎚️machine/🔣️policy.json" with {type:"json"};
-import {CAS_BUDGET_V1,CAS_RESERVE_FACTOR_V1,type CasBudgetV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
+import {CAS_BUDGET_V1,CAS_POLICY_V1,CAS_RESERVE_FACTOR_V1,type CasBudgetV1,type CasPolicyV1,type CasRoleV1} from "../🧬️schema/🟦️.ts";
 
-/** 🌡️ The partition that holds a path: its mount point, size and the bytes a writer may still use. */
-export type CasPartitionV1=Readonly<{partition:string;totalBytes:number;freeBytes:number}>;
+/** 🌡️ The partition that holds a path: its mount point, size, the bytes a writer may still use and the role of the machine for the store (read where the partition is measured, so every cap computed from it agrees). */
+export type CasPartitionV1=Readonly<{partition:string;totalBytes:number;freeBytes:number;role?:CasRoleV1}>;
+/** 🧑‍🏭️ The environment variable that names the role of a machine explicitly (`worker`, `builder` or `cache-host`). */
+export const CAS_ROLE_ENVIRONMENT_V1="SEMIO_CAS_ROLE";
 
 /** 🔭️ Measures the partition of a path (of its nearest existing ancestor); `undefined` when the host cannot say how large the partition is, so that no collection starts on a guess. @see ../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🆓️free-space/🟦️.ts */
 export function measureCasPartitionV1(path:string):CasPartitionV1|undefined{
  const space=freeSpaceSyncV1(path,{nearest:true});
  if(space?.totalBytes===undefined||!(space.totalBytes>0))return undefined;
- return Object.freeze({partition:volumeMountOfV1(path),totalBytes:space.totalBytes,freeBytes:Math.min(space.totalBytes,space.availableBytes)});
+ return Object.freeze({partition:volumeMountOfV1(path),totalBytes:space.totalBytes,freeBytes:Math.min(space.totalBytes,space.availableBytes),role:readCasRoleV1(path)});
 }
 
 /** 📏️ The share of a partition in use, counting `incomingBytes` still to be written. */
@@ -60,15 +64,41 @@ export function casPartitionBudgetV1(totalBytes:number,budget:CasBudgetV1=CAS_BU
 /** 🌡️ The policy a partition is judged by: the declared policy with the used shares replaced by the shares its derived budget gives (critical = 1 - cushion / size, high = 1 - reserve / size, low = 1 - (reserve + hysteresis) / size); a partition that cannot derive them, or an unmeasured one, keeps the declared shares. */
 export function casPartitionPolicyForV1(policy:CasPolicyV1,partition:(Pick<CasPartitionV1,"totalBytes">&Partial<Pick<CasPartitionV1,"freeBytes">>) | undefined,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):CasPolicyV1{
  if(partition===undefined)return policy;
- const cap=casEffectiveCapBytesV1(policy,partition,storeBytes),capped=cap===policy.capBytes?policy:Object.freeze({...policy,capBytes:cap}),derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ const cap=casEffectiveCapBytesV1(policy,partition,storeBytes,budget,factor),capped=cap===policy.capBytes?policy:Object.freeze({...policy,capBytes:cap}),derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
  if(!derived.derivable)return capped;
  const total=partition.totalBytes;
  return Object.freeze({...capped,partition:Object.freeze({criticalUsedFraction:1-derived.cushionBytes/total,highUsedFraction:1-derived.reserveBytes/total,lowUsedFraction:1-(derived.reserveBytes+derived.hysteresisBytes)/total})});
 }
 
-/** 🧯️ The cap in force on this partition: the declared cap, at most `capHostSharePercent` of the partition, and at most what the store holds plus what the host can still give above its free floor (the floor of the machine budget, `machineHostFloorV1`: the declared bytes bounded by a share of the volume), never below `minimumCapBytes` (and never above the declared cap), aligned down to the alignment step of the machine budget so that the cap does not move with every written byte. The store therefore shrinks as the disk fills instead of waiting for the critical share. An unknown store size leaves the room out. */
-export function casEffectiveCapBytesV1(policy:Pick<CasPolicyV1,"capBytes"|"capHostSharePercent"|"minimumCapBytes">,partition:Pick<CasPartitionV1,"totalBytes">&Partial<Pick<CasPartitionV1,"freeBytes">>,storeBytes?:number):number{
- const floor=machineHostFloorV1(machinePolicy,partition.totalBytes),share=Math.floor(partition.totalBytes*policy.capHostSharePercent/100),room=storeBytes===undefined?Infinity:storeBytes+Math.max(0,(partition.freeBytes??0)-floor),step=machinePolicy.alignBytes;
- const wanted=Math.max(policy.minimumCapBytes,Math.min(share,room)),aligned=Math.max(policy.minimumCapBytes,Math.floor(wanted/step)*step);
+/** 🧑‍🏭️ Where the role records of a store live: one small file per role, `<root>/v1/r/<role>.json`. */
+export const casRoleDirectoryV1=(root:string):string=>join(root,"v1","r");
+
+/** 🧑‍🏭️ Declares that this machine plays `role` for the store (the fleet cache server declares `cache-host` while it runs): writes a record that expires after `sizing.roleTtlMs` unless renewed. */
+export function declareCasRoleV1(root:string,role:CasRoleV1,policy:Pick<CasPolicyV1,"sizing">=CAS_POLICY_V1,now:number=Date.now()):void{
+ const directory=casRoleDirectoryV1(root);mkdirSync(directory,{recursive:true});
+ const target=join(directory,role+".json"),temporary=join(directory,role+"."+process.pid+".tmp");
+ writeFileSync(temporary,JSON.stringify({version:1,role,renewedAtMs:now,expiresAtMs:now+policy.sizing.roleTtlMs}));renameSync(temporary,target);
+}
+
+/** 🧑‍🏭️ The role of this machine for the store at `root`: the environment `SEMIO_CAS_ROLE` when it names a role, else the strongest role with a live record (cache-host before builder before worker, the order of the declared roles reversed), else `sizing.defaultRole`. */
+export function readCasRoleV1(root:string,policy:Pick<CasPolicyV1,"sizing">=CAS_POLICY_V1,environment:Readonly<Record<string,string|undefined>>=process.env,now:number=Date.now()):CasRoleV1{
+ const declared=policy.sizing.roles,named=declared.find(role=>role.id===environment[CAS_ROLE_ENVIRONMENT_V1]);
+ if(named!==undefined)return named.id;
+ for(const role of [...declared].reverse())try{const record=JSON.parse(readFileSync(join(casRoleDirectoryV1(root),role.id+".json"),"utf8")) as {expiresAtMs?:number};if(typeof record.expiresAtMs==="number"&&record.expiresAtMs>now)return role.id;}catch{}
+ return policy.sizing.defaultRole;
+}
+
+/** 📐️ The bytes a role needs at least: transient offload inputs, the full release caches of its checkouts and, on the server host, the fleet cache server's blobs. */
+export function casRoleFloorBytesV1(policy:Pick<CasPolicyV1,"sizing">,role:CasRoleV1):number{
+ const row=policy.sizing.roles.find(entry=>entry.id===role)??policy.sizing.roles.find(entry=>entry.id===policy.sizing.defaultRole)!;
+ return policy.sizing.transientBytes+row.releases*policy.sizing.releaseBytes+(row.server?policy.sizing.serverBytes:0);
+}
+
+/** 🧯️ The cap in force on this partition for the machine's role (`partition.role`, else the default role): the larger of the role's share of the partition and its floor (`casRoleFloorBytesV1`: transient inputs + the release caches of its checkouts + the server blobs on the cache host), at most what the store holds plus what the partition can still give above its free headroom (the larger of the machine budget's host floor `machineHostFloorV1` and the reserve below its high watermark, so the store's own growth never pushes the partition over it), never below `minimumCapBytes` and never above the declared ceiling `capBytes`, aligned down to the alignment step of the machine budget so that the cap does not move with every written byte. The store therefore shrinks as the disk fills instead of waiting for the critical share. An unknown store size leaves the room out. The fleet cache server's blob bound is a share of this number (`remoteCacheBlobBoundV1`) and so follows it. @see ../🧬️schema/🔣️.json */
+export function casEffectiveCapBytesV1(policy:Pick<CasPolicyV1,"capBytes"|"minimumCapBytes"|"sizing"|"partition">,partition:Pick<CasPartitionV1,"totalBytes"|"role">&Partial<Pick<CasPartitionV1,"freeBytes">>,storeBytes?:number,budget:CasBudgetV1=CAS_BUDGET_V1,factor:number=CAS_RESERVE_FACTOR_V1):number{
+ const role=policy.sizing.roles.find(entry=>entry.id===(partition.role??policy.sizing.defaultRole))??policy.sizing.roles.find(entry=>entry.id===policy.sizing.defaultRole)!,derived=casPartitionBudgetV1(partition.totalBytes,budget,factor);
+ const hostFloor=machineHostFloorV1(machinePolicy,partition.totalBytes),watermarkFree=derived.derivable?derived.reserveBytes:Math.ceil(partition.totalBytes*(1-policy.partition.highUsedFraction)),headroom=Math.max(hostFloor,watermarkFree);
+ const share=Math.floor(partition.totalBytes*role.sharePercent/100),wantedBytes=Math.max(share,casRoleFloorBytesV1(policy,role.id)),room=storeBytes===undefined?Infinity:storeBytes+Math.max(0,(partition.freeBytes??0)-headroom),step=machinePolicy.alignBytes;
+ const wanted=Math.max(policy.minimumCapBytes,Math.min(wantedBytes,room)),aligned=Math.max(policy.minimumCapBytes,Math.floor(wanted/step)*step);
  return Math.min(policy.capBytes,aligned);
 }

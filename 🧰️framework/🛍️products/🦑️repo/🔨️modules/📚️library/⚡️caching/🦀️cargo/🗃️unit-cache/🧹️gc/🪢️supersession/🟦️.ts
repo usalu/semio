@@ -3,6 +3,7 @@ import {dirname,join} from "node:path";
 import {SLOT_GRACE_MILLISECONDS_V1,type DeclarationV1,type StalenessModeV1} from "../../../../../🏗️build/🪢️slots/🟦️.ts";
 import {judgeStalenessV1,openTreeDigestsV1,stalenessReportV1,type StalenessVerdictV1} from "../../../../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
 import {reclaimCasObjectsV1,type CasReclaimV1} from "../../../../../🏗️build/🗄️cas/🪦️reclaim/🟦️.ts";
+import {resetCasHeldCacheV1} from "../../../../../🏗️build/🗄️cas/🫂️holders/🟦️.ts";
 import {casRootV1,createCasStoreV1,type CasStoreV1} from "../../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 
@@ -18,7 +19,7 @@ export type UnitRetirementV1=Readonly<{mode:StalenessModeV1;scanned:number;decla
 
 type Row={key:string;storedAt:number;accessed:number;directory:string;newest:string;files:string[];refs:string[];declaration:DeclarationV1|undefined};
 
-const none:CasReclaimV1={entries:0,bytes:0,pinned:0,recent:0,shared:0,missing:0};
+const none:CasReclaimV1={entries:0,bytes:0,pinned:0,held:0,recent:0,shared:0,missing:0};
 const yielding=()=>new Promise<void>(done=>setImmediate(done));
 const refsOf=(entry:{outputs?:{sha256?:unknown}[];stdout?:unknown;stderr?:unknown}):string[]=>[...(entry.outputs??[]).map(row=>row.sha256),entry.stdout,entry.stderr].filter((sha):sha is string=>typeof sha==="string"&&/^[0-9a-f]{64}$/u.test(sha));
 
@@ -76,6 +77,7 @@ export async function retireStaleUnitsV1(root:string,options:Readonly<{workspace
   const gone=new Set(removed.map(row=>row.key)),live=new Set<string>();
   for(const row of rows)if(!gone.has(row.key))for(const sha of row.refs)live.add(sha);
   const candidates=new Set<string>();for(const row of removed)for(const sha of row.refs)if(!live.has(sha))candidates.add(sha);
+  resetCasHeldCacheV1();
   reclaimed=await reclaimCasObjectsV1(options.host,candidates,{...options.signal?{signal:options.signal}:{}});
  }
  try{appendFileSync(join(root,"retention.jsonl"),JSON.stringify({...report,retired:removed.length})+"\n");}catch{}

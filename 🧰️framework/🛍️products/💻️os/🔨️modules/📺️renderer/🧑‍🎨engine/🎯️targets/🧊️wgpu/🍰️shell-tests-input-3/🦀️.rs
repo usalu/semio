@@ -9,7 +9,7 @@ use infinite_world::world::World3dState;
 use semio_framework::ViewModel;
 use semio_renderer_wgpu_contracts::{AdmittedSurfaceMap, SCENE_SURFACE_CAPACITY};
 use semio_renderer_wgpu_dock::{DockDragKind, DockSide, DockStackTab};
-use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe, split_pane_shell, test_app, tour_introduction, tour_shell};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe_closing, split_pane_shell, test_app, tour_introduction, tour_shell};
 use semio_renderer_wgpu_host_base::{keybinding_platform_uses_meta, set_host_platform_uses_meta};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_renderer_wgpu_native_platform::native_accessibility;

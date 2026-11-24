@@ -74,7 +74,7 @@ pub use axis_solving_and_stack_rendering::{dock_tab_content_width, split_hit_ext
 #[path = "🔲️window-frame-and-stack-geometry/🦀️.rs"]
 mod window_frame_and_stack_geometry;
 pub use window_frame_and_stack_geometry::{
-    layout_stack_cap, pane_document_rect, parse_path, path_str, push_window_frame_border, stack_window_frame,
+    kind_pane_document_rect, layout_stack_cap, pane_document_rect, surface_kind_is_engine_host, parse_path, path_str, push_window_frame_border, stack_window_frame,
     StackCapGroupLayout, StackCapLayout, StackCapTabLayout,
 };
 use window_frame_and_stack_geometry::{

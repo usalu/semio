@@ -22,13 +22,13 @@ export { cn };
  * learner's text size or the width of the card. */
 export const CARD_CHIP_WRAP = "h-auto max-h-none min-w-0 max-w-full shrink whitespace-normal text-left leading-tight";
 
-/** 🎬️ An action in a card's footer: the design system's card action, as a chip that gives way ({@link CARD_CHIP_WRAP}). */
-export const CardAction = forwardRef<HTMLButtonElement, OverviewCardActionProps>(({ className, ...rest }, ref) => <OverviewCardAction ref={ref} className={cn(CARD_CHIP_WRAP, className)} {...rest} />);
+/** 🎬️ An action in a card's footer: the design system's card action, as a chip that gives way ({@link CARD_CHIP_WRAP}). Every action carries its `icon` before its words. */
+export const CardAction = forwardRef<HTMLButtonElement, OverviewCardActionProps & { readonly icon: IconName }>(({ className, icon, children, ...rest }, ref) => <OverviewCardAction ref={ref} className={cn(CARD_CHIP_WRAP, className)} {...rest}><Icon icon={icon} size="small" className="shrink-0" />{children}</OverviewCardAction>);
 CardAction.displayName = "CardAction";
 
 /** 🔗️ A link that stands where a {@link CardAction} would: a chip that gives way. `download` offers the file under that
  * name, `external` opens another site in a tab of its own that gets neither the page nor its address. */
-export function CardLink(props: { readonly href: string; readonly download?: string; readonly external?: boolean; readonly primary?: boolean; readonly label?: string; readonly children: ReactNode }): ReactElement {
+export function CardLink(props: { readonly icon: IconName; readonly href: string; readonly download?: string; readonly external?: boolean; readonly primary?: boolean; readonly label?: string; readonly children: ReactNode }): ReactElement {
   return (
     <a
       href={props.href}
@@ -41,9 +41,15 @@ export function CardLink(props: { readonly href: string; readonly download?: str
       className={cn(overviewCardChipClass, CARD_CHIP_WRAP, "course-target cursor-pointer no-underline transition-colors", props.primary ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
       style={{ minHeight: "max(1.5rem, calc(7 * var(--ui-spacing)))" }}
     >
+      <Icon icon={props.icon} size="small" className="shrink-0" />
       {props.children}
     </a>
   );
+}
+
+/** 🧲️ The label of a title chip as something the pet of `topic` may try to steal; a card without a topic keeps its label. */
+function stealable(topic: string | undefined, label: ReactNode): ReactNode {
+  return topic === undefined ? label : <span data-pet-prop={topic} className="inline-block">{label}</span>;
 }
 
 /** 🃏️ One quiz card: a `<section>` named by its title chip's heading, `card` naming its place for styles and tests,
@@ -54,7 +60,8 @@ export function CardLink(props: { readonly href: string; readonly download?: str
  * taking openings. A pointer click anywhere but on a control also calls `onOpen`. The card takes the
  * pointer although the card layer above the glass lets it pass, and `revealed` lifts it while
  * its page shows clear behind it. `topic` names what the card is about for the pets (`data-pet-topic`: a key among the
- * grounds of their menagerie that they may match, never a thing they may lift). A `flush` card has no body padding: its
+ * grounds of their menagerie that they may match) and makes the label of its title chip a thing the pet of that topic may
+ * try to steal (`data-pet-prop`): a copy of the label is tugged out of the chip and put back, the card itself is never lifted. A `flush` card has no body padding: its
  * children are {@link CardSection}s, {@link RowList}s and other cells whose single dividers lie between them and whose
  * outer edges are the card's own. */
 export function CourseCard(props: {
@@ -88,7 +95,7 @@ export function CourseCard(props: {
       focusableHeading={props.focusableHeading}
       data={{ "data-card": props.card, "data-presence-anchor": props.anchor, "data-pet-topic": props.topic, "data-revealed": props.revealed ? "" : undefined }}
       icon={props.icon}
-      title={
+      title={stealable(props.topic,
         props.href === undefined ? (
           props.title
         ) : (
@@ -102,7 +109,7 @@ export function CourseCard(props: {
           >
             {props.title}
           </a>
-        )
+        ))
       }
       footerLeft={props.footerLeft}
       footerRight={props.footerRight}
@@ -135,6 +142,28 @@ export const CELL = { "data-shared-border-cell": "" } as const;
 export const GROUP = { "data-shared-border-group": "", "data-orientation": "vertical" } as const;
 export const FRAME = { "data-shared-border-frame": "" } as const;
 export const ROW = { "data-shared-border-group": "", "data-shared-border-cell": "" } as const;
+
+/** 🔀️ A setting that is on or off as a toggle cell: the whole cell is the switch, with its icon and its label, filled with the active colour while it is on. Its tick box stays the real control (the keyboard, its name is the label) and is not painted. */
+export function ToggleCell(props: { readonly icon: IconName; readonly checked: boolean; readonly disabled?: boolean; readonly describedBy?: string; readonly onChange: (checked: boolean) => void; readonly className?: string; readonly data?: Readonly<Record<`data-${string}`, string>>; readonly children: ReactNode }): ReactElement {
+  return (
+    <label {...CELL} {...props.data} data-state={props.checked ? "on" : "off"} className={cn("course-choice course-target flex min-w-0 items-center gap-single px-double py-single", props.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer", props.className)}>
+      <input type="checkbox" className="course-check sr-only" checked={props.checked} disabled={props.disabled} aria-describedby={props.describedBy} onChange={(event) => props.onChange(event.target.checked)} />
+      <Icon icon={props.icon} size="small" className="shrink-0" />
+      <span className="min-w-0">{props.children}</span>
+    </label>
+  );
+}
+
+/** 🔘️ One choice of a radio group as a toggle: the whole cell is the choice, filled with the active colour while it is the chosen one like the task of a run, so the group shows at a glance that one of its cells is on and which. Its radio button stays the real control (arrow keys, the name and the describing line for assistive technology) and is not painted. */
+export function RadioChoice(props: { readonly id: string; readonly icon: IconName; readonly name: string; readonly value: string; readonly checked: boolean; readonly onChange: () => void; readonly label: ReactNode; readonly hint: ReactNode }): ReactElement {
+  return (
+    <label {...CELL} data-state={props.checked ? "on" : "off"} className="course-choice course-target block min-w-0 cursor-pointer px-double py-single">
+      <input id={props.id} type="radio" name={props.name} value={props.value} checked={props.checked} onChange={props.onChange} aria-labelledby={`${props.id}-label`} aria-describedby={`${props.id}-hint`} className="course-radio sr-only" />
+      <span className="flex items-center gap-single text-sm font-semibold"><Icon icon={props.icon} size="small" className="shrink-0" /><span id={`${props.id}-label`}>{props.label}</span></span>
+      <span id={`${props.id}-hint`} className="course-choice-hint block text-xs leading-normal">{props.hint}</span>
+    </label>
+  );
+}
 
 /** 🧱️ A padded section of a flush card (or of a zone): a cell with its own padding and column of children. */
 export function CardSection(props: { readonly className?: string; readonly children: ReactNode } & Pick<HTMLAttributes<HTMLDivElement>, "id" | "role" | "aria-live">): ReactElement {
@@ -176,13 +205,13 @@ export interface PaneView {
   readonly revealed: boolean;
 }
 
-/** 📄️ A page behind a card of the overview: it fills its pane, scrolls on its own and lays its cards out in a centred
- * column ({@link CardStack}: no margin, no gap, the cards abut) laid out for the pane, not the window; `overlay` lies over that column and scrolls with it (the others on
+/** 📄️ A page behind a card of the overview: it fills its pane, scrolls on its own and lays its cards out in a
+ * column as wide as the pane ({@link CardStack}: no margin, no gap, the cards abut and their edges are the pane's); `overlay` lies over that column and scrolls with it (the others on
  * this page). */
-export function PageFrame(props: { readonly page: string; readonly wide?: boolean; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
+export function PageFrame(props: { readonly page: string; readonly overlay?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
-    <div data-page={props.page} className="course-page-frame relative h-full min-h-0 w-full overflow-auto bg-background text-foreground">
-      <CardStack maxWidth={props.wide ? "90rem" : "56rem"}>
+    <div data-page={props.page} className="course-page-frame ui-scrollbar-hidden relative h-full min-h-0 w-full overflow-auto bg-background text-foreground">
+      <CardStack>
         {props.children}
         {props.overlay}
       </CardStack>
@@ -448,7 +477,7 @@ export function Segments<T extends string>(props: { readonly label: string; read
  * button is a whole row of a flush card: a cell as wide as the card whose dividers are the card's single ones and
  * which has no outline of its own, since its outer edges are the card's. A `cell` button is a cell of a row (a notice band's
  * actions) with no outline of its own either. */
-export function BodyButton(props: { readonly onClick: () => void; readonly disabled?: boolean; readonly primary?: boolean; readonly row?: boolean; readonly cell?: boolean; readonly type?: "button" | "submit"; readonly describedBy?: string; readonly children: ReactNode }): ReactElement {
+export function BodyButton(props: { readonly icon: IconName; readonly onClick: () => void; readonly disabled?: boolean; readonly primary?: boolean; readonly row?: boolean; readonly cell?: boolean; readonly type?: "button" | "submit"; readonly describedBy?: string; readonly children: ReactNode }): ReactElement {
   return (
     <button
       type={props.type ?? "button"}
@@ -463,6 +492,7 @@ export function BodyButton(props: { readonly onClick: () => void; readonly disab
         props.primary ? "bg-active-base text-active-foreground" : "text-foreground hover:bg-hover-interactive-fill",
       )}
     >
+      <Icon icon={props.icon} size="small" className="shrink-0" />
       {props.children}
     </button>
   );
@@ -471,7 +501,7 @@ export function BodyButton(props: { readonly onClick: () => void; readonly disab
 /** 🔗️ A link that is a whole row of a flush card, like a `row` {@link BodyButton}: a cell as wide as the card whose
  * dividers are the card's single ones and which has no outline of its own. `download` offers the file under that name,
  * `external` opens another site in a tab of its own that gets neither the page nor its address. */
-export function RowLink(props: { readonly href: string; readonly download?: string; readonly external?: boolean; readonly primary?: boolean; readonly label?: string; readonly children: ReactNode }): ReactElement {
+export function RowLink(props: { readonly icon: IconName; readonly href: string; readonly download?: string; readonly external?: boolean; readonly primary?: boolean; readonly label?: string; readonly children: ReactNode }): ReactElement {
   return (
     <a
       href={props.href}
@@ -482,6 +512,7 @@ export function RowLink(props: { readonly href: string; readonly download?: stri
       {...CELL}
       className={cn(overviewCardChipClass, "course-target h-auto max-h-none w-full max-w-none cursor-pointer justify-start whitespace-normal p-double text-left leading-tight no-underline transition-colors hover:bg-hover-interactive-fill", props.primary ? "bg-active-base text-active-foreground" : "text-foreground")}
     >
+      <Icon icon={props.icon} size="small" className="shrink-0" />
       {props.children}
     </a>
   );
@@ -576,7 +607,7 @@ function holdPageScroll(host: HTMLElement, backdrop: HTMLElement | null): () => 
   };
 }
 
-/** 💬️ A modal card over the whole client: a question that needs an answer (`alertdialog`) or a notice to read
+/** 💬️ A modal card over the whole client, a band from the left edge of the client to the right one whose content alone is centred: a question that needs an answer (`alertdialog`) or a notice to read
  * (`dialog`). It is rendered as the last child of the client's root, so the root's language and styles apply and
  * everything else of the client is inert while it shows; focus goes to its `data-autofocus` control (again whenever
  * `focusKey` changes), Tab stays inside from wherever focus is, Escape calls `onEscape`, and closing returns focus to
@@ -674,10 +705,10 @@ export function Dialog(props: {
         ? null
         : createPortal(
             <div ref={backdrop} data-course-dialog="" data-observed-dialog={props.observed ? "" : undefined} className={cn("course-backdrop fixed inset-0 z-50 overflow-y-auto", props.observed && "pointer-events-none")} onClick={(event) => event.stopPropagation()}>
-              <div className="flex min-h-full items-center justify-center p-double">
-                <div ref={dialog} role={props.role} lang={props.locale ?? origin?.closest<HTMLElement>("[lang]")?.lang} aria-modal={props.observed ? undefined : true} aria-labelledby={props.id} aria-describedby={props.describedBy} className={cn("w-full", props.wide ? "max-w-2xl" : "max-w-md", props.observed && "pointer-events-auto")}>
+              <div className="flex min-h-full items-center">
+                <div ref={dialog} role={props.role} lang={props.locale ?? origin?.closest<HTMLElement>("[lang]")?.lang} aria-modal={props.observed ? undefined : true} aria-labelledby={props.id} aria-describedby={props.describedBy} className={cn("w-full", props.observed && "pointer-events-auto")}>
                   <CourseCard flush={props.flush} id={props.id} card="dialog" icon={props.icon} title={props.title} footerLeft={props.footerLeft} footerRight={props.footerRight}>
-                    {props.children}
+                    {props.flush ? props.children : <div className={cn("mx-auto w-full", props.wide ? "max-w-2xl" : "max-w-md")}>{props.children}</div>}
                   </CourseCard>
                 </div>
               </div>

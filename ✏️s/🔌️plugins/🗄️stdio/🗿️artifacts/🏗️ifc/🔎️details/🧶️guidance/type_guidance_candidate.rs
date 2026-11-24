@@ -1,7 +1,7 @@
 //! 🪪️ Guided readiness prepares the actual original-owned central type candidate without publishing it.
 use super::*;
 use super::{RetainedWorkOutcome,idle_step,owned_step,settled,charged,retire_self};
-use super::source_loan::closed_cursor;
+use super::source_loan::{close_quote,closed_cursor};
 use super::{candidate_rules::IfcTypeCandidate,constituent_roster::ConstituentRoster,domain_work::DomainWork,pointer::PathAdmission,type_guidance_request::RequestCopy,wire::SnapshotSource};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_plugin::action_staging::StagedFormRequest;
@@ -84,8 +84,8 @@ impl<C:IfcDetailsProfile> GuidedCandidate<C>{
         if !self.domain.terminal_is_empty(){return Ok(self.domain.close_demands());}
         if !self.roster.terminal_is_empty(){return self.roster.close_demands(body);}
         if !self.address.terminal_is_empty(){return Ok(self.address.close_demands());}
-        if !self.parts_cursor.terminal_is_empty(){return self.parts_cursor.close_demands(body);}
-        if !self.value_cursor.terminal_is_empty(){return self.value_cursor.close_demands(body);}
+        if !self.parts_cursor.terminal_is_empty(){return close_quote(&self.parts_cursor, body);}
+        if !self.value_cursor.terminal_is_empty(){return close_quote(&self.value_cursor, body);}
         if !self.request.empty(){return self.request.close_demands(body);}
         if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
         macro_rules! owner{($value:expr,$kind:ty)=>{if ($value).is_some(){return self.retirement.next_owner_demands::<$kind>(true,&None,body);}};}

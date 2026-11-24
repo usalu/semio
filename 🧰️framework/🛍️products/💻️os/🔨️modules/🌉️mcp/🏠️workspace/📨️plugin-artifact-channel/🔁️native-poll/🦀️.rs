@@ -43,7 +43,6 @@ impl PluginArtifactChannel {
 pub(super) fn close_poll(poll: &mut NativePoll) -> bool {
     let status = semio_framework_async::block_on(poll.close(|_, _, _| Ok(true)));
     if status == GuestPollSessionStatus::Closed && poll.terminal_is_empty() { return true; }
-    if std::env::var_os("RUST_BACKTRACE").is_some() { eprintln!("[DEBUG] poll close: {status:?}; primary: {:?}; retirement: {:?}", poll.failure(), poll.cleanup_failure()); }
     false
 }
 
@@ -100,7 +99,6 @@ pub(super) fn poll_turn<T>(poll: &mut NativePoll, events: &[Event], scope: &Acti
 }
 
 fn poll_fault(poll: &NativePoll, status: GuestPollSessionStatus) -> Fault {
-    if std::env::var_os("RUST_BACKTRACE").is_some() { eprintln!("[DEBUG] poll fault: {status:?}; primary: {:?}; retirement: {:?}", poll.failure(), poll.cleanup_failure()); }
     let failure = poll.failure().or_else(|| poll.cleanup_failure());
     if let Some(value) = failure.and_then(|failure| failure.primary.as_ref()).and_then(|primary| primary.primary_value()) {
         match value.kind {

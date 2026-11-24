@@ -92,3 +92,65 @@ Blocking fault: the first mutation of the guest (title commit, insert text, save
 ### Next
 
 Surface the `OriginalTurnPrimary::message()` in the WIT poll failure (or log it through the guest `log` import) so the host shows the actual fault, then fix it in the framework, rebuild with `rebuild-pdf-wasm.sh`, rerun `repo <ticket>/pdf-pane-journey.ts`.
+
+## Status after the reboot (2026-11-23, afternoon)
+- Native repro of the first edits (blank PDF 1.7: title, insert text) passes on the current tree; the browser fault was a stale wasm. The journey still has to be rerun against a fresh build.
+- `.cache/b/p/m` was empty and `repo run @semio-tech/framework-os-dev:dev-stdio-pdf-1-7-react-prototype` died on a stray entry in the unmounted native root. Fixed in the repo (stranded entries are quarantined, regression test), see `🧭️pdf-guest-edit-refusal.md`. The run is in flight (`/tmp/claude-501/devhost.txt`, `nohup`): cold graph read takes about 30 minutes, then the dev host builds the wasm and serves port 6260.
+- Not done yet: restage (needs the dev target, or the self-sufficient staging fallback), `serve-pdf-native.sh`, `pdf-pane-journey.ts` en/de, natural-route leftovers.
+
+## Native fallback staging (2026-11-23, later)
+- The products image `.cache/b/p/fixed.dmg` (33 GB, UDRW) was simply not attached after the reboot and still held the previously staged `browser/prototype/modules` (854 MB: `📘️stdio-pdf`, `🧵️shard`, `🪞️vendor`). `mount-products.sh` attaches it at `.cache/b/p/m` (what the repo's own recovery does once its graph read finishes). Mounted by hand once.
+- The staged `🌉️bridge.js` and `🟨️.js` were older than the current sources (staged-guest budget, return-escrow job outcome, the new semantic-fault log), so swapping only the component files would have mismatched. `stage-pdf-component.ts` now also regenerates both from source with `pluginComponentBridgeSource` and `hostShimSource` (same materialization pipeline) and refuses with a clear message when no staged module exists.
+- `rebuild-pdf-wasm.sh` started (waited behind two other agents for a lane, then compiling with `-j 1`); log `/tmp/claude-501/wasm.txt`. Host start and the en/de journey follow when it stages.
+
+### Graph read not converging (assessment)
+`repo run` is not a query: the dev target must plan against a fresh graph, and with no sealed generation (rebooted machine) the slice read walks the file inventory (217,413 source observations, 535 owners, "n of 600" counters that restart). On a worktree that is edited every second by 50 machines the inventory observation keeps being invalidated, so it can stall for tens of minutes. Real repo bug (class): a run should use the sealed/previous generation and only re-read changed owners, instead of restarting the whole inventory on concurrent edits. Not pinned to a file here: the progress line comes from the resident service's graph slice reader (`checking the file inventory of the tree`).
+
+## Journey evidence after the fresh wasm (2026-11-23, evening)
+Host `serve-pdf-native.sh` on 6260 serves the rebuilt and re-staged component (sha256 `fa75f5a1…`), bridge and host shim regenerated from source. Journey `pdf-pane-journey.ts`, evidence in `🗑️generated/pdf-journey/`.
+
+| Step | en | de |
+| --- | --- | --- |
+| New document: Letter canvas 612×792 | PASS | PASS |
+| Set title (Object pane) | PASS (title in saved PDF) | PASS (stored as PDFDocEncoding hex; journey check now accepts it) |
+| Save File: `%PDF-1.7`, 584-879 bytes | PASS | PASS |
+| Insert text | the guest refused `pdf page 1 does not exist`: the form takes a zero-based page. With `0` it is accepted (`textShown` still false right after submit, text appears after reopen) | same |
+| Reopen the saved file | file chooser opens now; the guest never publishes a `file-opened` notice within 120 s | same |
+| two-pages.pdf, export/import | not reached | not reached |
+
+The old `original-turn.native-return-refused: semantic` is gone: the first edits of a fresh document no longer fail in the browser.
+
+### Open File stall (root cause candidate)
+The console of the open shows 11,358 repeated `[DEBUG] work quote denied ready=true observed=0 additional=1048577 fuel=~1044891`: a decoder work quote of 1 MiB + 1 can never be admitted under a turn fuel just below 1 MiB, so every later turn repeats the same denial. This is the same family as the native large-document stalls (`close owner Begin`, 32768 turns). The quote logic is in `🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs` (`admit_work`) and the host turn fuel in the original admission stock; owned by the value/ownership work. Fix direction: quote at most the turn's fuel ceiling in chunks (or raise the ceiling above the largest indivisible quote).
+
+### UI finding: page numbers
+The insert-text form's `page` field is zero-based while the panes say `Page 1 / 2` (thumbnails, text layer, inspector heading all use `page + 1`). User-facing numbers must be one-based. The surface is wide (`edit_from_action` page argument, inspector commit args, authoring pick-source args, `go-to-page`, presence, about 140 test call sites and the natural-file fixture whose rotation page is an index), so I did not flip it piecemeal; a half flip would make some actions one-based and others zero-based. Plan: one-based `page` in every declared page argument, converted once in `page_index()`, new `PdfFault::PageNumberOutOfRange` (en/de, params page and last) replacing the English `pdf page N does not exist` at the four lookup sites, inspector/authoring/presence callers pass `index + 1`, tests and fixtures updated together. Journey keeps `0` until then.
+
+## End-to-end run (fresh build)
+
+2026-11-24. Wasm rebuilt through `rebuild-pdf-wasm.sh` (lane `w`, `-j 1`, sha256 `34a06abf…`, includes other agents' work up to 03:10), re-staged with regenerated bridge and host shim, host `serve-pdf-native.sh` on 6260. Evidence: `🗑️generated/pdf-journey/` (`en-1-new.png`, `en-2b-inserted.png`, `de-*.png`, `*-open-*.png`, `console-*.log`, `journey.json`, saved `*.pdf`).
+
+| Step | en | de |
+| --- | --- | --- |
+| New document: Letter canvas 612×792 | PASS | PASS |
+| Set title (Object pane) | PASS (in the saved file) | PASS (PDFDocEncoding hex) |
+| Insert text on page 1 (one-based) | PASS, text on the canvas about 2 s after submit, canvas pixels change | PASS |
+| Save File | PASS, `%PDF-1.7`, text in the content stream | PASS |
+| Reopen the saved file | FAIL: no `file-opened` notice in 90 s (see Open File) | FAIL (same) |
+| Open `two-pages.pdf` | FAIL (same stall) | not rerun |
+| Edit + save the opened PDF | not reachable (`transfer-busy` while the open is pending) | not reachable |
+| Export Document / Import Document | FAIL: no download within 90 s | not rerun |
+
+### Diagnosed on the way
+1. Host lost wake-up (fixed): `drainTypedOperations` dropped a request that arrived while another drain ran; a typed operation admitted during that window never got its completion polled. `🚚️handle-turn-drive/🟦️.ts` now re-arms the running drain (`rearmedDrains`).
+2. Intermediate wasm (before 03:10): the first edit of the session (title) and the following insert-text both ended in `interactive-job.publication-stalled` ("advanced 4096 publication units without moving its ladder: waiting on the pending publication is closing"): the edit reached the document and the saved file, but the operation never completed, so no `OperationCompleted` with `Full` scope reached the shell (text layer stayed "Untitled", canvas blank). Visible in the console as lane 11 result pages. The fresh build does not reproduce it (two probe runs, three journey runs); I added guest `[DEBUG]` probes at the publication abandon and the stale-root branch and they never fired, so the cause is not pinned. Probes removed again. Native regression test added: `typed_edit_after_a_reserved_shell_note_settles_through_the_registered_typed_operation` (passes; new law helper `settle_reserved_action_as`, `feature-owner.json` hashes of the two helpers are stale).
+3. Open File quote (`additional=1048577`): zero `work quote denied` lines on the fresh wasm. The console instead shows another agent's probe `[DEBUG] big work quote 49999995 available=Some(49999995)` (a quote equal to the whole 50 M turn fuel) once per open and per export, plus `unsupported backtrace` (std backtrace is unavailable on wasm32, so a backtrace probe cannot locate the requester there; use a native run or name the call site in the message). The open and the export then sit pending with the shell warning `stdio-pdf interaction has held stdio-pdf#2's lane for 5000 ms` and later `has not answered "an interaction" for 205 s`. So the Open/Export stall persists but is not the old denial loop: a decode or encode stage that quotes all remaining fuel does not finish. Owner: the decoder/encoder work-quote path (`🔨️modules/🧵️job` retirement/decode, pack export stage; see `📂️pdf-open-and-save-route.md`, large-document section).
+4. Imported-PDF save with retained objects (`ReferenceRequired`): not reachable in the browser yet because the open stalls; natively unchanged. The journey step `open-en`/`open-de` already asserts the contract (valid PDF, or a localized alert with `role=alert|status`), and currently records `silent failure` only because the save is refused as `transfer-busy` (that notice is localized: "Another file is still being opened — wait for it or cancel it in Tasks."). It is displayed, but the shell also shows a persistent status line for the stalled interaction with a Cancel command, which is accessible.
+
+### Journey changes
+`pdf-pane-journey.ts`: steps `en`, `de`, `open-en`, `open-de`, `transfer`, `probe` (diagnostic: `PROBE_TITLE`, `PROBE_TWICE`, `PROBE_CLICK`, `PROBE_POKE`, `INSERT_WAIT_MS`); insert text polls until the text is visible (reports `visibleAfterMs`) and compares canvas pixels; open steps insert on page 1 and save, accepting either a valid PDF or a localized accessible error.
+
+### Open items
+- Open File of any PDF and Export Document stall on the fresh wasm (quote of the whole fuel, see 3). Needs a native reproduction of the paged natural open under the 50 M browser turn fuel, not the 1 MiB fuel the existing regression test uses.
+- Verify item 2 stays fixed after the next rebuild (cause unknown).
+- The journey's reopen check reads title/text from the stale pane; once Open works, assert a fresh canvas hash.

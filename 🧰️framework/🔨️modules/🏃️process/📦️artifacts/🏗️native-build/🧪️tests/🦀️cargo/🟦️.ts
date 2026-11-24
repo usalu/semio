@@ -64,15 +64,15 @@ export function lawBuildOptionsV1(held:LawStorageV1,control:CompilerAdmissionCon
 export const lawStoragePolicyV1 = Object.freeze({ stubImageBytes: policy.stubImageBytes, realImageBytes: policy.realImageBytes, reserveBytes: policy.lawReserveBytes });
 
 /** 🛠️ The scheduler binaries every Cargo-backed law shares, compiled once per test process through the repository's canonical issued Cargo entry
- * (`repo cargo --store=shared`, the launcher `runRepositoryCargoCommandV1` delegates to), never by a direct `cargo`, and copied out of the shared store's
- * release target to the artifact directory.
+ * (`repo cargo --store=shared` in the build mode of the Original, a launch the suite row declares; the launcher `runRepositoryCargoCommandV1` delegates to), never by a direct `cargo`, and copied out of the shared store's
+ * target to the artifact directory.
  * @see ../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts */
 export const schedulerBinaries = (): Promise<ReadonlyMap<string, string>> => (globalThis as any).__semioScheduler ??= withBuildTestInvocationV1(async original => {
   const control = createIssuedResourceControlV1(original, "law:scheduler-binaries", policy.schedulerBuildMs, AbortSignal.timeout(policy.schedulerBuildMs)), output = mkdtempSync(join(artifacts, "sx-"));
   const manifest = fileURLToPath(new URL("../../🎟️admission/📦️packages/🦀️rust/Cargo.toml", import.meta.url)), declared = Bun.TOML.parse(readFileSync(manifest, "utf8")) as { bin: { name: string }[]; example: { name: string }[] };
   let repository = dirname(manifest);
   while (!existsSync(join(repository, "package.json")) || !(JSON.parse(readFileSync(join(repository, "package.json"), "utf8")).scripts?.repo)) { if (dirname(repository) === repository) throw Error("Cargo laws require the repository that issues their compiler store"); repository = dirname(repository); }
-  const issued = (args: readonly string[]) => captureOwnedCommandV1("repo", ["cargo", "--store=shared", "--configuration=release", "--", ...args, "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: "release" }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
+  const mode = process.env.SEMIO_BUILD_MODE === "release" ? "release" : "prototype", issued = (args: readonly string[]) => captureOwnedCommandV1("repo", ["cargo", "--store=shared", "--configuration=" + mode, "--", ...args, "--manifest-path", manifest], repository, { control, env: { ...process.env, SEMIO_BUILD_MODE: mode }, output: { maximumBytes: 16777216, maximumLines: 65536 } });
   const built = await issued(["build", "--bins", "--examples", "--message-format=json"]);
   const executables = new Map<string, string>();
   for (const line of built.split("\n")) {

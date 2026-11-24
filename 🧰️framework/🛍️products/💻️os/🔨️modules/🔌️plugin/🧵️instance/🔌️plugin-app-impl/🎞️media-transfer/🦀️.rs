@@ -24,6 +24,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.dispatch_ctx().advance_original_reserved_media(port, media, meta, &mut progress.operation, cx).await?;
             return Ok(false);
         };
+
         if let Some(mounted) = self.tools.tool_operations.get(operation.operation.0) {
             let awaiting_page = mounted.result_page.as_ref().filter(|_| mounted.stage == MountedTypedCommandFullOperationStage::AwaitingAck);
             if progress.terminal.is_none() {

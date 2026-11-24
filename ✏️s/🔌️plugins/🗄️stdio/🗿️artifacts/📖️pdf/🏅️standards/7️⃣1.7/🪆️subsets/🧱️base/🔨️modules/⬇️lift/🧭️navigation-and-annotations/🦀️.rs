@@ -82,7 +82,7 @@ impl Lifter<'_> {
             return Some(id);
         }
         let PdfObject::Stream { dict: stream_dict, data, .. } = self.source.deref(&stream_ref) else { return None };
-        self.source.record_role(&stream_ref, PdfStreamRoleValue::AttachmentBytes { bytes: data.clone() });
+        self.source.record_role(&stream_ref, PdfStreamRoleValue::AttachmentBytes { bytes: data.to_vec_owner() });
         let params = dict_get(&stream_dict, "Params").map(|p| self.source.deref(p)).and_then(|p| p.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();
         let file_name = self.text(dict_get(&dict, "UF")).or_else(|| self.text(dict_get(&dict, "F"))).unwrap_or_else(|| name.to_string());
         let file = PdfEmbeddedFile {
@@ -90,7 +90,7 @@ impl Lifter<'_> {
             file_name,
             description: self.text(dict_get(&dict, "Desc")),
             mime_type: dict_name(&stream_dict, "Subtype").map(str::to_string),
-            data,
+            data: data.to_vec_owner(),
             creation_date: self.date(dict_get(&params, "CreationDate")),
             modification_date: self.date(dict_get(&params, "ModDate")),
             relationship: dict_name(&dict, "AFRelationship").map(str::to_string),
@@ -139,7 +139,7 @@ impl Lifter<'_> {
             "JavaScript" => PdfActionKind::JavaScript { script: match dict_get(&dict, "JS").map(|js| self.source.deref(js)) {
                 Some(PdfObject::Text(text)) => text,
                 Some(PdfObject::Str(bytes)) => decode_text_string(&bytes),
-                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, "JS") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } text },
+                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data.to_vec_owner()).into_owned(); if let Some(value) = dict_get(&dict, "JS") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } text },
                 _ => String::new(),
             } },
             "SetOCGState" => PdfActionKind::SetOptionalContentState { states: extra_entries(&dict, &["Type", "S", "Next"]), preserve_radio_buttons: dict_get(&dict, "PreserveRB").and_then(PdfObject::as_bool).unwrap_or(true) },

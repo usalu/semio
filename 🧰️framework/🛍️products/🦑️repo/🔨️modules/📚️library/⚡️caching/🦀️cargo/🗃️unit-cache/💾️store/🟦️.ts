@@ -6,6 +6,8 @@ import {compilerWrittenV1} from "../🔏️key/🔗️sources/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {casObjectPathV1,casRootV1} from "../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts";
 import {hasCasObjectSyncV1,putCasObjectSyncV1,readCasObjectSyncV1,touchCasObjectSyncV1} from "../../../../🏗️build/🗄️cas/🗃️store/🔁️sync/🟦️.ts";
+import {casHolderIdV1,keepCasObjectsSyncV1,registerCasHolderSyncV1} from "../../../../🏗️build/🗄️cas/🫂️holders/🟦️.ts";
+import {CAS_POLICY_V1} from "../../../../🏗️build/🗄️cas/🧬️schema/🟦️.ts";
 import {claimUnitV1} from "../🧹️gc/🪢️supersession/🙋️claim/🟦️.ts";
 import {uncoveredOutputsV1} from "../✅️complete/🟦️.ts";
 import {declareV1,workspaceRowsV1} from "../../../../🏗️build/🌐️remote-cache/🏷️retention/🍂️staleness/🟦️.ts";
@@ -29,6 +31,20 @@ const objectPath=(sha:string)=>casObjectPathV1(casRootV1(),sha);
 /** 🕳️ Whether a recorded entry lost an object it replays: an output or, for a build script run, one of its two streams. */
 const lostObjectV1=(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):boolean=>[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].some(sha=>typeof sha==="string"&&!hasCasObjectSyncV1(casRootV1(),sha));
 const entryDirectory=(root:string,key:string)=>join(root,layout.entries,key.slice(0,2),key);
+
+/** 🫂️ The paths inside an entry file whose values are host-store digests: the outputs and, for a build script run, its two streams. */
+const HELD_REFERENCES_V1=Object.freeze(["outputs.*.sha256","stdout","stderr"]);
+/** 🫂️ Registers (or renews, at most every `holderRenewMs`) this cache root as a reference holder of the host store: the objects its live entries name are protected from the host collector and are the last it evicts, entry and objects together, when the cap still needs bytes. A root that stops renewing, or vanishes, ages out. Best effort, never throws.
+ * @see ../../../../🏗️build/🗄️cas/🧬️schema/🔣️.json */
+export function holdHostObjectsV1(root:string):void{
+ try{registerCasHolderSyncV1(casRootV1(),CAS_POLICY_V1,{kind:"unit-cache",root:resolve(root),indexes:[layout.entries,layout.runs].map(name=>({directory:join(resolve(root),name),references:HELD_REFERENCES_V1})),evictionLog:logFiles(resolve(root),policy.evictions.file)[0]});}catch{}
+}
+
+/** 🔗️ Gives the objects an entry names their keeper link in the host store (a second hard link that every collector generation honours), so that no process, whatever code it runs, can collect what a live entry replays. Best effort, never throws.
+ * @see ../../../../🏗️build/🗄️cas/🫂️holders/🟦️.ts */
+export function keepHostObjectsV1(root:string,entry:Readonly<{outputs:readonly{sha256:string}[];stdout?:string|null;stderr?:string|null}>):void{
+ try{keepCasObjectsSyncV1(casRootV1(),CAS_POLICY_V1,casHolderIdV1("unit-cache",resolve(root)),[...entry.outputs.map(row=>row.sha256),entry.stdout,entry.stderr].filter((sha):sha is string=>typeof sha==="string"));}catch{}
+}
 
 /** 🔏️ Content digest of a file, memoised per lane by (size, mtime, inode) so unchanged dependency artifacts are hashed once. */
 export function digestFileV1(path:string,stampDirectory:string|undefined):string|null{
@@ -70,13 +86,13 @@ function appendBounded(root:string,name:string,line:string):void{
 /** ♻️ What a collection or a forget removed, by kind (`Eviction` in the schema): lanes, lane incremental sets, incremental sessions, stale build units, entries retired because they are stale against the synchronized tree, entries that lost an object, entries forgotten on request. */
 export type EvictionCountsV1=Partial<Record<"lanes"|"incremental"|"sessions"|"units"|"retired"|"entries"|"forgotten",number>>;
 
-/** ♻️ Appends one eviction record to the bounded eviction log beside the lookup log; all-zero counts are not written. Best effort, never throws.
+/** ♻️ Appends one eviction record to the bounded eviction log beside the lookup log; all-zero counts are not written; `cause` names why (`lost`: an object vanished behind the entry, `capacity`: written by the host store, see the holders) and the role of the writer. Best effort, never throws.
  * @see ../🧬️schema/🔣️.json */
-export function recordEvictionV1(root:string,counts:EvictionCountsV1):void{
+export function recordEvictionV1(root:string,counts:EvictionCountsV1,cause:Readonly<{reason?:"capacity"|"lost";role?:string}>={}):void{
  try{
   const kept=Object.fromEntries(Object.entries(counts).filter(([,value])=>Number.isSafeInteger(value)&&(value as number)>0));
   if(Object.keys(kept).length===0)return;
-  appendBounded(root,policy.evictions.file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...kept}));
+  appendBounded(root,policy.evictions.file,JSON.stringify({version:1,atMs:Date.now(),pid:process.pid,...cause.reason===undefined?{}:{reason:cause.reason},...cause.role===undefined?{}:{role:cause.role},...kept}));
  }catch{}
 }
 
@@ -155,6 +171,7 @@ export function lookupUnitV1(root:string,key:string,context:Readonly<{cwd:string
   if(entry.dependencies.some(row=>digestFileV1(resolveStored(context.cwd,laneRestoreV1(row.path,context.laneRoot)),context.stampDirectory)!==row.sha256))continue;
   if(entry.environment.some(row=>{const value=context.environment[row.name];return(value===undefined?null:laneNeutralV1(value,context.laneRoot))!==row.value;}))continue;
   if(lostObjectV1(root,entry))continue;
+  holdHostObjectsV1(root);keepHostObjectsV1(root,entry);
   if(entry.slot!==undefined)claimUnitV1(root,key);
   return entry;
  }
@@ -220,8 +237,10 @@ export function publishUnitV1(root:string,input:Readonly<{key:string;crate:strin
 
 /** 📝️ Writes one entry as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a compile that publishes and by a unit installed from the fleet cache. */
 export function writeEntryV1(root:string,entry:UnitEntryV1):void{
+ holdHostObjectsV1(root);
  const directory=ensure(entryDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
  writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
+ keepHostObjectsV1(root,entry);
  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
 }
 
@@ -251,7 +270,7 @@ export function forgetCrateEntriesV1(root:string,crate:string):{entries:number}{
  return{entries};
 }
 
-/** 🧽️ Drops entries that lost an object, empty entry directories, the pre-host object directory of the workspace image that nothing replays any more (the natural drain of its bytes), and temporary files of writers that died an hour ago. */
+/** 🧽️ Drops entries that lost an object (host collected it behind the entry, or removed by hand; a capacity eviction removes the entry with its objects and leaves none), empty entry directories and temporary files of writers that died an hour ago. */
 export function pruneEntriesV1(root:string,nowMs:number):{entries:number;temporary:number}{
  let entries=0,temporary=0;
  for(const kind of[layout.entries,layout.runs]){
@@ -262,10 +281,9 @@ export function pruneEntriesV1(root:string,nowMs:number):{entries:number;tempora
    try{if(readdirSync(directory).length===0)rmSync(directory,{recursive:true,force:true});}catch{}
   }
  }
- rmSync(join(root,layout.objects),{recursive:true,force:true});
  const work=join(root,layout.temporary);let names:string[];try{names=readdirSync(work);}catch{names=[];}
  for(const name of names){try{if(nowMs-statSync(join(work,name)).mtimeMs>3600000){rmSync(join(work,name),{force:true});temporary++;}}catch{}}
- recordEvictionV1(root,{entries});
+ recordEvictionV1(root,{entries},{reason:"lost",role:"prune"});
  return{entries,temporary};
 }
 
@@ -315,6 +333,7 @@ export function lookupBuildRunV1(root:string,key:string,context:Readonly<{cwd:st
   let entry:BuildEntryV1;try{entry=JSON.parse(readFileSync(join(directory,name),"utf8"));}catch{continue;}
   if(entry.version!==1||entry.key!==key)continue;
   if(lostObjectV1(root,entry))continue;
+  holdHostObjectsV1(root);keepHostObjectsV1(root,entry);
   const directives={files:entry.facts.filter(row=>row.kind!=="package").map(row=>laneRestoreV1(row.path,context.laneRoot)),variables:entry.environment.map(row=>row.name)};
   const now=buildFactsV1({cwd:context.cwd,directives,laneRoot:context.laneRoot,environment:context.environment,stampDirectory:context.stampDirectory});
   if(!now)continue;
@@ -359,8 +378,10 @@ export function publishBuildRunV1(root:string,input:Readonly<{key:string;package
 
 /** 📝️ Writes one build script run as the newest variant of its key (written aside and renamed into place, the oldest variants beyond the bound dropped); shared by a run that publishes and by a run installed from the fleet cache. */
 export function writeBuildRunV1(root:string,entry:BuildEntryV1):void{
+ holdHostObjectsV1(root);
  const directory=ensure(runDirectory(root,entry.key)),temporary=join(ensure(join(root,layout.temporary)),randomBytes(8).toString("hex")),name=String(entry.createdMs).padStart(15,"0")+"-"+randomBytes(3).toString("hex")+".json";
  writeFileSync(temporary,JSON.stringify(entry));renameSync(temporary,join(directory,name));
+ keepHostObjectsV1(root,entry);
  try{const names=readdirSync(directory).filter(file=>file.endsWith(".json")).sort();for(const old of names.slice(0,Math.max(0,names.length-policy.key.maximumVariants)))rmSync(join(directory,old),{force:true});}catch{}
 }
 

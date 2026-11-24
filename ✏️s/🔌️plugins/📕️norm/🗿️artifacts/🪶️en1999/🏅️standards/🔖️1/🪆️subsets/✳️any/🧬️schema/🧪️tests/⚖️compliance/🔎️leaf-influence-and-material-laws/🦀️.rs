@@ -1,6 +1,7 @@
 //! 🔎️ Leaf influence and material laws of the EN 1999 compliance tests: the metadata rows, the editable leaf influence, the asset regeneration and the material id laws. See [`super`].
 
 use super::*;
+use semio_s_artifact_norm_en1999_checks::joints;
 
 pub(super) fn strip_nums(s: &str) -> String {
     s.chars().filter(|c| !c.is_ascii_digit() && *c != '.' && *c != ',').collect::<String>().split_whitespace().collect::<Vec<_>>().join(" ")
@@ -117,8 +118,62 @@ fn shell_chi_from_geometry_hand_value() {
     assert!(shell.explanation.en.contains("χ=") || shell.explanation.en.contains("Rcr") || shell.utilization > 0.0);
 }
 
-/// 🧯 Leaves that carry no information for the physical situation they sit in: hollow sections are immune to lateral-torsional and torsional buckling, and the second S–N slope is inactive while γ·Δσ stays above the knee stress.
+fn index_in(path: &str, head: &str) -> Option<usize> {
+    path.strip_prefix(head)?.split(']').next()?.parse().ok()
+}
+
+/// 🧵️ Whether the HAZ boundary resistance of the fillet weld of connection `idx` stays below the weld-metal resistance for every filler alloy and a β_w raised by the perturbation (EN 1999-1-1 §8.6.3.1: the resistance is the lesser of the two), so that β_w and the filler alloy cannot move the check.
+fn haz_boundary_governs_the_weld(snap: &En1999Snapshot, idx: usize) -> bool {
+    let Some(conn) = snap.connections.get(idx) else { return false };
+    let Some(material) = snap.materials.iter().find(|m| m.id == conn.material_id) else { return false };
+    let w = &conn.welds;
+    let Some(band) = part_1_1::resolve_alloy_for_thickness(&material.designation, conn.bolts.plate_thickness.max(w.throat / 0.7)) else { return false };
+    let params = na_de::AnnexParams::for_choice(snap.annex);
+    let weakest_filler = joints::filler_fw_pa(&w.filler_alloy, band.f_u_pa).min(joints::filler_fw_pa("4043", band.f_u_pa));
+    let (metal, haz) = joints::weld_resistance_per_length(w.throat, w.beta_w * 1.35, weakest_filler, band.f_u_pa, band.rho_u_haz, params.gamma_mw, params.gamma_m2);
+    haz <= metal
+}
+
+/// 🔥️ Whether the T-junction flag of plate element `element` of section `section` leaves the HAZ strip of the §6.1.6.3 table unchanged: the element is not welded, or the strip of b_haz (×1.33) around the weld already spans the same part of the element width.
+fn t_junction_leaves_the_strip(snap: &En1999Snapshot, section: usize, element: usize) -> bool {
+    let Some(el) = snap.sections.get(section).and_then(|s| s.elements.get(element)) else { return false };
+    let strip = |junction: bool| {
+        let mut e = el.clone();
+        e.weld_t_junction = junction;
+        let b = part_1_1::haz_width_for(&e);
+        if e.weld_direction == semio_s_artifact_norm_en1999_model::WeldDirection::Transverse { (0.0, e.width) } else { ((e.weld_position - b).max(0.0).min(e.width), (e.weld_position + b).max(0.0).min(e.width)) }
+    };
+    !el.welded || strip(false) == strip(true)
+}
+
+/// 🌡️ Whether the member temperature at the end of fire scenario `idx` is independent of the start temperature θ_a (EN 1999-1-2 §4.2.5): a thin member with a time constant far below the duration has forgotten its start temperature, so the leaf cannot move any check.
+fn fire_start_temperature_is_forgotten(snap: &En1999Snapshot, idx: usize) -> bool {
+    let Some(fire) = snap.fire_scenarios.get(idx) else { return false };
+    let Some(section) = snap.members.iter().find(|m| m.id == fire.member_id).and_then(|m| snap.sections.iter().find(|s| s.id == m.section_id)) else { return false };
+    let cover = snap.fire_insulations.iter().find(|i| i.fire_id == fire.id).map(part_1_2::Insulation::from).filter(|i| i.thickness > 0.0);
+    let at = |theta: f64| part_1_2::member_temperature_c(theta, part_1_2::section_factor(section), fire.duration_s.max(0.0), cover.as_ref());
+    let perturbed = if fire.theta_a.abs() < 1e-12 { 1.0e5 } else { fire.theta_a * 1.35 };
+    at(fire.theta_a).to_bits() == at(perturbed).to_bits()
+}
+
+/// 🧯 Leaves that carry no information for the physical situation they sit in: hollow sections are immune to lateral-torsional and torsional buckling, tubes carry no web for a patch load (§6.7.5), the second S–N slope is inactive while γ·Δσ stays above the knee stress, the weld-metal leaves are inert while the HAZ boundary governs the weld, the T-junction factor is inert once the HAZ strip spans the element and the start temperature of a fire is inert once the member has forgotten it.
 fn physically_inactive(snap: &En1999Snapshot, path: &str) -> bool {
+    if path.ends_with(".welds.betaW") || path.ends_with(".welds.fillerAlloy") {
+        return index_in(path, "connections[").is_some_and(|idx| haz_boundary_governs_the_weld(snap, idx));
+    }
+    if let (Some(idx), true) = (index_in(path, "fireScenarios["), path.ends_with(".thetaA")) {
+        if fire_start_temperature_is_forgotten(snap, idx) {
+            return true;
+        }
+    }
+    if path.ends_with(".weldTJunction") {
+        return index_in(path, "sections[").zip(path.split("elements[").nth(1).and_then(|r| r.split(']').next()).and_then(|i| i.parse().ok())).is_some_and(|(section, element)| t_junction_leaves_the_strip(snap, section, element));
+    }
+    if let (Some(idx), true) = (index_in(path, "members["), path.ends_with(".localLoadK") || path.ends_with(".bearingLength")) {
+        if snap.members.get(idx).and_then(|m| snap.sections.iter().find(|s| s.id == m.section_id)).is_some_and(part_1_1::is_tube) {
+            return true;
+        }
+    }
     if (path.ends_with(".torsionK") || path.ends_with(".localLoadK")) && !path.starts_with("members[") {
         return true;
     }

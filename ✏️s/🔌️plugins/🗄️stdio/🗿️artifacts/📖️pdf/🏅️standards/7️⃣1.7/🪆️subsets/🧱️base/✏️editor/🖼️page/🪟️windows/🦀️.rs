@@ -6,7 +6,8 @@ use super::*;
 //#region 🪟️Windows
 /// 🪟 The page window: a canvas, with one action per edit the surface can publish.
 pub fn window_definition() -> WindowKindDefinition {
-    let page = || ActionArgDef::number("page", LocalizedLabel::native("Page", "Seite")).required();
+    let page = || ActionArgDef::number("page", LocalizedLabel::native("Page number", "Seitenzahl")).required();
+    let page_index = || ActionArgDef::index("page", LocalizedLabel::native("Page index", "Seitenindex")).required();
     let object = || ActionArgDef::text("object", LocalizedLabel::native("Object", "Objekt")).min_length(1).required();
     let text = || ActionArgDef::text("text", LocalizedLabel::native("Text", "Text")).min_length(0).required();
     let x = || ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required();
@@ -37,7 +38,7 @@ pub fn window_definition() -> WindowKindDefinition {
                 "set-page",
                 "Set Page Text",
                 "Seitentext setzen",
-                vec![page(), ActionArgDef::number("item", LocalizedLabel::native("Text Item", "Textelement")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).min_length(1), text()],
+                vec![page_index(), ActionArgDef::number("item", LocalizedLabel::native("Text Item", "Textelement")).required(), ActionArgDef::target_revision("revision", LocalizedLabel::native("Revision", "Revision")).min_length(1), text()],
             )
             .describe(LocalizedLabel::native(
                 "Replaces the addressed page text when its revision still matches; the previous text remains available through undo.",
@@ -57,7 +58,7 @@ pub fn window_definition() -> WindowKindDefinition {
             action("set-image", "Set Image Samples", "Bildpunkte setzen", vec![page(), object(), width(), height(), text()]),
             action("insert-page", "Insert Page", "Seite einfügen", vec![page(), width(), height()]),
             action("remove-page", "Remove Page", "Seite entfernen", vec![page()]),
-            action("move-page", "Move Page", "Seite verschieben", vec![ActionArgDef::number("page", LocalizedLabel::native("Page", "Seite")), x()]),
+            action("move-page", "Move Page", "Seite verschieben", vec![ActionArgDef::number("page", LocalizedLabel::native("Page number", "Seitenzahl")), ActionArgDef::number("x", LocalizedLabel::native("Target page number", "Zielseitenzahl")).required()]),
             action("set-page-size", "Set Page Size", "Seitengröße setzen", vec![page(), width(), height()]),
             action("set-info", "Set Document Info", "Dokumentinfo setzen", vec![ActionArgDef::text("text", LocalizedLabel::native("Title", "Titel")).min_length(0), ActionArgDef::text("extra", LocalizedLabel::native("Author", "Autor")).min_length(0), ActionArgDef::text("object", LocalizedLabel::native("Subject", "Thema")).min_length(0)]),
             action("set-info-field", "Set Info Field", "Infofeld setzen", vec![object(), text()]),
@@ -206,7 +207,7 @@ pub fn render_inspector(
         let note = ui::text(ui::Label(UiText::clipped(prompt))).try_id("pdf-object-empty").map_err(|_| inspector_error("pdf.object.empty-id"))?.try_build().map_err(|_| inspector_error("pdf.object.empty"))?;
         column = column.try_child(note).map_err(|_| inspector_error("pdf.object.empty"))?;
         let page_index = page_index.unwrap_or(0);
-        let heading = format!("{} {}", pick(locale, "Page", "Seite"), page_index + 1);
+        let heading = format!("{} {}", pick(locale, "Page", "Seite"), page_number(page_index));
         column = column.try_child(ui::text(ui::Label(UiText::clipped(&heading))).emphasize(true).try_id("pdf-object-kind").map_err(|_| inspector_error("pdf.object.kind-id"))?.try_build().map_err(|_| inspector_error("pdf.object.kind"))?).map_err(|_| inspector_error("pdf.object.kind"))?;
         for field in page_fields(snapshot, page_index) {
             column = column.try_child(field_input(page_index, "", &field, controller_id, publication_revision, locale)?).map_err(|_| inspector_error("pdf.object.field"))?;
@@ -226,10 +227,10 @@ pub fn render_inspector(
         let label = |en: &'static str, de: &'static str| pick_label(locale, en, de);
         let mut actions = vec![("insert-page", label("Insert page after", "Seite danach einfügen"), page_index.saturating_add(1).min(snapshot.pages.len()), vec![("width", size.0), ("height", size.1)])];
         if page_index > 0 {
-            actions.push(("move-page-earlier", label("Move page earlier", "Seite nach vorne"), page_index, vec![("x", (page_index - 1) as f64)]));
+            actions.push(("move-page-earlier", label("Move page earlier", "Seite nach vorne"), page_index, vec![("x", page_number(page_index - 1) as f64)]));
         }
         if page_index + 1 < snapshot.pages.len() {
-            actions.push(("move-page-later", label("Move page later", "Seite nach hinten"), page_index, vec![("x", (page_index + 1) as f64)]));
+            actions.push(("move-page-later", label("Move page later", "Seite nach hinten"), page_index, vec![("x", page_number(page_index + 1) as f64)]));
         }
         if snapshot.pages.len() > 1 {
             actions.push(("remove-page", label("Remove page", "Seite entfernen"), page_index, Vec::new()));

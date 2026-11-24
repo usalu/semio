@@ -1,0 +1,46 @@
+{
+  "50": {
+    "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every drawing is the true orthographic view of the 1:50 model in the calm summer pose, drawn from its solids: the bed and the barrier rim by their outline, six culms with their taper, the branches and the branchlets as strokes along their centre lines at their true width, the node rings as strokes, and the lanceolate leaves of each bone and light as one outline of the leaf solids, sunlit and shaded leaves in two tones.",
+      "de": "Bei 1:50 (1 m sind 20 mm) ist jede Zeichnung die wahre Parallelprojektion des 1:50-Modells in der ruhigen Sommerpose, aus seinen Körpern gezeichnet: Beet und Sperrenrand als Umriss, sechs Halme mit ihrer Verjüngung, die Äste und die Zweige als Striche entlang ihrer Mittellinien in wahrer Breite, die Knotenringe als Striche und die lanzettlichen Blätter je Knochen und Licht als ein Umriss der Blattkörper, besonnte und beschattete Blätter in zwei Tönen."
+    },
+    "thinElements": {
+      "en": "Node rings are the finest strokes (texture pen); culms, branches and branchlets are strokes at their true width, at least 0.13 mm, at their true position.",
+      "de": "Knotenringe sind die feinsten Striche (Texturstift); Halme, Äste und Zweige sind Striche in wahrer Breite, mindestens 0,13 mm, an ihrer wahren Lage."
+    }
+  },
+  "100": {
+    "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) the drawings are the true views of the 1:100 model, drawn from its solids: the bed and the barrier rim by their outline, culms and both branches of every node as strokes along their centre lines, node rings as strokes, and the sprays of each bone and light (every leaf fan is one spray) as one outline, sunlit and shaded.",
+      "de": "Bei 1:100 (1 m sind 10 mm) sind die Zeichnungen die wahren Ansichten des 1:100-Modells, aus seinen Körpern gezeichnet: Beet und Sperrenrand als Umriss, Halme und beide Äste jedes Knotens als Striche entlang ihrer Mittellinien, Knotenringe als Striche und die Wedel je Knochen und Licht (jeder Blattfächer ist ein Wedel) als ein Umriss, besonnt und beschattet."
+    },
+    "omitted": {
+      "en": "Omitted: single leaves and branchlets (below 15 mm).",
+      "de": "Weggelassen: einzelne Blätter und Zweige (unter 15 mm)."
+    },
+    "thinElements": {
+      "en": "Node rings are texture strokes; culms and branches are strokes at their true width, at least 0.13 mm, at their true position.",
+      "de": "Knotenringe sind Texturstriche; Halme und Äste sind Striche in wahrer Breite, mindestens 0,13 mm, an ihrer wahren Lage."
+    }
+  },
+  "200": {
+    "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) the drawings are the true views of the 1:200 model, drawn from its solids: the barrier rim, six culms as strokes along their centre lines and the drooping leaf tufts of each bone and light as one outline, sunlit and shaded.",
+      "de": "Bei 1:200 (1 m sind 5 mm) sind die Zeichnungen die wahren Ansichten des 1:200-Modells, aus seinen Körpern gezeichnet: der Sperrenrand, sechs Halme als Striche entlang ihrer Mittellinien und die hängenden Blattbüschel je Knochen und Licht als ein Umriss, besonnt und beschattet."
+    },
+    "omitted": {
+      "en": "Omitted: nodes and branches (below 30 mm).",
+      "de": "Weggelassen: Knoten und Äste (unter 30 mm)."
+    },
+    "thinElements": {
+      "en": "The culms (16 to 29 mm, 0.08 to 0.15 mm on paper) are strokes of the 0.13 mm pen or their true width on their true axes.",
+      "de": "Die Halme (16 bis 29 mm, 0,08 bis 0,15 mm auf Papier) sind Striche des 0,13-mm-Stifts oder ihrer wahren Breite auf ihren wahren Achsen."
+    }
+  },
+  "500": {
+    "silhouette": {
+      "en": "At 1:500 (1 m is 2 mm) the drawings are the true views of the 1:500 model, drawn from its solids: six culms as strokes and the foliage masses of each bone and light as one outline (seven to ten masses per culm in three zones), sunlit tops and shaded lower masses.",
+      "de": "Bei 1:500 (1 m sind 2 mm) sind die Zeichnungen die wahren Ansichten des 1:500-Modells, aus seinen Körpern gezeichnet: sechs Halme als Striche und die Laubmassen je Knochen und Licht als ein Umriss (sieben bis zehn Massen je Halm in drei Zonen), besonnte Spitzen und beschattete untere Massen."
+    }
+  }
+}

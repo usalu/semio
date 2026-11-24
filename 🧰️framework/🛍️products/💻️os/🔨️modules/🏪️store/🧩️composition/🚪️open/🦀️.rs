@@ -479,7 +479,7 @@ impl ErasedSnapshotRetirement for MemberOpenRequest {
 
 impl Drop for MemberOpenRequest {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "member-open input reached Drop before adoption or bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "member-open input reached Drop before adoption or bounded retirement");
     }
 }
 

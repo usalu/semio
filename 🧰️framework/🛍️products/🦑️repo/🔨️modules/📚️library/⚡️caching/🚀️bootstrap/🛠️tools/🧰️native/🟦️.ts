@@ -211,7 +211,7 @@ with zipfile.ZipFile(archive) as archive_file:
             output.write(source.read())
 `;
 
-/** 📦️ Provisions one pinned tool: download under the pinned checksum, unpack with the program every operating system ships, verify the tree, record the executables in a receipt and publish the directory by one rename; a second call finds the receipt and does nothing. */
+/** 📦️ Provisions one pinned tool: download under the pinned checksum, unpack with the program every operating system ships, verify the tree, record the executables in a receipt and publish the directory by one rename; a second call finds the receipt and does nothing, and an installation without a receipt is not ours and is replaced. */
 export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHostV1, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
   return prepareArchiveV1(toolSubject(tool, host, toolsRoot), toolsRoot, port, signal);
 }
@@ -221,7 +221,7 @@ async function prepareArchiveV1(subject: ArchiveSubjectV1, toolsRoot: string, po
   plainDirectoryChain(parent, toolsRoot);
   try {
     lstatSync(directory);
-    return preparedArchiveV1(subject, toolsRoot, port.environment);
+    if (lstatSync(join(directory, ".toolchain.json"), {throwIfNoEntry: false}) !== undefined) return preparedArchiveV1(subject, toolsRoot, port.environment);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
@@ -263,6 +263,7 @@ async function prepareArchiveV1(subject: ArchiveSubjectV1, toolsRoot: string, po
     writeFileSync(join(payload, ".toolchain.json"), JSON.stringify({owner, identity: subject.identity, files}) + "\n");
     signal.throwIfAborted();
     try {
+      if (lstatSync(directory, {throwIfNoEntry: false}) !== undefined && lstatSync(join(directory, ".toolchain.json"), {throwIfNoEntry: false}) === undefined) renameSync(directory, join(temporary, "unreceipted"));
       renameSync(payload, directory);
     } catch (error) {
       if (!["EEXIST", "ENOTEMPTY", "EPERM", "EACCES"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;

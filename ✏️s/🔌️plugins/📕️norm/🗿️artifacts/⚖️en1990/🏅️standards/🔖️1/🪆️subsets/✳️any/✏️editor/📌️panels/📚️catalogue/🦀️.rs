@@ -128,6 +128,3 @@ pub fn render(
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

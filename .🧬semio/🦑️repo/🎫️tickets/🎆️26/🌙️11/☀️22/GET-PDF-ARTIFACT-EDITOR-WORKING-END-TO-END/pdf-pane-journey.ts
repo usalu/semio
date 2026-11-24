@@ -5,7 +5,7 @@ import { join } from "node:path";
 import type { Browser, Page } from "playwright";
 
 /** 📘️ Standalone PDF 1.7 pane journey (port 6260): new document, edit the document title, insert text, save, reopen the saved file and see both edits again, open a real PDF, in English and German.
- * Usage: `repo <this file> [en|de|open|transfer ...]` with the host from `serve-pdf-native.sh` (or the repo route) running.
+ * Usage: `repo <this file> [en|de|open-en|open-de|transfer ...]` with the host from `serve-pdf-native.sh` (or the repo route) running.
  * Writes screenshots, saved files and `journey.json` under `🗑️generated/pdf-journey`.
  * @see ./🌐️pdf-browser-journey.md */
 
@@ -14,7 +14,7 @@ const osDev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍
 const fixture = join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
 const url = process.env.PDF_PANE_URL ?? "http://127.0.0.1:6260/";
 const out = join(import.meta.dir, "🗑️generated", "pdf-journey");
-const steps = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["en", "de", "open", "transfer"];
+const steps = process.argv.slice(2).length > 0 ? process.argv.slice(2) : ["en", "de", "open-en", "open-de", "transfer"];
 const OPEN_BOUND_MS = Number(process.env.PDF_OPEN_BOUND_MS ?? 120_000);
 const OPENED = /^shell\.(?:documentTransfer\.(?:file-opened|file-open-failed|open-cancelled|transfer-busy)|openFile\.[^|]+)\|/u;
 
@@ -74,8 +74,10 @@ async function session(browser: Browser, locale: "en-US" | "de-DE") {
   };
   const shot = (name: string) => page.screenshot({ path: join(out, `${name}.png`) });
   const text = () => page.evaluate(() => document.body.innerText);
+  const canvasHash = () => page.evaluate(() => [...document.querySelectorAll("canvas")].map(canvas => { try { const data = canvas.getContext("2d")?.getImageData(0, 0, canvas.width, canvas.height).data; if (data === undefined) return `${canvas.width}x${canvas.height}:gl`; let hash = 0; for (let index = 0; index < data.length; index += 4) hash = (hash * 31 + data[index] + data[index + 1] * 3 + data[index + 2] * 7) | 0; return `${canvas.width}x${canvas.height}:${hash}`; } catch { return `${canvas.width}x${canvas.height}:unreadable`; } }));
   const insertText = async (value: string) => {
-    const pressed = await press("insert-text");
+    let pressed = await press("insert-text");
+    if (await page.locator('[id$="action.insertText.arg.page.input"]').count() === 0) pressed = await press("insert-text");
     const filled: string[] = [];
     for (const [key, entry] of Object.entries({ page: "1", x: "72", y: "700", text: value, height: "14" })) {
       const input = page.locator(`[id$="action.insertText.arg.${key}.input"]`).first();
@@ -83,10 +85,11 @@ async function session(browser: Browser, locale: "en-US" | "de-DE") {
       filled.push(`${key}=${entry}`);
     }
     const submitted = await clickUncovered(page, '[id$="action.insertText.execute"]');
-    await page.waitForTimeout(1500);
-    return { pressed, filled, submitted };
+    const started = Date.now();
+    while (Date.now() - started < Number(process.env.INSERT_WAIT_MS ?? 20_000) && !(await text()).includes(value)) await page.waitForTimeout(250);
+    return { pressed, filled, submitted, visibleAfterMs: Date.now() - started };
   };
-  return { context, page, faults, notices, open, save, shot, text, press, insertText };
+  return { context, page, faults, notices, open, save, shot, text, press, insertText, canvasHash };
 }
 
 const pdfText = (bytes: Uint8Array) => new TextDecoder("latin1").decode(bytes);
@@ -105,7 +108,10 @@ async function newDocument(browser: Browser, language: "en" | "de") {
     await pane.page.waitForTimeout(1000);
     await pane.shot(`${language}-2-edited`);
     const body = `Hello ${language === "en" ? "World" : "Welt"}`;
+    const canvasBefore = await pane.canvasHash();
     const inserted = await pane.insertText(body);
+    const canvasAfter = await pane.canvasHash();
+    const canvasChanged = JSON.stringify(canvasBefore) !== JSON.stringify(canvasAfter);
     await pane.shot(`${language}-2b-inserted`);
     const edited = await pane.text();
     const textShown = edited.includes(body);
@@ -114,8 +120,8 @@ async function newDocument(browser: Browser, language: "en" | "de") {
     const saved = await pane.save(`${language}-edited.pdf`).catch(error => ({ pressed: "failed", path: "", suggested: String(error).slice(0, 120), bytes: new Uint8Array() }));
     const content = pdfText(saved.bytes);
     const headerOk = content.startsWith("%PDF-1.7");
-    const titleOk = content.includes(title) || content.includes(title.replace("ä", "\\344"));
-    verdicts.push({ step: `${language}: new document shows a page and keeps the title`, pass: pageSize && headerOk && titleOk && textShown, evidence: { label: labels[language].save, pageSize, sizes, inserted, textShown, headerOk, titleOk, suggested: saved.suggested, bytes: saved.bytes.byteLength, header: content.slice(0, 8), faults: pane.faults.slice(0, 8) } });
+    const titleOk = content.includes(title) || content.includes(title.replace("ä", "\\344")) || content.includes(Buffer.from(title, "latin1").toString("hex").toUpperCase());
+    verdicts.push({ step: `${language}: new document shows a page and keeps the title`, pass: pageSize && headerOk && titleOk && textShown && canvasChanged, evidence: { canvasBefore, canvasAfter, canvasChanged, label: labels[language].save, pageSize, sizes, inserted, textShown, headerOk, titleOk, suggested: saved.suggested, bytes: saved.bytes.byteLength, header: content.slice(0, 8), faults: pane.faults.slice(0, 8) } });
     if (saved.bytes.byteLength > 0) {
       const again = await pane.open(saved.path);
       const titleAgain = await pane.page.getByRole("textbox", { name: labels[language].title, exact: true }).first().inputValue().catch(() => "");
@@ -128,17 +134,31 @@ async function newDocument(browser: Browser, language: "en" | "de") {
   }
 }
 
-/** 📂️ Opens the real two-page fixture, expects the file-opened notice and a rendered page canvas, then edits and reopens. */
-async function openReal(browser: Browser) {
-  const pane = await session(browser, "en-US");
+/** 📂️ Opens the real two-page fixture, expects the file-opened notice and rendered pages, inserts text on page 1 and saves: a valid PDF, or a localized visible save error (imported documents with retained objects are refused by the native writer until the reference writer lands). */
+async function openReal(browser: Browser, language: "en" | "de") {
+  const pane = await session(browser, language === "en" ? "en-US" : "de-DE");
   try {
     const opened = await pane.open(fixture);
-    await pane.shot("open-1-fixture");
+    await pane.shot(`${language}-open-1-fixture`);
     const canvases = await pane.page.evaluate(() => [...document.querySelectorAll("canvas")].map(canvas => `${canvas.width}x${canvas.height}`));
     const painted = canvases.filter(size => size !== "0x0" && !size.startsWith("0x"));
     const body = await pane.text();
-    const bothPages = body.includes("Page 1 / 2") && body.includes("Page 2 / 2");
-    verdicts.push({ step: "open the two-page fixture", pass: opened.notice.startsWith("shell.documentTransfer.file-opened|") && painted.length > 0 && bothPages && body.includes("595") && body.includes("Original Title"), evidence: { opened, canvases, painted, bothPages, faults: pane.faults.slice(0, 8) } });
+    const bothPages = language === "en" ? body.includes("Page 1 / 2") && body.includes("Page 2 / 2") : body.includes("Seite 1 / 2") && body.includes("Seite 2 / 2");
+    verdicts.push({ step: `${language}: open the two-page fixture`, pass: opened.notice.startsWith("shell.documentTransfer.file-opened|") && painted.length > 0 && bothPages && body.includes("595") && body.includes("Original Title"), evidence: { opened, canvases, painted, bothPages, faults: pane.faults.slice(0, 8) } });
+    const marker = `Edited ${language}`;
+    const inserted = await pane.insertText(marker);
+    await pane.shot(`${language}-open-2-edited`);
+    const textShown = (await pane.text()).includes(marker);
+    const cursor = (await pane.notices()).length;
+    const saved = await pane.save(`${language}-open-edited.pdf`).catch(error => ({ pressed: "failed", path: "", suggested: String(error).slice(0, 120), bytes: new Uint8Array() }));
+    await pane.page.waitForTimeout(2000);
+    await pane.shot(`${language}-open-3-saved`);
+    const content = pdfText(saved.bytes);
+    const saveNotices = (await pane.notices()).slice(cursor);
+    const alerts = await pane.page.evaluate(() => [...document.querySelectorAll('[role="alert"],[role="status"],[aria-live]')].map(element => `${element.getAttribute("role") ?? "live"}:${(element.textContent ?? "").trim()}`.slice(0, 300)).filter(line => !line.endsWith(":")));
+    const valid = content.startsWith("%PDF-") && content.includes("%%EOF");
+    const localizedError = saveNotices.some(line => /save|speicher/iu.test(line) && line.split("|")[1]?.length > 10 && (language === "en" ? !/[äöüß]/u.test(line) : true)) && alerts.length > 0;
+    verdicts.push({ step: `${language}: edit the opened PDF and save it`, pass: textShown && (valid || localizedError), evidence: { inserted, textShown, valid, localizedError, outcome: valid ? "saved" : localizedError ? "localized accessible error" : "silent failure", saveNotices, alerts, bytes: saved.bytes.byteLength, faults: pane.faults.slice(0, 8) } });
   } finally {
     await pane.context.close();
   }
@@ -150,12 +170,12 @@ async function transfer(browser: Browser) {
   try {
     const body = "Transfer Round Trip";
     const inserted = await pane.insertText(body);
-    const [download, pressed] = await Promise.all([pane.page.waitForEvent("download", { timeout: 90_000 }), pane.press("exportDocument")]);
+    const [download, pressed] = await Promise.all([pane.page.waitForEvent("download", { timeout: 90_000 }), pane.press("exportArtifactDocument")]);
     const path = join(out, "exported-document");
     await download.saveAs(path);
     const size = (await Bun.file(path).arrayBuffer()).byteLength;
     const cursor = (await pane.notices()).length;
-    const [chooser] = await Promise.all([pane.page.waitForEvent("filechooser", { timeout: 30_000 }), pane.press("importDocument")]);
+    const [chooser] = await Promise.all([pane.page.waitForEvent("filechooser", { timeout: 30_000 }), pane.press("importArtifactDocument")]);
     await chooser.setFiles(path);
     await pane.page.waitForTimeout(8000);
     await pane.shot("transfer-1-imported");
@@ -166,12 +186,59 @@ async function transfer(browser: Browser) {
   }
 }
 
+/** 🔬️ Diagnostic: after insert-text, which gesture makes the pane show the text. */
+async function probe(browser: Browser) {
+  const pane = await session(browser, "en-US");
+  try {
+    const marker = "Probe Text";
+    if (process.env.PROBE_TITLE && process.env.PROBE_TITLE !== "after") {
+      const field = pane.page.getByRole("textbox", { name: "Title", exact: true }).first();
+      await field.fill("Probe Title");
+      await field.press(process.env.PROBE_TITLE === "blur" ? "Tab" : "Enter");
+      await pane.page.waitForTimeout(Number(process.env.PROBE_WAIT ?? 1000));
+      await pane.shot("probe-0-title");
+    }
+    if (process.env.PROBE_CLICK) {
+      await pane.page.getByText(process.env.PROBE_CLICK, { exact: true }).first().click();
+      await pane.page.waitForTimeout(3000);
+    }
+    if (process.env.PROBE_TWICE) {
+      await pane.insertText("First Probe");
+      if (process.env.PROBE_TITLE === "after") {
+        const field = pane.page.getByRole("textbox", { name: "Title", exact: true }).first();
+        await field.fill("Probe Title");
+        await field.press("Enter");
+        await pane.page.waitForTimeout(3000);
+        const body = await pane.text();
+        console.log("after title:", body.includes("First Probe"), body.includes("Title: Probe Title"));
+      }
+    }
+    const inserted = await pane.insertText(marker);
+    if (process.env.PROBE_POKE) {
+      await pane.page.getByText(process.env.PROBE_POKE, { exact: true }).first().click();
+      await pane.page.waitForTimeout(5000);
+    }
+    const seen: Record<string, boolean> = { afterInsert: (await pane.text()).includes(marker), first: (await pane.text()).includes("First Probe") };
+    await pane.page.getByRole("button", { name: /^Viewer/u }).first().click().catch(() => undefined);
+    await pane.page.waitForTimeout(3000);
+    seen.afterViewer = (await pane.text()).includes(marker);
+    await pane.page.getByRole("button", { name: /^Editor/u }).first().click().catch(() => undefined);
+    await pane.page.waitForTimeout(3000);
+    seen.afterEditor = (await pane.text()).includes(marker);
+    await pane.shot("probe-1");
+    verdicts.push({ step: "probe", pass: false, evidence: { inserted, seen, canvas: await pane.canvasHash() } });
+  } finally {
+    await pane.context.close();
+  }
+}
+
 const browser = await chromium.launch();
 try {
   for (const step of steps) {
     try {
       if (step === "en" || step === "de") await newDocument(browser, step);
-      else if (step === "open") await openReal(browser);
+      else if (step === "open-en" || step === "open-de") await openReal(browser, step === "open-en" ? "en" : "de");
+      else if (step === "probe") await probe(browser);
       else if (step === "transfer") await transfer(browser);
       else throw new Error(`Unknown journey step: ${step}`);
     } catch (error) {

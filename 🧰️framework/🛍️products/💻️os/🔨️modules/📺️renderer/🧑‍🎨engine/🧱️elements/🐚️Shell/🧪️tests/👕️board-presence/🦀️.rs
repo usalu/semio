@@ -4,7 +4,7 @@
 //! roster becomes the overlays the chrome paints (`board_peer_overlays`) — held to the shared fixture
 //! `🧑‍🎨engine/🧫️fixtures/👕️canvas-presence/🔣️.json`, whose TypeScript runner holds React's board to it.
 
-use semio_renderer_wgpu_fixtures::shell::{mouse_pointer, paint_component_pointer_documents, pointer_interaction, tree_pointer_record};
+use semio_renderer_wgpu_fixtures::shell::{mouse_pointer, paint_component_pointer_documents_in, pointer_interaction, tree_pointer_record, PointerFixtureTurns};
 use super::*;
 use semio_renderer_wgpu_shell_windows::section_fixtures::{numeric, peer};
 use serde_json::Value;
@@ -43,13 +43,21 @@ fn under_own_window(case: &Value) -> Value {
 
 /// 🖼️ A shell whose one board window, owned by `window_id`, was painted with `camera` at `bounds` and
 /// mirrored into the pointer-state maps by the same body a presented frame runs.
-fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> ShellState {
-    painted_board_with_input(window_id, bounds, camera).0
+fn painted_board(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, PointerFixtureTurns) {
+    let (shell, _, turns) = painted_board_with_input(window_id, bounds, camera);
+    (shell, turns)
+}
+
+/// 🧹️ Retires the painted board's document and closes its mounted surface on the caller that mounted it.
+fn retire_board(shell: &mut ShellState, turns: PointerFixtureTurns) {
+    shell.docs.retire_documents_outside(&[], true, &mut shell.chrome).expect("the board document retires");
+    shell.docs.drain_retained_document_arenas();
+    turns.finish();
 }
 
 /// 🖱️ [`painted_board`] plus the input state its paint registered the board's retained hits in — what the renderer's pointer
 /// routing reads to let a published board surface claim a move.
-fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, InputState<ActionDescriptor>) {
+fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (ShellState, InputState<ActionDescriptor>, PointerFixtureTurns) {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     shell.dock.panel_anchors = std::array::from_fn(|_| PanelAnchorState::default());
     shell.dock.dock_tabs = ShellDock::default();
@@ -58,10 +66,12 @@ fn painted_board_with_input(window_id: &str, bounds: Rect, camera: &Value) -> (S
     let records = vec![tree_pointer_record(1, window_id, ui_contract::Component::Surface(surface), &[], None)];
     let document = shell.windows.publish_surface_records(window_id, records).expect("board document publishes");
     shell.dock.dock_window_plan = vec![(window_id.to_string(), bounds)];
-    let input = paint_component_pointer_documents(&mut shell, &[(window_id, "s.test.board", &document, bounds)]);
+    let mut turns = PointerFixtureTurns::default();
+    let input = paint_component_pointer_documents_in(&mut turns, &mut shell, &[(window_id, "s.test.board", &document, bounds)]);
+    shell.docs.window_ui.insert(window_id.to_string(), document);
     SessionCtx::of(&mut shell).sync_engine_surface_states();
     assert_eq!(shell.surfaces.board2d_states.len(), 1, "the painted board registered its surface");
-    (shell, input)
+    (shell, input, turns)
 }
 
 fn window_view_json(view: &PresenceWindowView) -> Value {
@@ -75,20 +85,23 @@ fn window_view_json(view: &PresenceWindowView) -> Value {
 
 #[test]
 fn a_painted_board_publishes_its_scene_camera_and_the_world_point_under_the_shell_pointer() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     for case in fixture()["publish"].as_array().expect("publish cases").iter().map(under_own_window) {
-        let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
+        let (mut shell, turns) = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         shell.directory.presence_pointer = case["pointer"].as_array().map(|pointer| (pointer[0].as_f64().expect("x") as f32, pointer[1].as_f64().expect("y") as f32));
         let (views, _) = shell.directory.board_presence_views(&shell.surfaces);
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
+        retire_board(&mut shell, turns);
     }
 }
 
 #[test]
 fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     for case in fixture()["paint"].as_array().expect("paint cases").iter().map(under_own_window) {
-        let mut shell = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
+        let (mut shell, turns) = painted_board(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         shell.directory.presence_peers = case["roster"].as_array().expect("roster").iter().map(peer).collect();
         assert!(shell.directory.board_peer_overlays(&shell.surfaces).is_empty(), "{}: nothing is painted before the hub named this connection's actor", case["id"]);
         shell.directory.presence_self = Some((case["myActor"].as_str().expect("my actor").to_string(), case["localColor"].as_u64().expect("local color") as u8));
@@ -107,6 +120,7 @@ fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
             .collect();
         assert_eq!(numeric(&Value::Array(cursors)), numeric(&case["expected"]["cursors"]), "{} cursors", case["id"]);
         assert_eq!(numeric(&Value::Array(marks)), numeric(&case["expected"]["marks"]), "{} marks", case["id"]);
+        retire_board(&mut shell, turns);
     }
 }
 
@@ -116,10 +130,11 @@ fn a_painted_board_paints_the_verified_roster_and_never_its_own_actor() {
 /// surface claims still becomes the presence pointer, so the heartbeat's window view is the fixture's expected view.
 #[test]
 fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_its_view_publishes() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let _serialized = semio_renderer_wgpu_engine_registry::engine_surface_law_guard();
     let mut claimed = 0;
     for case in fixture()["publish"].as_array().expect("publish cases").iter().filter(|case| case["pointer"].is_array()).map(under_own_window) {
-        let (shell, input) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
+        let (shell, input, turns) = painted_board_with_input(case["windowId"].as_str().expect("window id"), rect(&case["bounds"]), &case["camera"]);
         let mut interaction = pointer_interaction(shell, input);
         let (x, y) = (case["pointer"][0].as_f64().expect("x") as f32, case["pointer"][1].as_f64().expect("y") as f32);
         if interaction.shell.input.scene_pointer_target_at(x, y, &interaction.input, &interaction.theme).is_some() {
@@ -128,6 +143,7 @@ fn a_pointer_the_renderer_routes_over_a_painted_board_is_the_presence_pointer_it
         semio_framework_async::block_on(interaction.handle_pointer_move(mouse_pointer(1), x, y, false, 0, PointerModifiers::default()));
         let (views, _) = interaction.shell.directory.board_presence_views(&interaction.shell.surfaces);
         assert_eq!(views.iter().map(window_view_json).map(|view| numeric(&view)).collect::<Vec<_>>(), vec![numeric(&case["expected"])], "{}", case["id"]);
+        retire_board(&mut interaction.shell, turns);
     }
     assert!(claimed >= 1, "at least one routed move is claimed by the painted board surface (the path that froze the presence pointer)");
 }

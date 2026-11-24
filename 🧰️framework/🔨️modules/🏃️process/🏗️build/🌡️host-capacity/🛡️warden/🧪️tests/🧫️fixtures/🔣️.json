@@ -1,0 +1,3985 @@
+{
+ "_comment": "Inputs hand-authored; every expect is written by the independent Python oracle (python3 🐍️.py --write), never by the TypeScript implementation.",
+ "decisions": [
+  {
+   "name": "calm: plenty available, nothing to do",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 8000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "guard by available memory below the guard line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "guard by swap that worked while below the resume line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 20,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "no guard when swap is below the active rate",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 10,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "guard by OS pressure warn below the resume line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2400,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "warn"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "OS warn above the resume line stays calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 3000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "warn"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "danger by available memory: two cancels then a suspend",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 600,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     },
+     {
+      "action": "cancel",
+      "id": "p102",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p103",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "danger by OS critical with plenty available",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "critical"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p101",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p102",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "keepRunning: the only running subject is never suspended",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "keepRunning 2 keeps the two most expensive running",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "policy": {
+    "keepRunning": 2
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "keepRunning 0 may suspend every subject",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "policy": {
+    "keepRunning": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "order: rank, then elapsed, then megabytes descending, then pid",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1024,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p11",
+     "pid": 11,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 100,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p12",
+     "pid": 12,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p13",
+     "pid": 13,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 50,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p10",
+     "pid": 10,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p14",
+     "pid": 14,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 99,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p15",
+     "pid": 15,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 1,
+     "megabytes": 5000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "policy": {
+    "maximumSuspendsPerTick": 5
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p14",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p13",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p10",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p12",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "per-tick maximum of suspends",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1100,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p20",
+     "pid": 20,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p21",
+     "pid": 21,
+     "kind": "k11",
+     "rank": 11,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p22",
+     "pid": 22,
+     "kind": "k12",
+     "rank": 12,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p23",
+     "pid": 23,
+     "kind": "k13",
+     "rank": 13,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p24",
+     "pid": 24,
+     "kind": "k14",
+     "rank": 14,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p25",
+     "pid": 25,
+     "kind": "k15",
+     "rank": 15,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p26",
+     "pid": 26,
+     "kind": "k16",
+     "rank": 16,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p20",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p21",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p22",
+      "reason": "guard"
+     },
+     {
+      "action": "suspend",
+      "id": "p23",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "per-tick maximum of cancels",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 300,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p30",
+     "pid": 30,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p31",
+     "pid": 31,
+     "kind": "k11",
+     "rank": 11,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p32",
+     "pid": 32,
+     "kind": "k12",
+     "rank": 12,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p33",
+     "pid": 33,
+     "kind": "k13",
+     "rank": 13,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p34",
+     "pid": 34,
+     "kind": "k14",
+     "rank": 14,
+     "elapsedSeconds": 5,
+     "megabytes": 10,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p30",
+      "reason": "danger"
+     },
+     {
+      "action": "cancel",
+      "id": "p31",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p32",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p33",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "overdue suspended subject is cancelled below calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p41",
+     "pid": 41,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 130,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p42",
+     "pid": 42,
+     "kind": "k50",
+     "rank": 50,
+     "elapsedSeconds": 10,
+     "megabytes": 700,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p41",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "overdue subject that cannot cancel is resumed",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p43",
+     "pid": 43,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": false
+    },
+    {
+     "id": "p44",
+     "pid": 44,
+     "kind": "k50",
+     "rank": 50,
+     "elapsedSeconds": 10,
+     "megabytes": 700,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p43",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "overdue subject that cannot cancel is resumed even when calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p45",
+     "pid": 45,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": false
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p45",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "overdue cancellable subject is not cancelled when calm",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p46",
+     "pid": 46,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "overdue cancels are limited by the per-tick maximum",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p51",
+     "pid": 51,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 300,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p52",
+     "pid": 52,
+     "kind": "k21",
+     "rank": 21,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 250,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p53",
+     "pid": 53,
+     "kind": "k22",
+     "rank": 22,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 200,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p54",
+     "pid": 54,
+     "kind": "k90",
+     "rank": 90,
+     "elapsedSeconds": 10,
+     "megabytes": 900,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p51",
+      "reason": "overdue"
+     },
+     {
+      "action": "cancel",
+      "id": "p52",
+      "reason": "overdue"
+     }
+    ]
+   }
+  },
+  {
+   "name": "suspended subjects are cancelled first in danger",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 700,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p61",
+     "pid": 61,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 10,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p62",
+     "pid": 62,
+     "kind": "k50",
+     "rank": 50,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p63",
+     "pid": 63,
+     "kind": "k70",
+     "rank": 70,
+     "elapsedSeconds": 10,
+     "megabytes": 2000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "policy": {
+    "maximumCancelsPerTick": 1
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p62",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p61",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "overdue cancel counts toward the freed megabytes in danger",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p71",
+     "pid": 71,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 1200,
+     "suspended": true,
+     "suspendedSeconds": 125,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p72",
+     "pid": 72,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 10,
+     "megabytes": 400,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p73",
+     "pid": 73,
+     "kind": "k40",
+     "rank": 40,
+     "elapsedSeconds": 10,
+     "megabytes": 900,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p71",
+      "reason": "overdue"
+     },
+     {
+      "action": "suspend",
+      "id": "p72",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "calm hysteresis: second calm tick resumes nothing",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p81",
+     "pid": 81,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 1
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 2,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "calm hysteresis: third calm tick resumes the most expensive suspended subject, one per tick",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p82",
+     "pid": 82,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p83",
+     "pid": 83,
+     "kind": "k40",
+     "rank": 40,
+     "elapsedSeconds": 10,
+     "megabytes": 900,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p84",
+     "pid": 84,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 10,
+     "megabytes": 900,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 2
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 3,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p83",
+      "reason": "calm"
+     }
+    ]
+   }
+  },
+  {
+   "name": "calm count restarts after a guard tick",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p85",
+     "pid": 85,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "guard",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "resume is blocked below the resume line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p86",
+     "pid": 86,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 9
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 10,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "resume allowed exactly at the resume line",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2457,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p87",
+     "pid": 87,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 2
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 3,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p87",
+      "reason": "calm"
+     }
+    ]
+   }
+  },
+  {
+   "name": "clamp minimum on a 4 GB host",
+   "host": {
+    "totalMegabytes": 4096,
+    "availableMegabytes": 1000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p91",
+     "pid": 91,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p92",
+     "pid": 92,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p93",
+     "pid": 93,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 5,
+     "megabytes": 300,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1024,
+    "dangerMegabytes": 512,
+    "resumeMegabytes": 1024,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p91",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "4 GB host: available between the guard line and the resume line is calm without signals",
+   "host": {
+    "totalMegabytes": 4096,
+    "availableMegabytes": 1100,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1024,
+    "dangerMegabytes": 512,
+    "resumeMegabytes": 1024,
+    "actions": []
+   }
+  },
+  {
+   "name": "clamp maximum on a 128 GB host",
+   "host": {
+    "totalMegabytes": 131072,
+    "availableMegabytes": 4000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 4096,
+    "dangerMegabytes": 2048,
+    "resumeMegabytes": 19660,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "128 GB host: resume line is its share",
+   "host": {
+    "totalMegabytes": 131072,
+    "availableMegabytes": 19000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "warn"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 4096,
+    "dangerMegabytes": 2048,
+    "resumeMegabytes": 19660,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p101",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "unknown swap rate never counts as worked",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 2000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": null,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "empty subjects at danger",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 100,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "critical"
+   },
+   "subjects": [],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "already suspended subjects cover the deficit",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p94",
+     "pid": 94,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 100,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p95",
+     "pid": 95,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 2000,
+     "suspended": true,
+     "suspendedSeconds": 5,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p96",
+     "pid": 96,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "subjects that cannot suspend are skipped",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1200,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p97",
+     "pid": 97,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    },
+    {
+     "id": "p98",
+     "pid": 98,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p99",
+     "pid": 99,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "guard",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p98",
+      "reason": "guard"
+     }
+    ]
+   }
+  },
+  {
+   "name": "danger without cancellable subjects only suspends",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p110",
+     "pid": 110,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": false
+    },
+    {
+     "id": "p111",
+     "pid": 111,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": false
+    },
+    {
+     "id": "p112",
+     "pid": 112,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 5,
+     "megabytes": 500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": false
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "suspend",
+      "id": "p110",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p111",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "danger stops cancelling once the deficit is covered",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 1500,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "critical"
+   },
+   "subjects": [
+    {
+     "id": "p120",
+     "pid": 120,
+     "kind": "k10",
+     "rank": 10,
+     "elapsedSeconds": 5,
+     "megabytes": 200,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p121",
+     "pid": 121,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 5,
+     "megabytes": 400,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p122",
+     "pid": 122,
+     "kind": "k30",
+     "rank": 30,
+     "elapsedSeconds": 5,
+     "megabytes": 50,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "expect": {
+    "level": "danger",
+    "calmTicks": 0,
+    "hold": true,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "cancel",
+      "id": "p120",
+      "reason": "danger"
+     },
+     {
+      "action": "suspend",
+      "id": "p121",
+      "reason": "danger"
+     }
+    ]
+   }
+  },
+  {
+   "name": "calm tick with nothing suspended",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p101",
+     "pid": 101,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 30,
+     "megabytes": 800,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p102",
+     "pid": 102,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p103",
+     "pid": 103,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 900,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p104",
+     "pid": 104,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 1200,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true
+    },
+    {
+     "id": "p105",
+     "pid": 105,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 3000,
+     "megabytes": 6000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 7
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 8,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": []
+   }
+  },
+  {
+   "name": "custom calmTicks 1 resumes at once",
+   "host": {
+    "totalMegabytes": 16384,
+    "availableMegabytes": 9000,
+    "swapUsedMegabytes": 0,
+    "swapOutMegabytesPerSecond": 0,
+    "compressedMegabytes": 0,
+    "pressure": "normal"
+   },
+   "subjects": [
+    {
+     "id": "p130",
+     "pid": 130,
+     "kind": "k20",
+     "rank": 20,
+     "elapsedSeconds": 10,
+     "megabytes": 500,
+     "suspended": true,
+     "suspendedSeconds": 10,
+     "canSuspend": true,
+     "canCancel": true
+    }
+   ],
+   "previous": {
+    "level": "calm",
+    "calmTicks": 0
+   },
+   "policy": {
+    "calmTicks": 1
+   },
+   "expect": {
+    "level": "calm",
+    "calmTicks": 1,
+    "hold": false,
+    "guardMegabytes": 1638,
+    "dangerMegabytes": 819,
+    "resumeMegabytes": 2457,
+    "actions": [
+     {
+      "action": "resume",
+      "id": "p130",
+      "reason": "calm"
+     }
+    ]
+   }
+  }
+ ],
+ "classifications": [
+  {
+   "name": "local unit below a root, an unrelated rustc is not a subject",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 10,
+     "parent": 1,
+     "group": 10,
+     "rssKilobytes": 50000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:10:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/script.ts repo test"
+    },
+    {
+     "pid": 11,
+     "parent": 10,
+     "group": 11,
+     "rssKilobytes": 700000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:11:00 2026",
+     "command": "/home/u/.rustup/bin/rustc --crate-name a /w/a.rs"
+    },
+    {
+     "pid": 20,
+     "parent": 1,
+     "group": 20,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:20:00 2026",
+     "command": "/usr/bin/zsh"
+    },
+    {
+     "pid": 21,
+     "parent": 20,
+     "group": 21,
+     "rssKilobytes": 900000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:21:00 2026",
+     "command": "rustc --crate-name b /w/b.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "11.3c9db562",
+     "pid": 11,
+     "parent": 10,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 683,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:11:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "remote unit is a rustc below the remote-execution work directory",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 30,
+     "parent": 1,
+     "group": 30,
+     "rssKilobytes": 40000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:30:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🌐️remote-execution/👷️worker/🟦️.ts --work-directory x"
+    },
+    {
+     "pid": 31,
+     "parent": 30,
+     "group": 31,
+     "rssKilobytes": 500000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:31:00 2026",
+     "command": "/opt/rust/bin/rustc --crate-name m --edition=2021 /work/semio/.cache/f/remote-execution/work/ab12cd/r/src/m.rs"
+    },
+    {
+     "pid": 32,
+     "parent": 30,
+     "group": 32,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:32:00 2026",
+     "command": "rustc --crate-name n /work/semio/src/n.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "31.8d7d1c8e",
+     "pid": 31,
+     "parent": 30,
+     "kind": "remote-unit",
+     "rank": 10,
+     "elapsedSeconds": 60,
+     "megabytes": 488,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:31:00 2026",
+     "owner": "bun /work/semio/🌐️remote-execution/👷️worker/🟦️.ts --work-directory x",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "32.37cc0243",
+     "pid": 32,
+     "parent": 30,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 97,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:32:00 2026",
+     "owner": "bun /work/semio/🌐️remote-execution/👷️worker/🟦️.ts --work-directory x",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "never patterns: the sidecar and the replica are no subjects, the Ready stage wrapper below the sidecar is",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 40,
+     "parent": 1,
+     "group": 40,
+     "rssKilobytes": 60000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:40:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🌐️remote-execution/🛰️sidecar/../🟦️.ts agent"
+    },
+    {
+     "pid": 41,
+     "parent": 40,
+     "group": 41,
+     "rssKilobytes": 300000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:41:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs extra /work/semio/🛰️sidecar/🟦️.ts"
+    },
+    {
+     "pid": 42,
+     "parent": 40,
+     "group": 42,
+     "rssKilobytes": 70000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:42:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=1 /tmp/x.exit /work/semio/repo run"
+    },
+    {
+     "pid": 43,
+     "parent": 42,
+     "group": 43,
+     "rssKilobytes": 900000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:43:00 2026",
+     "command": "/work/semio/repo run"
+    },
+    {
+     "pid": 44,
+     "parent": 1,
+     "group": 44,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:44:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🔁️replica/🛟️supervisor/🟦️.ts 🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker"
+    }
+   ],
+   "expect": [
+    {
+     "id": "42.8b2988b2",
+     "pid": 42,
+     "parent": 40,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 60,
+     "megabytes": 947,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:42:00 2026",
+     "owner": "bun /work/semio/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=1 /tmp/x.exit /work/semio/repo run",
+     "scope": "tree",
+     "signal": "SIGTERM"
+    }
+   ]
+  },
+  {
+   "name": "a protected path excludes the process and every descendant",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 50,
+     "parent": 1,
+     "group": 50,
+     "rssKilobytes": 80000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:50:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/u/.sinc/play/x/script.ts repo build"
+    },
+    {
+     "pid": 51,
+     "parent": 50,
+     "group": 51,
+     "rssKilobytes": 800000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:51:00 2026",
+     "command": "rustc --crate-name p /Users/u/.sinc/play/a.rs"
+    },
+    {
+     "pid": 52,
+     "parent": 1,
+     "group": 52,
+     "rssKilobytes": 80000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:52:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/script.ts repo build"
+    },
+    {
+     "pid": 53,
+     "parent": 52,
+     "group": 53,
+     "rssKilobytes": 600000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:53:00 2026",
+     "command": "rustc --crate-name q /work/semio/a.rs"
+    }
+   ],
+   "options": {
+    "protect": [
+     "/Users/u/.sinc/play"
+    ]
+   },
+   "expect": [
+    {
+     "id": "53.8738b205",
+     "pid": 53,
+     "parent": 52,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 585,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:53:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo build",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "within keeps only descendants of the given pid, never the pid itself",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 60,
+     "parent": 1,
+     "group": 60,
+     "rssKilobytes": 80000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:00:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/script.ts repo test"
+    },
+    {
+     "pid": 61,
+     "parent": 60,
+     "group": 61,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "rustc --crate-name r /work/semio/r.rs"
+    },
+    {
+     "pid": 62,
+     "parent": 61,
+     "group": 62,
+     "rssKilobytes": 20000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:02:00 2026",
+     "command": "cc -o /tmp/r"
+    },
+    {
+     "pid": 63,
+     "parent": 1,
+     "group": 63,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:03:00 2026",
+     "command": "rustc --crate-name s /work/semio/s.rs"
+    },
+    {
+     "pid": 64,
+     "parent": 1,
+     "group": 64,
+     "rssKilobytes": 1000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:04:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/y/script.ts repo test"
+    },
+    {
+     "pid": 65,
+     "parent": 64,
+     "group": 65,
+     "rssKilobytes": 100000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:05:00 2026",
+     "command": "rustc --crate-name t /work/semio/t.rs"
+    }
+   ],
+   "options": {
+    "within": 60
+   },
+   "expect": [
+    {
+     "id": "61.25d82711",
+     "pid": 61,
+     "parent": 60,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 117,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "megabytes: a subject holds itself and every process whose nearest subject it is",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 70,
+     "parent": 1,
+     "group": 70,
+     "rssKilobytes": 10240,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:10:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/script.ts repo test"
+    },
+    {
+     "pid": 71,
+     "parent": 70,
+     "group": 71,
+     "rssKilobytes": 204800,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:11:00 2026",
+     "command": "rustc --crate-name u /work/semio/u.rs"
+    },
+    {
+     "pid": 72,
+     "parent": 71,
+     "group": 72,
+     "rssKilobytes": 102400,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:12:00 2026",
+     "command": "cc -o /tmp/u"
+    },
+    {
+     "pid": 73,
+     "parent": 72,
+     "group": 73,
+     "rssKilobytes": 51200,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:13:00 2026",
+     "command": "ld /tmp/u"
+    },
+    {
+     "pid": 74,
+     "parent": 71,
+     "group": 74,
+     "rssKilobytes": 307200,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:14:00 2026",
+     "command": "rustc --crate-name v /work/semio/v.rs"
+    },
+    {
+     "pid": 75,
+     "parent": 74,
+     "group": 75,
+     "rssKilobytes": 10240,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:15:00 2026",
+     "command": "as /tmp/v"
+    }
+   ],
+   "expect": [
+    {
+     "id": "71.3c9db562",
+     "pid": 71,
+     "parent": 70,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 350,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:11:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "74.bf110cd3",
+     "pid": 74,
+     "parent": 71,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 310,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:14:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "pool child and warm deriver, the pool puller is never a subject",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 80,
+     "parent": 1,
+     "group": 80,
+     "rssKilobytes": 90000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:20:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏊️pool/🟦️.ts pool"
+    },
+    {
+     "pid": 81,
+     "parent": 80,
+     "group": 81,
+     "rssKilobytes": 1048576,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:21:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs /tmp/child-1.json"
+    },
+    {
+     "pid": 82,
+     "parent": 1,
+     "group": 82,
+     "rssKilobytes": 614400,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:22:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts --root /work/semio --identity abc --endpoint /tmp/e"
+    }
+   ],
+   "expect": [
+    {
+     "id": "81.290ffbaa",
+     "pid": 81,
+     "parent": 80,
+     "kind": "pool-child",
+     "rank": 25,
+     "elapsedSeconds": 60,
+     "megabytes": 1024,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:21:00 2026",
+     "owner": "bun /work/semio/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🌐️owner-pool/🧒️child/🟨️.mjs /tmp/chi",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "82.f474be97",
+     "pid": 82,
+     "parent": 1,
+     "kind": "warm-deriver",
+     "rank": 35,
+     "elapsedSeconds": 60,
+     "megabytes": 600,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:22:00 2026",
+     "owner": "bun /work/semio/🏗️build/🧭️invocation/🕸️graph/🧠️memo/🧮️derive/♨️warm/⌨️main/🟦️.ts --root /work/se",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "kinds: farm worker, heavy question, test, slice worker, stage with ranks and actions",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 90,
+     "parent": 1,
+     "group": 90,
+     "rssKilobytes": 1536000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:30:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"
+    },
+    {
+     "pid": 91,
+     "parent": 1,
+     "group": 91,
+     "rssKilobytes": 2560000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:31:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts question.json"
+    },
+    {
+     "pid": 92,
+     "parent": 1,
+     "group": 92,
+     "rssKilobytes": 300000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:32:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun test /work/semio/a/b.test.ts"
+    },
+    {
+     "pid": 93,
+     "parent": 1,
+     "group": 93,
+     "rssKilobytes": 4096000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:33:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts"
+    },
+    {
+     "pid": 94,
+     "parent": 1,
+     "group": 94,
+     "rssKilobytes": 60000,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:34:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=9 /tmp/x.exit repo run"
+    }
+   ],
+   "expect": [
+    {
+     "id": "90.0e670692",
+     "pid": 90,
+     "parent": 1,
+     "kind": "farm-worker",
+     "rank": 30,
+     "elapsedSeconds": 60,
+     "megabytes": 1500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:30:00 2026",
+     "owner": "bun /work/semio/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "91.8d7d1c8e",
+     "pid": 91,
+     "parent": 1,
+     "kind": "heavy-question",
+     "rank": 40,
+     "elapsedSeconds": 60,
+     "megabytes": 2500,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:31:00 2026",
+     "owner": "bun /work/semio/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts questi",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "92.37cc0243",
+     "pid": 92,
+     "parent": 1,
+     "kind": "test",
+     "rank": 50,
+     "elapsedSeconds": 60,
+     "megabytes": 292,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:32:00 2026",
+     "owner": "bun test /work/semio/a/b.test.ts",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "93.55b2f522",
+     "pid": 93,
+     "parent": 1,
+     "kind": "slice-worker",
+     "rank": 60,
+     "elapsedSeconds": 60,
+     "megabytes": 4000,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:33:00 2026",
+     "owner": "bun /work/semio/🏗️build/🏡️resident/🏗️composition/🌐️host/👷️slice-pool/👷️worker.ts",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "94.524a4c55",
+     "pid": 94,
+     "parent": 1,
+     "kind": "stage",
+     "rank": 90,
+     "elapsedSeconds": 60,
+     "megabytes": 58,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": false,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:34:00 2026",
+     "owner": "bun /work/semio/🏗️build/🌐️remote-execution/🛰️sidecar/🚦️ready/🏃️wrapper/🟦️.ts --deadline=9 /tmp/x",
+     "scope": "tree",
+     "signal": "SIGTERM"
+    }
+   ]
+  },
+  {
+   "name": "a stopped subject carries the seconds since its recorded suspension",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 100,
+     "parent": 1,
+     "group": 100,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:40:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/aa/bun /work/semio/x/script.ts repo test"
+    },
+    {
+     "pid": 101,
+     "parent": 100,
+     "group": 101,
+     "rssKilobytes": 409600,
+     "stopped": true,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 03:00:01 2026",
+     "command": "rustc --crate-name w /work/semio/w.rs"
+    }
+   ],
+   "options": {
+    "nowMs": 2000000,
+    "suspendedSince": {
+     "101.5d7d1316": 1750000
+    }
+   },
+   "expect": [
+    {
+     "id": "101.5d7d1316",
+     "pid": 101,
+     "parent": 100,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 400,
+     "suspended": true,
+     "suspendedSeconds": 250,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 03:00:01 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "owner label cuts the prefixes, keeps the base name and at most 96 characters",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 110,
+     "parent": 1,
+     "group": 110,
+     "rssKilobytes": 2048,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:50:00 2026",
+     "command": "/Users/u/work/.cache/b/t/m/bun/aa/bun /Users/u/work/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo build --a --b --c --d --e --f --g --h --i --j"
+    },
+    {
+     "pid": 111,
+     "parent": 110,
+     "group": 111,
+     "rssKilobytes": 102400,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:51:00 2026",
+     "command": "rustc --crate-name x /Users/u/work/x.rs"
+    }
+   ],
+   "options": {
+    "prefixes": [
+     "/Users/u/work/",
+     "/Users/u/"
+    ]
+   },
+   "expect": [
+    {
+     "id": "111.ec5e3ceb",
+     "pid": 111,
+     "parent": 110,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 100,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:51:00 2026",
+     "owner": "bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts repo build --a ",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "the native build scheduler is a root",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 120,
+     "parent": 1,
+     "group": 120,
+     "rssKilobytes": 20480,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:00:00 2026",
+     "command": "/opt/semio/bin/semio-build-scheduler serve"
+    },
+    {
+     "pid": 121,
+     "parent": 120,
+     "group": 121,
+     "rssKilobytes": 204800,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "rustc --crate-name y /w/y.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "121.25d82711",
+     "pid": 121,
+     "parent": 120,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 200,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "owner": "semio-build-scheduler serve",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "the first matching kind wins: a heavy question run by bun test is a heavy question",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 130,
+     "parent": 1,
+     "group": 130,
+     "rssKilobytes": 204800,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:10:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun test /work/semio/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts"
+    }
+   ],
+   "expect": [
+    {
+     "id": "130.abeb3b87",
+     "pid": 130,
+     "parent": 1,
+     "kind": "heavy-question",
+     "rank": 40,
+     "elapsedSeconds": 60,
+     "megabytes": 200,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:10:00 2026",
+     "owner": "bun test /work/semio/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🪆️heavy-questions/📜️script.ts",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "a process outside every root is no subject even when its command is a kind",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 140,
+     "parent": 1,
+     "group": 140,
+     "rssKilobytes": 204800,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:20:00 2026",
+     "command": "/usr/bin/bun /work/other/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/👷️worker/🟨️.mjs"
+    },
+    {
+     "pid": 141,
+     "parent": 1,
+     "group": 141,
+     "rssKilobytes": 1,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:21:00 2026",
+     "command": "/usr/bin/python3 x.py"
+    }
+   ],
+   "expect": []
+  },
+  {
+   "name": "a pid reused with another start text is another subject id",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 150,
+     "parent": 1,
+     "group": 150,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:30:00 2026",
+     "command": "/work/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /work/semio/x/script.ts repo test"
+    },
+    {
+     "pid": 151,
+     "parent": 150,
+     "group": 151,
+     "rssKilobytes": 1048576,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 04:00:00 2026",
+     "command": "rustc --crate-name z /w/z.rs"
+    },
+    {
+     "pid": 152,
+     "parent": 150,
+     "group": 152,
+     "rssKilobytes": 1048576,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 04:00:01 2026",
+     "command": "rustc --crate-name zz /w/zz.rs"
+    }
+   ],
+   "expect": [
+    {
+     "id": "151.131db702",
+     "pid": 151,
+     "parent": 150,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 1024,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 04:00:00 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    },
+    {
+     "id": "152.0b99ec5d",
+     "pid": 152,
+     "parent": 150,
+     "kind": "local-unit",
+     "rank": 20,
+     "elapsedSeconds": 60,
+     "megabytes": 1024,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 04:00:01 2026",
+     "owner": "bun /work/semio/x/script.ts repo test",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  },
+  {
+   "name": "injected tables replace the authored ones",
+   "rows": [
+    {
+     "pid": 1,
+     "parent": 0,
+     "group": 1,
+     "rssKilobytes": 1024,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:01:00 2026",
+     "command": "/sbin/launchd"
+    },
+    {
+     "pid": 160,
+     "parent": 1,
+     "group": 160,
+     "rssKilobytes": 2048,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:40:00 2026",
+     "command": "sleep 100 warden-test-root"
+    },
+    {
+     "pid": 161,
+     "parent": 160,
+     "group": 161,
+     "rssKilobytes": 40960,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:41:00 2026",
+     "command": "hog 40MB warden-test-a"
+    },
+    {
+     "pid": 162,
+     "parent": 160,
+     "group": 162,
+     "rssKilobytes": 40960,
+     "stopped": false,
+     "elapsedSeconds": 60,
+     "start": "Tue Nov 24 02:42:00 2026",
+     "command": "hog 40MB warden-test-b"
+    }
+   ],
+   "tables": {
+    "roots": [
+     "warden-test-root"
+    ],
+    "never": [
+     "warden-test-b"
+    ],
+    "kinds": [
+     {
+      "name": "a",
+      "rank": 10,
+      "pattern": "warden-test-a",
+      "actions": [
+       "suspend",
+       "cancel"
+      ],
+      "signal": "SIGKILL",
+      "scope": "tree"
+     },
+     {
+      "name": "b",
+      "rank": 20,
+      "pattern": "warden-test-b",
+      "actions": [
+       "cancel"
+      ],
+      "signal": "SIGTERM",
+      "scope": "process"
+     }
+    ]
+   },
+   "expect": [
+    {
+     "id": "161.0c1596d7",
+     "pid": 161,
+     "parent": 160,
+     "kind": "a",
+     "rank": 10,
+     "elapsedSeconds": 60,
+     "megabytes": 40,
+     "suspended": false,
+     "suspendedSeconds": 0,
+     "canSuspend": true,
+     "canCancel": true,
+     "start": "Tue Nov 24 02:41:00 2026",
+     "owner": "sleep 100 warden-test-root",
+     "scope": "tree",
+     "signal": "SIGKILL"
+    }
+   ]
+  }
+ ],
+ "tables": {
+  "darwin": "    1     0     1  12144 Ss   10-09:04:35 Fri Nov 13 17:42:44 2026     /sbin/launchd\n 2908 66505 66484 865040 R       02:55:19 Mon Nov 23 23:52:00 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🤝️shared-worktree/🔁️replica/🛟️supervisor/🟦️.ts --boot-child run\n 9362     1  9362  16656 Ss   01-05:11:39 Sun Nov 22 21:35:40 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🛰️sidecar/🟦️.ts cache\n26616 26264 97578 679024 RN         00:36 Tue Nov 24 02:46:43 2026     rustc --crate-name semio_framework_kernel_identity --edition=2021 /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust/../../🦀️.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -Z embed-metadata=no -C opt-level=s -C linker-plugin-lto -C codegen-units=16 --remap-path-prefix=/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel=🧰️framework/🔨️modules/🎠️kernel --remap-path-prefix=/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🪪️identity/📦️packages/🦀️rust=semio-framework-kernel-identity-0.1.0 --remap-path-prefix=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b=/cargo/build-dir --remap-path-prefix=/Users/ueli/Documents/semio/.cache/b/t/m/r/9171f2f44c79a380/toolchains/nightly-2026-07-20-aarch64-apple-darwin/lib/rustlib/src/rust=/rustc/9f36de775bc636c8e88c31a173c2bcb6995956a0 --warn=rust_2018_idioms --warn=future_incompatible --warn=clippy::all --warn=unused_qualifications --warn=unused_lifetimes --warn=unsafe_op_in_unsafe_fn --warn=clippy::unnecessary_wraps --warn=clippy::semicolon_if_nothing_returned --warn=clippy::redundant_clone --warn=clippy::needless_pass_by_value --warn=clippy::map_unwrap_or --warn=clippy::inefficient_to_string --warn=clippy::cloned_instead_of_copied --check-cfg cfg(docsrs,test) --check-cfg cfg(feature, values()) -C metadata=5d518a18a525a2ba -C extra-filename=-1ea076fb7180216f --out-dir /private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-kernel-identity/1ea076fb7180216f/out --target wasm32-wasip2 -C strip=symbols -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/proc-macro2/5f1747865948dc93/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/quote/025137066dac1322/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive/ccf30cc681b12fd3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive-expansion/94a56f5c98355f74/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/serde_derive/e4727d3da3863338/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/syn/08bd6c06df5b1904/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/unicode-ident/e2269eccff0054bc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/itoa/16454adb1adb5957/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/memchr/9ee5b5dd2b0b5faf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor/86293383cadca981/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-failure/345c095b003fa525/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-job-publication/d827cc05251701df/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-pack/7ff2eb7953f5bdf1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-retained-context/efb4e38e9a7f40cc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-retained-turn/ef5447c2ea3b08f1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor-vocabulary/7d9159998aaf1059/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async/81aa39c236cd1d71/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async-slots/7fdefea4621a51e3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-async-timer/f7b1d318542db196/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-deflate/334a175dfab855dc/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-diagnostic/271070f1fca5bbc3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl/0cd6d274d87fee51/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-lexical/1b24b423b627ee37/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-notation/16c8bee9153c2710/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record/912934e84558f6c5/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-emission/c9cf781b2bca4ce2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-model/c9c319a019c65860/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-record-ownership/66f592949e2e7a74/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-syntax/2a86840b18221c5f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-dsl-token/fc70ce6c1158cc09/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-hash/b5fec1ef898e1420/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-base64/e8d6e30858f89979/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-control/121f79e06f4e74ec/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-io-failure-owner/94150ee4dc5339dd/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job/67505871ae70ad18/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-capture/4bc7f2775c18d418/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-clock/af886b0073c7e968/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-context/24c231161ea1738d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-failure/c54e38f2fe7d7c3b/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-native-encoding/bbe271d8925f1fde/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-native-turn/76e31b522620a4aa/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-outcome/4f0ad79a66f72970/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-outcome-borrow/7b345c75409b7994/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-park/943298ffc9573241/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-payload/2bb5494f2fd18bd5/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-receiving/5c4f7f94f6b3b10a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-recorded-clock/ad068611ea9be124/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-replacement/35a1596fe5cf57d0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return/7049697576beeeb9/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-book/e271529a6c7abeea/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-budget/f9921fe516379897/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-return-escrow-publication/3b02ca4c960661b6/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-job-work-grant/c5c8ca3981eb03d1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-mutation-diff/721ebaccfc49c9e7/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-error/c822af566d836811/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json/1a13170e4e589712/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json-canonical/6274548323c9a2ff/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-json-float/f68bc8df6a1b7cad/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-pack-source/d8a99a030f3f7036/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication/7b42d218ef83320d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-causal/e515c96c01bb66de/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-codec/7d0abf235853c903/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-command-ingress/c04e67c3d93c3517/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-conflict/f50b2f3d7f7af37c/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-crypto/630ef92369d0cbf0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-edit/8381474aaf8dc582/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-error/aecb8ac51b2d422e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-format/ea5a80e9b5b3bbc2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-frames/ae8f8a8c91f8f544/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-history/9c95247eaaa25ba1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-history-index/ef84fedcc4dcd145/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-ids/bba556538a09e707/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-interaction/8d607d3f08a8a045/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-local-interaction/55b1267f4364a973/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-mutation/cdedd22232455030/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-mutation-messages/4ba7a3b6ffc8eabf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-presence/e4defb3b6786bcef/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained/fc6d621c89028207/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-field/71a9bb5e3a6fb53e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-field-prep/8711fea779b326b0/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-retained-key/f37c9a817f619ef1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication-wire-core/1c755bb97aaad6d2/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-schema-state/98673b236b58ffa1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-trace/1c38aea7c0621674/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value/400d896a65b82351/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-allocation-return/f42f7dd02abeb083/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-call/e7eb648b58b15c63/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-selection/d1fc3e3fc58f7510/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-source/41ab69cd3538bcf4/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-clone-source-lease/6aad50b911a43dbf/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-contract/7963629c036e73db/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-physical/804dd784fdfc5214/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-control-reply/3d1183796f132194/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-equality/915d005d6781be8a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-factory/2327abd2ae24492c/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-intrinsic/69c0600fd2a7c13f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-array-backing/bf03bbabc23d8126/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-bounded-ordering/b1fe19c707019fb3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-clone-backing/84fc98fe59fd5348/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-clone-engine/9e48873124908820/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-cursor-backing/10b83f0ca0b2e332/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-decode-handoff/9a7dcf76d27cd420/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-decoding/32126d330f91b76e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-default/8344ceedff5fe6cb/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-dynamic-clone/1100abede916b6e3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-encoding/3e288287aef5fc68/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-list-receiver/3629209ed846c2ff/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-number/8b067f029636ca16/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-ordered-engine/5b606d3420c2f710/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-outcome/085a76bb894cef8a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-owned/0595edfdd22f7600/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiver-protocol/46b370d62f0d2f38/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-contract/9f538856cb1eab0a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-frame/15db57d9b8c15aea/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-receiving-original/c2c8d3ce056d8461/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-reservation/ba4020f2933812ac/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-schema/1691348236c33000/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-schema-engine/872c799f23ac0cfd/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-engine/c60f749a01ff513e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-field/0806dfd4790a5046/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-shared-slots/b7b36de926b95954/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-slice-equality/1c0983b8f4f34b7d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-sorted/5960cd3ac69e5d6e/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-source/d951662c6987531d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-storage/afe91f71592ffe83/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-tree-engine/66f72047d699ec5d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-ordered/0a2c95dac3b3d347/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-original-slot/28dee66af0fcb05f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-original-vector/197eb6ce1b85f077/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged/7956d03d8707f768/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-clone/e17280b327048c48/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-list/5865a5994eb75c77/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-paged-text/f77668b140ca6787/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-persistent/d4b65d612a4f7248/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-read/75760270e0697cc1/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-receiving/3cadb1727f1d086d/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-clone/9d7997a3ba441966/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-map/c2f60ae60cf71648/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-map-edit/5fcb99f47bce0528/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retained-work/3d607109b948f4fa/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retirement/59522cba1c650f62/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-retirement-contract/b49a3f263105738a/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-shared-issuance/41de882639547c47/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-shared-utf8/7f69111c615a7af3/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-snapshot-projection/912add794263385f/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-sort/e6f99d79831a3e47/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-source-turn/403dd8086899e106/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde/ce29b5acfd613309/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde_core/8e1aee4e314cfbde/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde_json/745380748d982563/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/zmij/a861f6f07b315ceb/out -L dependency=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-kernel-identity/1ea076fb7180216f/out --extern semio_framework_actor=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-actor/86293383cadca981/out/libsemio_framework_actor-86293383cadca981.rmeta --extern replication=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-replication/7b42d218ef83320d/out/libprotocol-7b42d218ef83320d.rmeta --extern semio_framework_value=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value/400d896a65b82351/out/libsemio_framework_value-400d896a65b82351.rmeta --extern semio_framework_value_derive=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/release/build/semio-framework-value-derive/ccf30cc681b12fd3/out/libsemio_framework_value_derive-ccf30cc681b12fd3.dylib --extern semio_framework_value_native_owned=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/semio-framework-value-native-owned/0595edfdd22f7600/out/libsemio_framework_value_native_owned-0595edfdd22f7600.rmeta --extern serde=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/b/wasm32-wasip2/release/build/serde/ce29b5acfd613309/out/libserde-ce29b5acfd613309.rmeta -Z threads=0 -C link-arg=--max-memory=536870912 -C link-arg=-zstack-size=8388608 -Z threads=0 -C link-arg=--max-memory=536870912 -C link-arg=-zstack-size=8388608 -Z checksum-hash-algorithm=blake3 --remap-path-scope=all -Z temps-dir=/private/tmp/claude-501/-Users-ueli-Documents-semio/caf759d9-ccba-4796-9909-827125acd710/scratchpad/p4/tA/z\n88190 77783 88190  26048 Ss+        23:10 Tue Nov 24 02:24:09 2026     /Users/ueli/Documents/semio/.cache/b/t/m/bun/90987a3a16d7db556d886ac3d551e7b6d3edf0a1cf43acaed622e8676be1d12f/bun ./📜️script.ts micro-commit diff\n",
+  "linux": "    1     0     1  11652 Ss   12-03:04:05 Mon Nov 10 08:00:00 2026 /sbin/init\n 4242  4200  4242 204800 T       01:02:03 Tue Nov 24 02:42:24 2026 /home/dev/.cache/b/t/m/bun/abc/bun /home/dev/ws/x/script.ts repo test\n 4243  4242  4242      0 Z          00:05 Tue Nov  3 02:43:24 2026 [sh] <defunct>\n 4250     1  4250   9000 S+         00:59 Tue Nov 24 02:44:24 2026 /usr/bin/python3 -m http.server\n 4300  4242  4242 512000 Tl   2-01:00:00 Tue Nov 24 02:45:24 2026 rustc --crate-name a /home/dev/ws/a.rs\n"
+ }
+}

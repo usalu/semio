@@ -26,6 +26,7 @@ body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -86,34 +87,11 @@ THETA_I = _example.THETA_I_WINTER_C
 THETA_E = _example.THETA_E_DESIGN_C
 DESIGN_DT = _example.D_THETA_DESIGN_K
 PEAK_KW = (H_T_VAL + H_V_VAL) * DESIGN_DT / 1000.0
-GAIN_LIMIT = 12.0
+Q_H_KWH_A = _example.Q_H_KWH_PER_A
 
 BASE_Y = -1.15
 WIDE_ORIGIN = np.array([-4.4, -0.75, 0.0])
 WIDE_W, WIDE_H = 8.8, 2.75
-#region DIN citation
-def _din_ref(text: str, title=None):
-    """📖 Standards citation for the beat in the top-right corner, flowed into lines that stay right of the beat title."""
-    room = config.frame_width / 2 - 0.30 - (title.get_right()[0] + 0.30) if title is not None else 9.0
-
-    def line(content: str):
-        return body_text(content, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-
-    lines = []
-    for part in text.replace("\n", " · ").split(" · "):
-        if lines and line(f"{lines[-1]} · {part}").width <= room:
-            lines[-1] += f" · {part}"
-        else:
-            lines.append(part)
-    ref = VGroup(*[line(content) for content in lines]).arrange(DOWN, buff=0.06, aligned_edge=RIGHT)
-    if ref.width > room:
-        ref.scale_to_fit_width(room)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Shared visual motifs
 # The whole chapter is told on one dataset: a synthetic year of heating power.
 # Beat 1 reads its height and its area, Beat 2 names its peak, Beat 3 sorts it
@@ -122,21 +100,42 @@ def _din_ref(text: str, title=None):
 # subject (Beat 2), and every explained object fades before the next one enters.
 
 #region Data
-def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
-    """📉 Synthetic annual heating-power profile, normalised to its own peak.
-
-    Shape only — a cosine season plus multi-day weather driving ``θ_i − θ_e``
-    below the building heating limit that the free gains lower to ``GAIN_LIMIT``, one sample per hour of the year. It is deliberately
-    not measured data; multiplying by ``PEAK_KW`` is what gives the beats real
-    kW/kWh.
-    """
+def _outdoor_series(n: int, seed: int) -> np.ndarray:
+    """🌡 Synthetic hourly outdoor temperature: a cosine season plus multi-day weather."""
     rng = np.random.default_rng(seed)
     t = np.linspace(0.0, 1.0, n)
     window = 240
     noise = np.convolve(rng.normal(0.0, 1.0, n + 2 * window), np.ones(window) / window, "same")[window:window + n]
-    theta_e = 9.0 - 9.5 * np.cos(2 * np.pi * t) + 3.0 * noise / noise.std()
-    load = np.maximum(0.0, GAIN_LIMIT - theta_e)
+    return 9.0 - 9.5 * np.cos(2 * np.pi * t) + 3.0 * noise / noise.std()
+
+
+def _shaped_load(gain_limit: float, theta_e: np.ndarray) -> np.ndarray:
+    """📉 Heating power proportional to ``gain_limit − θ_e``, normalised to its own peak."""
+    load = np.maximum(0.0, gain_limit - theta_e)
     return load / load.max()
+
+
+def _solve_gain_limit(theta_e: np.ndarray) -> float:
+    """🎯 Balance temperature at which the synthetic year integrates to ``Q_H_KWH_A`` — the one annual demand every chapter quotes."""
+    lo, hi = 8.0, 16.0
+    for _ in range(60):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if float(_shaped_load(mid, theta_e).sum()) * PEAK_KW < Q_H_KWH_A else (lo, mid)
+    return (lo + hi) / 2
+
+
+GAIN_LIMIT = _solve_gain_limit(_outdoor_series(PROFILE_N, 5))
+
+
+def _annual_load(n: int = PROFILE_N, seed: int = 5) -> np.ndarray:
+    """📉 Synthetic annual heating-power profile, normalised to its own peak.
+
+    Shape only — a cosine season plus multi-day weather driving ``θ_i − θ_e``
+    below the free-gain balance temperature ``GAIN_LIMIT``, one sample per hour of the year, solved so
+    that the year integrates to ``Q_H_KWH_A``. It is deliberately not measured data; multiplying by
+    ``PEAK_KW`` is what gives the beats real kW/kWh.
+    """
+    return _shaped_load(GAIN_LIMIT, _outdoor_series(n, seed))
 
 
 def _plot_samples(values: np.ndarray, n: int = PLOT_N) -> np.ndarray:
@@ -445,7 +444,7 @@ class Beat1_LeistungUndEnergie(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Power is a rate, energy is an amount", "Leistung ist eine Rate, Energie eine Menge"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "symbole")), subtitle)
+        din = reference_chip(_references.cite(("din-v-4108-6", "symbole")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "zahlen"))
@@ -644,7 +643,7 @@ class Beat2_Normheizlast(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The standard heating load per DIN EN 12831-1:2017-09", "Die Norm-Heizlast nach DIN EN 12831-1:2017-09"))
-        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "din-ts-12831-1"), subtitle)
+        din = reference_chip(_references.cite(("din-en-12831-1", "abschn6"), "din-ts-12831-1"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "spitze"))
@@ -910,7 +909,7 @@ class Beat3_Jahresdauerlinie(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("The annual load duration curve", "Die Jahresdauerlinie"))
-        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), ("din-v-4108-6", "bilanz")), subtitle)
+        din = reference_chip(_references.cite(("din-en-12831-1", "abschn6"), ("din-v-4108-6", "bilanz")), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "kurve"))
@@ -1106,7 +1105,7 @@ class Beat4_RichtigAuslegen(Scene):
         PEAK_F = 0.68
 
         subtitle = section_heading(tr("Size for the peak, not for the mean", "Auslegen auf die Spitze, nicht auf den Mittelwert"))
-        din = _din_ref(_references.cite(("din-en-12831-1", "abschn6"), "vdi-4645"), subtitle)
+        din = reference_chip(_references.cite(("din-en-12831-1", "abschn6"), "vdi-4645"), subtitle)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "kurve"))

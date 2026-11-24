@@ -1,8 +1,8 @@
 //! 🕹️ Handles: viewport grips for layer interfaces, groundwater, footing size, embedment and position, wall dimensions, slope geometry, pile length, diameter, count and position, embedded-wall height, embedment and prop level, anchor lengths and inclination, pile-group spacing and counts, and the piezometric level of a layer.
-//! The drag parameter `s` of a grip along an axis is the coordinate in metres along that axis (it rests at the projection of its anchor, see `rest_parameter`); the other kinds measure it from their anchor (radians for angular grips). The builders below state every field as `base + k * (s - rest)`, a grip along an axis stores `base - k * rest`.
+//! Every grip is declared relative to its current value (`base + k * s`, limits around zero) and converted by `rebased` to the absolute drag parameter of the framework (`rest_parameter`: the anchor along its axis, the angle of an angular grip), so the value read at the rest position is the current value exactly; the limits are widened to the rest, so the keyboard and the value field never clamp an untouched grip.
 
 use super::kit::*;
-use super::scene::projection_kit::handle_kit::choice_handle;
+use super::scene::projection_kit::handle_kit::{choice_handle, rebased, with_rest_in_limits};
 use super::layout::{wall_stem_x, Layout, Placement};
 use super::mechanics as mech;
 use super::cases as case_scene;
@@ -31,12 +31,8 @@ struct Grip {
 
 impl Grip {
     fn build(self) -> Handle {
-        let rest = match &self.kind {
-            HandleKind::ScalarAlong { axis } => self.anchor.dot(axis),
-            _ => 0.0,
-        };
-        let writes = self.writes.into_iter().map(|write| FieldBinding { map: Affine { base: write.map.base - write.map.k * rest, k: write.map.k }, ..write }).collect();
-        Handle {
+        let writes = self.writes;
+        with_rest_in_limits(rebased(Handle {
             id: self.id,
             entity: self.entity,
             kind: self.kind,
@@ -44,9 +40,9 @@ impl Grip {
             grip: self.style,
             writes,
             snap: SnapRule { grid: Some(GRID), increment: None, targets: Vec::new(), catalogue: Vec::new(), tolerance: 0.02 },
-            limits: (self.limits.0 < self.limits.1).then(|| Interval::new(self.limits.0 + rest, self.limits.1 + rest)),
+            limits: (self.limits.0 < self.limits.1).then(|| Interval::new(self.limits.0, self.limits.1)),
             accessible_name: LocalizedCopy::new(self.names.0, self.names.1),
-        }
+        }))
     }
 }
 
@@ -338,8 +334,8 @@ fn slip_circles(d: &En1997Snapshot, layout: &Layout, out: &mut Vec<Handle>) {
         let span = mech::slope_span(s);
         out.push(Grip { id: format!("{}:width", s.id), entity: entity.clone(), kind: HandleKind::FaceOffset { normal: pose.dir(&Vec3::Y) }, anchor: pose.at(0.0, span / 2.0, s.height / 2.0), style: GripStyle::Arrow, writes: vec![metres(path("width"), span, 2.0)], limits: range(span, 2.0, 1.0, 500.0), names: named("Width of slope", "Breite der Böschung", &s.id) }.build());
         out.push(Grip { id: format!("{}:circle-x", s.id), entity: entity.clone(), kind: HandleKind::Translate { axis: pose.dir(&Vec3::X) }, anchor: centre.clone(), style: GripStyle::Ring, writes: vec![metres(path("circleCentreX"), circle.xc, 1.0), hold("circleCentreZ", circle.yc), hold("circleRadius", circle.r)], limits: (-1.0e3, 1.0e3), names: named("Slip circle centre along the slope of", "Gleitkreismittelpunkt entlang der Böschung von", &s.id) }.build());
-        out.push(Grip { id: format!("{}:circle-z", s.id), entity: entity.clone(), kind: HandleKind::Translate { axis: pose.dir(&Vec3::Z) }, anchor: centre.clone(), style: GripStyle::Ring, writes: vec![hold("circleCentreX", circle.xc), metres(path("circleCentreZ"), circle.yc, 1.0), hold("circleRadius", circle.r)], limits: (-1.0e3, 1.0e3), names: named("Slip circle centre height of", "Gleitkreismittelpunkt Höhe von", &s.id) }.build());
-        out.push(Grip { id: format!("{}:circle-r", s.id), entity, kind: HandleKind::Radial { centre: centre.clone() }, anchor: pose.at(circle.xc, mech::slope_span(s) / 2.0, circle.yc - circle.r), style: GripStyle::Diamond, writes: vec![hold("circleCentreX", circle.xc), hold("circleCentreZ", circle.yc), metres(path("circleRadius"), circle.r, 1.0)], limits: range(circle.r, 1.0, 0.5, 4.0 * s.height.max(1.0) + 50.0), names: named("Slip circle radius of", "Gleitkreisradius von", &s.id) }.build());
+        out.push(Grip { id: format!("{}:circle-z", s.id), entity: entity.clone(), kind: HandleKind::Translate { axis: pose.dir(&Vec3::Z) }, anchor: centre.clone(), style: GripStyle::Ring, writes: vec![metres(path("circleCentreZ"), circle.yc, 1.0), hold("circleCentreX", circle.xc), hold("circleRadius", circle.r)], limits: (-1.0e3, 1.0e3), names: named("Slip circle centre height of", "Gleitkreismittelpunkt Höhe von", &s.id) }.build());
+        out.push(Grip { id: format!("{}:circle-r", s.id), entity, kind: HandleKind::Radial { centre: centre.clone() }, anchor: pose.at(circle.xc, mech::slope_span(s) / 2.0, circle.yc - circle.r), style: GripStyle::Diamond, writes: vec![metres(path("circleRadius"), circle.r, 1.0), hold("circleCentreX", circle.xc), hold("circleCentreZ", circle.yc)], limits: range(circle.r, 1.0, 0.5, 4.0 * s.height.max(1.0) + 50.0), names: named("Slip circle radius of", "Gleitkreisradius von", &s.id) }.build());
     }
 }
 

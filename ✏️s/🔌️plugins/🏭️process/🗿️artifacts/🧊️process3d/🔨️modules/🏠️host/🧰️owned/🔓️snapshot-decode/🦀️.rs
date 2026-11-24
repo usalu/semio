@@ -201,7 +201,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
 
 impl Drop for Process3dSnapshotDecodeAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Process3d snapshot field reached Drop before publication or terminal-empty close");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "Process3d snapshot field reached Drop before publication or terminal-empty close");
     }
 }
 

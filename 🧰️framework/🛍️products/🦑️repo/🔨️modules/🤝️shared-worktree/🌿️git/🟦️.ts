@@ -1415,6 +1415,26 @@ export async function repairGitConfigV1(worktree:string,now:number,signal?:Abort
  }catch{return false;}
 }
 
+/** 🪢 Removes a `.git/shallow` that cuts history this machine holds in full. The file is machine-local (`gitSharedV1` does not list it): it states which commits the own object store lacks the parents of, so a copy from another machine, or a boundary whose objects arrived since, makes git treat a commit with parents as a root (`git log` ends there, a later history rewrite would drop the parents for good). Every listed commit is read raw (`cat-file commit` ignores the boundary), and when every commit, tree and blob behind all their parents is present the file is kept in `.cache/f/lost/<ms>-git-shallow/shallow` and removed. A boundary whose history is really absent, an unreadable entry and a git that cannot start leave the file alone. Returns whether the file was removed. */
+export async function repairGitShallowV1(worktree:string,now:number,signal?:AbortSignal):Promise<boolean>{
+ try{
+  const file=join(worktree,".git","shallow"),listed=await readFile(file,"utf8").catch(()=>undefined);
+  if(listed===undefined)return false;
+  const parents=new Set<string>();
+  for(const oid of listed.split("\n").map(line=>line.trim()).filter(line=>line!=="")){
+   const raw=oidPattern.test(oid)?await git(worktree,["cat-file","commit",oid],{signal}):null;
+   if(raw===null||raw.code!==0)return false;
+   for(const line of raw.out.toString("utf8").split("\n\n",1)[0]!.split("\n"))if(line.startsWith("parent "))parents.add(line.slice(7).trim());
+  }
+  if(parents.size>0&&(await git(worktree,["rev-list","--objects","--quiet",...parents],{signal}))?.code!==0)return false;
+  const lost=join(worktree,".cache","f","lost",`${String(now).padStart(13,"0")}-git-shallow`);
+  await mkdir(lost,{recursive:true});
+  await copyFile(file,join(lost,"shallow"));
+  await unlink(file);
+  return true;
+ }catch{return false;}
+}
+
 /** ♻️ Forgets every cached verdict, signature and retry timer of a worktree (for tests and after a `.git` replacement). */
 export function forgetGitV1(worktree:string):void{
  stamps.delete(worktree);verdicts.delete(worktree);volumes.delete(worktree);versions=new Map();caseIgnored.delete(worktree);pinned.delete(worktree);trees.delete(worktree);signatures.delete(worktree);memory.delete(worktree);records.delete(worktree);retries.delete(worktree);for(const key of waits.keys())if(key.startsWith(`${worktree}\0`))waits.delete(key);

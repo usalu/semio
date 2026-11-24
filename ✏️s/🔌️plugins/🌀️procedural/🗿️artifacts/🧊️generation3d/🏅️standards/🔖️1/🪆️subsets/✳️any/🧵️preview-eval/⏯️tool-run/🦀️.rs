@@ -480,6 +480,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     pub fn new(owner: ArtifactInstanceOperationOwnerHandle, port: ToolRunJobPort, identity: ToolRunIdentity, preview_widget_ids: Vec<String>) -> Result<Self, Fault> {
         owner.with_mut::<O, _>(|held| {
             let (session, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
+            session.resume_preview_evaluation();
             for (window_id, _) in &link.windows {
                 session.note_window_tick_outcome(window_id, true, PREVIEW_EVAL_BOOKKEEPING_GRANT).map_err(|error| Fault::from(error.to_string()))?;
             }
@@ -590,8 +591,29 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
 }
 
 impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
+    /// 🛑️ Advances the session's preview cancellation one admitted step; `true` while it still drains. Nothing else drives it, so a cancelled preview never owed or dispatched another hop.
+    fn drain_cancellation(&self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let drained = self.owner.with_mut::<O, _>(|held| {
+            let Some((session, _)) = held.preview_eval_parts() else { return Ok(Ok(false)) };
+            if session.preview_cancellation_terminal_is_empty() {
+                return Ok(Ok(false));
+            }
+            let demand = session.next_preview_cancellation_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error| Fault::from(error.to_string()))?;
+            Ok(semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| session.preview_cancellation_step(effect)).map(|_| true))
+        });
+        match drained {
+            Ok(step) => step,
+            Err(fault) => Ok(fault.code.0 == "interactive-job.instance-owner-busy"),
+        }
+    }
+}
+
+impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if !self.closing && self.drain_cancellation(cx)? {
+            return Ok(None);
+        }
         if self.delivered {
             let demand = self.publication.retirement_demands()?;
             let publication = &mut self.publication;
@@ -620,7 +642,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
         let grant = cx.retained_grant();
         let turn = self.owner.with_mut::<O, _>(|held| {
             let (session, link) = held.preview_eval_parts().ok_or_else(preview_eval_session_closing)?;
-            let hop = next_preview_eval_hop(session, &link.windows);
+            let hop = if session.resume_preview_evaluation() { next_preview_eval_hop(session, &link.windows) } else { PreviewEvalHop::Wait };
             match hop {
                 PreviewEvalHop::Dispatch(index) => {
                     let (window_id, kind) = &link.windows[index];
@@ -703,6 +725,7 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.released&&self.drain_cancellation(cx)?{return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         if !self.publication.terminal_is_empty() {
             let demand = self.publication.retirement_demands()?;

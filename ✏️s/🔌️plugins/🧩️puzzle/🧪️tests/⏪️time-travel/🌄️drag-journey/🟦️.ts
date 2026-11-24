@@ -195,7 +195,7 @@ export const step3 = async (ctx: Ctx) => {
   const indicator = await indicators();
   verdict("windows-wear-the-time-travel-indicator", indicator.length > 0, { indicator: indicator.slice(0, 4) });
   const roster = await presenceText();
-  verdict("presence-roster-shows-no-editing-peer", roster === null || !/⏪|is editing|bearbeitet .* im Verlauf|bearbeitet den Verlauf/.test(roster), { roster, reading: "one tab, no peer: the ⏪ badge and the \"is editing\" notes (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers`) must stay absent; a live second peer needs a presence transport (hub), which this serve does not run" });
+  verdict("presence-roster-shows-no-editing-peer", roster === null || !/⏪|is editing|bearbeitet\b.*\bVerlauf\b/.test(roster), { roster, reading: "one tab, no peer: the ⏪ badge and the \"is editing\" notes (`🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-peers`) must stay absent; a live second peer needs a presence transport (hub), which this serve does not run" });
   const preview = await waitUntil(positions, (p) => placed(p, ctx.a!, ctx.p0![ctx.a!], ctx.dx!, ctx.dy!) && placed(p, ctx.c!, ctx.p0![ctx.c!], 0, 0), 15000);
   verdict("preview-is-state-before-target-plus-draft", placed(preview.value, ctx.a, ctx.p0[ctx.a], ctx.dx!, ctx.dy!) && placed(preview.value, ctx.b, ctx.p0[ctx.b], ctx.dx!, ctx.dy!), {
     a: preview.value[ctx.a],

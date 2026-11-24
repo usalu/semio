@@ -5,7 +5,7 @@ use crate::editor::sourcing::modes::edit::windows::grid::config::{
     GridWindowConfig, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT,
 };
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::schema::{append_grid_count_glyph_instances, append_kind_scene_meshes, box_parts, grid_placement, grid_scale, kind_instances_json, unit_box_mesh_json};
+use crate::schema::{append_grid_count_glyph_instances, append_kind_scene_meshes, box_parts, grid_placement, grid_scale, kind_copy_instances_json, unit_box_mesh_json};
 use crate::CurationSnapshot;
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::ObjectKind;
@@ -73,7 +73,7 @@ fn push_kind_copies(instances: &mut Vec<semio_framework_value::DslValue>, kind: 
     let copies = if line_behind { count.max(1) as usize } else { 1 };
     for copy in 0..copies {
         let z = position[2] + if line_behind { line_behind_offset(copy, SOURCING_CURATION_GRID_CELL) } else { 0.0 };
-        instances.extend(kind_instances_json(kind, [position[0], position[1], z], scale, false));
+        instances.extend(kind_copy_instances_json(kind, copy, [position[0], position[1], z], scale, false));
     }
 }
 

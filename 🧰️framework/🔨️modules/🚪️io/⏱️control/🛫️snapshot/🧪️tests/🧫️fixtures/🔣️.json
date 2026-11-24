@@ -38,11 +38,11 @@
   "publicationHeader": {
     "output": "originalOptionString",
     "nativeWords": 3,
-    "intermediateBytes": 1,
+    "intermediateHeaderBytes": 1,
     "requiredItems": 1,
     "capacityBytes": 0,
     "requiredDepth": 1,
-    "deniedCopy": "onlyIntermediateHeader",
+    "deniedCopy": "fullIntermediateRetirement",
     "deniedOutput": "originalReceivingFrame",
     "acceptedOutput": "sameCallerBacking",
     "closeAuthority": "independentCallerWallet",
@@ -59,27 +59,26 @@
     ],
     "layouts": [
       {
-        "nativeWordBytes": 4,
-        "headerBytes": 12,
-        "zeroCopyBytes": 1,
-        "oneShortCopyBytes": 12,
-        "exactCopyBytes": 13,
-        "measureCopyBytes": 1048576
-      },
-      {
         "nativeWordBytes": 8,
         "headerBytes": 24,
-        "zeroCopyBytes": 1,
-        "oneShortCopyBytes": 24,
-        "exactCopyBytes": 25,
-        "measureCopyBytes": 1048576
+        "copyBytes": {
+          "receive": {
+            "zero": 628,
+            "oneShort": 651,
+            "exact": 652
+          },
+          "cursor": {
+            "zero": 664,
+            "oneShort": 687,
+            "exact": 688
+          }
+        }
       }
     ],
     "cases": [
       "zero",
       "oneShort",
-      "exact",
-      "measure"
+      "exact"
     ],
     "admissionDenials": [
       "maximumItems",

@@ -340,3 +340,12 @@ with open(os.path.join(HERE, "🔣️.json"), "w", encoding="utf8") as f:
 print(f"[DEBUG] mass {MASS_KG} kg; bones " + ", ".join(f"{k} {v[0]:.3f}" for k, v in MASS.items()))
 for d in (50, 100, 200, 500):
     print(f"[DEBUG] 1:{d} body {len(SC[d].body)} thermal {len(SC[d].thermal)} structure {len(SC[d].structure)} shapes " + "/".join(str(len(v)) for v in reps[str(d)]["geometry"].values()))
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch SO, the last step: ops/used-dog-waste-station.json of the umbrella ticket of 2026-11-22
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/SO")
+    from lib import repair_file as _repair_file
+    _repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-dog-waste-station")

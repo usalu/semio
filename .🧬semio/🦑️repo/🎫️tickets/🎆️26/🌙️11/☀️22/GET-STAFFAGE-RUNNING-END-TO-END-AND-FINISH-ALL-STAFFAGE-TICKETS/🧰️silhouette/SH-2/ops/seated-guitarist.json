@@ -1,0 +1,3 @@
+[
+{"op":"shape","scale":"100","view":"elevation","id":"shank-r","shape":{"id":"shank-r","bone":"shank-r","role":"body","z":4.3,"filled":true,"tone":0.29000000000000004,"region":"jeans","material":"denim","kind":"poly","points":[[-0.06542,0.0013],[-0.06542,0.0522],[-0.05012,0.0594],[-0.03792,0.0619],[-0.03182,0.0623],[0.07818,0.0643],[0.26818,0.0568],[0.36818,0.0593],[0.39218,0.0548],[0.39218,0.0013]],"closed":true,"solid":{"kind":"revolved","axisBone":"shank-r","axis":"u","axisX":0.0013,"axisZ":0,"mirror":true}}}
+]

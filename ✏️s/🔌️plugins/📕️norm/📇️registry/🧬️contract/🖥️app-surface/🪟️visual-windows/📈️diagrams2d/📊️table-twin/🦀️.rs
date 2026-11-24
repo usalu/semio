@@ -1,6 +1,6 @@
 //! 📊️ Table twin: the accessible tabular alternative of a diagram plus its screen-reader description. See [`super`].
 
-use super::*;
+use {super::*, crate::chrome};
 
 /// 📋️ One formatted table-twin row set: column headers with units and string cells per row.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -45,20 +45,36 @@ pub fn table_twin(diagram: &Diagram2d, locale: Locale) -> TableTwin {
     }
 }
 
-/// ♿️ Screen-reader description: title, description, axes with units and ranges, series and markers with their utilisation.
-pub fn accessible_description(diagram: &Diagram2d, locale: Locale) -> String {
-    let t = |en: &str, de: &str| if locale == Locale::En { en.to_string() } else { de.to_string() };
-    let mut parts = vec![copy_text(&diagram.title, locale).to_string(), diagram.basis().map_or_else(String::new, |basis| copy_text(basis, locale).to_string()), copy_text(&diagram.description, locale).to_string()];
+/// 📝️ Basis, description, axes with ranges and series of a diagram: the part of every description that does not grow with the marker count.
+fn description_head(diagram: &Diagram2d, locale: Locale) -> Vec<String> {
+    let mut parts = vec![diagram.basis().map_or_else(String::new, |basis| copy_text(basis, locale).to_string()), copy_text(&diagram.description, locale).to_string()];
     for (i, axis) in diagram.axes.iter().enumerate() {
         let (lo, hi) = resolve_domain(diagram, i);
-        let name = if i == 0 { t("Horizontal axis", "Horizontale Achse") } else { t("Vertical axis", "Vertikale Achse") };
-        parts.push(format!("{name}: {} [{}], {} {} {} {}", copy_text(&axis.label, locale), axis.unit, t("from", "von"), format_number(lo, locale), t("to", "bis"), format_number(hi, locale)));
+        let name = if i == 0 { chrome("Horizontal axis", "Horizontale Achse", locale) } else { chrome("Vertical axis", "Vertikale Achse", locale) };
+        parts.push(format!("{name}: {} [{}], {} {} {} {}", copy_text(&axis.label, locale), axis.unit, chrome("from", "von", locale), format_number(lo, locale), chrome("to", "bis", locale), format_number(hi, locale)));
     }
-    parts.push(format!("{}: {}", t("Series", "Datenreihen"), diagram.series.iter().map(|s| copy_text(series_label(s), locale)).collect::<Vec<_>>().join(", ")));
+    parts.push(format!("{}: {}", chrome("Series", "Datenreihen", locale), diagram.series.iter().map(|s| copy_text(series_label(s), locale)).collect::<Vec<_>>().join(", ")));
+    parts
+}
+
+/// 📝️ Bounded canvas description: [`description_head`] and a marker count with the worst utilisation. The surface's accessible description is a fixed-capacity text, so it summarises instead of enumerating every marker; [`accessible_description`] and the table twin keep the full list.
+pub fn surface_description(diagram: &Diagram2d, locale: Locale) -> String {
+    let mut parts = description_head(diagram, locale);
+    if let Some(worst) = diagram.markers.iter().filter_map(|m| m.utilisation).reduce(f64::max) {
+        parts.push(format!("{}: {}, {} {}", chrome("Markers", "Markierungen", locale), diagram.markers.len(), chrome("worst utilisation", "höchste Ausnutzung", locale), format_percent(worst, locale)));
+    }
+    parts.retain(|p| !p.is_empty());
+    parts.join(". ")
+}
+
+/// ♿️ Screen-reader description: title, description, axes with units and ranges, series and markers with their utilisation.
+pub fn accessible_description(diagram: &Diagram2d, locale: Locale) -> String {
+    let mut parts = vec![copy_text(&diagram.title, locale).to_string()];
+    parts.extend(description_head(diagram, locale));
     for m in &diagram.markers {
         let shape = marker_shape_name(m.shape, locale);
-        let u = m.utilisation.map_or_else(String::new, |u| format!(", {} {}", t("utilisation", "Ausnutzung"), format_percent(u, locale)));
-        parts.push(format!("{} ({shape}) {} {}; {}{u}", copy_text(&m.label, locale), t("at", "bei"), format_number(m.at.x, locale), format_number(m.at.y, locale)));
+        let u = m.utilisation.map_or_else(String::new, |u| format!(", {} {}", chrome("utilisation", "Ausnutzung", locale), format_percent(u, locale)));
+        parts.push(format!("{} ({shape}) {} {}; {}{u}", copy_text(&m.label, locale), chrome("at", "bei", locale), format_number(m.at.x, locale), format_number(m.at.y, locale)));
     }
     parts.retain(|p| !p.is_empty());
     parts.join(". ")

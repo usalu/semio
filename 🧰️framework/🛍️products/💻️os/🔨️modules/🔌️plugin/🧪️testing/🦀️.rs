@@ -33,17 +33,7 @@ use semio_framework::manifest::ActionInvocation as ManifestActionInvocation;
 use semio_framework::kernel::{ActorId, Effect, InvocationResult};
 use semio_framework::{ActionKind, AppIo, ConfigSpec, Fault, FaultCode, FaultOrigin, MediaPortSpec, ViewModel, ViewWindowInstance, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID};
 use semio_ui_contract::BuiltNode;
-/// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
-/// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
-/// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
-/// (registrar-request: drop it from this crate's `Cargo.toml`, add `semio-ui-contract`
-/// and `semio-ui-runtime` in its place). `Ui*Node`/`UiPresence`/`UiControlNode`/
-/// `ActionDescriptor` have no drop-in replacement of the same name — see
-/// `📓️recipe-plugin.md` in this ticket's folder for the variant-by-variant mechanical
-/// translation (`UiNode::Text{..}` → `ui::text(..)`, `ActionDescriptor` → `ActionBinding`, …).
-/// `ui::*` is the contract crate's own builder DSL (`ui::stack()`, `ui::button()`, …); the bare
-/// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
-/// too, since this module already used every one of the old wgpu-target types unqualified.
+/// 🧬️ The UI contract vocabulary every UI-bearing plugin imports through this one block, including the `ui::*` builder DSL.
 use semio_ui_contract::*;
 use semio_ui_runtime::ComponentTree;
 use serde_json::Value;
@@ -61,13 +51,9 @@ use semio_ui_layout::layout::ContextMenuItemSpec;
 use semio_ui_layout::layout::ContextMenuRequest;
 use semio_ui_layout::layout::WindowEngagement;
 use semio_ui_layout::layout::WindowMeasure;
-/// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
-/// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
-/// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
+/// 🎞️ The media value vocabulary backing the artifact app media ports.
 use semio_framework::{Media, MediaError, MediaFingerprint};
-/// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
-/// 2). Defined in `semio_framework` so plugins and the OS product
-/// share one definition without an inverted dependency; re-exported here verbatim.
+/// 🏅️ Standards and subsets dialect vocabulary shared with the OS product.
 use semio_framework_artifact_reference::{ArtifactDialect, Dialect};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};

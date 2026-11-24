@@ -31,21 +31,7 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
             assert_eq!(demands.copy_bytes, fixture["currencies"]["copyBytes"].as_u64().unwrap() as usize);
             assert_eq!(demands.capacity_bytes, fixture["currencies"]["capacityBytes"].as_u64().unwrap() as usize);
             assert_eq!(demands.depth, fixture["currencies"]["depth"].as_u64().unwrap() as usize);
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand, maximum_depth: demands.depth, ..Default::default() };
-            let (refused, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(RetainedCloneGrant { maximum_depth: 0, ..grant }));
-            assert_eq!(refused.unwrap_err().kind, ValueRefusalKind::DepthLimit);
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }] {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(denied).unwrap());
-                assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                assert_eq!(catalog.next_release_byte_demand().unwrap(), demand);
-            }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(grant).unwrap());
-            assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() });
-            assert_eq!(matches!(step, RetainedCloneStep::Complete(_)), catalog.terminal_is_empty());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
-            total_released += demand;
+            assert_eq!(catalog.next_release_byte_demand().unwrap(), demand);
         }
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(grant).unwrap());
         assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() });

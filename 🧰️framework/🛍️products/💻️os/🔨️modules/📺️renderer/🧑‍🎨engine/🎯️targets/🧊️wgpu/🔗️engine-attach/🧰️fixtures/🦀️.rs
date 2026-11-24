@@ -21,7 +21,7 @@ pub fn drop_engine_surface(surface_id: &str) {
     assert_eq!(begin_engine_surface_close_token(token), Ok(true), "the attached surface begins closing");
     let mut input = InputState::<ActionDescriptor>::default();
     let mut turns = 0usize;
-    while !with_engine_close_context(1, |context| close_engine_surface_step(token, context, &mut input)) {
+    while !with_engine_close_context(1 << 20, |context| close_engine_surface_step(token, context, &mut input)) {
         turns += 1;
         assert!(turns < 262_144, "the attached surface reaches a fixed terminal witness");
     }

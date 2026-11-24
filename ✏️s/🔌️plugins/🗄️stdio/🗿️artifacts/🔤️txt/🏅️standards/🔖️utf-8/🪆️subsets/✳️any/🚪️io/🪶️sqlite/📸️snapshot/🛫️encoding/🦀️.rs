@@ -47,7 +47,7 @@ pub(super) fn encode(source:&TxtSnapshot,encoding:SnapshotEncoding,control:&mut 
  let mut observer=|event:NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Vec<u8>,SnapshotReceivingOutput<IoPayload>,NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
   let before_work=native.actual_work();
-  let operation=receive_into(source,encoding,body_bytes,slot,native,body).map_err(NativeSnapshotFailure::from);
+  let operation=receive_into(source,encoding,body_bytes,slot,native,body).map_err(|error|settlement.refused(native.owned_bytes(),error)).map_err(NativeSnapshotFailure::from);
   let settled=settlement.finish_body(native.owned_bytes());
   *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
   RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}

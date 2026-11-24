@@ -54,3 +54,18 @@ async fn set_active_example_loads_the_registered_demo_and_refuses_unknown_ids() 
 
     assert!(handle(&SetActiveExample { example_id: "semio".into() }, &doc, &cfg, &mut ctx).is_err(), "an unregistered example id must fault, not load an empty document");
 }
+
+/// ⚖️ LAW: the canonical empty example id `""` loads the empty note document.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_empty_id_loads_the_empty_document() {
+    let (snapshot, history) = empty_view();
+    let doc = ArtifactView::new(&snapshot, &history);
+    let cfg_snapshot = semio_plugin::NoConfig::default();
+    let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
+    let mut ctx = crate::editor::note::dispatch_ctx::NoteDispatchCtx { selected_block_ids: Vec::new(), id_owner: crate::schema::NoteIdOwner::new("active-example-test", 0), view_state: None, window_transient: Default::default(), window_transient_owner: None };
+    let emit = handle(&SetActiveExample { example_id: String::new() }, &doc, &cfg, &mut ctx).expect("handle");
+    let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("the empty id must emit a LoadDocument effect") else {
+        panic!("expected a LoadDocument effect");
+    };
+    assert_eq!(<NoteSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack"), empty_note_snapshot());
+}

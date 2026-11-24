@@ -82,12 +82,11 @@ export function useCardInterlock(container: HTMLElement | null): void {
 /** 🃏️ Props of {@link CardStack}. */
 export interface CardStackProps extends Omit<React.HTMLAttributes<HTMLElement>, "children"> {
   readonly as?: "div" | "main" | "section" | "ul" | "ol";
-  /** 📏️ Widest the column grows (any CSS length); it is centred when the container is wider. Unbounded by default. */
-  readonly maxWidth?: string;
   readonly children?: React.ReactNode;
 }
 
-/** 🧱️ A column of abutting cards: no gap and no page margin between them, the container touches whatever lies above
+/** 🧱️ A column of abutting cards as wide as its container: no gap and no margin beside, between, above or below them, so every card is a rectangle whose
+ * edges are its neighbours' or the container's; only the content of a card is centred or aligned. The container touches whatever lies above
  * and below it, the first card starts on the container's top edge and the last card ends on its bottom edge. Each card is one
  * rectangle with its title and footer chips overlaid inside it, so two cards meet on one coincident line that the shared-border
  * compositor paints once (see {@link useCardInterlock}). Domain-neutral: it knows only `OverviewCard`s (`data-overview-card`),
@@ -95,7 +94,7 @@ export interface CardStackProps extends Omit<React.HTMLAttributes<HTMLElement>, 
  *
  * @see ../🃏️OverviewCard/🟦️.tsx
  * @see ../🗂️WindowChrome/shared-border.ts — one owner per coincident segment */
-export const CardStack = React.forwardRef<HTMLElement, CardStackProps>(function CardStack({ as: Tag = "div", maxWidth, className, style, children, ...rest }, forwarded) {
+export const CardStack = React.forwardRef<HTMLElement, CardStackProps>(function CardStack({ as: Tag = "div", className, children, ...rest }, forwarded) {
   const [inner, setInner] = React.useState<HTMLElement | null>(null);
   const ref = React.useCallback((node: HTMLElement | null) => {
     setInner(node);
@@ -105,7 +104,7 @@ export const CardStack = React.forwardRef<HTMLElement, CardStackProps>(function 
   useCardInterlock(inner);
   const Element = Tag as React.ElementType;
   return (
-    <Element ref={ref} data-slot="card-stack" data-card-stack="" className={cn("relative mx-auto flex w-full min-w-0 flex-col", className)} style={{ maxWidth, ...style }} {...rest}>
+    <Element ref={ref} data-slot="card-stack" data-card-stack="" className={cn("relative flex w-full min-w-0 flex-col", className)} {...rest}>
       {children}
     </Element>
   );

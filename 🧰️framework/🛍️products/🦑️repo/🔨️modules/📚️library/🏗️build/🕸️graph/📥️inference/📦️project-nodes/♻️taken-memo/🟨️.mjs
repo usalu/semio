@@ -44,3 +44,10 @@ export function createTakenMemoV1({holds,retain}){
   stats(){return{entries:entries.size,...counters};},
  });
 }
+
+/** 📌️ Remembers a taken owner in the memo of the read BEFORE the retention of its record is released, then releases it: a machine under memory pressure releases every owner's retained observations the moment it is taken, so the memo that was filled afterwards found nothing to keep and every pass over the owners took all of them again (a 16 GB worker remembered 17 of 503 owners; the rows are references into the shared row pool, the cost is small).
+ * @see ./🧪️tests/🧷️pressure/🟦️.ts */
+export function keepTakenThenReleaseV1({memo,name,key,project,read,release}){
+ if(memo!==undefined&&key!==undefined){const rows=read();if(rows!==undefined)memo.remember(name,{key,project,rows});}
+ release?.();
+}

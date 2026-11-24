@@ -103,7 +103,7 @@ impl FlowEvaluationSource{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.is_none()&&self.retirement.is_none()}
 }
 impl Default for FlowEvaluationSource{fn default()->Self{Self::new()}}
-impl Drop for FlowEvaluationSource{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow source must complete explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
+impl Drop for FlowEvaluationSource{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow source must complete explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 /// 🧹️ Owns a closing source projection as its retirement cursor.
 pub struct SourceRetirement(FlowEvaluationSource);
 impl RetirementCursor for SourceRetirement{

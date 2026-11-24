@@ -129,7 +129,7 @@ pub(super) fn spectrum(document: &En1990Snapshot, report: &CheckReport, focus: O
             let mut series = Vec::new();
             let mut notes = Vec::new();
             let mut markers = Vec::new();
-            let mut cumulative = Vec::new();
+            let mut cumulative = vec![p(0.0, 0.0)];
             for (i, (bin, share)) in bins.iter().zip(&shares).enumerate() {
                 running += share;
                 let x = i as f64;

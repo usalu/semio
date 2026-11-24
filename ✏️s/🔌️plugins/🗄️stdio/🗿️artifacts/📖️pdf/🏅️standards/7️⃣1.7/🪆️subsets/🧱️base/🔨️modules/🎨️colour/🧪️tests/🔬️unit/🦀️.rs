@@ -13,7 +13,7 @@ use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleVa
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 #[allow(unused_imports)]
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfExtGState, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfSoftMask};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, PdfDictEntry, PdfExtGState, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfSoftMask};
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use crate::standards::v1_7::subsets::base::modules::colour::*;
 use semio_s_artifact_stdio_pdf_snapshot_2::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
@@ -45,7 +45,7 @@ fn sampled_function_neutral_words_preserve_native_sample_extent() {
         let bytes: Vec<u8> = serde_json::from_value(case["nativeBytes"].clone()).unwrap();
         let (function, object) = lower(bits, &words).unwrap();
         let PdfObject::Stream { data, .. } = &object else { panic!("expected sampled stream") };
-        assert_eq!(data, &bytes);
+        assert_eq!(data.to_vec_owner(), bytes);
         assert_eq!(lift_function(&object, &mut GraphSource::new(&[])), Some(function));
         (words, bytes, object)
     };
@@ -59,7 +59,7 @@ fn sampled_function_neutral_words_preserve_native_sample_extent() {
     assert_eq!(words, physical_words);
     assert!(lower(12, &[4096]).is_err());
     let PdfObject::Stream { data, .. } = &mut short else { panic!("expected sampled stream") };
-    data.truncate(2);
+    *data = stream_bytes(&data.to_vec_owner()[..2]);
     assert!(lift_function(&short, &mut GraphSource::new(&[])).is_none());
     let (max, object) = lower(32, &[u32::MAX]).unwrap();
     assert_eq!(lift_function(&object, &mut GraphSource::new(&[])), Some(max));

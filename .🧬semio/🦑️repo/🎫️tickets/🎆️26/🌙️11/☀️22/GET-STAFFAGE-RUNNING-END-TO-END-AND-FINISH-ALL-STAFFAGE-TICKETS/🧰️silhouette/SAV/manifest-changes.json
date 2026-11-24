@@ -1,0 +1,31 @@
+{
+  "cargo-bike": {
+    "depthM": 0.648
+  },
+  "city-car": {
+    "widthM": 3.926
+  },
+  "delivery-van": {
+    "widthM": 5.353
+  },
+  "domestic-cat": {
+    "widthM": 0.76
+  },
+  "horse": {
+    "widthM": 2.913,
+    "depthM": 0.604
+  },
+  "motor-scooter": {
+    "widthM": 1.881
+  },
+  "red-fox": {
+    "widthM": 1.089
+  },
+  "sheep": {
+    "heightM": 0.837
+  },
+  "tram": {
+    "heightM": 5.022,
+    "depthM": 2.419
+  }
+}

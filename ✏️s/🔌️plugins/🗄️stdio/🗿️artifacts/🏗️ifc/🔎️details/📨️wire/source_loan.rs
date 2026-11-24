@@ -1,8 +1,8 @@
 //! 🪢️ One original-funded projection leases the render host's actual immutable source Arc.
 use super::{IfcSnapshot,wire::SnapshotSource};
-use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext,receive_original_retained_work};
+use semio_framework_job::{InteractiveJobCloseStep,OriginalSourceBinding,OriginalTurnFailure,StepContext,receive_original_retained_work};
 use super::effected;
-use semio_framework_value::{OriginalRetirementFailure,RetainedAllocationEffect,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedClone,RetainedCloneCursor,RetainedCloneRef,RetainedCloneProgress,StagedSourceAdmission,retained_clone_grant_admits},retirement::arc_custody::ArcLease};
+use semio_framework_value::{OriginalRetirementFailure,RetainedAllocationEffect,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{OriginalEffectReply,OriginalEffectReplyComplete,RetainedClone,RetainedCloneCursor,RetainedCloneRef,RetainedCloneProgress,retained_clone_grant_admits},retirement::arc_custody::ArcLease};
 use std::{mem::size_of,sync::Arc};
 
 /// 🔗️ The host's shared snapshot leases its own payload as the original clone source.
@@ -11,17 +11,29 @@ pub type SnapshotLease=ArcLease<IfcSnapshot>;
 /// 🪙️ Runs one step inside the turn's own original effect and settles its receipt and performed work once; `None` means the quote was not admitted and nothing ran.
 pub fn funded_turn(cx:&mut StepContext<'_>,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>)->Result<Option<RetainedCloneStep>,OriginalTurnFailure>{
     let grant=cx.retained_grant();
-    let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|run(effect))? else{return Ok(None)};
+    let Some((turn,performed))=cx.with_original_source_effect(grant,|_,effect|run(effect))? else{return Ok(None)};
     let overrun=turn.work!=performed;
     let step=receive_original_retained_work(cx,turn)?;
     if overrun{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IFC admission work differs from its original effect").into());}
     Ok(Some(step))
 }
 
+/// ♻️ Runs one quoted owner close inside the turn's own original Source effect, the effect every admission birth is authenticated against.
+pub fn closed_in_source(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+    let pending=||InteractiveJobCloseStep::Pending{progress:Default::default()};
+    if cx.retirement_should_yield()||!cx.retained_work_can_enter(demand){return Ok(pending());}
+    let grant=cx.retained_grant();
+    let Some((turn,performed))=cx.with_original_source_effect(grant,|_,effect|run(effect))? else{return Ok(pending())};
+    let overrun=turn.work!=performed;
+    let step=receive_original_retained_work(cx,turn)?;
+    if overrun{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IFC admission close work differs from its original effect").into());}
+    Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})
+}
+
 #[derive(Clone,Copy)]
 struct Binding{original:OriginalSourceBinding,pointer:usize,revision:[u8;32]}
 semio_framework_value::artifact_retire_leaf!(Binding);
-type Admission=StagedSourceAdmission<IfcSnapshot,SnapshotLease>;
+type Admission=super::source_staging::SourceStaging<IfcSnapshot,SnapshotLease>;
 #[derive(Default,semio_framework_value::RetireOwned)]
 pub struct SourceLoan{admission:Option<Admission>,source:Option<SnapshotSource>,binding:Option<Binding>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"staging.original-source-loan")}
@@ -66,6 +78,8 @@ impl SourceLoan{
 pub fn replied<E>(effect:&mut RetainedAllocationEffect<'_>,action:impl for<'r> FnOnce(&mut RetainedAllocationEffect<'_>,OriginalEffectReply<'r,RetainedCloneStep,E>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,E>,ValueError>)->Result<Option<Result<RetainedCloneStep,E>>,ValueError>{
     let mut slot=None;let reply=OriginalEffectReply::borrow(&mut slot)?;action(&mut *effect,reply)?;Ok(slot.take())
 }
+/// 📐️ Quotes the next close transition of a clone cursor, including the not-yet-started close that `close_demands` leaves unpriced.
+pub fn close_quote<T:RetainedClone,C:RetainedCloneCursor<T>>(cursor:&C,body:usize)->Result<RetirementDemand,ValueError>{if cursor.close_started(){cursor.close_demands(body)}else{cursor.begin_close_demand()}}
 /// 🔁️ One clone-cursor turn over a borrowed source; a suspended reply is recovered on the next turn through `recover`.
 pub fn advance_cursor<T:RetainedClone,C:RetainedCloneCursor<T>>(cx:&mut StepContext<'_>,cursor:&mut C,source:RetainedCloneRef<'_,T>,body:usize,recover:&mut bool)->Result<(),OriginalTurnFailure>{
     let again=*recover;
@@ -75,7 +89,7 @@ pub fn advance_cursor<T:RetainedClone,C:RetainedCloneCursor<T>>(cx:&mut StepCont
 /// ♻️ One clone-cursor close turn; a suspended reply is recovered on the next turn through `recover`.
 pub fn close_cursor<T:RetainedClone,C:RetainedCloneCursor<T>>(cx:&mut StepContext<'_>,cursor:&mut C,body:usize,recover:&mut bool)->Result<(),OriginalTurnFailure>{
     let again=*recover;
-    let Some(reply)=effected(cx,|effect|if again{replied(effect,|effect,reply|cursor.recover_close_into(body,effect,reply))}else{replied(effect,|effect,reply|cursor.close_into(body,effect,reply))})? else{return Ok(())};
+    let Some(reply)=effected(cx,|effect|if !cursor.close_started(){if again{replied(effect,|effect,reply|cursor.recover_begin_close_into(effect,reply))}else{replied(effect,|effect,reply|cursor.begin_close_into(effect,reply))}}else if again{replied(effect,|effect,reply|cursor.recover_close_into(body,effect,reply))}else{replied(effect,|effect,reply|cursor.close_into(body,effect,reply))})? else{return Ok(())};
     settle_cursor(cx,reply?,recover)
 }
 /// 🧾️ Settles one recorded reply: a completed step is debited, a suspension arms the recovery flag.
@@ -97,7 +111,7 @@ pub fn take_cursor<T:RetainedClone,C:RetainedCloneCursor<T>>(cx:&mut StepContext
 /// ♻️ One effect-shaped clone-cursor close whose reply is folded into the owner outcome; a suspended reply is recovered on the next turn through `recover`.
 pub fn closed_cursor<T:RetainedClone,C:RetainedCloneCursor<T>>(effect:&mut RetainedAllocationEffect<'_>,cursor:&mut C,body:usize,recover:&mut bool)->RetainedWorkOutcome{
     let again=*recover;
-    let reply=if again{replied(effect,|effect,reply|cursor.recover_close_into(body,effect,reply))}else{replied(effect,|effect,reply|cursor.close_into(body,effect,reply))};
+    let reply=if !cursor.close_started(){if again{replied(effect,|effect,reply|cursor.recover_begin_close_into(effect,reply))}else{replied(effect,|effect,reply|cursor.begin_close_into(effect,reply))}}else if again{replied(effect,|effect,reply|cursor.recover_close_into(body,effect,reply))}else{replied(effect,|effect,reply|cursor.close_into(body,effect,reply))};
     let result=match reply{
         Ok(Some(result))=>{*recover=false;result.map_err(OriginalRetirementFailure::into_value_error)},
         Ok(None)=>{*recover=true;Ok(RetainedCloneStep::Progress(Default::default()))},

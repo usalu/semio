@@ -122,7 +122,6 @@ pub(super) fn physical_policy(original:&super::WakeDriverState,policy:RetainedCl
  let available=consumable_remaining(available,operation.reserve.retained)?;
  let policy=intersect(policy,available);
  if policy.maximum_items==0{
-  if std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] poll physical currency: treasury {remaining:?}, semantic available after cleanup {:?}, cleanup {:?}, guest loan pending {}",available,operation.reserve.retained,operation.guest.pending());}
   return Err(spent("semantic operation currency exhausted with cleanup reserve retained"))
  }
  Ok(policy)

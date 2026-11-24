@@ -153,7 +153,7 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
         let runtime = window_ownership::runtime(config, &window_config, &window_transient, window_id);
         let empty_selection = protocol::DomainSelection::default();
         let selection = interaction.selection.get(PUZZLE5D_INTERACTION_DOMAIN).unwrap_or(&empty_selection);
-        let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), if matches!(self.tool_id, "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions") { context.and_then(|context| context.tool_run()) } else { None });
+        let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), if matches!(self.tool_id, "engagementAbort" | "openVortexSuggestions" | "closeVortexSuggestions") { context.and_then(|context| context.original_tool_run()) } else { None });
         self.consumed = true;
         Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
     

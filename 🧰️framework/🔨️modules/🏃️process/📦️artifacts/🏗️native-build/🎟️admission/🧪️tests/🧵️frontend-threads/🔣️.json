@@ -170,15 +170,13 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "a cdylib final gets one front-end thread whatever the grant; its back end runs serially",
+   "note": "a cdylib final gets one front-end thread whatever the grant; with 8 granted cores its back end keeps the jobserver and runs parallel",
    "expected": [
     "--crate-type",
     "cdylib",
     "-Z",
     "threads=1",
-    "a.rs",
-    "-Z",
-    "no-parallel-backend"
+    "a.rs"
    ]
   },
   {
@@ -189,13 +187,11 @@
     "a.rs"
    ],
    "tokens": 8,
-   "note": "the joined crate-type spelling is a cdylib final too; its back end runs serially",
+   "note": "the joined crate-type spelling is a cdylib final too; its back end keeps the jobserver and runs parallel",
    "expected": [
     "--crate-type=cdylib",
     "-Zthreads=1",
-    "a.rs",
-    "-Z",
-    "no-parallel-backend"
+    "a.rs"
    ]
   },
   {
@@ -232,6 +228,42 @@
     "cdylib",
     "-Z",
     "threads=0"
+   ]
+  },
+  {
+   "id": "cdylib-one-job",
+   "args": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=0",
+    "a.rs"
+   ],
+   "tokens": 1,
+   "note": "one admitted job leaves rustc no token beside its implicit slot, so its back end stays serial",
+   "expected": [
+    "--crate-type",
+    "cdylib",
+    "-Z",
+    "threads=1",
+    "a.rs",
+    "-Z",
+    "no-parallel-backend"
+   ]
+  },
+  {
+   "id": "cdylib-two-jobs",
+   "args": [
+    "--crate-type=cdylib",
+    "-Zthreads=0",
+    "a.rs"
+   ],
+   "tokens": 2,
+   "note": "two admitted jobs leave one token for a codegen thread: the back end takes it from the jobserver",
+   "expected": [
+    "--crate-type=cdylib",
+    "-Zthreads=1",
+    "a.rs"
    ]
   }
  ]

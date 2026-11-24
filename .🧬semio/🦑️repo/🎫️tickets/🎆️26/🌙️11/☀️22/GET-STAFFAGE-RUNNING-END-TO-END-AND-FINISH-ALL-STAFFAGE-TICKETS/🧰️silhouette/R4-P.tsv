@@ -1,0 +1,4 @@
+vegetation	agave	1:500 elevation: expected 0.9121383203952012 to be greater than or equal to 0.92
+vegetation	bamboo-clump	1:100 elevation: expected 0.908022579269059 to be greater than or equal to 0.92
+vegetation	date-palm	1:500 elevation Hausdorff: expected 0.25155764746872633 to be less than or equal to 0.15
+vegetation	hosta-clump	1:100 elevation: expected 0.9030535174794994 to be greater than or equal to 0.92

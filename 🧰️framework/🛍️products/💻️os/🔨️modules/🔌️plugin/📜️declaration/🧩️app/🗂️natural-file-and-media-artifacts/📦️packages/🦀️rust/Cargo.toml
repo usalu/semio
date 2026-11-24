@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-plugin-decl-natural-file-media"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Natural file codecs and media artifact contracts an app declares: decode cursors, mounted natural file actions, media artifact descriptor, errors and the document load fault codes"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-decl-natural-file-media"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-pack = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-plugin-decl-emission = { path = "../../../../📨️emission/📦️packages/🦀️rust" }
+semio-plugin-decl-media = { path = "../../../../🎞️media/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-ui-locale = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

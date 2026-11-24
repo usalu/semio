@@ -512,6 +512,16 @@ where
     Ok(crate::norm_interaction_topology(domain, &semio_framework_value::ToValue::to_value(document), &scene, &report))
 }
 
+/// 🧷️ [`live_interaction_topology`] without the outliner filter and over the settled report instead of the budgeted paint report: every entity, row and check of the document, whatever a window filtered last and however slow the evaluation is.
+pub fn live_interaction_topology_unfiltered<A: NormLiveEditor>(document: &A::Snapshot, domain: &str) -> Result<semio_plugin::InteractionTopology, semio_framework_value::ValueError>
+where
+    A::Snapshot: semio_framework_value::ToValue,
+{
+    let report = <A::Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(document);
+    let scene = A::live_scene(document, ViewOptions::none());
+    Ok(crate::norm_interaction_topology_filtered(domain, &semio_framework_value::ToValue::to_value(document), &scene, &report, None))
+}
+
 /// 🔗️ The view effects of the click on check row `check`: the framework selection of its owner entity in the interaction `domain` (the viewport then frames it, the lane carries the check); none for a document-level check or an unknown row.
 pub fn live_check_focus_effects<A: NormLiveEditor>(document: &A::Snapshot, check: Option<u32>, domain: &str) -> Vec<semio_plugin::Effect> {
     let Some(index) = check else { return Vec::new() };

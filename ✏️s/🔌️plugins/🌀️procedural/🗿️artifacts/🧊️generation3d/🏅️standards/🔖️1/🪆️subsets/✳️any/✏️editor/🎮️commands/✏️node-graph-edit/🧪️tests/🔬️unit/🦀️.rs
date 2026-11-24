@@ -215,7 +215,7 @@ fn node_graph_edit_takes_exactly_the_shared_row_vocabulary() {
         let batch = serde_json::json!([{ "operation": "disconnect", "synapseId": "s1" }, case["row"]]);
         assert!(rows(&NodeGraphEdit { operations_json: batch.to_string() }).is_err(), "{} refuses the whole batch", case["id"]);
         let args: semio_framework_value::DslValue = serde_json::json!({ "operations": batch }).into();
-        assert!(<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", Some((args).clone()), None).is_err(), "{} is refused at admission", case["id"]);
+        assert!(<semio_s_artifact_procedural_3d_editor::Generation3dPlayApp as semio_plugin::ArtifactEditor>::command_from_action("nodeGraphEdit", &mut Some((args).clone()), &mut None).is_err(), "{} is refused at admission", case["id"]);
     }
 }
 

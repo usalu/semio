@@ -1,0 +1,5 @@
+[
+{"op": "solid-set", "scale": "50", "id": "ruler", "set": {"profile": [[0.00125, -0.035], [0.00125, 0.005], [0.00875, 0.005], [0.00875, -0.027], [0.00475, -0.035]]}},
+{"op": "set", "path": ["volumes", "50", "body", {"id": "ruler"}, "slender"]},
+{"op": "shape-set", "scale": "100", "view": "front", "id": "end-leaf-frame", "set": {"x": -0.0155, "y": 0.068, "h": 1.154}}
+]

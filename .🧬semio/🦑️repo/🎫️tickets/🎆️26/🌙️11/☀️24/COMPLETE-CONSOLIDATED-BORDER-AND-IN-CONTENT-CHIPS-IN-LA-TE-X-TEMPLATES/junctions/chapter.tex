@@ -1,0 +1,41 @@
+\documentclass[type=report,theme=light,language=en]{semio}
+\title{Chapter Junctions}
+\author{Semio}
+\date{}
+\begin{document}
+\chapter{Chapter At Page Top}
+\section{Section Below Chapter}
+Prose inside the closed column, long enough to wrap onto a second line so that the inset from both column borders is visible on the left and on the right side.
+\begin{itemize}
+\item A list item inside the column, long enough to wrap onto a second line so that the right inset of list text against the column border is visible too.
+\item Another list item.
+\item A third list item.
+\end{itemize}
+Prose after the list.
+\begin{enumerate}
+\item First numbered point.
+\item Second numbered point.
+\end{enumerate}
+\subsection{Window With A List}
+\begin{Window}[title={Steps}]
+\begin{itemize}
+\item Inside a window the dividers run to the window border.
+\item Second point.
+\end{itemize}
+\end{Window}
+\begin{Window}[title={List Then Prose}]
+\begin{itemize}
+\item Only point.
+\end{itemize}
+Prose after the list inside the window.
+\end{Window}
+
+An equation in the column:
+\begin{equation}
+R = \frac{r}{n}
+\end{equation}
+\begin{description}
+\item[API] Application programming interface.
+\item[PDF] Portable document format.
+\end{description}
+\end{document}

@@ -103,7 +103,7 @@ where
             current_detached: false,
             tail_undo_cache: std::mem::ManuallyDrop::new(None),
             supersessions: std::mem::ManuallyDrop::new(supersessions),
-            prefix_ring: std::mem::ManuallyDrop::new(Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY)),
+            prefix_ring: std::mem::ManuallyDrop::new({let mut ring=Vec::with_capacity(PREFIX_SNAPSHOT_RING_CAPACITY);semio_framework_value::birth_ledger::record_original_birth(std::mem::size_of_val(ring.spare_capacity_mut()));ring}),
             prefix_ring_dirty_from: usize::MAX,
             fold_frontier: None,
             tail_step_generation: None,

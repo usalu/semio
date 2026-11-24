@@ -79,7 +79,7 @@ impl ErasedSnapshotRetirement for CanvasPathRetirement {
 
 impl Drop for CanvasPathRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Canvas path cursor dropped before funded original backing release");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "Canvas path cursor dropped before funded original backing release");
         unsafe { ManuallyDrop::drop(&mut self.elements); }
     }
 }

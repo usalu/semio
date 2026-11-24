@@ -1,10 +1,10 @@
 {
   "title": "Staffage Human Collection Wave",
   "emoji": "🧍",
-  "status": "open",
+  "status": "closed",
   "description": "Extend the architectural staffage catalog (🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/👤️humans) with a huge collection of new handcrafted people (work, hospitality, care, construction, children, elderly, sports, mobility, leisure, culture, chores, services, accessibility, weather, crowds, logistics) via a massive parallel wave of Opus 5.5 agents, each asset passing the staffage check, with manifest rows, collections and tests synced.",
+  "summary": "47 new people are in the staffage catalog and manifest (75 humans), with five new collections and two extended ones. All 47 pass the product check CLI, the schema, the three-views pose-and-clip sweep, catalog physics, breathing and power suites (2026-11-23). Not clean: the catalog-silhouette guard (2D drawing against 3D volume) is still red for 22 of the 47 (most only at 1:50 by 16 to 36 mm against 15 mm, dancer at every scale); several people keep print range-end findings in the full validator; the fixes are repair ops on top of the generators and the generators were not all re-run; not every sheet was opened. Never started and left unstarted by the dev's order: hotel-receptionist, carer-pushing-wheelchair, yoga-practitioner, inline-skater, window-cleaner, security-guard, gardener-with-wheelbarrow. The silhouette remainder is carried by the open 3D ticket 26/11/14. Evidence: state-at-close.md in the ticket and humans-a.md, humans-b.md, humans-a-repair.md, humans-b-repair.md, three-views-3.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "goal": "🎯runningdrawing",
-  "sessions": [],
   "interactions": [
     {
       "kind": "ticket.open",
@@ -15,6 +15,20 @@
       "checkpoint": "",
       "prompt": "Use as massive wave of Opus 5.5. agents to extend the staffage with huge collection of people. Start wave immediately as fast as you can.",
       "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 15:24:56",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "47 new people are in the staffage catalog and manifest (75 humans), with five new collections and two extended ones. All 47 pass the product check CLI, the schema, the three-views pose-and-clip sweep, catalog physics, breathing and power suites (2026-11-23). Not clean: the catalog-silhouette guard (2D drawing against 3D volume) is still red for 22 of the 47 (most only at 1:50 by 16 to 36 mm against 15 mm, dancer at every scale); several people keep print range-end findings in the full validator; the fixes are repair ops on top of the generators and the generators were not all re-run; not every sheet was opened. Never started and left unstarted by the dev's order: hotel-receptionist, carer-pushing-wheelchair, yoga-practitioner, inline-skater, window-cleaner, security-guard, gardener-with-wheelbarrow. The silhouette remainder is carried by the open 3D ticket 26/11/14. Evidence: state-at-close.md in the ticket and humans-a.md, humans-b.md, humans-a-repair.md, humans-b-repair.md, three-views-3.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        }
+      ]
     }
   ]
 }

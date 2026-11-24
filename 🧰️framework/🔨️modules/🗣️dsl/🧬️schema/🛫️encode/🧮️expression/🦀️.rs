@@ -75,7 +75,7 @@ impl RetainedExpressionCursor{
   Ok(RetainedExpressionStep{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:released,..Default::default()},complete:self.terminal_is_empty(),written_bytes:0})
  }
 }
-impl Drop for RetainedExpressionCursor{fn drop(&mut self){assert!(self.frames.terminal_is_empty(),"original expression backing requires funded terminal retirement");}}
+impl Drop for RetainedExpressionCursor{fn drop(&mut self){assert!(std::thread::panicking()||(self.frames.terminal_is_empty()),"original expression backing requires funded terminal retirement");}}
 /// ♻️ Physical retirement hands the paged traversal frames to their controlled owner.
 impl semio_framework_value::retirement::RetireOwned for RetainedExpressionCursor{
  type RetirementCursor=<PagedList<Frame,64> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;

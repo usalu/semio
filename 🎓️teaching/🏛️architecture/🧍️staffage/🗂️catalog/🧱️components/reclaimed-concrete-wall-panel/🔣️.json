@@ -2575,6 +2575,78 @@
        "closed": true
       },
       {
+       "id": "rebar-stub-left-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         -0.008
+        ],
+        [
+         0.0,
+         -0.008
+        ],
+        [
+         0.0,
+         0.008
+        ],
+        [
+         -0.06,
+         0.008
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-left-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.892
+        ],
+        [
+         -0.06,
+         -0.892
+        ]
+       ],
+       "closed": true
+      },
+      {
        "id": "rebar-stub-left-3",
        "bone": "panel",
        "role": "body",
@@ -2606,6 +2678,78 @@
         [
          -0.06,
          0.908
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-right-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         -0.008
+        ],
+        [
+         6.06,
+         -0.008
+        ],
+        [
+         6.06,
+         0.008
+        ],
+        [
+         6.0,
+         0.008
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-right-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.892
+        ],
+        [
+         6.0,
+         -0.892
         ]
        ],
        "closed": true
@@ -4276,6 +4420,80 @@
        "closed": true
       },
       {
+       "id": "rebar-stub-left-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         -0.008
+        ],
+        [
+         0.0,
+         -0.008
+        ],
+        [
+         0.0,
+         0.008
+        ],
+        [
+         -0.06,
+         0.008
+        ]
+       ],
+       "closed": true,
+       "penMm": 0.13
+      },
+      {
+       "id": "rebar-stub-left-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.892
+        ],
+        [
+         -0.06,
+         -0.892
+        ]
+       ],
+       "closed": true,
+       "penMm": 0.13
+      },
+      {
        "id": "rebar-stub-left-3",
        "bone": "panel",
        "role": "body",
@@ -4309,7 +4527,82 @@
          0.908
         ]
        ],
-       "closed": true
+       "closed": true,
+       "penMm": 0.13
+      },
+      {
+       "id": "rebar-stub-right-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         -0.008
+        ],
+        [
+         6.06,
+         -0.008
+        ],
+        [
+         6.06,
+         0.008
+        ],
+        [
+         6.0,
+         0.008
+        ]
+       ],
+       "closed": true,
+       "penMm": 0.13
+      },
+      {
+       "id": "rebar-stub-right-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.892
+        ],
+        [
+         6.0,
+         -0.892
+        ]
+       ],
+       "closed": true,
+       "penMm": 0.13
       },
       {
        "id": "rebar-stub-right-3",
@@ -4345,7 +4638,8 @@
          0.908
         ]
        ],
-       "closed": true
+       "closed": true,
+       "penMm": 0.13
       }
      ]
     },
@@ -4615,6 +4909,96 @@
        "y": 1.4,
        "w": 0.14,
        "h": 0.12
+      },
+      {
+       "id": "rebar-stub-left-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": -0.06,
+       "y": -0.908,
+       "w": 0.06,
+       "h": 0.016
+      },
+      {
+       "id": "rebar-stub-left-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": -0.06,
+       "y": -0.008,
+       "w": 0.06,
+       "h": 0.016
+      },
+      {
+       "id": "rebar-stub-left-3",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": -0.06,
+       "y": 0.892,
+       "w": 0.06,
+       "h": 0.016
+      },
+      {
+       "id": "rebar-stub-right-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": 6.0,
+       "y": -0.908,
+       "w": 0.06,
+       "h": 0.016
+      },
+      {
+       "id": "rebar-stub-right-2",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": 6.0,
+       "y": -0.008,
+       "w": 0.06,
+       "h": 0.016
+      },
+      {
+       "id": "rebar-stub-right-3",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "kind": "rect",
+       "x": 6.0,
+       "y": 0.892,
+       "w": 0.06,
+       "h": 0.016
       }
      ],
      "front": [
@@ -5102,6 +5486,150 @@
         [
          4.43,
          1.52
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-left-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.908
+        ],
+        [
+         0.0,
+         -0.892
+        ],
+        [
+         -0.06,
+         -0.892
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-left-3",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         -0.06,
+         0.892
+        ],
+        [
+         0.0,
+         0.892
+        ],
+        [
+         0.0,
+         0.908
+        ],
+        [
+         -0.06,
+         0.908
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-right-1",
+       "bone": "panel",
+       "role": "body",
+       "z": 3.8,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.908
+        ],
+        [
+         6.06,
+         -0.892
+        ],
+        [
+         6.0,
+         -0.892
+        ]
+       ],
+       "closed": true
+      },
+      {
+       "id": "rebar-stub-right-3",
+       "bone": "panel",
+       "role": "body",
+       "z": 4,
+       "filled": true,
+       "tone": 0.22,
+       "region": "exposed-steel",
+       "material": "rusted-steel",
+       "solid": {
+        "kind": "extruded",
+        "sweep": "w",
+        "z0": 0.052,
+        "z1": 0.068
+       },
+       "kind": "poly",
+       "points": [
+        [
+         6.0,
+         0.892
+        ],
+        [
+         6.06,
+         0.892
+        ],
+        [
+         6.06,
+         0.908
+        ],
+        [
+         6.0,
+         0.908
         ]
        ],
        "closed": true
@@ -9394,6 +9922,78 @@
         0
        ]
       }
+     },
+     {
+      "id": "rebar-stubs-left",
+      "kind": "revolve",
+      "bone": "panel",
+      "material": "rusted-steel",
+      "role": "body",
+      "tone": 0.22,
+      "profile": [
+       [
+        0,
+        0.008
+       ],
+       [
+        0.06,
+        0.008
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       -0.06,
+       -0.9,
+       0.04866
+      ],
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        0.8999999999999999,
+        0
+       ]
+      }
+     },
+     {
+      "id": "rebar-stubs-right",
+      "kind": "revolve",
+      "bone": "panel",
+      "material": "rusted-steel",
+      "role": "body",
+      "tone": 0.22,
+      "profile": [
+       [
+        0,
+        0.008
+       ],
+       [
+        0.06,
+        0.008
+       ]
+      ],
+      "axis": [
+       1,
+       0,
+       0
+      ],
+      "origin": [
+       6.0,
+       -0.9,
+       0.04866
+      ],
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        0.8999999999999999,
+        0
+       ]
+      }
      }
     ],
     "thermal": [
@@ -10052,6 +10652,62 @@
        "translation": [
         3.0,
         0,
+        0
+       ]
+      }
+     },
+     {
+      "id": "rebar-stubs-left",
+      "kind": "box",
+      "bone": "panel",
+      "material": "rusted-steel",
+      "role": "body",
+      "tone": 0.22,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        -0.0225,
+        -0.9,
+        0.04866
+       ]
+      },
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        0.8999999999999999,
+        0
+       ]
+      }
+     },
+     {
+      "id": "rebar-stubs-right",
+      "kind": "box",
+      "bone": "panel",
+      "material": "rusted-steel",
+      "role": "body",
+      "tone": 0.22,
+      "size": [
+       0.075,
+       0.075,
+       0.075
+      ],
+      "transform": {
+       "translation": [
+        6.0225,
+        -0.9,
+        0.04866
+       ]
+      },
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        0.8999999999999999,
         0
        ]
       }

@@ -18,7 +18,7 @@ fn chrome_lane_source() -> String {
 }
 
 fn lane_body(source: &str, name: &str) -> String {
-    let after = source.split(&format!("fn {name}(&mut self) {{")).nth(1).unwrap_or_else(|| panic!("the {name} arm"));
+    let after = source.split(&format!("fn {name}(&mut self")).nth(1).unwrap_or_else(|| panic!("the {name} arm"));
     after[..after.find("\n    }\n").expect("the arm ends")].to_string()
 }
 
@@ -27,11 +27,11 @@ fn lane_body(source: &str, name: &str) -> String {
 fn no_chrome_maintenance_lane_arms_itself_without_pressure() {
     let source = chrome_lane_source();
     let persist = lane_body(&source, "request_chrome_preferences_persist");
-    assert!(persist.contains("last_synced_preferences.as_ref() != Some(&UiPrefsSnapshot::capture(self))"), "preferences persist only when a field actually changed");
+    assert!(persist.contains("last_synced_preferences.as_ref() != Some(&capture_ui_prefs_snapshot(chrome, self))"), "preferences persist only when a field actually changed");
     assert!(persist.contains("if "), "and the arm is guarded, not unconditional");
 
     let layout = lane_body(&source, "request_panel_layout_persist");
-    assert!(layout.contains("last_persisted_dock_ui.as_ref() != Some(&self.dock_ui_snapshot())"), "the dock UI page is armed only when the dock moved");
+    assert!(layout.contains("chrome.chrome_present.last_persisted_dock_ui.as_ref() != Some(&self.dock_ui_snapshot())"), "the dock UI page is armed only when the dock moved");
     assert!(layout.contains("last_persisted_dock_skeleton.as_ref() != Some(&self.dock_override)"), "and so is the skeleton half");
 
     let presence = lane_body(&source, "request_presence_preview");
@@ -45,9 +45,9 @@ fn no_chrome_maintenance_lane_arms_itself_without_pressure() {
 fn the_chrome_walk_still_visits_every_maintenance_phase() {
     let source = chrome_lane_source();
     for (phase, arm) in [
-        ("ShellChromeFramePhase::Presence => {", "self.request_presence_preview();"),
-        ("ShellChromeFramePhase::PersistLayout => {", "self.request_panel_layout_persist();"),
-        ("ShellChromeFramePhase::PersistPreferences => {", "self.request_chrome_preferences_persist();"),
+        ("ShellChromeFramePhase::Presence => {", "self.sync.request_presence_preview(&mut self.chrome);"),
+        ("ShellChromeFramePhase::PersistLayout => {", "self.dock.request_panel_layout_persist(&mut self.chrome);"),
+        ("ShellChromeFramePhase::PersistPreferences => {", "self.prefs.request_chrome_preferences_persist(&mut self.chrome);"),
     ] {
         let after = source.split(phase).nth(1).unwrap_or_else(|| panic!("the {phase} arm"));
         assert!(after[..200].contains(arm), "{phase} still calls {arm}");

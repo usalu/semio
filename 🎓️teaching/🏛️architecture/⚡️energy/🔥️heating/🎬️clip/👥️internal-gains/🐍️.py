@@ -36,6 +36,7 @@ _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡
 B5_ICON_METRE = 0.8
 room_metre = _manim_module.room_metre
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 PASTEL_PINK = _manim_module.PASTEL_PINK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
 PASTEL_CYAN = _manim_module.PASTEL_CYAN
@@ -195,20 +196,6 @@ def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
 
 
 
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
-    modules. Internal gains are tabulated in DIN V 18599-10, so every beat that
-    does not already print that standard in its diagram footnotes it here.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30)
-    return ref
-#endregion
-
-
 #region Beat1 — Winter house & free internal gains
 #region Beat1 stage
 B1_HOUSE_C = np.array([0.0, -0.79, 0.0])
@@ -356,15 +343,15 @@ class Beat2_PersonenPhiP(Scene):
          "That load is about eighty watts — roughly two thirds of a seated person's full output.",
          "Diese Last liegt bei etwa achtzig Watt — rund zwei Drittel einer sitzenden Person."),
         ("phi_p",
-         r"We call the heat from persons $\dot{Q}_{\mathrm{i,p}}$ — the heat flow $\Phi$ as a load at the room, unit watt.",
-         r"Wir nennen die Personenwärme $\dot{Q}_{\mathrm{i,p}}$ — der Wärmestrom $\Phi$ als Last am Raum, Einheit Watt."),
+         r"The heat from persons is $\dot{Q}_{\mathrm{i,p}}$ — the heat flow $\Phi$ as a room load.",
+         r"Die Personenwärme ist $\dot{Q}_{\mathrm{i,p}}$ — der Wärmestrom $\Phi$ als Last am Raum."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from people", "Personenabwärme"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "person"))
@@ -435,7 +422,7 @@ class Beat3_GeraetePhiE(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from equipment", "Geräteabwärme"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "desk"))
@@ -539,7 +526,7 @@ class Beat4_BeleuchtungPhiL(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat from lighting", "Beleuchtungswärme"))
-        din = _din_ref(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
+        din = reference_chip(_references.cite(("din-v-4108-6", "intern"), ("din-ts-18599-10", "intern")))
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "lamp"))
@@ -641,8 +628,8 @@ class Beat5_SummeUndDichte(Scene):
          r"Divide by the net floor area $A_{\mathrm{N}}$ to get watts per square metre.",
          r"Geteilt durch die Nettogrundfläche $A_{\mathrm{N}}$ ergibt Watt pro Quadratmeter."),
         ("din",
-         r"That specific load $q_{\mathrm{i}}$ is tabulated in DIN/TS 18599-10; over the heating season it becomes the internal gain $Q_{\mathrm{i}}$.",
-         r"Diese spezifische Last $q_{\mathrm{i}}$ steht tabellarisch in DIN/TS 18599-10; über die Heizperiode wird daraus der interne Gewinn $Q_{\mathrm{i}}$."),
+         r"The load $q_{\mathrm{i}}$ is tabulated in DIN/TS 18599-10 and gives the gain $Q_{\mathrm{i}}$.",
+         r"Die Last $q_{\mathrm{i}}$ steht in DIN/TS 18599-10 und ergibt den Gewinn $Q_{\mathrm{i}}$."),
     ]
 
     def construct(self):

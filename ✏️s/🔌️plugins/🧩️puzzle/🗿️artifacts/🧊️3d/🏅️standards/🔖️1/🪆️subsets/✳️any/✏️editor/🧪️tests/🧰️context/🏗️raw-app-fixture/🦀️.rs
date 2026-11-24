@@ -242,7 +242,7 @@ impl Puzzle3dApp {
 }
 
 /// ♻️ Retires the two ordered roots of one host view synchronously, so dropping the view never aborts an unretired ownership.
-fn retire_view(mut view: ViewModel) {
+pub fn retire_view(mut view: ViewModel) {
     std::mem::take(&mut view.active_utility_by_window_id).retire_cold();
     std::mem::take(&mut view.tool_run_trace_cursor_by_window_id).retire_cold();
 }

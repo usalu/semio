@@ -630,6 +630,8 @@ def member_checks(member, s, mat, annex, out, positions=()):
         chi_z = chi_ap(lam_z, alpha, l0)
         put("en1999.6.3.1.fb", ratio(nc, nby))
         put("en1999.6.3.1.fb.z", ratio(nc, nbz))
+        if has_haz or member["transverseWeld"]:
+            put("en1999.6.3.1.haz", ratio(nc, min(nby, nbz)))
         i0 = (geo["iy"] + geo["iz"]) / max(gross["a"], 1e-18)
         if lct > 0 and i0 > 0:
             ncrt = (G * geo["it"] + math.pi ** 2 * E * geo["iw"] / lct ** 2) / i0
@@ -1176,6 +1178,12 @@ def fire_checks(f, member, s, mat, out, ins=None):
     out.append({"id": f"en1999.1-2.fire.buckling.{f['id']}", "utilization": ratio(nc, r["nb"])})
     out.append({"id": f"en1999.1-2.fire.ltb.{f['id']}", "utilization": ratio(my, r["mb"])})
     out.append({"id": f"en1999.1-2.fire.theta-cr.{f['id']}", "utilization": theta / max(th_cr, 1.0)})
+    start, duration = max(f["thetaA"], 20.0), max(f["durationS"], 0.0)
+    at = (lambda sec: protected_temperature(amv, sec, start, ins)) if protected else (lambda sec: member_temperature(amv, sec, start))
+    if not protected and not is_tube(s) and make_strips(s, ctx_gross(fo, a)):
+        out.append({"id": f"en1999.1-2.fire.field.{f['id']}", "utilization": 0.0, "status": "info"})
+    out.append({"id": f"en1999.1-2.fire.thermal-elongation.{f['id']}", "utilization": 0.0, "status": "info" if 0.0 < theta < 500.0 else "notApplicable"})
+    out.append({"id": f"en1999.1-2.fire.transient-creep.{f['id']}", "utilization": 0.0, "status": "notApplicable" if duration > 1800.0 and at(duration - 1800.0) > 170.0 else "info"})
 
 
 # ---------------------------------------------------------------- fatigue
@@ -1640,7 +1648,7 @@ def run_vectors(path):
 
 
 def evaluate(doc):
-    annex = doc.get("annex", "en")
+    annex = doc.get("annex", "En").lower()
     RELIABILITY["k_fi"] = K_FI[doc["reliabilityClass"]]
     secs = {s["id"]: s for s in doc.get("sections", [])}
     mats = {m["id"]: m for m in doc.get("materials", [])}

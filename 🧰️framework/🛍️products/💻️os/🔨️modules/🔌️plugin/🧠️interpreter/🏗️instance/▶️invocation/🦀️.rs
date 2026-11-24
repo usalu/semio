@@ -13,12 +13,12 @@ pub use host::CoreOriginalHostCall;
 #[cfg(any(test, feature = "testkit"))]
 #[path="📊️trace/🦀️.rs"]
 mod trace;
-#[cfg(any(test, feature = "testkit"))]
+#[cfg(test)]
 use trace::{Category, Slice};
 
 macro_rules! trace_work {
  ($trace:expr, $category:ident, $cx:expr, $fuel:expr) => {
-  #[cfg(any(test, feature = "testkit"))]
+  #[cfg(test)]
   if let Some(trace) = $trace.as_mut() {
    trace.mark(Category::$category, $cx, $fuel);
   }
@@ -27,8 +27,6 @@ macro_rules! trace_work {
 
 use semio_framework_actor::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt,OriginalJobBudget};
 use semio_framework_value::RetirementDemand;
-static TRACE_CORE_FRAME:std::sync::OnceLock<bool>=std::sync::OnceLock::new();
-thread_local!{static CORE_FRAME_STEPS:std::cell::Cell<u64>=const{std::cell::Cell::new(0)};}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CoreOriginalInvocationStatus{Pending,Complete,Host,Cancelled,Deadline}
 pub struct CoreOriginalInvocationCall{pub result:Result<CoreOriginalInvocationStatus,OriginalTurnFailure>,pub execution:OriginalGuestExecutionReceipt}
@@ -83,14 +81,12 @@ impl CoreInstanceOpening{
  fn begin_function(&mut self,module:&Arc<CoreModule>,function:u32,arguments:&[Value],input_retirement_epoch:Option<u64>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(module,cx)?;if !self.resources_ready(){return Err(refused("Core invocation requires its fully initialized original resources").into())}if self.core.as_ref().unwrap().machine.is_some(){return Err(refused("Core invocation must retire its preceding machine before admission").into())}if cx.original_retirement_active()&&input_retirement_epoch.is_none()&&!retirement_export(module,function){return Err(refused("Core retirement permits only unaliased original cleanup exports").into())}if (cx.is_cancelled()&&!cx.original_retirement_active())||cx.should_yield(){return Ok(false)}
   let (type_index,locals,body)=match module.functions.get(function as usize){Some(FunctionDecl::Defined{type_index,locals,body,..})=>(*type_index,locals,body),_=>return Err(refused("Core opening requires an owned defined function").into())};let signature=module.types.get(type_index as usize).ok_or_else(||refused("Core opening function type is absent"))?;if arguments.len()!=signature.parameters.len()||arguments.iter().zip(&signature.parameters).any(|(value,ty)|value.value_type()!=*ty){return Err(refused("Core opening arguments differ from their original function type").into())}let local_count=arguments.len().checked_add(locals.len()).ok_or_else(||refused("Core opening local count overflow"))?;let results=bytes_for::<ValueType>(signature.results.len())?;let local_bytes=bytes_for::<Value>(local_count)?;let capacity=size_of::<Frame>().checked_add(size_of::<ControlFrame>()).and_then(|n|n.checked_add(local_bytes)).and_then(|n|n.checked_add(results.checked_mul(2)?)).ok_or_else(||refused("Core machine storage size overflow"))?;let copy=capacity.checked_add(size_of::<Machine>()+if input_retirement_epoch.is_some(){size_of::<Option<u64>>()}else{0}).ok_or_else(||refused("Core machine copy size overflow"))?;let end_pc=body.len().checked_sub(1).ok_or_else(||refused("Core function has no terminating instruction"))?;
-  #[cfg(any(test, feature = "testkit"))]
+  #[cfg(test)]
   let trace=Slice::begin(cx,Category::FrameBirth);
   let charged=charge(cx,copy,capacity,0);
-  #[cfg(any(test, feature = "testkit"))]
-  if let Some(trace)=trace{trace.finish(module,function,cx,0,matches!(&charged,Ok(false)));}
+  #[cfg(test)]
+  if let Some(trace)=trace{trace.finish(cx,0,matches!(&charged,Ok(false)));}
   if !charged?{return Ok(false)}
-  #[cfg(any(test, feature = "testkit"))]
-  trace::input_witness(module,function,arguments,self.core.as_ref().unwrap());
   let mut local_values=Vec::with_capacity(local_count);local_values.extend_from_slice(arguments);local_values.extend(locals.iter().copied().map(ValueType::zero));let mut branch_types=Vec::with_capacity(signature.results.len());branch_types.extend_from_slice(&signature.results);let mut result_types=Vec::with_capacity(signature.results.len());result_types.extend_from_slice(&signature.results);let mut controls=Vec::with_capacity(1);controls.push(ControlFrame{kind:ControlKind::Function,start_pc:0,end_pc,stack_height:0,branch_types,result_types});let mut frames=Vec::with_capacity(1);frames.push(Frame{function,pc:0,locals:local_values,stack_base:0,controls});self.core.as_mut().unwrap().machine=Some(Machine{values:Vec::new(),frames,pending_host:None});self.invocation_complete=false;self.returning_frame=false;self.input_retirement_epoch=input_retirement_epoch;Ok(true)
  }
  pub fn invocation_values(&self)->Option<&[Value]>{self.invocation_complete.then(||self.core.as_ref()?.machine.as_ref().map(|machine|machine.values.as_slice())).flatten()}
@@ -103,7 +99,7 @@ impl CoreInstanceOpening{
  }
  pub fn advance_scalar(&mut self,module:&Arc<CoreModule>,execution:OriginalGuestExecutionBudget,cx:&mut StepContext<'_>)->Result<CoreOriginalInvocationCall,OriginalTurnFailure>{
   self.validate(module,cx)?;self.validate_retirement_root(module,cx)?;let cleanup=cx.original_retirement_active();let input=execution.input;if input.operation!=cx.operation().0||input.generation!=cx.generation().0||Some(input.epoch)!=cx.original_source_epoch()||input.grant!=cx.retained_grant(){return Err(refused("Core execution requires the actual incoming input and unchanged physical ceiling").into())}execution.validate_original(input,cx.deadline_us())?;let mut used=0;
-  #[cfg(any(test, feature = "testkit"))]
+  #[cfg(test)]
   let mut trace=Slice::begin(cx,Category::Scalar);
   let result=(||{if self.invocation_complete{return Ok(CoreOriginalInvocationStatus::Complete)}if self.host_call.is_some(){return Ok(CoreOriginalInvocationStatus::Host)}while used<execution.fuel{if cx.is_cancelled()&&!cleanup{return Ok(CoreOriginalInvocationStatus::Cancelled)}if cx.deadline_exceeded(){return Ok(CoreOriginalInvocationStatus::Deadline)}if cx.should_yield(){return Ok(CoreOriginalInvocationStatus::Pending)}let core=self.core.as_mut().unwrap();
    if let Some(work)=self.memory_work.as_mut(){
@@ -123,37 +119,12 @@ impl CoreInstanceOpening{
    let action=match opcode{0x01=>Action::Nop,0x10=>{let function=unsigned(body,&mut pc)?;Action::Call(u32::try_from(function).map_err(|_|refused("Core original call function exceeds its declared width"))?,false)},0x11=>{let expected=unsigned(body,&mut pc)?;let table=unsigned(body,&mut pc)?;let selector=match machine.values.last(){Some(Value::I32(value))=>*value as u32 as usize,_=>return Err(refused("Core original indirect call requires its i32 selector").into())};let table=core.tables.get(table).filter(|table|table.element==ValueType::FuncRef).ok_or_else(||refused("Core original indirect call requires its actual function table"))?;let function=table.values.get(selector).copied().flatten().and_then(|value|u32::try_from(value).ok()).ok_or_else(||refused("Core original indirect call targets an absent function"))?;let expected=module.types.get(expected).ok_or_else(||refused("Core original indirect call expected type is absent"))?;let actual=module.functions.get(function as usize).and_then(|function|module.types.get(function.type_index()as usize)).ok_or_else(||refused("Core original indirect call actual type is absent"))?;if expected!=actual{return Err(refused("Core original indirect call changes its declared function type").into())}Action::Call(function,true)},0x1a=>{if machine.values.is_empty(){return Err(refused("Core scalar drop requires its original operand").into())}Action::Drop},0x20=>{let index=unsigned(body,&mut pc)?;Action::Push(*frame.locals.get(index).ok_or_else(||refused("Core scalar local is absent"))?)},0x21|0x22=>{let index=unsigned(body,&mut pc)?;let target=frame.locals.get(index).ok_or_else(||refused("Core scalar local is absent"))?;let value=*machine.values.last().ok_or_else(||refused("Core scalar local assignment has no original operand"))?;if target.value_type()!=value.value_type(){return Err(refused("Core scalar local assignment changes its type").into())}Action::Local(index,value,opcode==0x21)},0x23=>{let index=unsigned(body,&mut pc)?;Action::Push(core.globals.get(index).ok_or_else(||refused("Core scalar global is absent"))?.value)},0x24=>{let index=unsigned(body,&mut pc)?;let target=core.globals.get(index).ok_or_else(||refused("Core scalar global is absent"))?;let value=*machine.values.last().ok_or_else(||refused("Core scalar global assignment has no original operand"))?;if !target.mutable||target.value.value_type()!=value.value_type(){return Err(refused("Core scalar global assignment changes immutable original storage").into())}Action::Global(index,value)},0x28..=0x3e=>{let alignment=unsigned(body,&mut pc)?;if alignment>=64{return Err(refused("Core original memory plan requires its declared default memory").into())}let offset=unsigned64(body,&mut pc)?;let memory=core.memories.first().ok_or_else(||refused("Core original memory instruction has no retained memory"))?;let(address,width)=plan_memory_address(memory,machine,opcode,offset)?;Action::Memory(opcode,address,width)},0x3f=>{let index=unsigned(body,&mut pc)?;let memory=core.memories.get(index).ok_or_else(||refused("Core original memory size index is absent"))?;let pages=memory.bytes.len()/WASM_PAGE_BYTES;Action::Push(if memory.memory64{Value::I64(pages as i64)}else{Value::I32(pages as i32)})},0x41=>Action::Push(Value::I32(signed(body,&mut pc,32)?as i32)),0x42=>Action::Push(Value::I64(signed(body,&mut pc,64)?)),0x43=>Action::Push(Value::F32(u32::from_le_bytes(fixed::<4>(body,&mut pc)?))),0x44=>Action::Push(Value::F64(u64::from_le_bytes(fixed::<8>(body,&mut pc)?))),0x45..=0xc4=>{let count=numeric_arity(opcode).map_err(|_|refused("Core numeric instruction has no declared scalar shape"))?;let start=machine.values.len().checked_sub(count).ok_or_else(||refused("Core numeric instruction has fewer original operands than declared"))?;let value=execute_numeric_fixed(opcode,&machine.values[start..]).map_err(|_|refused("Core numeric instruction refused its actual original operands"))?;Action::Numeric(value,count)},_=>return Err(refused("Core instruction has no admitted original physical execution plan").into())};
    if let Action::Memory(opcode,address,width)=action{trace_work!(trace,Memory,cx,used);if !admit_memory_instruction(&mut core.memories[0],machine,opcode,address,width,cx)?{return Ok(CoreOriginalInvocationStatus::Pending)}used+=1;machine.frames.last_mut().unwrap().pc=pc;continue}if let Action::Call(function,selector)=action{if matches!(module.functions.get(function as usize),Some(FunctionDecl::Import{..})){trace_work!(trace,HostCall,cx,used);if let Some(call)=host::admit(module,function,machine,selector,pc,cx)?{self.host_call=Some(call);used+=1;return Ok(CoreOriginalInvocationStatus::Host)}return Ok(CoreOriginalInvocationStatus::Pending)}trace_work!(trace,FrameBirth,cx,used);if !admit_defined_frame(module,function,machine,selector,cx)?{return Ok(CoreOriginalInvocationStatus::Pending)}used+=1;let caller=machine.frames.len()-2;machine.frames[caller].pc=pc;continue}if opcode==0x3f{trace_work!(trace,Memory,cx,used);}else{trace_work!(trace,Scalar,cx,used);}if matches!(action,Action::Push(_))&&machine.values.len()==machine.values.capacity(){if !grow_values(&mut machine.values,cx)?{return Ok(CoreOriginalInvocationStatus::Pending)}}if !charge(cx,size_of::<Value>()+size_of::<usize>(),0,0)?{return Ok(CoreOriginalInvocationStatus::Pending)}used+=1;match action{Action::Nop=>{},Action::Drop=>{machine.values.pop();},Action::Push(value)=>machine.values.push(value),Action::Local(index,value,pop)=>{machine.frames.last_mut().unwrap().locals[index]=value;if pop{machine.values.pop();}},Action::Global(index,value)=>{core.globals[index].value=value;machine.values.pop();},Action::Numeric(value,count)=>{machine.values.truncate(machine.values.len()-count);machine.values.push(value);},Action::Call(_,_)|Action::Memory(_,_,_)=>unreachable!()}machine.frames.last_mut().unwrap().pc=pc;
   }Ok(CoreOriginalInvocationStatus::Pending)})();
-  #[cfg(any(test, feature = "testkit"))]
-  if let Some(trace)=trace{
-   if let Some(function)=self.core.as_ref().and_then(|core|core.machine.as_ref()).and_then(|machine|machine.frames.first()).map(|frame|frame.function){
-    if self.returning_frame&&matches!(&result,Ok(CoreOriginalInvocationStatus::Pending))&&trace.zero_progress(cx,used){
-     let machine=self.core.as_ref().unwrap().machine.as_ref().unwrap();
-     trace::pending_frame_return(machine,cx,execution.fuel-used);
-    }
-    trace.finish(module,function,cx,used,matches!(&result,Ok(CoreOriginalInvocationStatus::Pending)));
-   }
-  }
-  if !cleanup&&*TRACE_CORE_FRAME.get_or_init(||std::env::var_os("RUST_BACKTRACE").is_some()){
-   CORE_FRAME_STEPS.with(|steps|{
-    let step=steps.get().saturating_add(1);steps.set(step);
-    if step.is_power_of_two(){
-     if let Some(machine)=self.core.as_ref().and_then(|core|core.machine.as_ref()){
-      let leaf: [Option<(u32,usize)>;4]=std::array::from_fn(|index|machine.frames.iter().rev().nth(index).map(|frame|(frame.function,frame.pc)));
-      eprintln!("[DEBUG] Core scalar: step {step}, execution epoch {}, root function {:?}, frame depth {}, leaf functions and byte offsets {leaf:?}, VM fuel {used}, status {result:?}",input.epoch,machine.frames.first().map(|frame|frame.function),machine.frames.len());
-     }
-    }
-   });
-  }
+  #[cfg(test)]
+  if let Some(trace)=trace{trace.finish(cx,used,matches!(&result,Ok(CoreOriginalInvocationStatus::Pending)));}
   Ok(CoreOriginalInvocationCall{result,execution:OriginalGuestExecutionReceipt{budget:execution,spent_fuel:Some(used),submitted:true}})
  }
  pub fn close_invocation_step(&mut self,module:&Arc<CoreModule>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(module,cx)?;
-  #[cfg(any(test, feature = "testkit"))]
-  if trace::ordinary_flush_enabled(cx){
-   if let Some(function)=self.core.as_ref().and_then(|core|core.machine.as_ref()).and_then(|machine|machine.frames.first()).map(|frame|frame.function){
-    trace::flush_ordinary(module,function,cx);
-   }
-  }
   if self.host_call.is_some(){if !retirement_charge(cx,size_of::<OriginalHostCall>(),0,0)?{return Ok(false)}self.host_call=None;}if let Some(work)=self.memory_work.as_mut(){if !work.close_step(cx)?{return Ok(false)}self.memory_work=None;}if self.control.is_some(){if !retirement_charge(cx,size_of::<OriginalControlPlan>(),0,0)?{return Ok(false)}self.control=None;}let Some(machine)=self.core.as_mut().unwrap().machine.as_mut()else{return Ok(true)};if machine.pending_host.is_some(){return Err(refused("Core scalar machine cannot discard a live original host call").into())}if let Some(frame)=machine.frames.last_mut(){if let Some(control)=frame.controls.last_mut(){if release_vector(&mut control.branch_types,cx)?||release_vector(&mut control.result_types,cx)?{return Ok(false)}if retirement_charge(cx,size_of::<ControlFrame>(),0,0)?{frame.controls.pop();}return Ok(false)}if release_vector(&mut frame.controls,cx)?||release_vector(&mut frame.locals,cx)?{return Ok(false)}if retirement_charge(cx,size_of::<Frame>(),0,0)?{machine.frames.pop();}return Ok(false)}if release_vector(&mut machine.frames,cx)?||release_vector(&mut machine.values,cx)?{return Ok(false)}if !retirement_charge(cx,size_of::<Machine>()+size_of::<bool>()+if self.input_retirement_epoch.is_some(){size_of::<Option<u64>>()}else{0},0,0)?{return Ok(false)}self.core.as_mut().unwrap().machine.take();self.invocation_complete=false;self.returning_frame=false;self.input_retirement_epoch=None;Ok(true)
  }
 }

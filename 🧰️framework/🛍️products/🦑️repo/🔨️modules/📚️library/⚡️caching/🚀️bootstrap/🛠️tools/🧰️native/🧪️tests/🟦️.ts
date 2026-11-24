@@ -108,6 +108,17 @@ describe.skipIf(python === null || windows)("the provisioning of a pinned CPytho
     expect(fetches.length).toBe(1);
   });
 
+  test("replaces an installation without a receipt by the pinned archive instead of refusing it as missing", async () => {
+    const root = fresh(), version = NATIVE_TOOLCHAINS_V1.python.cpython.series["3.12"].version, served = new Map([[pythonInterpreterUrlV1("3.12", host), interpreterArchive("3.12", version)]]), home = pythonInterpreterHomeV1("3.12", host, root);
+    mkdirSync(join(home, "bin"), {recursive: true});
+    writeFileSync(join(home, "bin/python3"), "#!/bin/sh\n");
+    await expect(provisionInterpretersV1(["3.12"], root, portOf(new Map(), "linux", {offline: true}), AbortSignal.timeout(60000), false, host)).rejects.toThrow(/repo tools setup/u);
+    const binary = await prepareInterpreterV1("3.12", host, root, portOf(served, "linux"), AbortSignal.timeout(60000));
+    expect(spawnSync(binary, ["--version"], {encoding: "utf8"}).stdout).toContain(version);
+    expect(existsSync(join(home, ".toolchain.json"))).toBe(true);
+    expect(readdirSync(join(home, "..")).sort()).toEqual([home.split("/").pop()!]);
+  });
+
   test("refuses an archive whose bytes differ from the pin, an offline machine without the interpreter and a binary that reports another version, and publishes nothing", async () => {
     const version = NATIVE_TOOLCHAINS_V1.python.cpython.series["3.12"].version, good = interpreterArchive("3.12", version), url = pythonInterpreterUrlV1("3.12", host);
     const flipped = Buffer.from(good);

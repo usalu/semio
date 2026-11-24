@@ -1,0 +1,18 @@
+[
+{"op":"solid-set","scale":"50","id":"stub-axle","set":{"repeat":{"count":2,"translation":[0,0,-0.835]}}},
+{"op":"solid-set","scale":"50","id":"tilt-eye","set":{"repeat":{"count":2,"translation":[0,0,-0.84]}}},
+{"op":"solid-set","scale":"50","id":"tilt-rod-eye","set":{"repeat":{"count":2,"translation":[0,0,-0.84]}}},
+{"op":"solid-set","scale":"50","id":"pivot-pin","set":{"repeat":{"count":2,"translation":[0,0,-0.672]}}},
+{"op":"solid-set","scale":"50","id":"inner-roller","set":{"repeat":{"count":2,"translation":[0,0,-0.592]}}},
+{"op":"solid-set","scale":"50","id":"carriage-roller-1","set":{"repeat":{"count":2,"translation":[0,0,-0.46]}}},
+{"op":"solid-set","scale":"50","id":"carriage-roller-2","set":{"repeat":{"count":2,"translation":[0,0,-0.46]}}},
+{"op":"solid-set","scale":"100","id":"stub-axle","set":{"repeat":{"count":2,"translation":[0,0,-0.835]}}},
+{"op":"solid-set","scale":"100","id":"pivot-pin","set":{"repeat":{"count":2,"translation":[0,0,-0.672]}}},
+{"op":"solid-set","scale":"100","id":"carriage-roller-1","set":{"repeat":{"count":2,"translation":[0,0,-0.46]}}},
+{"op":"solid-set","scale":"100","id":"carriage-roller-2","set":{"repeat":{"count":2,"translation":[0,0,-0.46]}}},
+{"op":"solid-set","scale":"100","id":"inner-roller","set":{"repeat":{"count":2,"translation":[0,0,-0.592]}}},
+{"op":"shape","scale":"50","view":"plan","id":"pivot-pin","shape":{"id":"pivot-pin","bone":"mast-outer","role":"body","z":1.85,"tone":0.3,"region":"mast","material":"steel","filled":true,"kind":"path","d":"M 0.13 -0.372 L 0.19 -0.372 L 0.19 -0.3001 L 0.13 -0.3001 Z M 0.13 0.2999 L 0.19 0.2999 L 0.19 0.3721 L 0.13 0.3721 Z"}},
+{"op":"shape","scale":"50","view":"plan","id":"inner-roller","shape":{"id":"inner-roller","bone":"mast-inner","role":"body","z":1.85,"tone":0.4,"region":"mast","material":"steel","filled":true,"kind":"path","d":"M 0.14 -0.31 L 0.225 -0.31 L 0.225 -0.2819 L 0.14 -0.2819 Z M 0.14 0.2819 L 0.225 0.2819 L 0.225 0.31 L 0.14 0.31 Z"}},
+{"op":"shape","scale":"100","view":"plan","id":"pivot-pin","shape":{"id":"pivot-pin","bone":"mast-outer","role":"body","z":1.85,"tone":0.3,"region":"mast","material":"steel","filled":true,"kind":"path","d":"M 0.13 -0.372 L 0.19 -0.372 L 0.19 -0.3001 L 0.13 -0.3001 Z M 0.13 0.2999 L 0.19 0.2999 L 0.19 0.3717 L 0.13 0.3717 Z"}},
+{"op":"shape","scale":"100","view":"plan","id":"inner-roller","shape":{"id":"inner-roller","bone":"mast-inner","role":"body","z":1.85,"tone":0.4,"region":"mast","material":"steel","filled":true,"kind":"path","d":"M 0.14 -0.31 L 0.225 -0.31 L 0.225 -0.2819 L 0.14 -0.2819 Z M 0.14 0.2819 L 0.225 0.2819 L 0.225 0.31 L 0.14 0.31 Z"}}
+]

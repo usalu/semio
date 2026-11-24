@@ -193,7 +193,7 @@ pub(super) fn set_annotation_kind(snapshot: &PdfSnapshot, page: usize, object_id
         },
         PdfAnnotationKind::Link { action, destination, highlight, quad_points } => match aspect {
             "uri" => *action = none_if_empty(value).map(PdfAction::uri),
-            "page" => *destination = (x >= 0.0).then_some(PdfDestination::Page { page: x.round() as u32, fit: PdfDestinationFit::Fit }),
+            "page" => *destination = if x < 0.0 { None } else { Some(PdfDestination::Page { page: resolve_page(snapshot.pages.len(), x.round() as u64)? as u32, fit: PdfDestinationFit::Fit }) },
             "highlight" => *highlight = none_if_empty(value),
             "quads" => *quad_points = if value.is_empty() { Vec::new() } else { csv_numbers(value)? },
             other => return Err(unknown(other)),

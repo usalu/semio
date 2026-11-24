@@ -56,11 +56,11 @@ async function beside(left: Locator, right: Locator): Promise<boolean> {
   return side;
 }
 
-/** 🚫️ Nothing of the screen in front is wider than what holds it: neither the page nor any box that could scroll. */
+/** 🚫️ Nothing of the screen in front is wider than what holds it: neither the page nor any box that could scroll, except the full leaderboard, a table whose frame scrolls in both dimensions by design. */
 async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> {
   const wider = await page.evaluate(() => {
     const boxes = [document.documentElement, ...document.querySelectorAll<HTMLElement>("#course-main, #course-main *")].filter((element) => element.closest("[inert]") === null);
-    return boxes.filter((element) => element === document.documentElement || ["auto", "scroll"].includes(getComputedStyle(element).overflowX)).filter((element) => element.scrollWidth > element.clientWidth + 1).map((element) => `${element.tagName.toLowerCase()}.${element.className} +${element.scrollWidth - element.clientWidth}`);
+    return boxes.filter((element) => element === document.documentElement || ["auto", "scroll"].includes(getComputedStyle(element).overflowX)).filter((element) => !element.matches("[data-board-table]")).filter((element) => element.scrollWidth > element.clientWidth + 1).map((element) => `${element.tagName.toLowerCase()}.${element.className} +${element.scrollWidth - element.clientWidth}`);
   });
   expect(wider, `${where}: boxes that scroll sideways`).toEqual([]);
 }

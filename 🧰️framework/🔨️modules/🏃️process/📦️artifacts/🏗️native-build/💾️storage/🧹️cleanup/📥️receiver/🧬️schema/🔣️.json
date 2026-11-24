@@ -14,6 +14,10 @@
           "en": "Funded child without a creator claim ignored (a retirement stopped half way): {path}",
           "de": "Finanziertes Kind ohne Erzeuger-Anspruch ignoriert (eine Stilllegung blieb auf halbem Weg stehen): {path}"
         },
+        "unfundedNotice": {
+          "en": "Unrelated attached image ignored, it is no funded child (mount {mount}, image {image})",
+          "de": "Unbeteiligtes eingehängtes Image ignoriert, es ist kein finanziertes Kind (Einhängepunkt {mount}, Image {image})"
+        },
         "foreignMountRefusal": {
           "en": "Foreign native image mounted inside the parent, not funded by it and not a sibling race: mount {mount}, backing image {image}, device {device}, owner {owner}. Detach the device {device} (a test sandbox must live outside every managed native parent).",
           "de": "Fremdes natives Image im Elternteil eingehängt, weder von ihm finanziert noch ein Geschwister-Wettlauf: Einhängepunkt {mount}, Image-Datei {image}, Gerät {device}, Eigentümer {owner}. Das Gerät {device} aushängen (eine Test-Sandbox muss außerhalb jedes verwalteten nativen Elternteils liegen)."

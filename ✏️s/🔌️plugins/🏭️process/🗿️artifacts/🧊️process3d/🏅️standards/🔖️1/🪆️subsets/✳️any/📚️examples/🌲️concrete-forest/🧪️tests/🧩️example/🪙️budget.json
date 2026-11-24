@@ -1,0 +1,38 @@
+{
+  "forestBrep": {
+    "packBytes": 13686,
+    "rows": {
+      "vertices": 71,
+      "edges": 126,
+      "loops": 57,
+      "faces": 57,
+      "coedges": 252
+    },
+    "ceilingSeedBytes": 17557728,
+    "targetSeedBytes": 58720256,
+    "hostLifetimeFuel": 58720256,
+    "loadsPerLifetime": 1
+  },
+  "receiveSlot": {
+    "beforeBytes": 15712,
+    "ceilingBytes": 9968
+  },
+  "recordReceiver": {
+    "beforeBytes": {
+      "BrepVertex": 38048,
+      "BrepEdge": 69760,
+      "BrepCoedge": 146208,
+      "BrepFace": 84416,
+      "BrepLoop": 52528,
+      "BrepLoopEdge": 22224
+    },
+    "ceilingBytes": {
+      "BrepVertex": 19056,
+      "BrepEdge": 19344,
+      "BrepCoedge": 24576,
+      "BrepFace": 23184,
+      "BrepLoop": 20272,
+      "BrepLoopEdge": 16496
+    }
+  }
+}

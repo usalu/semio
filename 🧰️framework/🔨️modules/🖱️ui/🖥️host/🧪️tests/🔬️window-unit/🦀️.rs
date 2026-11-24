@@ -8,7 +8,7 @@ use crate::observed_allocator::measured;
 #[cfg(not(target_arch="wasm32"))]
 const CLIPBOARD_FIXTURE_FUEL:u64=20000;
 #[cfg(not(target_arch="wasm32"))]
-#[path="../../../../🧵️job/🧪️testing/♻️close/🦀️.rs"]
+#[path="../../../../🧵️job/🧪️tests/♻️close/🦀️.rs"]
 mod close_source;
 #[cfg(not(target_arch="wasm32"))]
 fn clipboard_fixture_now_us()->Option<u64>{Some(0)}

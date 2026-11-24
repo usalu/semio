@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.cargo/ManifestClosureV1",
+  "title": "Cargo build closure derived from Cargo.toml files alone, without cargo metadata and without the project graph",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "manifest": "Cargo.toml",
+        "lock": "Cargo.lock",
+        "maximumCrates": 16384,
+        "maximumManifestBytes": 4194304,
+        "memoSuffix": ".json",
+        "listing": "ls:",
+        "kinds": ["dependencies", "build-dependencies", "dev-dependencies"],
+        "unsupportedTables": ["patch", "replace"],
+        "texts": {
+          "escapes": {
+            "en": "A Cargo path dependency leaves the repository: {path}",
+            "de": "Eine Cargo-Pfadabhängigkeit verlässt das Repository: {path}"
+          },
+          "missing": {
+            "en": "A Cargo path dependency has no manifest: {path}",
+            "de": "Eine Cargo-Pfadabhängigkeit hat kein Manifest: {path}"
+          },
+          "limit": {
+            "en": "The Cargo closure exceeds {limit} crates",
+            "de": "Der Cargo-Abschluss überschreitet {limit} Crates"
+          }
+        }
+      }
+    },
+    "Crate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "name", "digest", "member"],
+      "properties": {
+        "directory": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "name": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "member": { "type": "boolean" }
+      }
+    },
+    "Closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scope", "tests", "crates", "inputs", "unsupported"],
+      "properties": {
+        "version": { "const": 1 },
+        "scope": { "enum": ["workspace", "package"] },
+        "tests": { "type": "boolean" },
+        "crates": { "type": "array", "items": { "$ref": "#/definitions/Crate" } },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "digest"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "digest": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "unsupported": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Memo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "closure"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "closure": { "$ref": "#/definitions/Closure" }
+      }
+    }
+  }
+}

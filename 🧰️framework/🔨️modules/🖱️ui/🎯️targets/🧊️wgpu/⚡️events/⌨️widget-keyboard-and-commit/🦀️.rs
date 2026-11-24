@@ -214,7 +214,7 @@ impl EventRouter {
         }
     }
 
-    /// ⌨️ The keys of a focused `date` or `color` field, as the browser's own pickers answer them. Closed: Enter, Space and ArrowDown open the popup. A date popup: arrows one day or week, Page one month (Shift: one year), Home and End the week's ends move the focused day (the shown month follows), Enter and Space pick it and close. A colour popup: arrows walk the swatches, Home and End jump, Enter and Space pick the highlighted one. Escape stays with the generic overlay close; `Tab` closes and moves on.
+    /// ⌨️ The keys of a focused `date` or `color` field, as the browser's own pickers answer them. Closed: Enter (unless a typed draft waits to commit), Space and ArrowDown open the popup. A date popup: arrows one day or week, Page one month (Shift: one year), Home and End the week's ends move the focused day (the shown month follows), Enter and Space pick it and close. A colour popup: arrows walk the swatches, Home and End jump, Enter and Space pick the highlighted one. Escape stays with the generic overlay close; `Tab` closes and moves on.
     pub(super) fn route_picker_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers, out: &mut Vec<UiCommand>) -> bool {
         use semio_ui_wgpu_layout::colour_picker::{colour_value, swatch_key, COLOUR_SWATCHES};
         use semio_ui_wgpu_layout::date_picker::{date_key, focus_date, is_picker_kind, DateKey};
@@ -227,6 +227,11 @@ impl EventRouter {
         let key = if key == "NumpadEnter" { "Enter" } else { key };
         let (open, kind, change, value, day, monday, highlighted) = (node.state.open, input.input_kind.clone(), input.on_change.clone(), input.value.clone(), node.state.picker_day, node.state.picker_week_monday, node.state.highlighted);
         if !open {
+            let published = (kind == "date").then(|| node.state.date_display.clone()).flatten().or_else(|| editable_value(&node.spec.0));
+            let drafting = node.state.edit.as_ref().zip(published.as_ref()).is_some_and(|(edit, published)| edit.text != *published);
+            if key == "Enter" && drafting {
+                return false;
+            }
             if matches!(key, "Enter" | " " | "ArrowDown") {
                 out.extend(self.toggle_select_popup(tree, id));
                 return true;

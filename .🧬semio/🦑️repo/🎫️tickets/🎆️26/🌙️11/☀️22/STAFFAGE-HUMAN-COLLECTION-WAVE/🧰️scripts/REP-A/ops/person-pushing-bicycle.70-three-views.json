@@ -1,0 +1,4 @@
+[
+{"op": "shape", "scale": "500", "view": "front", "id": "shoe-r", "shape": {"id": "shoe-r", "bone": "foot-r", "role": "body", "z": 1, "filled": true, "tone": 0.8, "region": "shoes", "material": "leather-shoe", "kind": "poly", "points": [[-0.0824, -0.081782], [0.139668, -0.081782], [0.139668, -0.004532], [-0.063139, 0.00515]], "closed": true, "solid": {"kind": "extruded", "sweep": "w", "z0": 0.07254, "z1": 0.15937}}},
+{"op": "shape", "scale": "500", "view": "front", "id": "shoe-l", "shape": {"id": "shoe-l", "bone": "foot-l", "role": "body", "z": 1.4, "filled": true, "tone": 0.8, "region": "shoes", "material": "leather-shoe", "kind": "poly", "points": [[-0.0824, -0.081782], [0.139668, -0.081782], [0.139668, -0.004532], [-0.063139, 0.00515]], "closed": true, "solid": {"kind": "extruded", "sweep": "w", "z0": 0.26247, "z1": 0.34941}}}
+]

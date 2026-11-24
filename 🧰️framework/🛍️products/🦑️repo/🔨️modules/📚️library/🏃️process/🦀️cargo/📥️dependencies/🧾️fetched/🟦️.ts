@@ -12,7 +12,7 @@ const underHome=(home:string,path:string)=>{const row=resolve(home,path);if(row!
 /** 🧾️ Proves that every package of the named lockfiles was fetched as an archive whose content is the lockfile checksum, so the proof survives any rewrite, touch, move or restoration of an identical archive. */
 export type FetchedReceiptV1=Readonly<{version:1;request:string;locks:readonly Readonly<{path:string;digest:string;bytes:number}>[];registry:Readonly<{digest:string;count:number}>}>;
 /** 🔌️ Observes the repository Source bytes, the registry directories and the SHA-256 of registry archives; its only write replaces one extracted `registry/src` package directory. */
-export type FetchedPortV1=Readonly<{read(path:string):Promise<Uint8Array|undefined>;digest(path:string):Promise<string|undefined>;list(path:string):readonly string[]|undefined;archive(path:string):Promise<Uint8Array|undefined>;unpacked(path:string):Promise<ReadonlyMap<string,string>|undefined>;restore(path:string,files:ReadonlyMap<string,Uint8Array>):Promise<void>}>;
+export type FetchedPortV1=Readonly<{read(path:string):Promise<Uint8Array|undefined>;digest(path:string):Promise<string|undefined>;list(path:string):readonly string[]|undefined;archive(path:string):Promise<Uint8Array|undefined>;unpacked(path:string):Promise<ReadonlyMap<string,string>|undefined>;restore(path:string,files:ReadonlyMap<string,Uint8Array>):Promise<void>;listing(checksum:string):string|undefined;remember(checksum:string,listing:string):void}>;
 
 /** 📜️ Classifies a lockfile: only registry and path packages can be proven fetched by archive checksums; git sources keep the unconditional fetch. */
 export function classifyFetchedLockV1(text:string):"registry"|"unsupported"{
@@ -116,18 +116,23 @@ export async function fetchedSourcesV1(home:string,port:FetchedPortV1,locked:Rea
  const sound=async([name,checksum]:readonly[string,string]):Promise<boolean>=>{
   for(const index of indexes){
    const archive=underHome(home,posix.join(protocol.registryCache,index,name+".crate"));if(await port.digest(archive)!==checksum)continue;
+   const directory=underHome(home,posix.join(protocol.registrySource,index,name)),have=await port.unpacked(directory),remembered=port.listing(checksum);
+   if(remembered!==undefined&&have?.has(".cargo-ok")&&fetchedListingV1([...have].filter(([path])=>path!==".cargo-ok"))===remembered)return true;
    const bytes=await port.archive(archive),files=bytes&&fetchedArchiveFilesV1(bytes);if(!files)return false;
-   const directory=underHome(home,posix.join(protocol.registrySource,index,name)),have=await port.unpacked(directory);
-   if(have&&have.has(".cargo-ok")&&[...files].every(([path,body])=>have.get(path)===digestOf(body)))return true;
+   const content=[...files].map(([path,body])=>[path,digestOf(body)] as const);port.remember(checksum,fetchedListingV1(content));
+   if(have&&have.has(".cargo-ok")&&content.every(([path,digest])=>have.get(path)===digest))return true;
    if(!repair)return false;
    await port.restore(directory,new Map([...files,[".cargo-ok",marker]]));
-   const again=await port.unpacked(directory);return again!==undefined&&again.has(".cargo-ok")&&[...files].every(([path,body])=>again.get(path)===digestOf(body));
+   const again=await port.unpacked(directory);return again!==undefined&&again.has(".cargo-ok")&&content.every(([path,digest])=>again.get(path)===digest);
   }
   return false;
  };
  for(let start=0;start<locked.length;start+=16)if((await Promise.all(locked.slice(start,start+16).map(sound))).includes(false))return false;
  return true;
 }
+
+/** 📇️ The SHA-256 of an archive's sorted `path NUL file-digest LF` rows: a pure function of the archive bytes, so one remembered under the archive checksum can never go stale, and an extracted directory holding exactly the same rows needs no archive read. */
+export function fetchedListingV1(rows:Iterable<readonly[string,string]>):string{return createHash("sha256").update([...rows].sort(([left],[right])=>left<right?-1:left>right?1:0).map(([path,digest])=>path+"\0"+digest+"\n").join("")).digest("hex");}
 
 /** 🔐️ The locked `[name-version, checksum]` rows of every lockfile the manifests own; `undefined` when a lockfile is missing, unreadable, not registry-sourced or exceeds the protocol bounds. */
 export async function fetchedLockedOfV1(manifests:readonly string[],read:FetchedPortV1["read"]):Promise<ReadonlyArray<readonly[string,string]>|undefined>{

@@ -1,8 +1,9 @@
 {
   "title": "Staffage Plant Collection Wave",
   "emoji": "🌿",
-  "status": "open",
+  "status": "closed",
   "description": "Extend the architectural staffage catalog (🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation) with a huge collection of new handcrafted plants (trees, conifers, palms, desert plants, shrubs, hedges, herbs, grasses, climbers, crops, potted plants) via a massive parallel wave of Opus 5.5 agents, each asset passing the staffage check, with manifest rows, collections and tests synced.",
+  "summary": "51 new plants are in the staffage catalog and manifest (67 vegetation assets) with eight plant collections. All 67 vegetation assets pass the product check CLI and the three-views suite, and each wave plant validates with 0 issues (2026-11-23). Not clean: 18 of the 27 plants of PW-01 to PW-09 keep measured volume-rule findings, mostly cross-scale disagreement of the coarse crowns on 15 plants; the weakest drawings are fig-tree, honey-locust, dawn-redwood, english-yew and the european-beech top; the silhouette guard was not measured to the end for the plants. Evidence: plants-a.md, plants-b.md, plants-pw15.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "goal": "🎯runningdrawing",
   "sessions": [
     "ce4617d4-4e33-4d3f-8bc0-b14e955fb8da"
@@ -17,6 +18,20 @@
       "checkpoint": "",
       "prompt": "Extend the architectural staffage catalog (🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/🌳️vegetation) with a huge collection of new handcrafted plants (trees, conifers, palms, desert plants, shrubs, hedges, herbs, grasses, climbers, crops, potted plants) via a massive parallel wave of Opus 5.5 agents, each asset passing the staffage check, with manifest rows, collections and tests synced.",
       "llm": "opus-5-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 15:24:19",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "51 new plants are in the staffage catalog and manifest (67 vegetation assets) with eight plant collections. All 67 vegetation assets pass the product check CLI and the three-views suite, and each wave plant validates with 0 issues (2026-11-23). Not clean: 18 of the 27 plants of PW-01 to PW-09 keep measured volume-rule findings, mostly cross-scale disagreement of the coarse crowns on 15 plants; the weakest drawings are fig-tree, honey-locust, dawn-redwood, english-yew and the european-beech top; the silhouette guard was not measured to the end for the plants. Evidence: plants-a.md, plants-b.md, plants-pw15.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
+      "files": [
+        {
+          "path": "🛅🎓️teaching🗃️🏛️architecture🗃️🧍️staffage🗃️🗂️catalog⚙️🔣️"
+        }
+      ]
     }
   ]
 }

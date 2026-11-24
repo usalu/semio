@@ -196,6 +196,13 @@ export function nativeWorkspaceV1(directory,workspaceRoot,manifest=readToml(join
  }
 }
 
+/** 🕳️ The refusal of a Cargo path dependency whose directory has no manifest: it names the manifest that is missing and, when a dependant declares it, that dependant and the path it spells, so the declaration to repair is the one the message points at. */
+function missingManifestV1(manifest, dependant, spelling) {
+  const error = new Error(`Native dependency has no Cargo manifest: ${manifest}` + (dependant === undefined ? "" : ` (declared by ${dependant} as path "${spelling}")`));
+  error.code = "NATIVE_INPUT_ADMISSION"; error.manifest = manifest; error.dependant = dependant;
+  return error;
+}
+
 const NATIVE_DIRECTORY_CLOSURES = new WeakMap();
 
 /** 🧶️ The relative spelling of every crate directory a graph construction met, one string instance per directory: the closure of each of thousands of roots lists most of the crates, and a spelling per list entry cost hundreds of megabytes. */
@@ -212,7 +219,7 @@ export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache 
   const read = (path, role) => memoizedObservedComputationV1(cache,role+"\0"+path,()=>readCargoManifestRoleV1(path, role));
   const children = function* (directory, includeTests) {
     const manifestPath = join(directory, "Cargo.toml");
-    if (!existsSync(manifestPath)) { const error = new Error(`Native dependency has no Cargo manifest: ${manifestPath}`); error.code = "NATIVE_INPUT_ADMISSION"; error.manifest=manifestPath; throw error; }
+    if (!existsSync(manifestPath)) throw missingManifestV1(manifestPath);
     const manifest = read(manifestPath, includeTests ? "graph-tests" : "graph");
     let workspace = directory;
     if (manifest.package?.workspace) workspace = resolve(directory, manifest.package.workspace);
@@ -227,6 +234,7 @@ export function nativeDependencyRoots(root, workspaceRoot, tests = false, cache 
       if (dependency.kind === "dev-dependencies" && !includeTests) continue;
       const child = resolve(dependency.workspace ? workspace : directory, dependency.path);
       if (buildPath(relative(workspaceRoot, child)).startsWith("../")) throw new Error(`Native dependency escapes repository: ${child}`);
+      if (!existsSync(join(child, "Cargo.toml"))) throw missingManifestV1(join(child, "Cargo.toml"), join(directory, "Cargo.toml"), dependency.path);
       yield child;
     }
   };

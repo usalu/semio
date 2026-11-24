@@ -3,7 +3,8 @@
  * origin, which the dev server proxies to the dev proctor. The site hands the quiz its material — the course and its
  * quizzes — as chunks of their own that are fetched while the page already shows, so the first paint weighs none of the
  * solutions and the page goes on working while the proctor cannot be reached: a learner registers, plays and is scored
- * on the device, and the proctor hears of it once it answers. The footer links the
+ * on the device, and the proctor hears of it once it answers. The site speaks the language the deployment names
+ * (`site.language`: German) until its learner chooses another. The footer links the
  * legal pages the deployment names (`site.legal`: imprint, privacy policy); a page it does not name is not linked. The
  * pets are the architecture menagerie, a script chunk of its own that only a learner who wants pets downloads. The posters of
  * the learning clips are the built URLs of their images, content-hashed assets that only the clips page shows.
@@ -34,4 +35,4 @@ export function bakedProctorOrigin(): string {
 }
 
 const root = document.getElementById("root");
-if (root) mountCourse(root, { proctor: bakedProctorOrigin(), tenant: ARCHITECTURE_COURSE_TENANT, material: loadArchitectureCourseMaterial, logo, legal: site.legal, posters: ARCHITECTURE_CLIP_POSTERS, pets: () => import("../🐾️pets/🟦️.ts").then((module) => module.ARCHITECTURE_MENAGERIE) });
+if (root) mountCourse(root, { proctor: bakedProctorOrigin(), tenant: ARCHITECTURE_COURSE_TENANT, material: loadArchitectureCourseMaterial, logo, language: site.language, legal: site.legal, posters: ARCHITECTURE_CLIP_POSTERS, pets: () => import("../🐾️pets/🟦️.ts").then((module) => module.ARCHITECTURE_MENAGERIE) });

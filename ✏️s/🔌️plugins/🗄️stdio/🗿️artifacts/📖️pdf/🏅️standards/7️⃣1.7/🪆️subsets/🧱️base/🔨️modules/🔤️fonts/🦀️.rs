@@ -273,7 +273,7 @@ pub struct FontCodec {
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
 use crate::standards::v1_7::subsets::base::io::error::{PResult, PdfEngineError};
 
-fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
+fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data.to_vec_owner()),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
 
 
 fn standard_outline_program(name: &str) -> Option<&'static [u8]> {

@@ -166,4 +166,4 @@ impl OriginalScratchWork<GenerationPlayState> for GenerationFoldWork{
  fn advance(&mut self,state:&mut GenerationPlayState,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{self.advance(state,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.step_progress()}
 }
-impl Drop for GenerationFoldWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original generation fold retains input, row, comparison, lookup or map custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for GenerationFoldWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original generation fold retains input, row, comparison, lookup or map custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

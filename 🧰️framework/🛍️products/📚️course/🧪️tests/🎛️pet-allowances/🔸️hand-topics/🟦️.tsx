@@ -63,7 +63,7 @@ export function registerHandTopicsTests(): void {
       expect(document.querySelector(".course-drag-ghost")).toBeNull();
     });
 
-    it("gives every quiz card of the overview its quiz as a topic it is never lifted for — a press on a card is the card's — and marks every task of an opened quiz's page with `<quiz>/<task>`", () => {
+    it("gives every quiz card of the overview its quiz as a topic it is never lifted for, lets the pet of that topic try to steal the label of its title chip alone, and marks every task of an opened quiz's page with `<quiz>/<task>`", () => {
       const home = (step: CourseStep): ReactElement => <HomeScreen session={idleSession()} state={homeAt(step)} text={courseText("en")} locale="en" preferences={PREFERENCES} onPreferences={() => undefined} />;
       const { rerender } = render(home({ screen: "home" }));
       const cards = [...document.querySelectorAll<HTMLElement>("[data-pet-topic]")];
@@ -71,12 +71,13 @@ export function registerHandTopicsTests(): void {
       for (const card of cards) {
         expect(card.dataset.card).toBe(`quiz:${card.dataset.petTopic}`);
         expect(card.hasAttribute("data-pet-prop")).toBe(false);
-        expect(card.closest(COURSE_PET_CONTROLS)).not.toBeNull();
-        expect(card.closest(COURSE_PET_CONTROLS)).toBe(card);
-        expect(card.closest("[data-layered-card]")!.closest(COURSE_PET_CONTROLS)).toBeNull();
-        expect(card.querySelectorAll("[data-pet-prop]")).toHaveLength(0);
+        expect(card.closest(COURSE_PET_CONTROLS), "pets live in a card's open room: a press on one there is the pet's").toBeNull();
+        const marked = [...card.querySelectorAll<HTMLElement>("[data-pet-prop]")];
+        expect(marked.map((element) => element.dataset.petProp)).toEqual([card.dataset.petTopic]);
+        expect(marked[0]!.closest("[data-window-frame-chip]")?.getAttribute("data-dock"), "the label of the title chip").toBe("top");
+        expect(marked[0]!.textContent).toBe(card.querySelector("h1, h2, h3, h4")!.textContent);
       }
-      expect([...document.querySelectorAll(COURSE_PET_PROPS)].filter((element) => element.closest("[data-layered-card]") !== null)).toEqual([]);
+      expect([...document.querySelectorAll<HTMLElement>(COURSE_PET_PROPS)].filter((element) => element.closest("[data-layered-card]") !== null).map((element) => element.dataset.petProp).sort()).toEqual(["cooling", "heating"]);
 
       expect({version:taskTopics.version,markerTag:taskTopics.markerTag,rowTag:taskTopics.rowTag,listTag:taskTopics.listTag,card:taskTopics.card,props:taskTopics.rows.map(row=>row.prop),cases:taskTopics.cases}).toEqual({version:1,markerTag:"DIV",rowTag:"LI",listTag:"OL",card:"course-tasks",props:["heating/u-values","heating/heating-load-and-demand"],cases:[{id:"open",locked:false},{id:"first-task-locked",locked:true}]});
       for (const vector of taskTopics.cases) {

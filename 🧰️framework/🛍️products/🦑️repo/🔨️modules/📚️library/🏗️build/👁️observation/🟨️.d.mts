@@ -202,6 +202,8 @@ export function observationRowsHoldAsyncV1(rows:readonly unknown[],step:()=>Prom
 export function useStableDirectoriesV1(directories:ReadonlySet<string>):void;
 /** 🔢️ How many directory listings this process made. */
 export function observationProbeCountsV1():{readdir:number};
+/** 📊️ How often the memo of directory facts answered by stamps, had to list again, remembered a fact or refused one, and how many facts it holds. */
+export function observationDirectoryFactCountsV1():{hits:number;misses:number;recorded:number;refused:number;entries:number};
 
 /** 🌐️ The port through which project inference records travel through the fleet cache; `undefined` keeps them local. */
 /** 🚚️ How the closure entries of a project record travel with it. */

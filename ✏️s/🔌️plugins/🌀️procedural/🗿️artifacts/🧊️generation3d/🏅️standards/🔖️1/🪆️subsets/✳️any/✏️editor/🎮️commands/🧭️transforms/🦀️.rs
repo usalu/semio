@@ -851,7 +851,7 @@ impl GumballGestures{
 impl GumballGesture{
  fn retire_cold(self){for(_,leaf)in self.entries{leaf.retire_cold()}}
 }
-impl Drop for GumballGestures{fn drop(&mut self){assert!(self.terminal_is_empty(),"live gumball authority requires original map retirement");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.open)}}}}
+impl Drop for GumballGestures{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"live gumball authority requires original map retirement");if self.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.open)}}}}
 #[path="📥️source/🦀️.rs"]
 mod original_gesture_source;
 pub use original_gesture_source::{OriginalGumballRead,GumballPreviewRecord};

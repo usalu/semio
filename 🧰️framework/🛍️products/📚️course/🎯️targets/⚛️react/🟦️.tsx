@@ -22,7 +22,7 @@
 //#region 🔁️Reexports
 export { COURSE_BUNDLE_DE } from "./🔨️modules/🌐️i18n/🔡️german-bundle/🟦️.ts";
 export { COURSE_BUNDLE_EN } from "./🔨️modules/🌐️i18n/🔠️english-bundle/🟦️.ts";
-export { COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, courseLocaleLoaded, isCourseLocale, loadCourseLocales, localized, preferredLocale, courseText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
+export { COURSE_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, courseLocaleLoaded, initialLocale, isCourseLocale, loadCourseLocales, localized, preferredLocale, courseText, titled } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export type { CourseLabelKey, CourseLocale, CourseText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export { SIGNIFICANT_DIGITS, SI_PREFIXES, ceilSignificant, engineering, floorSignificant, formatClock, formatCount, formatCountdown, formatDate, formatDuration, formatFactor, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, formatTimes, oneDecimal, parseQuantity, quantityReading, quantitySymbol, quantityUnits, splitGuess, withMinusSign, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
 export type { QuantityUnit, Toward } from "./🔨️modules/📏️quantity/🟦️.ts";
@@ -50,7 +50,7 @@ export { OTHERS_CHOICE_LABELS, PET_CHOICE_LABELS, withPets } from "./🔨️modu
 export { PET_CHOICES, PetTopic, PetsPlay, PetsSwitch, CoursePets, CoursePetsProvider, effectivePetMode, petProp, switchedPets, usePetCast, usePetQuestion, usePetTopic, usePetsForced, usePetsReduced } from "./🔨️modules/🐾️pets/🟦️.tsx";
 export type { PetChoice, PetLiveliness, CoursePetsSource, ShownPets } from "./🔨️modules/🐾️pets/🟦️.tsx";
 export type { PetPlay, PetPlayer, CoursePetsStage } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
-export { PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PET_HOME_SCENE, PetsPlayground, COURSE_PETS_TEMPO, COURSE_PET_CONTROLS, COURSE_PET_KEEPOUTS, COURSE_PET_PROPS, COURSE_PET_SURFACES, CoursePetLayer, peerGlances, petNames, petPlayers, petScene, petsTempo, shinyPetSpecies } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
+export { PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PET_HOME_SCENE, PetsPlayground, COURSE_PETS_TEMPO, COURSE_PET_CONTROLS, COURSE_PET_KEEPOUTS, COURSE_PET_OPEN, COURSE_PET_PROPS, COURSE_PET_SURFACES, CoursePetLayer, peerGlances, petNames, petPlayers, petScene, petsTempo, shinyPetSpecies } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
 export type { PetDeed } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
 export { DROP_ZONE_CLASS, DragGrip, GuessField, HINT_SYMBOL, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, exampleGuess, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement } from "./🔨️modules/🧩️task/🟦️.tsx";

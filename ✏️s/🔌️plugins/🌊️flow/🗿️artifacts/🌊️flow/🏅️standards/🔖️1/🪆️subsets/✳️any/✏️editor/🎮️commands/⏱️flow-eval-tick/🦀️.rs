@@ -43,6 +43,11 @@ pub fn eval_tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
 pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> bool {
     flow::unserved_flow_operator_kinds(host_snapshot, &flow::flow_operator_registry()).is_empty()
 }
+
+/// 🧭️ The typed requests that park a document on its unserved kinds: one [`Effect::PublishEvent`] on [`flow::ON_DEMAND_REQUEST_TOPIC`] per namespace, carrying the UTF-8 JSON `{"kind":"node-kind","nodeKind":…}` the host's on-demand activator admits. The window stays parked; the activated extension's contributions push moves the registry generation and re-arms it (`FlowEvalSession::invalidate_for_flow_extension_registry`), and an extension that stays unavailable leaves its nodes faulted as unknown kinds.
+pub fn on_demand_effects(unserved: &[String]) -> Vec<Effect> {
+    flow::on_demand_node_kind_requests(unserved).into_iter().map(|request| Effect::PublishEvent { topic: flow::ON_DEMAND_REQUEST_TOPIC.into(), payload: request.into_bytes() }).collect()
+}
 //#endregion 🔖️Constants
 
 //#region 🔖️Arm
@@ -83,7 +88,8 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
     let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick_cold(&mut host, None);
     let parked = host.take_pending_extension_evals();
-    let servable = may_rearm(&host.host_snapshot);
+    let unserved = flow::unserved_flow_operator_kinds(&host.host_snapshot, &flow::flow_operator_registry());
+    let servable = unserved.is_empty();
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
     host.retire_cold().or_else(|refusal|refusal.resolve()).map_err(crate::editor::flow::host::value_fault)?;
     let mut extension_invocations = Vec::new();
@@ -107,7 +113,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
         if more && !servable {
             session.abandon_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
         }
-        Vec::new()
+        on_demand_effects(&unserved)
     };
     Ok(Emit { effects, extension_invocations, ..Default::default() })
 }

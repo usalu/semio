@@ -207,6 +207,10 @@ use semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::U
 pub fn inverse_drawing_mutation(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
     <DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::inverse(mutation, snapshot)
 }
+/// 🚫 Whether semantic admission refuses `mutation` against `snapshot` outright, such as a missing target; a no-op is admitted.
+pub fn drawing_mutation_is_refused(snapshot: &DrawingSnapshot, mutation: &DrawingMutation) -> bool {
+    matches!(<DrawingMutation as protocol::ColdMutation<DrawingSnapshot>>::diff(mutation, snapshot).admit(), protocol::MutationAdmission::Refused(_))
+}
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests

@@ -125,7 +125,7 @@ impl OriginalSurfaceViewRead{
  pub fn terminal_is_empty(&self)->bool{self.closing&&!self.locked&&self.admission.terminal_is_empty()&&self.unit.terminal_is_empty()}
  pub fn release_demand()->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }
-impl Drop for OriginalSurfaceViewRead{fn drop(&mut self){assert!(self.terminal_is_empty(),"original surface view read requires exact source restoration and paid closure")}}
+impl Drop for OriginalSurfaceViewRead{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original surface view read requires exact source restoration and paid closure")}}
 /// 🎟️ The existing typed clone capture embeds the same stable source pin.
 pub struct OriginalSurfaceViewCapture{read:OriginalSurfaceViewRead,cursor:RetainedCloneOwner<ViewModel>,output:ManuallyDrop<Option<ViewModel>>,retirement:RetainedCloneClose,unit:Unit,phase:u8,closing:bool}
 impl OriginalSurfaceViewCapture{
@@ -183,4 +183,4 @@ impl OriginalSurfaceViewCapture{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.read.terminal_is_empty()&&self.output.is_none()&&self.cursor.terminal_is_empty()&&self.retirement.is_empty()&&self.unit.terminal_is_empty()}
  pub fn release_demand()->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }
-impl Drop for OriginalSurfaceViewCapture{fn drop(&mut self){assert!(self.terminal_is_empty(),"original surface view capture requires cache restoration and paid closure")}}
+impl Drop for OriginalSurfaceViewCapture{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original surface view capture requires cache restoration and paid closure")}}

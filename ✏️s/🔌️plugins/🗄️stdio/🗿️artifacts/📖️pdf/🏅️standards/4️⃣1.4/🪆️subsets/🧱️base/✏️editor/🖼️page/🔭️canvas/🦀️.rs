@@ -1,7 +1,7 @@
 //! 🖼️ PDF 1.4 page canvas: the resolved 1.4 pages lifted into the shared 1.7 page model, so one scene builder, view lane, selection and text path serve both dialects. PDF 1.4 is a subset of 1.7, and the lift is exactly the file the 1.4 writer saves.
 //! [PDF 32000-1 page tree](https://www.iso.org/standard/51502.html)
 
-use semio_os_kernel::{ColdMutation, Mutation};
+use semio_os_kernel::ColdMutation;
 use semio_plugin::app::InteractionView;
 use semio_plugin::retained_command::ArtifactCommandWork;
 use semio_plugin::{ArtifactView, Axis, ComponentTree, EditorApp, Emit, Fault, FaultCode, FaultOrigin, PluginAssemblyError, UiAssemblyResult, WindowKindDefinition, WindowLayout, WindowLayoutNode};
@@ -103,16 +103,17 @@ fn set_text(snapshot: &Snapshot14, value: &Value) -> Result<Emit<PdfMutation>, F
 /// ▶️ Admits one replayed canvas action against the 1.4 page domain: a hit selects, text and page structure become the own mutation, anything else is refused.
 pub fn emit_page_edit(snapshot: &Snapshot14, action: &str, payload: &str) -> Result<Emit<PdfMutation>, Fault> {
     let value: Value = serde_json::from_str(payload).map_err(|error| refusal(error.to_string()))?;
-    let page_index = value.get("page").and_then(Value::as_u64).map_or(0, |page| page as usize);
+    let pages = snapshot.pages.len();
+    let page_index = |slots: usize| page::resolve_page(slots, value.get("page").and_then(Value::as_u64).unwrap_or(0));
     let (width, height) = (number(&value, "width").max(1.0), number(&value, "height").max(1.0));
     match action {
         "canvasPointerMove" | "canvasPointerUp" => Ok(Emit::default()),
         "canvasPointerDown" => Ok(Emit { effects: page::emit_page_edit(&lift(snapshot)?, action, payload)?.effects, ..Default::default() }),
         "set-text" => set_text(snapshot, &value),
-        "insert-page" => admit(snapshot, PdfMutation::InsertPage(InsertPage { index: page_index, page: PageDoc::new(width, height) })),
-        "remove-page" => admit(snapshot, PdfMutation::RemovePage(RemovePage { index: page_index })),
-        "move-page" => admit(snapshot, PdfMutation::MovePage(MovePage { from: page_index, to: number(&value, "x").max(0.0) as usize })),
-        "set-page-size" => admit(snapshot, PdfMutation::ResizePage(ResizePage { index: page_index, width, height })),
+        "insert-page" => admit(snapshot, PdfMutation::InsertPage(InsertPage { index: page_index(pages + 1)?, page: PageDoc::new(width, height) })),
+        "remove-page" => admit(snapshot, PdfMutation::RemovePage(RemovePage { index: page_index(pages)? })),
+        "move-page" => admit(snapshot, PdfMutation::MovePage(MovePage { from: page_index(pages)?, to: page::resolve_page(pages, number(&value, "x").max(0.0).round() as u64)? })),
+        "set-page-size" => admit(snapshot, PdfMutation::ResizePage(ResizePage { index: page_index(pages)?, width, height })),
         other => Err(refusal(format!("PDF 1.4 pages keep size and text only; '{other}' is not a 1.4 page action"))),
     }
 }

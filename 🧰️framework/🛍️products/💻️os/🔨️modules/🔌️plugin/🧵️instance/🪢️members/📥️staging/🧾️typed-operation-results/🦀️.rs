@@ -13,7 +13,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 && operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck
                 && matches!(operation.publication.as_ref(), Some(ArtifactToolCompletionValue::Download(Ok(_), _)))
         });
-        if download_ack && (!self.media.segmented_downloads.can_insert(token.operation) || !self.media.segmented_closures.can_insert(token.operation)) {
+        if download_ack && (!self.media.segmented_downloads.can_insert(token.operation) || !self.media.segmented_closures.can_insert(token.operation) || self.tools.typed_completion_outbox.items.len() >= self.tools.typed_completion_outbox.capacity) {
             return Ok(false);
         }
         let Some(operation) = self.tools.tool_operations.get_mut(token.operation) else { return Ok(false) };
@@ -30,6 +30,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-ephemeral"), "download ACK preceded retained ephemeral publication"));
         }
         self.media.segmented_downloads.insert_admitted(token.operation, download);
+        let _ = self.tools.typed_completion_outbox.push(semio_plugin_job::TypedOperationCompletionWitness { operation: token.operation, ui_scope: UiDirtyScope::Full });
         Ok(true)
     }
 

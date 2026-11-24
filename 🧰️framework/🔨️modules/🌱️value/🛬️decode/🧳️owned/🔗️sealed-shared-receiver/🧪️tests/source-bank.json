@@ -17,7 +17,7 @@
   "completedLocalPending": false,
   "childCloseCalls": 1,
   "childCloseRecovers": 1,
-  "vacantFrameFields": 36,
+  "vacantFrameFields": 28,
   "seedInterruptReplays": 0,
   "seedCancelCuts": [
     1,

@@ -97,4 +97,4 @@ impl<T:RetainedClone> OriginalScratchWork<()> for ProjectedFieldCloneWork<T>{
  fn advance(&mut self,_source:&mut (),effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<bool>{ProjectedFieldCloneWork::advance(self,effect)}
  fn step_progress(&self)->RetainedCloneProgress{self.progress}
 }
-impl<T:RetainedClone> Drop for ProjectedFieldCloneWork<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"projected native field retains its source, clone cursor or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cursor);ManuallyDrop::drop(&mut self.output)}}}}
+impl<T:RetainedClone> Drop for ProjectedFieldCloneWork<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"projected native field retains its source, clone cursor or output");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.cursor);ManuallyDrop::drop(&mut self.output)}}}}

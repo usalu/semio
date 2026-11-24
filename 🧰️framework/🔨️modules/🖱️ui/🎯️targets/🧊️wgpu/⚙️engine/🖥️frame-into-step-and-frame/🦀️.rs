@@ -51,7 +51,7 @@ impl Ui {
             candidate.set_screen_height(target.screen_height());
             candidate.set_clock_seconds(target.clock_seconds());
             candidate.set_reduced_motion(target.reduced_motion());
-            window.paint_frame = Some(RetainedPaintFrame {
+            window.paint_frame = Some(Box::new(RetainedPaintFrame {
                 phase: RetainedPaintPhase::Synchronize,
                 walk: RetainedPaintWalk::new(&window.tree, root),
                 candidate,
@@ -77,7 +77,7 @@ impl Ui {
                 hit_candidates: Vec::new(),
                 fault_site: None,
                 progress: 0,
-            });
+            }));
             return UiFrameStep::Pending;
         }
         let fresh = window

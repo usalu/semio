@@ -56,7 +56,13 @@ impl NativeSnapshotBodyWallet{
   let attempt=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||native.effect_allocated(self.grant,&mut self.progress,demand,bytes,&mut state.view(),failure,&mut operation)));let progress=self.progress;
   match attempt{
    Ok(turn)=>RetainedWorkOutcome{work:turn.work,result:match turn.result{Ok(Some(()))=>Ok(()),Ok(None)=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot encoder effect awaits an unfinished original reply").into()),Err(error)=>Err(NativeSnapshotFailure::from_encode_effect(error,progress))}},
-   Err(payload)=>{if let Some(error)=failure.take(){*unwind=Some(NativeSnapshotFailure::from_encode_effect(error,progress))}std::panic::resume_unwind(payload)}
+   Err(payload)=>{
+    let settled=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||native.effect_allocated(self.grant,&mut self.progress,demand,bytes,&mut state.view(),failure,&mut operation)));
+    let progress=self.progress;
+    let owned=match settled{Ok(RetainedWorkOutcome{result:Err(error),..})=>Some(error),_=>failure.take()};
+    if let Some(error)=owned{*unwind=Some(NativeSnapshotFailure::from_encode_effect(error,progress))}
+    std::panic::resume_unwind(payload)
+   }
   }
  }
  /// 📦️ Copies octets through the same original encoder and retained allocation carrier.

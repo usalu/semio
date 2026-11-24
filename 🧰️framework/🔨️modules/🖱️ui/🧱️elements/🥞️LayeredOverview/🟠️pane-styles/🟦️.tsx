@@ -114,7 +114,11 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
       const box = rootRef.current?.getBoundingClientRect();
       if (!box || box.width <= 0 || box.height <= 0) return;
       const unit = (value: number): number => Math.min(1, Math.max(0, value));
-      const camera = { x: unit((event.clientX - box.left) / box.width), y: unit((event.clientY - box.top) / box.height) };
+      const overlay = rootRef.current?.querySelector(":scope > [data-layered-overlay]");
+      const room = overlay ? getComputedStyle(overlay) : null;
+      const [clearTop, clearBottom] = [Number.parseFloat(room?.paddingTop ?? "") || 0, Number.parseFloat(room?.paddingBottom ?? "") || 0];
+      const height = Math.max(1, box.height - clearTop - clearBottom);
+      const camera = { x: unit((event.clientX - box.left) / box.width), y: unit((event.clientY - box.top - clearTop) / height) };
       latest.current.props.onCameraChange?.(camera);
       if (revealedRef.current !== null || latest.current.props.camera !== undefined) return;
       const { grid: strip, cellList: placed } = latest.current;

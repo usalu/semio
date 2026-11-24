@@ -11,6 +11,9 @@ pub const MODE_AMPLITUDE: f64 = 0.04;
 pub const DEFLECTION_TARGET: f64 = 0.05;
 const LTB_STRIDE: usize = 4;
 const MOMENT_SAMPLES: usize = 40;
+const MEMO_CAPACITY: usize = 512;
+
+type LtbShape = (f64, Vec<(f64, f64, f64)>);
 
 /// 🌀️ One computed shape: `Ncr` in N for the unit axial load, `Mcr` in Nm for the given peak moment, or the display magnification of a deflection; plus the displacement samples in world directions.
 pub struct Eigen {
@@ -41,8 +44,10 @@ fn mapped(frame: &Frame, curve: mech::member_modes::Curve, scale: f64) -> Vec<Di
 
 /// 🌀️ Flexural buckling under a unit compression: `factor` is `Ncr`, the shape (largest translation 1) the first mode of the support condition (pinned, fixed at the root, fixed at both ends).
 pub fn flexural(member: &AluminiumMember, section: &AluminiumSection, frame: &Frame) -> Option<Eigen> {
-    let (ncr, curve) = mech::member_modes::buckling(&props(member, section), ends(member)).ok()?;
-    Some(Eigen { factor: ncr, samples: mapped(frame, curve, 1.0) })
+    static TABLE: Memo<Option<std::sync::Arc<(f64, mech::member_modes::Curve)>>> = std::sync::OnceLock::new();
+    let (props, ends) = (props(member, section), ends(member));
+    let shape = memoised(&TABLE, member_key(&props, ends, &[]), || mech::member_modes::buckling(&props, ends).ok().map(std::sync::Arc::new))?;
+    Some(Eigen { factor: shape.0, samples: mapped(frame, shape.1.clone(), 1.0) })
 }
 
 /// 📈️ Signed moment line `M(s)/max|M|` of a uniform load (`udl`) or of a mid-span point load (tip load of a cantilever): positive sagging.
@@ -63,31 +68,63 @@ pub fn lateral_torsional(member: &AluminiumMember, section: &AluminiumSection, f
     let l = member.length;
     let (a, iy, iz, _, _, it, iw) = section_geometry(section);
     let spacing = if member.ltb_length > 1e-6 { member.ltb_length } else { l };
-    let restraints = (1..).map(|k| k as f64 * spacing).take_while(|x| *x < l - 1e-6).map(|x| mech::LtbRestraint { x, lateral: true, twist: true }).collect();
-    let (end_i, end_j) = match member.support {
-        SupportCondition::SimplySupported => (mech::ltb::fork_end(), mech::ltb::fork_end()),
-        SupportCondition::Cantilever => (mech::ltb::fixed_end(), mech::LtbEnd::default()),
-        SupportCondition::Continuous => (mech::ltb::fixed_end(), mech::ltb::fixed_end()),
-    };
-    let ltb = mech::LtbMember {
-        length: l,
-        e: E_PA,
-        g: G_PA,
-        iz,
-        iw,
-        j: it,
-        polar_radius_sq: (iy + iz) / a.max(1e-12),
-        end_i,
-        end_j,
-        restraints,
-        moment: (0..=MOMENT_SAMPLES).map(|i| i as f64 / MOMENT_SAMPLES as f64).map(|s| (s * l, m_ed * moment_line(member.support, udl, s))).collect(),
-        elements: 32,
-        ..Default::default()
-    };
-    let result = mech::ltb::ltb_analyze(&ltb, &mech::Control::none()).ok()?;
-    let last = result.shape.len().saturating_sub(1);
-    let samples = result.shape.iter().enumerate().filter(|(i, _)| i % LTB_STRIDE == 0 || *i == last).map(|(_, p)| DisplacementSample { at: p.x / l, delta: mul(&frame.y, p.lateral + p.twist * depth / 2.0) }).collect();
-    Some(Eigen { factor: result.mcr, samples })
+    let polar_radius_sq = (iy + iz) / a.max(1e-12);
+    static TABLE: Memo<Option<std::sync::Arc<LtbShape>>> = std::sync::OnceLock::new();
+    let key = bits(&[l, iz, iw, it, polar_radius_sq, spacing, m_ed, f64::from(member.support as u8), f64::from(u8::from(udl))]);
+    let shape = memoised(&TABLE, key, || {
+        let restraints = (1..).map(|k| k as f64 * spacing).take_while(|x| *x < l - 1e-6).map(|x| mech::LtbRestraint { x, lateral: true, twist: true }).collect();
+        let (end_i, end_j) = match member.support {
+            SupportCondition::SimplySupported => (mech::ltb::fork_end(), mech::ltb::fork_end()),
+            SupportCondition::Cantilever => (mech::ltb::fixed_end(), mech::LtbEnd::default()),
+            SupportCondition::Continuous => (mech::ltb::fixed_end(), mech::ltb::fixed_end()),
+        };
+        let ltb = mech::LtbMember {
+            length: l,
+            e: E_PA,
+            g: G_PA,
+            iz,
+            iw,
+            j: it,
+            polar_radius_sq,
+            end_i,
+            end_j,
+            restraints,
+            moment: (0..=MOMENT_SAMPLES).map(|i| i as f64 / MOMENT_SAMPLES as f64).map(|s| (s * l, m_ed * moment_line(member.support, udl, s))).collect(),
+            elements: 32,
+            ..Default::default()
+        };
+        let result = mech::ltb::ltb_analyze(&ltb, &mech::Control::none()).ok()?;
+        let last = result.shape.len().saturating_sub(1);
+        let points = result.shape.iter().enumerate().filter(|(i, _)| i % LTB_STRIDE == 0 || *i == last).map(|(_, p)| (p.x / l, p.lateral, p.twist)).collect();
+        Some(std::sync::Arc::new((result.mcr, points)))
+    })?;
+    let samples = shape.1.iter().map(|(at, lateral, twist)| DisplacementSample { at: *at, delta: mul(&frame.y, lateral + twist * depth / 2.0) }).collect();
+    Some(Eigen { factor: shape.0, samples })
+}
+
+type Memo<T> = std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<Vec<u64>, T>>>;
+
+/// 🧠️ The solution of one eigen or deflection analysis for the bit patterns `key` of its mechanical inputs: each analysis is a dense solve that depends on nothing else, so members that repeat (a document of cloned rows, a drag that moves one member) are solved once; a table is emptied when it grows past [`MEMO_CAPACITY`] entries.
+fn memoised<T: Clone>(table: &'static Memo<T>, key: Vec<u64>, solve: impl FnOnce() -> T) -> T {
+    let memo = table.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()));
+    if let Some(known) = memo.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&key) {
+        return known.clone();
+    }
+    let solved = solve();
+    let mut known = memo.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if known.len() >= MEMO_CAPACITY {
+        known.clear();
+    }
+    known.insert(key, solved.clone());
+    solved
+}
+
+fn bits(values: &[f64]) -> Vec<u64> {
+    values.iter().map(|value| value.to_bits()).collect()
+}
+
+fn member_key(props: &mech::member_modes::Props, ends: mech::member_modes::Ends, extra: &[f64]) -> Vec<u64> {
+    bits(&[&[props.length, props.e, props.g, props.a, props.iy, props.iz, props.j, f64::from(ends as u8)], extra].concat())
 }
 
 /// 📐️ Elastic deflection line under a unit uniform load (`udl`) or a unit mid-span point load (tip load of a cantilever) scaled to the computed deflection `delta`: the largest displacement is `delta`, `factor` the display magnification bringing it to a twentieth of the length.
@@ -95,7 +132,10 @@ pub fn deflection(member: &AluminiumMember, section: &AluminiumSection, frame: &
     let l = member.length;
     let at = if member.support == SupportCondition::Cantilever { l } else { l / 2.0 };
     let loads = if udl { mech::member_modes::Loads { udl: 1.0, ..Default::default() } } else { mech::member_modes::Loads { point: (at, 1.0), ..Default::default() } };
-    let curve = mech::member_modes::deflection(&props(member, section), ends(member), &loads).ok()?;
+    static TABLE: Memo<Option<std::sync::Arc<mech::member_modes::Curve>>> = std::sync::OnceLock::new();
+    let (props, ends) = (props(member, section), ends(member));
+    let curve = memoised(&TABLE, member_key(&props, ends, &[f64::from(u8::from(udl)), at]), || mech::member_modes::deflection(&props, ends, &loads).ok().map(std::sync::Arc::new))?;
+    let curve = curve.as_ref().clone();
     let top = curve.iter().flat_map(|(_, u)| u.iter()).fold(0.0_f64, |m, v| m.max(v.abs()));
     (top > 0.0 && delta > 0.0).then(|| Eigen { factor: (DEFLECTION_TARGET * l / delta).max(1.0), samples: mapped(frame, curve, delta / top) })
 }

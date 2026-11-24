@@ -306,10 +306,11 @@ def footing_local_rect(leg):
     return [(0.0, -FOOTING_X / 2), (FOOTING_D, -FOOTING_X / 2), (FOOTING_D, FOOTING_X / 2), (0.0, FOOTING_X / 2)]
 
 
-def plan_spans():
-    """🔭 The part of every slat seen from above: where a higher slat overlaps a lower one in plan (the steep back), the lower one starts at the edge of the higher one."""
-    spans = [[min(p[0] for p in sl["corners"]), max(p[0] for p in sl["corners"])] for sl in SLATS]
-    tops = [max(p[1] for p in sl["corners"]) for sl in SLATS]
+def plan_spans(eased=False):
+    """🔭 The part of every slat seen from above: where a higher slat overlaps a lower one in plan (the steep back), the lower one starts at the edge of the higher one. `eased` measures the slats with their eased arrises, as the body of the fine scales has them: two slats whose sharp corners would just overlap in plan then leave the few millimetres of open joint the body shows (silhouette repair SF of 2026-11-23, `catalog-silhouette` 80.6 mm in the plan of 1:50 between slat 3 and slat 4)."""
+    outlines = [rounded_rect(sl["x"], sl["y"], sl["a"], SLAT_W, SLAT_T, SLAT_R) if eased else sl["corners"] for sl in SLATS]
+    spans = [[min(p[0] for p in o), max(p[0] for p in o)] for o in outlines]
+    tops = [max(p[1] for p in o) for o in outlines]
     for i in range(len(spans) - 1):
         if spans[i + 1][0] < spans[i][1]:
             if tops[i] >= tops[i + 1]:
@@ -320,6 +321,7 @@ def plan_spans():
 
 
 PLAN_SPANS = plan_spans()
+PLAN_SPANS_EASED = plan_spans(True)
 
 
 def slat_tone(i):
@@ -374,7 +376,7 @@ def build(den):
             thermal.append({"id": f"th-{sid}", "of": sid, "region": "slats"})
             outline = rounded_rect(sl["x"], sl["y"], sl["a"], SLAT_W, SLAT_T, SLAT_R) if sc.eased else sl["corners"]
             elev.append(poly(sid, "frame", "body", 6, outline, tone=tone, region="slats", material="robinia-weathered", pen=0.5 if den == 50 else 0.35))
-            xa, xb = PLAN_SPANS[i]
+            xa, xb = (PLAN_SPANS_EASED if sc.eased else PLAN_SPANS)[i]
             plan.append(rect(sid, "frame", "body", 6, xa, -SLAT_L / 2, xb, SLAT_L / 2, tone=tone, region="slats", material="robinia-weathered", hatch="grain" if den == 50 else None, pen=0.5 if den == 50 else 0.35))
         ys = sorted([(min(p[1] for p in sl["corners"]), max(p[1] for p in sl["corners"])) for sl in SLATS])
         band = [list(ys[0])]

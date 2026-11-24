@@ -1,4 +1,4 @@
-import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "../../🧭️selection/📥️options/🟦️.ts";
+import {buildOptionsV1,declaredBuildProjectSelectorsV1,literalBuildProjectSelectorsV1,selectBuildNamesV1,wholeBuildReadReasonV1} from "../../🧭️selection/📥️options/🟦️.ts";
 import {buildBooleanOptionV1} from "../../🧭️selection/🟦️.ts";
 import {createHash} from "node:crypto";
 import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
@@ -26,7 +26,7 @@ const sourceOwners=(registry:BuildOwnerRegistryV1)=>registry.owners.flatMap(owne
 /** ✅️ Rejects open selections and canonicalizes the finite task order. */
 export function readBuildGraphSelectionV1(value:unknown):BuildGraphSelectionV1{
  if(validateJsonSchemaSubset(selectionSchema,value).length)throw Error("Closed build graph selection required");
- const selection=value as BuildGraphSelectionV1;return selection.kind==="all"?{kind:"all"}:selection.kind==="owners"?{kind:"owners",projects:[...selection.projects].sort(),exclude:[...selection.exclude].sort(),...(selection.targets?{targets:[...selection.targets].sort()}:{})}:{kind:"tasks",tasks:selection.tasks.map(task=>({...task})).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))),...(selection.excludeDependencies?{excludeDependencies:true as const}:{})};
+ const selection=value as BuildGraphSelectionV1;return selection.kind==="all"?{kind:"all"}:selection.kind==="owners"?{kind:"owners",projects:selection.projects.some(value=>value.startsWith("!"))?[...selection.projects]:[...selection.projects].sort(),exclude:[...selection.exclude].sort(),...(selection.targets?{targets:[...selection.targets].sort()}:{})}:{kind:"tasks",tasks:selection.tasks.map(task=>({...task})).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b))),...(selection.excludeDependencies?{excludeDependencies:true as const}:{})};
 }
 
 /** 📋️ Validates only declarations and identity collisions, never independent physical inputs. */
@@ -208,7 +208,7 @@ export async function closeBuildOwnerAdmissionV1(selection:BuildGraphSelectionV1
   inputs.set(name,selected);
   if(selected.size!==previous)dirty(name);
  };
- if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else if(selection.kind==="owners")for(const name of selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude)){admit(name);named.add(name);for(const target of selection.targets??[])task(name,target,true);}else for(const value of selection.tasks)task(value.project,value.target);
+ if(selection.kind==="all")for(const owner of registry.owners)admit(owner.name);else if(selection.kind==="owners")for(const name of selectBuildNamesV1(registry.owners,selection.projects,selection.exclude)){admit(name);named.add(name);for(const target of selection.targets??[])task(name,target,true);}else for(const value of selection.tasks)task(value.project,value.target);
  for(pass=0;pass<=registry.owners.length+65536;pass++){
   let changed=false;
   for(let name=frontier.take(pass);name!==undefined;name=frontier.take(pass)){
@@ -260,10 +260,17 @@ export function applyBuildGeneratedTaskDependenciesV1<T extends {name:string;tar
  const targets={...project.targets};for(const[name,producers]of Object.entries(value as Record<string,string[]>)){if(!targets[name])throw Error("Generated consumer task absent");const inputs=[...(targets[name].inputs??["default","^default"])];for(const producer of producers){if(producer===project.name+":"+name)throw Error("Generated task cannot consume its own output: "+JSON.stringify({project:project.name.slice(0,256),target:name.slice(0,256),producer:producer.slice(0,256)}));const owner=producer.slice(0,producer.lastIndexOf(":")),input=owner===project.name?"default":{input:"default",projects:[owner]};if(!inputs.some(value=>JSON.stringify(value)===JSON.stringify(input)))inputs.push(input);}targets[name]={...targets[name],dependsOn:[...new Set([...(targets[name].dependsOn??[]),...producers])],inputs};}return {...project,targets};
 }
 
+/** 🌐️ The bilingual progress line of a `run-many` whose `-p` selectors cannot resolve from declared names, so its graph read stays complete; undefined when the read is scoped.
+ * @see ../../🧭️selection/📥️options/🟦️.ts */
+export function buildWholeReadReasonV1(args:readonly string[]):string|undefined{
+ const head=args.slice(0,args.includes("--")?args.indexOf("--"):undefined);if(args[0]!=="run-many"||head.some(argument=>argument==="--all"||argument.startsWith("--all=")))return undefined;
+ const list=(names:string[])=>buildOptionsV1(args,names).flatMap(value=>value.split(",").filter(Boolean));return wholeBuildReadReasonV1(list(["projects","p"]),list(["exclude"]));
+}
+
 /** 🏁️ Makes complete workspace admission explicit for roster-dependent commands. */
 export function buildInvocationGraphSelectionV1(args:readonly string[]):BuildGraphSelectionV1{
  const head=args.slice(0,args.includes("--")?args.indexOf("--"):undefined);
- if(args[0]==="run-many"&&!head.some(argument=>argument==="--all"||argument.startsWith("--all="))){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean)),targets=[...new Set(buildOptionsV1(args,["targets","target","t"]).flatMap(value=>value.split(",").filter(Boolean)))];if(literalBuildProjectSelectorsV1(projects,exclude)&&targets.length&&targets.length<=64&&targets.every(target=>!/[*?\[\]{}()\\:]/u.test(target)))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)],targets});}
+ if(args[0]==="run-many"&&!head.some(argument=>argument==="--all"||argument.startsWith("--all="))){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean)),targets=[...new Set(buildOptionsV1(args,["targets","target","t"]).flatMap(value=>value.split(",").filter(Boolean)))];if(declaredBuildProjectSelectorsV1(projects,exclude)&&targets.length&&targets.length<=64&&targets.every(target=>!/[*?\[\]{}()\\:]/u.test(target)))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)],targets});}
  if(args[0]==="exec"){const projects=buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),exclude=buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean));if(literalBuildProjectSelectorsV1(projects,exclude))return readBuildGraphSelectionV1({kind:"owners",projects:[...new Set(projects)],exclude:[...new Set(exclude)]});}
  if(args[0]==="show"&&args[1]==="project"&&args[2]&&literalBuildProjectSelectorsV1([args[2]],[]))return readBuildGraphSelectionV1({kind:"owners",projects:[args[2]],exclude:[]});
  if(args[0]!=="run")return {kind:"all"};

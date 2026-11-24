@@ -60,4 +60,4 @@ impl FlowAuthoringCommandWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.authoring.is_none()&&self.translation.is_none()&&self.source.terminal_is_empty()&&self.publication.terminal_is_empty()&&self.failure.terminal_is_empty()&&self.outputs.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl Drop for FlowAuthoringCommandWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow authoring command must close source, domain and native output custody");unsafe{ManuallyDrop::drop(&mut self.outputs)}}}
+impl Drop for FlowAuthoringCommandWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow authoring command must close source, domain and native output custody");unsafe{ManuallyDrop::drop(&mut self.outputs)}}}

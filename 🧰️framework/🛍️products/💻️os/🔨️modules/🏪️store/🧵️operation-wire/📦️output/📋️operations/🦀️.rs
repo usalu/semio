@@ -139,5 +139,5 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
  })(); semio_framework_value::RetirementPollExit::settle(effect, result) }
 }
 impl Drop for ArtifactPreparedOperationsOwner {
- fn drop(&mut self){assert!(self.values.terminal_is_empty()&&self.contiguous.is_none(),"original operation rows require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.values);ManuallyDrop::drop(&mut self.contiguous)};}
+ fn drop(&mut self){assert!(std::thread::panicking()||(self.values.terminal_is_empty()&&self.contiguous.is_none()),"original operation rows require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.values);ManuallyDrop::drop(&mut self.contiguous)};}
 }

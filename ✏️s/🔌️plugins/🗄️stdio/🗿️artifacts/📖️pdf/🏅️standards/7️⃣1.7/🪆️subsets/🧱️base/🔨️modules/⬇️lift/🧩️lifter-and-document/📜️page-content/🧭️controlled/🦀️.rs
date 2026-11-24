@@ -3,7 +3,8 @@
 use super::{ObjRef, ObjectSource, PdfObject};
 use crate::standards::v1_7::subsets::base::modules::content::{ContentProgramCursor, ContentProgramEvent, ContentProgramReceipt, FontTable, NoFonts};
 use crate::standards::v1_7::subsets::base::modules::lexer::CosGrant;
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfOp;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfStreamBytes};
+use semio_framework_value::ByteReadSource;
 
 #[derive(Clone, Copy)]
 enum Location {
@@ -29,7 +30,7 @@ enum Span {
 }
 
 impl Span {
-    fn inspect(self, source: &mut dyn ObjectSource, read: &mut dyn FnMut(Option<&[u8]>)) {
+    fn inspect(self, source: &mut dyn ObjectSource, read: &mut dyn FnMut(Option<&PdfStreamBytes>)) {
         let mut stream = |value: Option<&PdfObject>| read(stream_bytes(value));
         match self {
             Self::Direct(location) => location.inspect(source, &mut stream),
@@ -40,7 +41,7 @@ impl Span {
     }
 }
 
-fn stream_bytes(value: Option<&PdfObject>) -> Option<&[u8]> {
+fn stream_bytes(value: Option<&PdfObject>) -> Option<&PdfStreamBytes> {
     match value {
         Some(PdfObject::Stream { data, .. }) => Some(data),
         _ => None,
@@ -86,7 +87,7 @@ enum Stage {
 }
 
 #[derive(Clone, Copy)]
-enum Input { Single(Span), Joined, Empty }
+enum Input { Joined, Empty }
 
 /// 🚧️ Identifies a controlled interpretation barrier without consuming the unavailable operator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -195,9 +196,11 @@ impl PageContentCursor {
             Stage::Inspect { location } => {
                 self.stage = Stage::Interpret(Input::Empty);
                 location.inspect(source, &mut |value| match value {
-                    Some(PdfObject::Stream { .. }) => {
+                    Some(PdfObject::Stream { data, .. }) => {
                         self.stream_count = 1;
-                        self.stage = Stage::Interpret(Input::Single(Span::Direct(location)));
+                        self.planned_bytes = data.len();
+                        self.first_stream = Some(Span::Direct(location));
+                        self.stage = Stage::Allocate { array: location };
                     }
                     Some(PdfObject::Ref(reference)) if matches!(location, Location::Entry { .. }) => {
                         self.stage = Stage::Inspect { location: Location::Owner(*reference) };
@@ -211,7 +214,7 @@ impl PageContentCursor {
             Stage::MeasureReference { array, index, reference } => {
                 let span = Span::Direct(Location::Owner(reference));
                 let mut len = None;
-                span.inspect(source, &mut |data| { len = data.map(<[u8]>::len); });
+                span.inspect(source, &mut |data| { len = data.map(PdfStreamBytes::len); });
                 self.record_span(array, index, len.map(|len| (span, len)))
             }
             Stage::Allocate { array } => {
@@ -221,7 +224,10 @@ impl PageContentCursor {
                 if self.joined.try_reserve_exact(self.planned_bytes).is_err() {
                     return self.fail("cannot allocate combined PDF page content");
                 }
-                self.stage = Stage::Join { array, index: 0 };
+                self.stage = match (self.stream_count, self.first_stream) {
+                    (1, Some(span)) => Stage::Copy { array, index: 0, span, offset: 0, separator: false },
+                    _ => Stage::Join { array, index: 0 },
+                };
                 PageContentReceipt { allocated_bytes: self.joined.capacity(), ..worked() }
             }
             Stage::Join { array, index } => {
@@ -282,7 +288,7 @@ impl PageContentCursor {
             Member::End => {
                 self.stage = match (self.stream_count, self.first_stream) {
                     (0, _) => Stage::Interpret(Input::Empty),
-                    (1, Some(span)) => Stage::Interpret(Input::Single(span)),
+                    (1, Some(_)) => Stage::Allocate { array },
                     _ => Stage::Allocate { array },
                 };
                 return worked();
@@ -316,21 +322,26 @@ impl PageContentCursor {
         let mut next = Stage::Join { array, index: index + 1 };
         span.inspect(source, &mut |bytes| {
             let Some(bytes) = bytes else { return };
-            let Some(tail) = bytes.get(offset..) else {
+            let Some(tail_len) = bytes.len().checked_sub(offset) else {
                 next = Stage::Failed("PDF page content source changed while joining");
                 return;
             };
             let separator_count = usize::from(separator);
-            let count = tail.len().min(grant.work - separator_count);
+            let count = tail_len.min(grant.work - separator_count);
             let remaining = self.joined.capacity() - self.joined.len();
             if separator_count + count > remaining {
                 next = Stage::Failed("PDF page content source exceeds its planned length");
                 return;
             }
             if separator { self.joined.push(b'\n'); }
-            self.joined.extend_from_slice(&tail[..count]);
+            let start = self.joined.len();
+            self.joined.resize(start + count, 0);
+            if bytes.read_bytes(offset, &mut self.joined[start..]) != count {
+                next = Stage::Failed("PDF page content source changed while joining");
+                return;
+            }
             turn.work = (separator_count + count).max(1);
-            if count < tail.len() {
+            if count < tail_len {
                 next = Stage::Copy { array, index, span, offset: offset + count, separator: false };
             }
         });
@@ -343,14 +354,6 @@ impl PageContentCursor {
         let turn = match input {
             Input::Empty => self.program.advance(&[], fonts, grant, false),
             Input::Joined => self.program.advance(&self.joined, fonts, grant, false),
-            Input::Single(span) => {
-                let mut turn = None;
-                span.inspect(source, &mut |bytes| {
-                    if let Some(bytes) = bytes { turn = Some(self.program.advance(bytes, fonts, grant, false)); }
-                });
-                let Some(turn) = turn else { return self.fail("PDF page content stream disappeared during projection"); };
-                turn
-            }
         };
         let turn = program_receipt(turn);
         self.stage = match turn.event {

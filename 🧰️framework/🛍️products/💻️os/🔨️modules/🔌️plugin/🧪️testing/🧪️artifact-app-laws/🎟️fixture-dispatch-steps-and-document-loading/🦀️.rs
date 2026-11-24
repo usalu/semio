@@ -26,6 +26,36 @@ pub fn arm_host_lifetime(cx:&semio_framework_job::StepContext<'_>)->HostLifetime
     HostLifetimeGuard(())
 }
 
+thread_local!{static HOST_TURN_GRANT:std::cell::Cell<Option<RetainedCloneGrant>>=const{std::cell::Cell::new(None)};}
+
+/// 🔒️ Disarms the host turn grant when the law that armed it ends, also on unwind.
+pub struct HostTurnGrantGuard(());
+impl Drop for HostTurnGrantGuard{fn drop(&mut self){let _=HOST_TURN_GRANT.try_with(|slot|slot.set(None));}}
+
+/// 🌐️ Narrows every fixture turn renewal on this thread to the per-turn grant `grant` a host issues (the browser's is far below the native fixture's), while the lifetime stock stays the fixture's.
+pub fn arm_host_turn_grant(grant:RetainedCloneGrant)->HostTurnGrantGuard{HOST_TURN_GRANT.with(|slot|slot.set(Some(grant)));HostTurnGrantGuard(())}
+
+/// 🌐️ Whether a host turn grant is armed on this thread.
+pub fn host_turn_grant_armed()->bool{HOST_TURN_GRANT.with(|slot|slot.get().is_some())}
+
+struct HostTurnFuel{fuel:u64,last_spent:Option<u128>,peak:u128,turns:usize}
+thread_local!{static HOST_TURN_FUEL:std::cell::RefCell<Option<HostTurnFuel>>=const{std::cell::RefCell::new(None)};}
+
+/// ⛽️ Disarms the host turn fuel when the law that armed it ends, also on unwind.
+pub struct HostTurnFuelGuard(());
+impl Drop for HostTurnFuelGuard{fn drop(&mut self){let _=HOST_TURN_FUEL.try_with(|slot|slot.borrow_mut().take());}}
+impl HostTurnFuelGuard{
+    /// 📏️ The most original work any one renewed turn spent since this guard was armed; the turn that is still running is counted at the next renewal or by [`Self::settle`].
+    pub fn peak_turn_work(&self)->u128{HOST_TURN_FUEL.with(|slot|slot.borrow().as_ref().map_or(0,|armed|armed.peak))}
+    /// 🔢️ How many turns were renewed since this guard was armed.
+    pub fn turns(&self)->usize{HOST_TURN_FUEL.with(|slot|slot.borrow().as_ref().map_or(0,|armed|armed.turns))}
+    /// 🧾️ Counts the work of the turn that is still running as a finished turn.
+    pub fn settle(&self,cx:&semio_framework_job::StepContext<'_>){HOST_TURN_FUEL.with(|slot|if let Some(armed)=slot.borrow_mut().as_mut(){if let Some(last)=armed.last_spent{armed.peak=armed.peak.max(cx.original_work_units_spent().saturating_sub(last))}armed.last_spent=Some(cx.original_work_units_spent())})}
+}
+
+/// ⛽️ Replaces the fixture's per-turn fuel on this thread by the fuel a host turn really grants (the browser shard grants 50,000,000, the native fixture 2,000,000) and meters the original work every renewed turn spends, so a law can bound one turn's work and not only the whole operation's.
+pub fn arm_host_turn_fuel(fuel:u64)->HostTurnFuelGuard{HOST_TURN_FUEL.with(|slot|*slot.borrow_mut()=Some(HostTurnFuel{fuel,last_spent:None,peak:0,turns:0}));HostTurnFuelGuard(())}
+
 fn host_lifetime_refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,message)}
 
 /// 🧾️ Ends the previous fixture call's turn the way the host does when it drops a turn's context: the open original receiving scope is settled against a semantic receipt equal to its accepted physical spend, so the next call opens a fresh scope that owes nothing.
@@ -34,6 +64,8 @@ pub fn fixture_end_turn(cx:&mut semio_framework_job::StepContext<'_>)->Result<()
 /// 🔁️ Renews one fixture turn like the host issues it: fuel and grant are restored per turn, but an armed [`arm_host_lifetime`] first refuses the turn once the lifetime stock is spent or the lifetime wall clock has run out.
 pub fn fixture_renew_turn(cx:&mut semio_framework_job::StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),semio_framework_value::ValueError>{
     fixture_end_turn(cx)?;
+    let fuel=HOST_TURN_FUEL.with(|slot|slot.borrow_mut().as_mut().map_or(fuel,|armed|{let spent=cx.original_work_units_spent();if let Some(last)=armed.last_spent{armed.peak=armed.peak.max(spent.saturating_sub(last))}armed.last_spent=Some(spent);armed.turns+=1;armed.fuel}));
+    let grant=HOST_TURN_GRANT.with(|slot|slot.get()).map_or(grant,|host|RetainedCloneGrant{maximum_items:grant.maximum_items.min(host.maximum_items),maximum_copy_bytes:grant.maximum_copy_bytes.min(host.maximum_copy_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.min(host.maximum_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.min(host.maximum_release_bytes),maximum_depth:grant.maximum_depth.min(host.maximum_depth)});
     HOST_LIFETIME.with(|slot|{
         let slot=slot.borrow();let Some(lifetime)=slot.as_ref() else{return Ok(())};
         if lifetime.started.elapsed()>HostLifetimeStock::ELAPSED{return Err(host_lifetime_refusal("host lifetime deadline exhausted: the native initiating event allows 30 s"))}
@@ -68,7 +100,9 @@ pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_
 }
 
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
+/// 🎫️ Every dispatch is one initiating native event: it is issued [`OriginalFixtureCaller::event_stock`] afresh, as the host births one stock per event, and the previous event must have stayed within its own.
 pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    semio_framework_job::testkit::issue_initiating_event(cx,OriginalFixtureCaller::event_stock())?;
     let (fresh_fuel,fresh_grant)=(OriginalFixtureCaller::turn_fuel(),cx.original_turn_ceiling().0);
     ensure_fixture_cancellation_issuer(app,cx)?;
     if matches!(action, "copy" | "cut" | "paste") {
@@ -251,9 +285,14 @@ pub fn fixture_step_context() -> semio_framework_job::StepContext<'static> {
 
 /// 🧮️ [`fixture_step_context`] for any retained turn input: the context names exactly that input's operation, generation and grant, so a fixture that funds a turn with a narrower grant (or none) hands the kernel a context that agrees.
 pub fn fixture_step_context_for(turn: semio_framework::kernel::RetainedTurnInput) -> semio_framework_job::StepContext<'static> {
+    fixture_step_context_funded(turn, 1_000_000)
+}
+
+/// 🧮️ [`fixture_step_context_for`] with the turn's own fuel, so a law can open a context with the 50,000,000 units one browser shard turn grants.
+pub fn fixture_step_context_funded(turn: semio_framework::kernel::RetainedTurnInput, fuel: u64) -> semio_framework_job::StepContext<'static> {
     let sequence: &'static mut u64 = Box::leak(Box::new(0));
     let progress: &'static mut semio_framework_value::RetainedCloneProgress = Box::leak(Box::default());
-    semio_framework_job::StepContext::new(semio_framework_job::OperationId(turn.operation), semio_framework_job::Generation(turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, turn.grant), semio_framework_job::root_cancel_token(), || Some(0), sequence, progress)
+    semio_framework_job::StepContext::new(semio_framework_job::OperationId(turn.operation), semio_framework_job::Generation(turn.generation), semio_framework_job::StepBudget::new(fuel, u64::MAX, turn.grant), semio_framework_job::root_cancel_token(), || Some(0), sequence, progress)
 }
 
 /// 🌀️ Polls one app's pending effects under a fresh fixture step context, as the refresh poll lane does.

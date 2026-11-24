@@ -396,7 +396,6 @@ impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving
         let valid=matches!((self.phase,call.kind),(Phase::Boot,OriginalActorFixedKind::Admission{..})|(Phase::CloseContext,OriginalActorFixedKind::Close{..})|(Phase::CloseContext,OriginalActorFixedKind::QuiescentForCoreRetirement)|(Phase::Input,OriginalActorFixedKind::InputAdmission{..})|(Phase::Input,OriginalActorFixedKind::InputFailure{..})|(Phase::Poll,OriginalActorFixedKind::TurnOutput{..})|(Phase::CloseOutput,OriginalActorFixedKind::Close{..})|(_,OriginalActorFixedKind::Failure{..}));if !valid{return Err(invalid("Poll fixed receipt has another actual frontier"))}
         let bytes=std::mem::size_of_val(&self.fixed)+std::mem::size_of_val(&self.journal_identity)+std::mem::size_of_val(&self.close_kind)+std::mem::size_of_val(&self.capsule)+2*std::mem::size_of::<bool>();if !charge_frame(cx,bytes)?{return Ok(false)}
         match call.kind{OriginalActorFixedKind::TurnOutput{ready,captured,pointer,length,..}=>{if self.output_captured&&!captured{return Err(invalid("Poll captured flag regressed before CloseOutput"))}self.output_captured=captured;if ready{self.capsule=Some((pointer,length));self.resident=true;}},OriginalActorFixedKind::QuiescentForCoreRetirement|OriginalActorFixedKind::Admission{..}|OriginalActorFixedKind::Close{..}=>self.close_kind=Some(call.kind),_=>{}}self.fixed=Some(call);self.journal_identity=Some(view.identity());
-        if self.phase==Phase::Boot&&std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] Boot SRE1 settled: epoch {}, result {:?}, guest work {}",call.input.epoch,call.kind,call.work_units_spent);}
         Ok(true)
     }
     /// ▶️ The frozen bytes stay immutable until the caller has observed their complete committed receipt.
@@ -408,7 +407,6 @@ impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving
     }
     fn accept_bootstrap_step(&mut self,call:&semio_plugin_guest_contract::original_actor_context::OriginalActorBootstrapCall,identity:semio_plugin_host_guest_runtime::GuestBootstrapHeaderIdentity,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate(cx)?;if let Some(existing)=self.bootstrap_identity{if existing!=identity||self.bootstrap_status!=Some(call.status){return Err(invalid("Poll bootstrap changed its settled actual target"))}return Ok(true)}if !self.frozen||!matches!(self.phase,Phase::Boot|Phase::CloseContext)||self.budget!=Some(call.budget)||self.bootstrap_status.is_some()||self.bootstrap_returned.is_some(){return Err(invalid("Poll bootstrap lacks its exact frozen original admission"))}let bytes=std::mem::size_of_val(&self.bootstrap_identity)+std::mem::size_of_val(&self.bootstrap_status)+std::mem::size_of_val(&self.bootstrap_resume);if !charge_frame(cx,bytes)?{return Ok(false)}self.bootstrap_identity=Some(identity);self.bootstrap_status=Some(call.status);self.bootstrap_resume=Some(self.phase);
-        if self.phase==Phase::Boot&&std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] Boot SAB1 settled: epoch {}, phase {}, sequence {}, result {:?}",call.budget.input.epoch,call.phase,call.sequence,call.status);}
         Ok(true)
     }
     fn resume_bootstrap_step(&mut self,runtime:&GuestRuntimes,instance:&mut GuestInstance,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -439,9 +437,6 @@ impl<T: NativeReceive<DslValue> + RetireOwned + Sync,R:GuestPollFailureReceiving
                 let framed=runtime.with_original_scalar_header(instance,cx,|_,_,_|Ok(()))
                     .and_then(|ready|ready.then_some(()).ok_or_else(||invalid("Ready Poll scalar has no actual header")));
                 if let Err(error)=framed {
-                    if std::env::var_os("RUST_BACKTRACE").is_some(){
-                        eprintln!("[DEBUG] poll unframed scalar: {:?}, issued {:?}, actual clock {:?}, host deadline {}, work {}, retained {:?}",self.phase,self.budget,(cx.clock_source())(),cx.deadline_us(),cx.fuel_remaining(),cx.retained_grant());
-                    }
                     self.failed=true;self.phase=Phase::Fault;
                     return Err(error);
                 }

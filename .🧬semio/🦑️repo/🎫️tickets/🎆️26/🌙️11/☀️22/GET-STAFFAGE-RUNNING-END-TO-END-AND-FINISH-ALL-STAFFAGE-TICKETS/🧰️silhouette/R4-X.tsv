@@ -1,0 +1,2 @@
+machinery	tower-crane	1:500 elevation: expected 0.7935860609714293 to be greater than or equal to 0.92
+vehicles	vintage-car-1929	1:100 elevation Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.03

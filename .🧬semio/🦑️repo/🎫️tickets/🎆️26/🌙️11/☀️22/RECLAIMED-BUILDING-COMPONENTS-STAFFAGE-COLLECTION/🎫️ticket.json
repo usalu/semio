@@ -1,8 +1,9 @@
 {
   "title": "Reclaimed Building Components Staffage Collection",
   "emoji": "♻️",
-  "status": "open",
+  "status": "closed",
   "description": "Use a massive wave of fable agents to create staffage for a huge collection of used building components. Forty handcrafted reclaimed components (timber, steel, concrete, masonry, roof, openings, facade, services) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses, clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and a collection, verified by the product's validators and tests.",
+  "summary": "22 reclaimed building components are published in the staffage catalog and manifest; each validates with 0 issues and passes the product check CLI in the catalog-wide run of 2026-11-23 (components 58 of 58). The lattice girder was corrected in its generator so that its three views agree in every pose and clip. Rows 23 to 40 of the assignment were never started and stay unstarted by the dev's order to finish started rows only. Not every sheet was opened. Evidence: reclaimed.md and three-views-2.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2794"
   },
@@ -20,6 +21,15 @@
       "checkpoint": "",
       "prompt": "Use a massive wave of fable agents to create staffage for a huge collection of used building components. Forty handcrafted reclaimed components (timber, steel, concrete, masonry, roof, openings, facade, services) in the staffage archive `🎓️teaching/🏛️architecture/🧍️staffage`, each with rig, poses, clips, thermal and structural model, 2D representations and 3D volumes at 1:50, 1:100, 1:200, 1:500, manifest rows and a collection, verified by the product's validators and tests.",
       "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-23 13:53:14",
+      "author": "ueli",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "a6e34dbae6f4dc3759820a19292c53d1e5f9cb8e",
+      "summary": "22 reclaimed building components are published in the staffage catalog and manifest; each validates with 0 issues and passes the product check CLI in the catalog-wide run of 2026-11-23 (components 58 of 58). The lattice girder was corrected in its generator so that its three views agree in every pose and clip. Rows 23 to 40 of the assignment were never started and stay unstarted by the dev's order to finish started rows only. Not every sheet was opened. Evidence: reclaimed.md and three-views-2.md in ticket 26/11/22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS."
     }
   ]
 }

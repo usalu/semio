@@ -5,14 +5,14 @@ use semio_s_plugin_norm_compliance::design_case::CaseCatalogue;
 use semio_s_plugin_norm_compliance::spec_trace::{assert_traced, Emitted, Realisation};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 
-/// 🧭️ The compliant package, its showcase variant (placed footings, a seismic wall, a 6 m excavation at the embedded wall) and a variant with an undrained footing layer and a pile under tension, a showcase variant whose first layer takes its c_u from the investigations, and a geotechnics variant (an oedometer series, a pumped well, a settling ground with dynamic tests, a reinforced wall): the entities a spec id traces to are all present in one of them.
+/// 🧭️ The compliant package, its showcase variant (placed footings, a seismic wall, a 6 m excavation at the embedded wall) and a variant with an undrained footing layer and a pile under tension, a showcase variant whose first layer takes its c_u from the investigations with an entered cone factor N_kt, the full-catalogue example (one case per catalogue entry, the document the editor ships), and a geotechnics variant (an oedometer series, a pumped well, a settling ground with dynamic tests, a reinforced wall): the entities a spec id traces to are all present in one of them.
 fn trace_documents() -> Vec<semio_s_artifact_norm_en1997_model::En1997Snapshot> {
     let mut cohesive = semio_s_artifact_norm_en1997_model::compliant_demo();
     cohesive.layers[0].cohesion_undrained = 60_000.0;
     cohesive.piles[0].tension_variable = 80_000.0;
     let mut geotechnics = semio_s_artifact_norm_en1997_model::compliant_demo();
     let test = &mut geotechnics.lab_tests[0];
-    (test.kind, test.compression_index, test.swelling_index, test.stress_increment, test.secondary_compression_index, test.design_life) = ("oedometer".into(), 0.25, 0.04, 100_000.0, 0.01, 1.58e9);
+    (test.kind, test.compression_index, test.swelling_index, test.stress_increment, test.secondary_compression_index, test.design_life) = (semio_s_artifact_norm_en1997_model::LabTestKind::Oedometer, 0.25, 0.04, 100_000.0, 0.01, 1.58e9);
     let water = &mut geotechnics.layer_waters[0];
     (water.well_radius, water.well_water_depth, water.well_capacity) = (0.3, 12.0, 0.01);
     let pile = &mut geotechnics.piles[0];
@@ -21,13 +21,15 @@ fn trace_documents() -> Vec<semio_s_artifact_norm_en1997_model::En1997Snapshot> 
     let wall = &mut geotechnics.retaining_walls[0];
     (wall.reinforcement_spacing, wall.reinforcement_width, wall.reinforcement_friction) = (0.6, 0.1, 0.8);
     let mut derived = semio_s_artifact_norm_en1997_model::showcase_demo();
+    derived.layers[0].cpt_nkt = 17.0;
     let layer = derived.layers[0].id.clone();
     derived.characteristic_bases = vec![semio_s_artifact_norm_en1997_model::CharacteristicBasis { id: "basis-1".into(), layer_id: layer, parameter: semio_s_artifact_norm_en1997_model::CharacteristicParameter::UndrainedStrength, basis: semio_s_artifact_norm_en1997_model::ParameterBasis::Derived }];
-    vec![semio_s_artifact_norm_en1997_model::compliant_demo(), semio_s_artifact_norm_en1997_model::showcase_demo(), cohesive, geotechnics, derived]
+    let full_catalogue = semio_s_artifact_norm_en1997_model::En1997Snapshot { cases: crate::catalogue::catalogue_demo_cases(), ..semio_s_artifact_norm_en1997_model::compliant_demo() };
+    vec![semio_s_artifact_norm_en1997_model::compliant_demo(), semio_s_artifact_norm_en1997_model::showcase_demo(), cohesive, geotechnics, derived, full_catalogue]
 }
 
 fn emitted() -> Emitted {
-    trace_documents().iter().fold(Emitted::default().with_case_catalogue::<En1997Cases>(AnnexChoice::De), |emitted, document| emitted.with_checks(check_project(document).checks.iter().map(|check| check.id.clone())))
+    trace_documents().iter().fold(Emitted::default(), |emitted, document| emitted.with_checks(check_project(document).checks.iter().map(|check| check.id.clone())))
 }
 
 #[test]

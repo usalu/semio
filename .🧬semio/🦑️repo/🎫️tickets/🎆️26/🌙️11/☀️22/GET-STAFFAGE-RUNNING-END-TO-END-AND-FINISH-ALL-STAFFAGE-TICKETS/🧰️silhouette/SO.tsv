@@ -1,0 +1,27 @@
+objects	bicycle-stand	1:500 front: expected 0.833744449925999 to be greater than or equal to 0.92
+objects	chalkboard	1:100 front: expected 0.9023872679045093 to be greater than or equal to 0.92
+objects	charcoal-grill	1:50 axis 0: 0.6094900000000001 m against 0.6 m: expected 0.00949000000000011 to be less than or equal to 0.0075
+objects	drinking-fountain	1:200 elevation Hausdorff: expected 0.07175786459168994 to be less than or equal to 0.06
+objects	market-parasol	1:200 axis 0: 2.55228579662323 m against 2.59 m: expected 0.037714203376769895 to be less than or equal to 0.03
+objects	patio-heater	1:50 elevation Hausdorff: expected 0.026316879089284123 to be less than or equal to 0.015
+objects	playground-swing	1:50 axis 1: 2.513500309787494 m against 2.5 m: expected 0.013500309787493947 to be less than or equal to 0.0075
+objects	shopping-trolley	1:100 front Hausdorff: expected 0.0525 to be less than or equal to 0.03
+objects	stepladder	1:500 front Hausdorff: expected 0.21377091924028727 to be less than or equal to 0.15
+objects	street-lamp	1:50 elevation Hausdorff: expected 0.018466608378367694 to be less than or equal to 0.015
+objects	tealight	1:50 elevation: expected 0.9137720313907114 to be greater than or equal to 0.92
+objects	used-baby-grand-piano	1:100 plan Hausdorff: expected 0.0675 to be less than or equal to 0.03
+objects	used-basketball-hoop	1:100 elevation Hausdorff: expected 0.047434164902525694 to be less than or equal to 0.03
+objects	used-bathtub	1:50 front Hausdorff: expected 0.320625 to be less than or equal to 0.015
+objects	used-bicycle-shelter	1:500 front: expected 0.8837863167760075 to be greater than or equal to 0.92
+objects	used-climbing-net-pyramid	1:500 plan Hausdorff: expected 0.3606634511563377 to be less than or equal to 0.15
+objects	used-dog-waste-station	1:50 elevation Hausdorff: expected 0.04230192814754429 to be less than or equal to 0.015
+objects	used-double-bass	1:200 plan Hausdorff: expected 0.07424621202458749 to be less than or equal to 0.06
+objects	used-drum-kit	1:100 elevation Hausdorff: expected 0.10297147663309486 to be less than or equal to 0.03
+objects	used-football-goal	1:50 elevation Hausdorff: expected 0.024375 to be less than or equal to 0.015
+objects	used-marching-snare-and-bass-drum	1:500 elevation: expected 0.9076132602144162 to be greater than or equal to 0.92
+objects	used-recycling-bin-cluster	1:50 front Hausdorff: expected 0.01590990257669732 to be less than or equal to 0.015
+objects	used-seesaw	1:50 plan Hausdorff: expected 0.020624999999999998 to be less than or equal to 0.015
+objects	used-slide-tower	1:200 axis 1: 4.355342309449 m against 4.427342 m: expected 0.0719996905510003 to be less than or equal to 0.03
+objects	used-upright-piano	1:50 front Hausdorff: expected 0.080625 to be less than or equal to 0.015
+objects	used-viola	1:50 plan Hausdorff: expected 0.028124999999999997 to be less than or equal to 0.015
+objects	used-water-play-table	1:100 elevation Hausdorff: expected 0.041249999999999995 to be less than or equal to 0.03

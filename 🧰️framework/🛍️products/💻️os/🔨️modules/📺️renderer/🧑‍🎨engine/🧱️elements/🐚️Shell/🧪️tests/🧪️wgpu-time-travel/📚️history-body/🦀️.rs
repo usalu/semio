@@ -196,6 +196,7 @@ fn activate_history_mirror_node(mut shell: &mut ShellState, key: &str) -> Vec<Ac
 /// description) and activating it or its row begins nothing; with Begin allowed the same button begins an edit of its mutation.
 #[test]
 fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
@@ -243,6 +244,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
     assert!(!edit.disabled && edit.actionable && edit.label.as_deref().is_some_and(|label| label.starts_with("Edit:")), "Begin allowed: Edit is an enabled button: {edit:?}");
     let begun = activate_history_mirror_node(&mut shell, "framework.history.mutation.m-100::row-action::0");
     assert_eq!(begun.iter().map(|action| (action.action.as_str(), args_of(action)["mutationId"].clone())).collect::<Vec<_>>(), [(semio_framework::history_edit::HISTORY_EDIT_BEGIN_ACTION_ID, serde_json::json!("m-100"))], "and begins an edit of its own mutation");
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
 }
@@ -254,6 +256,7 @@ fn the_guest_history_body_opens_pages_and_refuses_edit_with_its_reason() {
 /// the disabled controls dispatch nothing.
 #[test]
 fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 900.0);
@@ -286,6 +289,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
             "{locale:?}: a chip drafts the removal of its own item"
         );
     }
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
 }
@@ -298,6 +302,7 @@ fn the_guest_editor_offers_list_and_chip_edits_within_their_bounds() {
 /// German.
 #[test]
 fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_the_mirror() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut producer = None;
     use semio_framework::kernel::HistoryReprojectionKind as Kind;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
@@ -329,6 +334,7 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
         assert!(status.starts_with(refusal) && status.len() > refusal.len(), "{locale:?}: a refused step names its reason: {status:?}");
         assert!(history_mirror_node("framework.history.reprojection.cancelReplay").is_none(), "{locale:?}: a refused step offers no control");
     }
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
 }
@@ -339,6 +345,7 @@ fn a_replaying_history_step_or_document_load_shows_its_progress_and_cancels_in_t
 /// owner.
 #[test]
 fn a_panel_body_is_one_scroll_region_under_its_rows() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let mut producer = None;
     let surface = FRAMEWORK_PANEL_TAB_HISTORY_ID;
     let body = Rect::new(0.0, 0.0, 420.0, 640.0);
@@ -354,6 +361,7 @@ fn a_panel_body_is_one_scroll_region_under_its_rows() {
     let gap = (body.x + body.w * 0.5, body.y + body.h - 4.0);
     assert_eq!(input.hit_at(gap.0, gap.1).and_then(|hit| hit.control_id.clone()).as_deref(), Some(region.as_str()), "the gap below the rows is the region");
     assert!(shell.input.handle_pointer_wheel(gap.0, gap.1, 0.0, 40.0, &mut input), "a wheel over the gap scrolls the body");
+    semio_renderer_wgpu_fixtures::shell::retire_shell_documents(&mut shell);
     close_retained_body(surface, documents);
     close_history_producer(&mut producer);
 }

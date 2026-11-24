@@ -1,0 +1,41 @@
+{
+  "claimTtlMilliseconds": 400,
+  "runMilliseconds": 40,
+  "scenarios": [
+    {
+      "name": "selection owners go first on one machine",
+      "owners": { "tier0": 6, "tier1": 14 },
+      "machines": [{ "name": "m1", "cores": 4, "totalMegabytes": 16384, "availableMegabytes": 4000, "childMegabytes": 800, "busy": false }]
+    },
+    {
+      "name": "six machines of different spare memory serve 12 selection owners and 60 lookahead owners",
+      "owners": { "tier0": 12, "tier1": 60 },
+      "machines": [
+        { "name": "m1", "cores": 10, "totalMegabytes": 16384, "availableMegabytes": 9000, "childMegabytes": 800, "busy": false },
+        { "name": "m2", "cores": 10, "totalMegabytes": 16384, "availableMegabytes": 3600, "childMegabytes": 800, "busy": false },
+        { "name": "m3", "cores": 12, "totalMegabytes": 16384, "availableMegabytes": 2200, "childMegabytes": 800, "busy": true },
+        { "name": "m4", "cores": 10, "totalMegabytes": 16384, "availableMegabytes": 1500, "childMegabytes": 800, "busy": true },
+        { "name": "m5", "cores": 16, "totalMegabytes": 65447, "availableMegabytes": 30000, "childMegabytes": 1200, "busy": false },
+        { "name": "m6", "cores": 10, "totalMegabytes": 32768, "availableMegabytes": 12000, "childMegabytes": 1600, "busy": false }
+      ]
+    },
+    {
+      "name": "a machine that dies with owners in flight leaves them to the others after the claim lapsed",
+      "owners": { "tier0": 24, "tier1": 0 },
+      "machines": [
+        { "name": "m1", "cores": 4, "totalMegabytes": 16384, "availableMegabytes": 5000, "childMegabytes": 800, "busy": false },
+        { "name": "m2", "cores": 4, "totalMegabytes": 16384, "availableMegabytes": 5000, "childMegabytes": 800, "busy": false },
+        { "name": "m3", "cores": 4, "totalMegabytes": 16384, "availableMegabytes": 5000, "childMegabytes": 800, "busy": false }
+      ],
+      "kill": { "machine": "m2", "afterStarts": 5 }
+    },
+    {
+      "name": "the busy small machine with nothing to spare takes no owner, the others take all",
+      "owners": { "tier0": 8, "tier1": 8 },
+      "machines": [
+        { "name": "m1", "cores": 10, "totalMegabytes": 16384, "availableMegabytes": 2100, "childMegabytes": 800, "busy": true },
+        { "name": "m2", "cores": 10, "totalMegabytes": 16384, "availableMegabytes": 6000, "childMegabytes": 800, "busy": false }
+      ]
+    }
+  ]
+}

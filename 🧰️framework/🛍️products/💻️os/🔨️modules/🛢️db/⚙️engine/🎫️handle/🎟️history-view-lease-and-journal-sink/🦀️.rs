@@ -58,7 +58,7 @@ impl Drop for HistoryView {
                 *state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(owner));
             }
         }
-        assert!(self.terminal_is_empty(), "history result reached Drop before page/range/admission retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "history result reached Drop before page/range/admission retirement");
     }
 }
 //#endregion 🔖️History

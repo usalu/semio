@@ -279,6 +279,7 @@ export async function withHostCapacityV1<T>(options:HostCapacityOptionsV1,body:(
   const sizing=request.quiet===true?options.upgrade!:request,plan=planHostCapacityV1(policy,{totalMegabytes:1048576},sizing,sizing.preferredJobs);
   return body(Object.freeze({id:request.id,jobs:plan.jobs,cpu:plan.cpu,reservedMegabytes:0,plan,inherited:false,adopted:false,bypassed:true,environment:Object.freeze({})}));
  }
+ if(options.directory===undefined)void import("../🛡️warden/🔁️loop/🟦️.ts").then(module=>module.ensureHostWardenV1()).catch(()=>undefined);
  const inheritedId=environment[protocol.grantEnvironment];
  if(inheritedId!==undefined&&!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(inheritedId))throw hostCapacityErrorV1("inheritedIdentifier",{},environment);
  const directory=prepare(options.directory),inheritedPath=inheritedId?grantPath(directory,inheritedId):undefined,inherited=inheritedPath?readJson(inheritedPath):undefined,at=now();

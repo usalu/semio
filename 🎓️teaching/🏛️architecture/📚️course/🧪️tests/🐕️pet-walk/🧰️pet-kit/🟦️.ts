@@ -42,10 +42,10 @@ export function hoverOf(id: string): number {
   return kind?.locomotion.gait === "float" ? (kind.locomotion.hover ?? 0) : 0;
 }
 
-/** 🃏️ The parts of a card of the screen in front: its tab and its body. */
-export const CARD_PARTS = '#course-main [data-card] [data-slot="window-chrome-chip-cap"], #course-main [data-card] [data-slot="window-chrome-body-surface"]';
+/** 🃏️ The border lines of the cards of the screen in front: the frame of every card, whose top edge is the line it shares with the card above, and the chips at its foot. */
+export const CARD_PARTS = '#course-main [data-card] [data-window-frame], #course-main [data-card] [data-window-frame-chip][data-dock="bottom"]';
 
-/** 🧱️ What pets stand on in the quiz, as the client names it for its pet layer: the parts of every card, and the
+/** 🧱️ What pets stand on in the quiz, as the client names it for its pet layer: the border lines of every card, and the
  * footer line. */
 export const EDGES = `${CARD_PARTS}, .course-app > footer`;
 
@@ -617,8 +617,8 @@ export function seenBoxes(selector: string): { left: number; top: number; right:
   });
 }
 
-/** 🔤️ The tabs of the cards, which stand on the edge of their body: a pet there would stand in front of them. */
-export const CHIPS = '#course-main [data-card] [data-slot="window-chrome-chip-cap"]';
+/** 🔤️ The chips at the foot of the cards, solid bodies a pet stands on: a pet on the line below would stand in front of them. */
+export const CHIPS = '#course-main [data-card] [data-window-frame-chip][data-dock="bottom"]';
 
 /** 📄️ The blocks whose words a pet must not cover. */
 export const WORDS = "p, li, h1, h2, h3, h4, h5, h6, legend, figcaption, dt, dd, td, th, label, [role=\"status\"]";
@@ -650,9 +650,9 @@ export function seenWords(selector: string): { left: number; top: number; right:
 }
 
 /** 👣️ What is wrong with where the pets of a page stand that stand on a perch, one line each; none when every such pet
- * that is whole stands with its feet on an edge the screen shows (the top of a tab, of a body or of the footer; a
- * floater its hover above it), no two of them on one edge overlap, and none covers a control, a line of text or a
- * tab that stands on its edge (a card is no wall: its empty face may lie behind a pet). Pets in the hand, in the air, on a wall, a ladder, a rope or another pet's head stand on no edge by design. */
+ * that is whole stands with its feet on a border line the screen shows (the top of a card's frame, of a chip at its foot or of the footer; a
+ * floater its hover above it), no two of them on one line overlap, and none covers a control, a line of text or a
+ * chip at a card's foot (a card is a frame around open room: its empty face lies behind the pets that live in it). Pets in the hand, in the air, on a wall, a ladder, a rope or another pet's head stand on no edge by design. */
 export async function misplaced(page: Page): Promise<readonly string[]> {
   const shown = (await standing(page)).filter((pet) => pet.opacity > 0.99 && pet.footing === "perch");
   const edges = (await page.evaluate(seenBoxes, EDGES)).filter((edge) => edge.topped);

@@ -752,7 +752,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             8 => self.stores.config_lane_under_pressure().then_some(MaintenanceUnit::Pressure(MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE)),
             9 => self.child_composition.child_retirements_under_pressure().then_some(MaintenanceUnit::Pressure(MAINTENANCE_CHILD_ROOT_STAGE)),
             10 => self.child_composition.child_retirements_under_pressure().then_some(MaintenanceUnit::Pressure(MAINTENANCE_CHILD_MEMBER_STAGE)),
-            11 => (!self.media.media_submission_refusal_terminal_is_empty()).then_some(MaintenanceUnit::MediaRefusal),
+            11 => self.media.media_submission_refusal_retained().then_some(MaintenanceUnit::MediaRefusal),
             12=>self.tools.agent_lane_preview.as_ref().filter(|state|state.closing).map(|_|MaintenanceUnit::AgentPreview),
             13=>(!self.ingress.action_ingress_sources_idle()).then_some(MaintenanceUnit::ActionIngress),
             _ => Some(MaintenanceUnit::Stage(((usize::from(cursor) + position - ROTATION_START) % usize::from(MAINTENANCE_STAGES)) as u8)),

@@ -79,7 +79,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 512,
-            "pattern": "^(?!(?:tag:|!))[^*?\\[\\]{}()\\\\]+$"
+            "pattern": "^(?!(?:!?tag:))[^?\\[\\]{}()\\\\]+$"
           }
         },
         "exclude": {
@@ -90,7 +90,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 512,
-            "pattern": "^(?!(?:tag:|!))[^*?\\[\\]{}()\\\\]+$"
+            "pattern": "^(?!(?:!?tag:))[^?\\[\\]{}()\\\\]+$"
           }
         },
         "targets": {

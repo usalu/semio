@@ -1,0 +1,26 @@
+{
+  "50": {
+    "silhouette": {
+      "en": "At 1:50 (1 m is 20 mm) every view is the true orthographic view of the 1:50 model in summer-turgid, drawn from its solids: 28 leaves, each of the two parts of a leaf by the outline of its body (keel, two wings and the terminal spine), so that the outline is the blade as modelled with its crenate margin and spine; the channel groove as a stroke; the spear with its spine and the hidden stem by their outline. A part that reaches deeper than 0.3 m along the viewing direction is drawn as several plates, one per 0.3 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:50 (1 m sind 20 mm) ist jede Ansicht die wahre Parallelprojektion des 1:50-Modells in summer-turgid, aus seinen Körpern gezeichnet: 28 Blätter, jedes der zwei Teile eines Blattes als Umriss seines Körpers (Kiel, zwei Flügel und Enddorn), sodass der Umriss die modellierte Spreite mit gekerbtem Rand und Dorn ist; die Rinne als Strich; der Speer mit seinem Dorn und der verdeckte Stamm als Umriss. Ein Teil, das in Blickrichtung tiefer als 0,3 m reicht, ist als mehrere Platten gezeichnet, eine je 0,3 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  },
+  "100": {
+    "silhouette": {
+      "en": "At 1:100 (1 m is 10 mm) every view is the true view of the 1:100 model, drawn from its solids: 28 leaves, each of the two parts of a leaf by the outline of its body (keel and two wings) with a smooth margin; spear and stem by their outline. A part that reaches deeper than 0.3 m along the viewing direction is drawn as several plates, one per 0.3 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:100 (1 m sind 10 mm) ist jede Ansicht die wahre Ansicht des 1:100-Modells, aus seinen Körpern gezeichnet: 28 Blätter, jedes der zwei Teile eines Blattes als Umriss seines Körpers (Kiel und zwei Flügel) mit glattem Rand; Speer und Stamm als Umriss. Ein Teil, das in Blickrichtung tiefer als 0,3 m reicht, ist als mehrere Platten gezeichnet, eine je 0,3 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  },
+  "200": {
+    "silhouette": {
+      "en": "At 1:200 (1 m is 5 mm) every view is the true view of the 1:200 model, drawn from its solids: 28 leaves, each of the two parts of a leaf by the outline of the lens blade that holds the channel; spear and stem by their outline. A part that reaches deeper than 0.3 m along the viewing direction is drawn as several plates, one per 0.3 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:200 (1 m sind 5 mm) ist jede Ansicht die wahre Ansicht des 1:200-Modells, aus seinen Körpern gezeichnet: 28 Blätter, jedes der zwei Teile eines Blattes als Umriss der Linsenspreite, die die Rinne enthält; Speer und Stamm als Umriss. Ein Teil, das in Blickrichtung tiefer als 0,3 m reicht, ist als mehrere Platten gezeichnet, eine je 0,3 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  },
+  "500": {
+    "silhouette": {
+      "en": "At 1:500 (1 m is 2 mm) every view is the true view of the 1:500 model, drawn from its solids: 28 blades of 75 mm that run out to a point, each of the two parts of a blade by its outline, spear and stem by their outline; the star of the rosette stays readable. A part that reaches deeper than 0.3 m along the viewing direction is drawn as several plates, one per 0.3 m of depth, so that it keeps its depth in every pose.",
+      "de": "Bei 1:500 (1 m sind 2 mm) ist jede Ansicht die wahre Ansicht des 1:500-Modells, aus seinen Körpern gezeichnet: 28 Spreiten von 75 mm, die spitz auslaufen, jedes der zwei Teile einer Spreite als Umriss, Speer und Stamm als Umriss; der Stern der Rosette bleibt lesbar. Ein Teil, das in Blickrichtung tiefer als 0,3 m reicht, ist als mehrere Platten gezeichnet, eine je 0,3 m Tiefe, sodass es in jeder Pose seine Tiefe behält."
+    }
+  }
+}

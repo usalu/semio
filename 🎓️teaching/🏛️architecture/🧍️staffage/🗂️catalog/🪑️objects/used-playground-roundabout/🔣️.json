@@ -80,7 +80,7 @@
     },
     {
      "id": "duffie-beckman-2013",
-     "citation": "Duffie, J. A., Beckman, W. A. (2013). Solar Engineering of Thermal Processes, 4th ed., Wiley (solar absorptance and emittance of galvanised steel, new 0.65/0.13 and weathered 0.89/0.28)."
+     "citation": "Duffie, J. A., Beckman, W. A. (2013). Solar Engineering of Thermal Processes, 4th ed., Wiley (solar absorptance and emittance of galvanised steel, clean and new 0.65/0.13, oxidised and weathered 0.80/0.28)."
     },
     {
      "id": "levinson-2007",
@@ -110,7 +110,7 @@
      "de": "Feuerverzinkter Stahl, matt verwittert"
     },
     "emissivity": 0.28,
-    "solarAbsorptivity": 0.89,
+    "solarAbsorptivity": 0.8,
     "densityKgM3": 7850.0,
     "conductivityWmK": 50,
     "specificHeatJKgK": 450,
@@ -9877,7 +9877,11 @@
      "regions": {
       "deck": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.92
+       "sunlitFraction": 0.92,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 24
+       }
       },
       "rails": {
        "exposedFraction": 1,
@@ -9945,8 +9949,8 @@
        "exposedFraction": 0.93,
        "sunlitFraction": 0.8,
        "contact": {
-        "fraction": 0.05,
-        "tempC": 33
+        "fraction": 0.12,
+        "tempC": 27.8
        }
       },
       "rails": {
@@ -10106,7 +10110,11 @@
      "regions": {
       "deck": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.85
+       "sunlitFraction": 0.85,
+       "contact": {
+        "fraction": 0.19,
+        "tempC": 32
+       }
       },
       "rails": {
        "exposedFraction": 1,
@@ -10187,7 +10195,11 @@
      "regions": {
       "deck": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.92
+       "sunlitFraction": 0.92,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 24
+       }
       },
       "rails": {
        "exposedFraction": 1,
@@ -10254,7 +10266,11 @@
      "regions": {
       "deck": {
        "exposedFraction": 1,
-       "sunlitFraction": 0.92
+       "sunlitFraction": 0.92,
+       "contact": {
+        "fraction": 0.07,
+        "tempC": 24
+       }
       },
       "rails": {
        "exposedFraction": 1,
@@ -10333,8 +10349,8 @@
        "exposedFraction": 0.93,
        "sunlitFraction": 0.8,
        "contact": {
-        "fraction": 0.05,
-        "tempC": 33
+        "fraction": 0.12,
+        "tempC": 27.8
        }
       },
       "rails": {
@@ -10899,12 +10915,16 @@
    "emitters": [],
    "assumptions": [
     {
-     "en": "Reference case: a hot summer afternoon (summer-hot-sun: 32 degC air, 850 W/m2); the dark weathered zinc of the deck (solar absorptance 0.89, emittance 0.28) is the hot surface children touch, the bare new zinc of the replaced rail (0.65, 0.13) reflects more but radiates less, the red powder coat (0.62, 0.90) stays cooler than the deck.",
-     "de": "Bezugsfall: ein heißer Sommernachmittag (summer-hot-sun: 32 degC Luft, 850 W/m2); das dunkle verwitterte Zink des Decks (Absorptionsgrad 0,89, Emissionsgrad 0,28) ist die heiße Fläche, die Kinder berühren, das blanke neue Zink des ersetzten Bügels (0,65, 0,13) reflektiert mehr, strahlt aber weniger ab, die rote Pulverbeschichtung (0,62, 0,90) bleibt kühler als das Deck."
+     "en": "Reference case: a hot summer afternoon (summer-hot-sun: 32 degC air, 850 W/m2); the dark weathered zinc of the deck (solar absorptance 0.80, emittance 0.28) is the hot surface children touch, the bare new zinc of the replaced rail (0.65, 0.13) reflects more but radiates less, the red powder coat (0.62, 0.90) stays cooler than the deck.",
+     "de": "Bezugsfall: ein heißer Sommernachmittag (summer-hot-sun: 32 degC Luft, 850 W/m2); das dunkle verwitterte Zink des Decks (Absorptionsgrad 0,80, Emissionsgrad 0,28) ist die heiße Fläche, die Kinder berühren, das blanke neue Zink des ersetzten Bügels (0,65, 0,13) reflektiert mehr, strahlt aber weniger ab, die rote Pulverbeschichtung (0,62, 0,90) bleibt kühler als das Deck."
     },
     {
      "en": "The pit under the platform is treated as closed: the 6 mm running gap exchanges negligible air, so the spokes, hub, spindle and bearing housing are the hidden region underframe; the buried tray, apron underside and point foundation conduct to the soil (contact 0.85, 0.46 and 1.0 at 22, 24 and 16 degC).",
      "de": "Die Wanne unter der Plattform gilt als geschlossen: der 6-mm-Laufspalt tauscht vernachlässigbar wenig Luft, daher sind Speichen, Nabe, Achse und Lagergehäuse die verdeckte Region underframe; die eingegrabene Wanne, die Unterseite der Umrandung und das Punktfundament leiten zum Erdreich (Kontakt 0,85, 0,46 und 1,0 bei 22, 24 und 16 degC)."
+    },
+    {
+     "en": "The 5 mm tread plate is one temperature through its thickness (Biot number about 0.001), so its underside loses heat too, although it is not part of the outer area of the region deck: it radiates to the pit tray at about 24 degC (two zinc faces of emittance 0.28, 1.2 W/(m2 K) at these temperatures), the still air of the pit conducts 0.14 W/(m2 K) and hub and spindle carry 0.5 W/K into the footing; on the outer area of the deck this is 1.3 W/(m2 K), entered as the contact share 0.07 of the solver's 20 W/(m2 K) towards 24 degC. With the four children their contact (0.05 at 33 degC) is added: 0.12 at 27.8 degC. Lifted out, the underside stands in the open air (about 4.5 W/(m2 K) of mixed convection and radiation): 0.19 towards the air at 32 degC.",
+     "de": "Das 5-mm-Tränenblech hat über seine Dicke eine Temperatur (Biot-Zahl etwa 0,001), also gibt auch seine Unterseite Wärme ab, obwohl sie nicht zur Außenfläche der Region deck gehört: Sie strahlt zur Wanne von etwa 24 degC (zwei Zinkflächen mit Emissionsgrad 0,28, 1,2 W/(m2 K) bei diesen Temperaturen), die ruhende Luft der Wanne leitet 0,14 W/(m2 K), Nabe und Achse führen 0,5 W/K ins Fundament; auf die Außenfläche des Decks bezogen sind das 1,3 W/(m2 K), angesetzt als Kontaktanteil 0,07 der 20 W/(m2 K) des Lösers gegen 24 degC. Mit den vier Kindern kommt deren Kontakt (0,05 bei 33 degC) hinzu: 0,12 bei 27,8 degC. Ausgehoben steht die Unterseite in der freien Luft (etwa 4,5 W/(m2 K) aus gemischter Konvektion und Strahlung): 0,19 gegen die Luft von 32 degC."
     },
     {
      "en": "The roundabout has no electrical or fuel element: its total power is 0 W.",

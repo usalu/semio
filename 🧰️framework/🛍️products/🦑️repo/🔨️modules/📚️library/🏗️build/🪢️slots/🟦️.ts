@@ -7,7 +7,7 @@ import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../..
 export const SLOT_HEADER_V1="x-semio-slot";
 
 /** 🧾️ What a published entry was built from (`Declaration` of the slot schema): kind, toolchain, workspace sources with digests, the digests of the files of other entries it consumed (`externs`), its own name (`self`, the local key) and the names of the entries it consumed that a digest cannot name (`units`: the producer of every extern file, the build script executable, the build script run its OUT_DIR comes from). */
-export type DeclarationV1=Readonly<{version:2;kind:"rust-unit"|"build-script-run"|"stage-output";self?:string;toolchain:string;sources:readonly Readonly<{path:string;sha256:string}>[];externs:readonly string[];units?:readonly string[]}>;
+export type DeclarationV1=Readonly<{version:2;kind:"rust-unit"|"build-script-run"|"stage-output"|"graph";self?:string;toolchain:string;sources:readonly Readonly<{path:string;sha256:string}>[];externs:readonly string[];units?:readonly string[]}>;
 
 /** 🚦️ How staleness acts: `off` judges nothing, `dry-run` only records what it would retire or refuse, `enforce` retires and refuses. */
 export type StalenessModeV1="off"|"dry-run"|"enforce";

@@ -108,6 +108,7 @@ fn intrinsic_value(value: &dyn ArtifactCanonicalJsonTree) -> Result<FieldProject
     use FieldProjectionView as View;
 
     if let Some(bytes) = value.canonical_tree_octets() { return Ok(View::IntrinsicBytes(bytes)); }
+    if let Some(bytes) = value.canonical_tree_octet_source() { return Ok(View::IntrinsicBytesSource(bytes)); }
     Ok(match value.canonical_tree_node()? {
         Node::Null => View::IntrinsicNull,
         Node::Bool(value) => View::IntrinsicBool(value),

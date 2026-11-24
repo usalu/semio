@@ -1,5 +1,5 @@
-/** 🚀️ The site of the stack under test boots: a first visitor gets the introduction of the course in the browser's
- * language, straight from the proctor. Every other spec runs after this one, so a cold dev server has transformed and
+/** 🚀️ The site of the stack under test boots: a first visitor gets the introduction of the course in the site's
+ * language and, once chosen, in the other one, straight from the proctor. Every other spec runs after this one, so a cold dev server has transformed and
  * optimized its modules before anything is asserted about a clean console — the second, fresh visitor here must
  * already see one.
  * @see ../../🎭️e2e/🎚️config/🟦️.ts — the projects that depend on this one */

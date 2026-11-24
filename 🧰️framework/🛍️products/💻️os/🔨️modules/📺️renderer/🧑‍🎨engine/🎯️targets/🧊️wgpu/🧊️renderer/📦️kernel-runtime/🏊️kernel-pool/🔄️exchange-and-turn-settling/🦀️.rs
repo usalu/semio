@@ -240,7 +240,7 @@ impl KernelPoolState {
         }
         let mut settled: Option<ExchangeOutcome> = None;
         while let Some(batch) = batches.pop_front() {
-            let first = self.run_turn_once(actor, instance, batch).await?;
+            let first = Box::pin(self.run_turn_once(actor, instance, batch)).await?;
             let outcome = self.settle_turn(actor, instance, first, deadline).await?;
             match settled.as_mut() {
                 Some(earlier) => earlier.absorb(outcome)?,
@@ -259,7 +259,7 @@ impl KernelPoolState {
             if std::time::Instant::now() >= deadline || quiet >= run_turn_quiescent_continuations() {
                 break;
             }
-            let (later, next) = self.run_turn_once(actor, instance, events).await?;
+            let (later, next) = Box::pin(self.run_turn_once(actor, instance, events)).await?;
             quiet = if later.carries_nothing() { quiet + 1 } else { 0 };
             outcome.absorb(later)?;
             owed.extend(run_turn_continuation_turns(next));

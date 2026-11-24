@@ -3,6 +3,7 @@
     "reactor": [
       "stageCommandPage",
       "stageColdPairPage",
+      "stageActorContextBudget",
       "admitActorContext",
       "admitActorInput",
       "closeActorContext",
@@ -11,6 +12,7 @@
       "channelVersion"
     ],
     "jobs": [
+      "stageJobBudget",
       "startJob",
       "stepJob",
       "readJobOutput",

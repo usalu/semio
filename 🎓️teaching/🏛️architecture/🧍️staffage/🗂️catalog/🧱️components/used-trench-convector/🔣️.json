@@ -4209,6 +4209,36 @@
        "h": 0.00125
       },
       {
+       "id": "levelling-bracket-0",
+       "bone": "convector",
+       "role": "body",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": -0.145,
+       "y": 0.08,
+       "w": 0.02625,
+       "h": 0.05
+      },
+      {
+       "id": "levelling-bracket-1",
+       "bone": "convector",
+       "role": "body",
+       "z": 6.9,
+       "filled": true,
+       "tone": 0.32,
+       "material": "galvanised-steel",
+       "region": "trough",
+       "kind": "rect",
+       "x": 0.11875,
+       "y": 0.08,
+       "w": 0.02625,
+       "h": 0.05
+      },
+      {
        "id": "trough-end-connection",
        "bone": "convector",
        "role": "body",

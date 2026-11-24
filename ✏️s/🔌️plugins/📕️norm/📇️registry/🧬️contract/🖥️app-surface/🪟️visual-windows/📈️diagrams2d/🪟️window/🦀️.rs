@@ -116,9 +116,9 @@ fn diagram_nodes(body_key: &str, diagram: &Diagram2d, spec: &DiagramsWindowSpec,
             children.push(diagram_text(&base, "basis", &copy_text(basis, locale))?);
         }
     }
-    let description = accessible_description(diagram, locale);
-    children.push(scene_surface(&base, semio_ui_contract::SurfaceKind::Canvas2d, &canvas, copy_text(&diagram.title, locale), Some(&description))?);
-    children.push(diagram_text(&base, "description", &description)?);
+    let summary = semio_ui_contract::UiText::clipped(&surface_description(diagram, locale));
+    children.push(scene_surface(&base, semio_ui_contract::SurfaceKind::Canvas2d, &canvas, copy_text(&diagram.title, locale), Some(summary.as_str()))?);
+    children.push(diagram_text(&base, "description", &accessible_description(diagram, locale))?);
     Ok(children)
 }
 

@@ -11,45 +11,26 @@ import { useId, type ReactElement } from "react";
 import { CHALLENGES, challengeRules, type Challenge } from "@semio-tech/course";
 import type { CourseLocale, CourseText } from "../🌐️i18n/🟦️.ts";
 import { formatPoints } from "../📏️quantity/🟦️.ts";
-import { CELL } from "../🪟️chrome/🟦️.tsx";
+import { ROW, RadioChoice } from "../🪟️chrome/🟦️.tsx";
 
-import { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
-import { sharedBorderlessBoxProps } from "@semio-tech/ui-react/chrome";
-export { CHALLENGE_HINTS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
+import { CHALLENGE_HINTS, CHALLENGE_ICONS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
+export { CHALLENGE_HINTS, CHALLENGE_ICONS, CHALLENGE_LABELS } from "./🏷️labels/🟦️.ts";
 
 /** 💰️ `points` earned at `challenge` as text: its name and the points of its most, "Hard · Points: 261 of 300". */
 export function challengeScored(challenge: Challenge, points: number, text: CourseText, locale: CourseLocale): string {
   return text("course.challenge.scored", { challenge: text(CHALLENGE_LABELS[challenge]), points: formatPoints(points, locale), par: formatPoints(challengeRules(challenge).par, locale) });
 }
 
-/** 🧗️ The challenge chooser of a quiz's page: four radios, each with what it asks and its most points. It is a row of a
- * flush card — a cell with no outline of its own, so its legend stands at the card's edge instead of a box inside it. */
-export function ChallengeChooser(props: { readonly challenge: Challenge; readonly onChange: (challenge: Challenge) => void; readonly text: CourseText; readonly locale: CourseLocale }): ReactElement {
+/** 🧗️ The challenge chooser of a quiz's page: four radios, each with what it asks and its most points. It is the content of a flush card that the
+ * card's title chip names (`labelledBy`): every choice is a cell, the choices are separated by the card's single lines, and the chosen one is a filled toggle cell with its icon. */
+export function ChallengeChooser(props: { readonly challenge: Challenge; readonly labelledBy: string; readonly onChange: (challenge: Challenge) => void; readonly text: CourseText; readonly locale: CourseLocale }): ReactElement {
   const { challenge, onChange, text, locale } = props;
   const scope = useId();
   return (
-    <fieldset data-options={CHALLENGES.length} {...CELL} className="course-kinds m-0 min-w-0 p-double">
-      <legend className="p-0 text-sm font-semibold">{text("course.challenge.legend")}</legend>
+    <div role="radiogroup" aria-labelledby={props.labelledBy} data-options={CHALLENGES.length} {...ROW} className="course-kinds min-w-0">
       {CHALLENGES.map((option) => (
-        <div key={option} {...sharedBorderlessBoxProps} className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-single">
-          <input
-            id={`${scope}-${option}`}
-            type="radio"
-            name={`${scope}-challenge`}
-            value={option}
-            checked={challenge === option}
-            onChange={() => onChange(option)}
-            aria-describedby={`${scope}-${option}-hint`}
-            className="course-radio"
-          />
-          <label htmlFor={`${scope}-${option}`} className="course-target flex cursor-pointer items-center text-sm font-semibold">
-            {text(CHALLENGE_LABELS[option])}
-          </label>
-          <p id={`${scope}-${option}-hint`} className="col-start-2 m-0 text-xs leading-normal text-muted-foreground">
-            {text(CHALLENGE_HINTS[option], { par: formatPoints(challengeRules(option).par, locale) })}
-          </p>
-        </div>
+        <RadioChoice key={option} id={`${scope}-${option}`} icon={CHALLENGE_ICONS[option]} name={`${scope}-challenge`} value={option} checked={challenge === option} onChange={() => onChange(option)} label={text(CHALLENGE_LABELS[option])} hint={text(CHALLENGE_HINTS[option], { par: formatPoints(challengeRules(option).par, locale) })} />
       ))}
-    </fieldset>
+    </div>
   );
 }

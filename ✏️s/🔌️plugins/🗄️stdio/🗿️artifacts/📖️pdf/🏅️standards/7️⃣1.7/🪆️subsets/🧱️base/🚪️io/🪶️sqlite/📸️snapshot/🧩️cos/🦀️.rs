@@ -74,6 +74,7 @@ pub fn write_dictionary(out:&mut Projection<'_,'_>,entries:&[PdfDictEntry])->Res
 pub fn write_object(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{let key=write_shallow(out,value)?;if let Some(children)=object_children(value,key){write_children(out,children)?;}Ok(key)}
 fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueError>{
     let mut fields = [C::Null; 12];
+    let stream_octets;
     let kind = match value {
         PdfObject::Null => "null", PdfObject::Bool(value) => { fields[0] = C::Integer(i64::from(*value)); "boolean" },
         PdfObject::Int(value) => { fields[1] = C::Integer(*value); "integer" },
@@ -83,7 +84,7 @@ fn write_shallow(out:&mut Projection<'_,'_>,value:&PdfObject)->Result<i64,ValueE
         PdfObject::Str(value) => { fields[5] = C::Blob(value); "string" }, PdfObject::Name(value) => { fields[6] = C::Text(value); "name" },
         PdfObject::Array(_) => "array", PdfObject::Dict(_) => "dictionary",
         PdfObject::Ref(value) => { fields[7] = C::Integer(i64::from(value.num)); fields[8] = C::Integer(i64::from(value.gen)); "reference" },
-        PdfObject::Stream { data, filters, .. } => { fields[9] = C::Blob(data); fields[10] = C::Integer(write_filters(out, filters)?); "stream" },
+        PdfObject::Stream { data, filters, .. } => { stream_octets = data.to_vec_owner(); fields[9] = C::Blob(&stream_octets); fields[10] = C::Integer(write_filters(out, filters)?); "stream" },
     };
     let mut cells = vec![C::Text(kind)]; cells.extend(fields);
     out.insert("pdf_cos_value", &cells)
@@ -117,7 +118,7 @@ fn read_shallow(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfObject,ValueErr
         "reference" => PdfObject::Ref(ObjRef { num: integer(row, 9)?, gen: integer(row, 10)? }),
         "array" => PdfObject::Array(Vec::new()),
         "dictionary" => PdfObject::Dict(Vec::new()),
-        "stream" => PdfObject::Stream { dict: Vec::new(), data: reader.blob(row,11)?, filters: read_filters(reader, row.integer(12)?)? },
+        "stream" => PdfObject::Stream { dict: Vec::new(), data: stream_bytes(&reader.blob(row,11)?), filters: read_filters(reader, row.integer(12)?)? },
         _ => unreachable!(),
     })
 }

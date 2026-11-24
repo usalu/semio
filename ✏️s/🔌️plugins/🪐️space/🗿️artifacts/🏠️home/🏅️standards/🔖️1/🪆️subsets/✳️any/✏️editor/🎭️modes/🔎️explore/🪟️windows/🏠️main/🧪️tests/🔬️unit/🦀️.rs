@@ -100,6 +100,7 @@ async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_local_row_renders_without_directory_lifecycle_actions() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"));
     assert!(json.contains("Fixture Studio"));
     assert!(json.contains("local"));
@@ -109,6 +110,7 @@ async fn a_local_row_renders_without_directory_lifecycle_actions() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_hub_row_renders_with_the_full_action_set() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(rows(&TreeWindows::unhosted(), &[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"));
     assert!(json.contains("Fabrication"));
     assert!(json.contains("hub"));
@@ -120,6 +122,7 @@ async fn a_hub_row_renders_with_the_full_action_set() {
 /// arg) — not text, per ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 3-F.
 #[semio_framework_async_macros::async_test]
 async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     observe(rows(&TreeWindows::unhosted(), &[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("Hub Home row"), |root| {
         let row = row(root, "space:sp-hub");
         let buttons = buttons(row);
@@ -134,6 +137,7 @@ async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions(
 
 #[semio_framework_async_macros::async_test]
 async fn spectator_and_unbound_hub_rows_only_carry_open() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     for row in [spectator_hub_row(), unbound_hub_row()] {
         observe(rows(&TreeWindows::unhosted(), &[row], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("restricted Hub Home row"), |root| {
             let buttons = buttons(root.children.iter().find(|node| node.key.as_str().starts_with("space:")).expect("restricted Home row present"));
@@ -145,6 +149,7 @@ async fn spectator_and_unbound_hub_rows_only_carry_open() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_local_row_carries_open_and_remove_from_home() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     observe(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("local Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-local"));
         let names: Vec<&str> = buttons.iter().map(|binding| binding.action.name.as_str()).collect();
@@ -156,6 +161,7 @@ async fn a_local_row_carries_open_and_remove_from_home() {
 
 #[semio_framework_async_macros::async_test]
 async fn seeded_local_studio_renders_a_table_row() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let cfg = HomeConfig::default();
     let _ = semio_s_space_core::list_all_space_catalog_entries().await;
     let node = render(&cfg, &HomeDirectoryProjection::default(), &host_view(semio_ui_locale::Locale::En)).expect("seeded Home rows");
@@ -165,6 +171,7 @@ async fn seeded_local_studio_renders_a_table_row() {
 
 #[semio_framework_async_macros::async_test]
 async fn german_locale_labels_resolve_in_the_rendered_table() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Herkunft"), "German column header must resolve: {json}");
@@ -173,11 +180,12 @@ async fn german_locale_labels_resolve_in_the_rendered_table() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_resolves_labels_from_host_view() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let cfg = HomeConfig { ..HomeConfig::default() };
     let view_state = host_view(semio_ui_locale::Locale::De);
     let json = project(rows(&TreeWindows::unhosted(), &[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
-    let _ = render(&cfg, &HomeDirectoryProjection::default(), &view_state).expect("localized Home rows");
+    observe(render(&cfg, &HomeDirectoryProjection::default(), &view_state).expect("localized Home rows"), |_| ());
 }
 
 /// 🔎️ The first node anywhere in the tree carrying `key`.
@@ -194,6 +202,7 @@ fn keyed<'a>(node: &'a semio_plugin::BuiltNode, key: &str) -> Option<&'a semio_p
 /// this test stays valid if the spacer count or the toolbar nesting ever changes.
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_real_create_space_and_import_studio_buttons() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     observe(render(&HomeConfig::default(), &HomeDirectoryProjection::default(), &host_view(semio_ui_locale::Locale::En)).expect("Home rows with toolbar actions"), |root| {
         for (key, action) in [("s-home-create-space", "createSpace"), ("s-home-import-studio", "importSpace")] {
             let button = keyed(root, key).unwrap_or_else(|| panic!("a {key} button somewhere in the tree"));
@@ -208,6 +217,7 @@ async fn render_wraps_the_table_with_real_create_space_and_import_studio_buttons
 
 #[semio_framework_async_macros::async_test]
 async fn german_toolbar_and_removal_labels_resolve() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(render_rows_wrapped(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE, &TreeWindows::unhosted()).expect("German Home body"));
     assert!(json.contains("Studio importieren") && json.contains("Space erstellen") && json.contains("Aus Home entfernen"), "German toolbar and removal labels must resolve: {json}");
 }
@@ -238,6 +248,7 @@ async fn the_signed_out_window_body_survives_the_component_tree_producer() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_signed_in_window_body_survives_the_component_tree_producer() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(render_rows_wrapped_for_test(&[one_hub_row(), one_local_row()]).await.expect("populated Home body"));
     assert!(json.contains("Fabrication") && json.contains("Fixture Studio"), "the populated body publishes both rows: {json}");
 }
@@ -251,6 +262,7 @@ async fn render_rows_wrapped_for_test(rows: &[semio_s_space_core::HomeSpaceRow])
 
 #[semio_framework_async_macros::async_test]
 async fn ephemeral_row_offers_promote_and_persist_not_share() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     observe(rows(&TreeWindows::unhosted(), &[one_ephemeral_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN).expect("ephemeral Home row"), |root| {
         let buttons = buttons(row(root, "space:sp-draft"));
         assert_eq!(buttons.len(), 4, "ephemeral rows offer open + promote + persist + remove from Home");
@@ -262,6 +274,7 @@ async fn ephemeral_row_offers_promote_and_persist_not_share() {
 
 #[semio_framework_async_macros::async_test]
 async fn ephemeral_row_german_promote_label_resolves() {
+    let _arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let json = project(rows(&TreeWindows::unhosted(), &[one_ephemeral_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German ephemeral Home row"));
     assert!(json.contains("Zum Hub hochstufen") && json.contains("Lokal speichern"), "German ephemeral actions must resolve: {json}");
 }

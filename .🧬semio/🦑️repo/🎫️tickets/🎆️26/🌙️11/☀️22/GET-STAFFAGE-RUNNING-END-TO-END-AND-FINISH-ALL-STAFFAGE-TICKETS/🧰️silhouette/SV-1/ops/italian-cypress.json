@@ -1,0 +1,6 @@
+[
+{"op":"solid-set","scale":"100","id":"foliage-spray-4-3","set":{"transform":{"translation":[0.00385,0.01867,0]}}},
+{"op":"solid-set","scale":"100","id":"foliage-spray-3-1","set":{"transform":{"translation":[0.00102,-0.00486,0]}}},
+{"op":"solid-set","scale":"200","id":"foliage-spray-2-4","set":{"transform":{"translation":[0,0,-0.03595]}}},
+{"op":"solid-set","scale":"200","id":"foliage-spray-3-2","set":{"transform":{"translation":[0,0,0.01085]}}}
+]

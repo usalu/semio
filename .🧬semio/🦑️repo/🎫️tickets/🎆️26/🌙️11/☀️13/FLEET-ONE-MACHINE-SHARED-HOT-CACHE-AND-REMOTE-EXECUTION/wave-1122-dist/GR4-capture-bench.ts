@@ -1,0 +1,13 @@
+import {mkdtempSync,readFileSync,writeFileSync} from "node:fs";
+import {join} from "node:path";
+import {captureNxAuthorizerSourcesV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import {nxAuthorizerMemoFileV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧊️memo/🟦️.ts";
+const root="/Users/ueli/Documents/semio",entry=process.argv[2]!,tampered=Number(process.argv[3]??20),base=mkdtempSync("/tmp/gr4-bench-"),file=nxAuthorizerMemoFileV1(base,root,entry,true);
+const run=async(label:string)=>{const served:string[]=[],lines:string[]=[],start=performance.now();const result=await captureNxAuthorizerSourcesV1(root,entry,new AbortController().signal,{installed:true,report:text=>lines.push(text.slice(0,90)),memo:{file,served:value=>served.push(value)}});console.log(label.padEnd(34),((performance.now()-start)/1000).toFixed(1).padStart(7),"s",served.join(","),result.manifest.sources.length,"files",lines.filter(line=>line.startsWith("memo")).join(";"));return result;};
+await run("cold walk (no memo)");
+await run("warm replay (memo holds)");
+const memo=JSON.parse(readFileSync(file,"utf8"));
+for(const row of memo.manifest.sources.slice(0,tampered))row.sha256="0".repeat(64);
+writeFileSync(file,JSON.stringify(memo));
+await run(`partial repair (${tampered} files differ)`);
+await run("warm replay after repair");

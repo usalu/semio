@@ -58,7 +58,7 @@ export function BadgesCard(props: { readonly state: CourseState; readonly text: 
       icon={<CardIcon icon="award" />}
       title={text("course.home.badges")}
       footerRight={
-        <CardAction primary onClick={onOpen}>
+        <CardAction icon="award" primary onClick={onOpen}>
           {text("course.home.allBadges")}
         </CardAction>
       }
@@ -100,7 +100,7 @@ export function BadgesPage(props: { readonly state: CourseState; readonly text: 
   const id = useId();
   const badges = state.course?.badges ?? [];
   return (
-    <PageFrame page={HOME_PAGES.badges} wide overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "badges" })} opened={view.opened} />}>
+    <PageFrame page={HOME_PAGES.badges} overlay={<PanePeers scope={state.course === undefined ? undefined : roomScope(state.course.id, { screen: "badges" })} opened={view.opened} />}>
       <CourseCard flush id={id} card="all-badges" anchor={PRESENCE_ANCHORS.badges} icon={<CardIcon icon="award" />} title={text("course.home.badges")}>
         <RowList>
           {badges.map((badge) => {

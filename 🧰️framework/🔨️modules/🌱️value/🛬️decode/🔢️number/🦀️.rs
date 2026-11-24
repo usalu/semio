@@ -192,7 +192,7 @@ impl OriginalFloatWord{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.output.is_none()&&self.issued.is_none()}
 }
-impl Drop for OriginalFloatWord{fn drop(&mut self){assert!(self.terminal_is_empty(),"original numeric field requires explicit output and source closure")}}
+impl Drop for OriginalFloatWord{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original numeric field requires explicit output and source closure")}}
 
 #[cfg(test)]
 #[path="🧪️laws/🦀️.rs"]

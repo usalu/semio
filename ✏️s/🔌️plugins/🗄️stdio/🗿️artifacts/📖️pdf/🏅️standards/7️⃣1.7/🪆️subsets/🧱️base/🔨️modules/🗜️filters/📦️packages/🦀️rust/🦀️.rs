@@ -10,7 +10,7 @@ pub use bounded_lzw::PdfLzwCursor;
 
 #[path = "../../🪣️stream-data/🦀️.rs"]
 mod stream_data;
-pub use stream_data::{PdfStreamDataCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus};
+pub use stream_data::{PdfStreamBytes, PdfStreamDataCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus};
 
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️flate/🦀️.rs"]

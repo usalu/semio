@@ -1,7 +1,8 @@
 /** 🤏️ Pointer drag and drop for task interactions — mouse, pen and touch through one Pointer Events path.
  *
- * Drop zones are plain elements carrying `data-course-drop="<zone>"`; a drag starts on a grip, follows the pointer with
- * an inert ghost copy of its source, highlights the zone under the pointer and reports the zone it was released over.
+ * Drop zones are plain elements carrying `data-course-drop="<zone>"`; a drag starts on a grip and detaches its source: the source leaves its place
+ * (only its room stays, so nothing jumps under the pointer) and travels with the pointer as an inert glass copy one layer above the page. While it travels every
+ * zone of its task is shown as a place to drop it (`data-course-dragging` on the task), the zone under the pointer more strongly, and the zone it is released over is reported.
  * Escape or a cancelled pointer abandons the drag. Every interaction also has a keyboard path in its task component;
  * dragging is the additional pointer path, so the ghost and highlights are hidden from assistive technology.
 
@@ -50,7 +51,8 @@ function edgeScrollSpeed(host: HTMLElement, y: number): number {
 
 /** 👻️ An inert copy of `source` that looks like it, in an empty copy of the list it lies in: the list is the room its
  * rows lay themselves out for (a container query), so the copy keeps the layout of its source — one line or two —
- * wherever it is carried. Cloning a node does not carry over what a select currently shows, so every select of the
+ * wherever it is carried. Of the list only its classes are kept: a list that is a shared-border group or cell is positioned by the border
+ * compositor, which would put the copy back into the flow of the page instead of at the pointer. Cloning a node does not carry over what a select currently shows, so every select of the
  * copy is given the value of the one it copies.
  * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element — no cloning steps
  * @see ../../🎨️.css — `.course-rows` */
@@ -61,9 +63,12 @@ function ghostOf(source: HTMLElement): HTMLElement {
   copy.removeAttribute("id");
   for (const element of copy.querySelectorAll("[id]")) element.removeAttribute("id");
   copy.style.width = `${source.getBoundingClientRect().width}px`;
+  copy.classList.add("ui-glass");
+  copy.setAttribute("data-level", "menu");
+  copy.setAttribute("data-glass-chip", "");
   const room = source.parentElement;
   const ghost = room === null ? document.createElement("div") : (room.cloneNode(false) as HTMLElement);
-  for (const own of ["id", "tabindex", "aria-label", "aria-labelledby"]) ghost.removeAttribute(own);
+  for (const own of ghost.getAttributeNames()) if (own !== "class") ghost.removeAttribute(own);
   ghost.classList.add("course-drag-ghost");
   ghost.setAttribute("aria-hidden", "true");
   ghost.setAttribute("inert", "");
@@ -109,6 +114,7 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
   const grip = event.currentTarget;
   holdPointer(grip, event.pointerId);
   const host = source.closest<HTMLElement>(".course-app") ?? document.body;
+  const places = source.closest<HTMLElement>(".course-task") ?? host;
   const origin = { x: event.clientX, y: event.clientY };
   const bounds = source.getBoundingClientRect();
   const edgeScroll = event.pointerType === "touch" || event.pointerType === "pen";
@@ -160,6 +166,7 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
       ghost = ghostOf(source);
       host.append(ghost);
       source.classList.add("course-dragging");
+      places.setAttribute("data-course-dragging", "");
     }
     point = { x: moved.clientX, y: moved.clientY };
     ghost.style.transform = `translate(${bounds.left + point.x - origin.x}px, ${bounds.top + point.y - origin.y}px)`;
@@ -184,6 +191,7 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
     highlight(null);
     ghost?.remove();
     source.classList.remove("course-dragging");
+    places.removeAttribute("data-course-dragging");
   };
   const cancel = (pointer: Event): void => {
     if (owns(pointer as PointerEvent)) finish();

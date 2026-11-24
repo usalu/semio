@@ -19,6 +19,10 @@ path = "../../🦀️.rs"
 name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
+[[test]]
+name = "replay_preparation_physical"
+path = "../../🧪️tests/🧮️physical/🦀️.rs"
+
 [dependencies]
 serde = { workspace = true, optional = true }
 semio-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }

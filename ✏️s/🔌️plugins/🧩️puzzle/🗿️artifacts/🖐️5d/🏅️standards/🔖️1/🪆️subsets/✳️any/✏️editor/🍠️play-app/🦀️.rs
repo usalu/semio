@@ -34,7 +34,7 @@ impl Puzzle5dPlayApp {
         view_state: Option<&semio_plugin::ViewModel>,
         selection: &protocol::DomainSelection,
         instance_owner: Option<&semio_plugin::ArtifactInstanceOperationOwnerHandle>,
-        tool_run: Option<&semio_plugin::ToolRunView>,
+        tool_run: Option<semio_plugin::OriginalToolRunView<'_>>,
     ) -> (Emit<Puzzle5dMutation, Puzzle5dConfigMutation>, EphemeralEmit<EditorApp<Puzzle5dPlayApp>>) {
         let projection = puzzle5d_editor_projection(snapshot);
         let shared_before = window_ownership::shared(config);

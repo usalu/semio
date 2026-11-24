@@ -421,7 +421,7 @@ fn walk_page_tree(node: ObjRef, resolver: &mut Resolver<'_>, inherited: Option<(
         };
         for stream in streams {
             if let Some(PdfObject::Stream { dict, data, .. }) = resolver.resolve(stream.num) {
-                if let Ok((decoded, _)) = decode_stream(&dict, &data) {
+                if let Ok((decoded, _)) = decode_stream(&dict, &data.to_vec_owner()) {
                     if !combined.is_empty() {
                         combined.push(b'\n');
                     }

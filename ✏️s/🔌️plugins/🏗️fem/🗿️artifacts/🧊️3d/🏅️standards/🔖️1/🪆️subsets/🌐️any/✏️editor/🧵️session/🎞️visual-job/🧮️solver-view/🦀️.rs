@@ -150,10 +150,10 @@ impl Fem3dSolverView {
 impl Drop for Fem3dSolverView {
     fn drop(&mut self) {
         for owner in self.scalars.iter_mut().filter_map(Option::take) {
-            assert!(recover_fem3d_backing(Fem3dRecoveredBacking::SolverScalar(owner)), "FEM3D solver scalar recovery capacity");
+            assert!(std::thread::panicking()||(recover_fem3d_backing(Fem3dRecoveredBacking::SolverScalar(owner))), "FEM3D solver scalar recovery capacity");
         }
         for owner in self.initialized.iter_mut().filter_map(Option::take) {
-            assert!(recover_fem3d_backing(Fem3dRecoveredBacking::SolverInitialized(owner)), "FEM3D solver initialized recovery capacity");
+            assert!(std::thread::panicking()||(recover_fem3d_backing(Fem3dRecoveredBacking::SolverInitialized(owner))), "FEM3D solver initialized recovery capacity");
         }
     }
 }

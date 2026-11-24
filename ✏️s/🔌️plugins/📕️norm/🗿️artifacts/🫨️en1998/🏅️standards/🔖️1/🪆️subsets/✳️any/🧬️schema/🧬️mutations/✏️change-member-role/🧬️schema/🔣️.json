@@ -70,7 +70,25 @@
         },
         "group": "value",
         "order": 30,
-        "widget": "select"
+        "widget": "select",
+        "options": {
+          "beam": {
+            "en": "Beam",
+            "de": "Träger"
+          },
+          "column": {
+            "en": "Column",
+            "de": "Stütze"
+          },
+          "wall": {
+            "en": "Wall",
+            "de": "Wand"
+          },
+          "brace": {
+            "en": "Brace",
+            "de": "Verband"
+          }
+        }
       },
       "x-semio-rust": {
         "type": "semio_s_artifact_norm_en1998_model::MemberKind"

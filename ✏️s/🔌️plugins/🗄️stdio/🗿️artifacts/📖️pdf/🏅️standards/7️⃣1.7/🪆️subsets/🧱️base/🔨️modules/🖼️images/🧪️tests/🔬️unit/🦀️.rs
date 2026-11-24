@@ -1,5 +1,5 @@
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfImage, PdfObject, PdfStreamFilter};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{stream_bytes, PdfImage, PdfObject, PdfStreamFilter};
 use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::standards::v1_7::subsets::base::modules::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
@@ -33,5 +33,5 @@ fn pdf_semantic_body_image_words_match_neutral_native_and_independent_lopdf() {
 fn pdf_semantic_body_foreign_artifact_custody_is_explicit_and_independent() {
     use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot,PdfIndirectObject,ObjRef};
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::admit_pdf_artifact;
-    let mut snapshot=PdfSnapshot::default();let object=PdfObject::Stream {dict:Vec::new(),data:vec![255,216,255,217],filters:vec![PdfStreamFilter::Dct {color_transform:None}]};let reference=admit_pdf_artifact(&mut snapshot,"s.stdio.jpeg",object.clone()).unwrap();assert_eq!(NativePdfArtifactResources::from_objects(&snapshot.objects).resolve(&reference).unwrap(),object);assert!(NativePdfArtifactResources::default().resolve(&reference).is_err());let bytes=snapshot.objects[0].value.clone();snapshot.objects.clear();snapshot.objects.push(PdfIndirectObject{id:ObjRef{num:99,gen:0},value:bytes});assert_eq!(NativePdfArtifactResources::from_objects(&snapshot.objects).resolve(&reference).unwrap(),object);
+    let mut snapshot=PdfSnapshot::default();let object=PdfObject::Stream {dict:Vec::new(),data:stream_bytes(&vec![255,216,255,217]),filters:vec![PdfStreamFilter::Dct {color_transform:None}]};let reference=admit_pdf_artifact(&mut snapshot,"s.stdio.jpeg",object.clone()).unwrap();assert_eq!(NativePdfArtifactResources::from_objects(&snapshot.objects).resolve(&reference).unwrap(),object);assert!(NativePdfArtifactResources::default().resolve(&reference).is_err());let bytes=snapshot.objects[0].value.clone();snapshot.objects.clear();snapshot.objects.push(PdfIndirectObject{id:ObjRef{num:99,gen:0},value:bytes});assert_eq!(NativePdfArtifactResources::from_objects(&snapshot.objects).resolve(&reference).unwrap(),object);
 }

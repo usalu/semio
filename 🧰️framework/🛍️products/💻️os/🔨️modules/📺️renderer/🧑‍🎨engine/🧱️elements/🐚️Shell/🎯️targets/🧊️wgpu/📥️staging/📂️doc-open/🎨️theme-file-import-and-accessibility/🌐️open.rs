@@ -73,8 +73,8 @@ async fn read_picked_range(token: u32, start: u64, end: u64) -> Result<Vec<u8>, 
         let from = start + bytes.len() as u64;
         let to = (from + BROWSER_FILE_RANGE_MAX_BYTES).min(end);
         let answer = host_io_call(&serde_json::json!({ "op": "read-picked-file", "token": token, "start": from, "end": to }).to_string(), None).await?;
-        let chunk = semio_framework_io_base64::base64_standard_decode(&answer).map_err(|_| "Open File read answer is not base64".to_string())?;
-        if chunk.len() as u64 != to - from { return Err("Open File changed size while being read".into()); }
+        let chunk = semio_framework_io_base64::base64_standard_decode(&answer).map_err(|_| "open-file.read-not-base64".to_string())?;
+        if chunk.len() as u64 != to - from { return Err("open-file.size-changed".into()); }
         bytes.extend_from_slice(&chunk);
     }
     Ok(bytes)
@@ -142,7 +142,7 @@ async fn pick_and_route(source: Option<BrowserPickedFile>, catalog: BrowserCatal
         }
     }
     release_browser_picked_file(file.token).await;
-    Err("Open File content check did not settle".into())
+    Err("open-file.content-check-unsettled".into())
 }
 
 async fn import_browser_file(program: ProgramBridgeEntry, app: AppDefinition, format_kind: String, file: BrowserPickedFile, source_instance: u32, cancel: CancelToken, progress: Arc<AtomicU8>) -> Result<Option<BrowserOpenedFile>, String> {
@@ -153,7 +153,7 @@ async fn import_browser_file(program: ProgramBridgeEntry, app: AppDefinition, fo
 
 async fn import_picked_bytes(program: &ProgramBridgeEntry, app: &AppDefinition, format_kind: &str, file: &BrowserPickedFile, source_instance: u32, cancel: &CancelToken, progress: &AtomicU8) -> Result<Option<BrowserOpenedFile>, String> {
     let maximum = program.natural_file_maximum_bytes(format_kind).await? as u64;
-    if file.size == 0 || file.size > maximum { return Err("Open File has an inadmissible input extent".into()); }
+    if file.size == 0 || file.size > maximum { return Err("open-file.inadmissible-extent".into()); }
     let mut bytes = Vec::with_capacity(file.size as usize);
     while (bytes.len() as u64) < file.size {
         if cancel.is_cancelled_now() { return Ok(None); }
@@ -170,6 +170,6 @@ async fn import_picked_bytes(program: &ProgramBridgeEntry, app: &AppDefinition, 
     program.import_natural_file(instance, format_kind, &bytes).await?;
     if cancel.is_cancelled_now() { return Ok(None); }
     let owner = program.read_app_document_identity(instance).await.map_err(|error| error.to_string())?;
-    opened.document_id = owner.parent_document_id.ok_or("Open File did not create a document identity")?;
+    opened.document_id = owner.parent_document_id.ok_or("open-file.no-document-identity")?;
     Ok(Some(opened))
 }

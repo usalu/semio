@@ -9,7 +9,7 @@ pub struct MeshTessellationInspection<'a>{pub snapshot:&'a Snapshot,pub tessella
 pub struct MeshTransformInspection<'a>{pub mesh:&'a HalfedgeMesh,pub phase:u8,pub vertex:usize}
 pub struct MeshOrientationInspection<'a>{
     pub snapshot:&'a Snapshot,pub edges:&'a HistoryFoldIndex<(u32,u32),Vec<(usize,bool)>>,pub keys:&'a Vec<(u32,u32)>,
-    pub adjacency:&'a Vec<Vec<(usize,bool)>>,pub oriented:&'a Vec<bool>,pub flipped:&'a Vec<bool>,pub stack:&'a Vec<usize>,
+    pub adjacency:&'a Vec<Vec<(usize,bool)>>,pub component:&'a Vec<usize>,pub flipped:&'a Vec<bool>,pub stack:&'a Vec<usize>,
     pub active:Option<usize>,pub face:usize,pub corner:usize,pub cursor:usize,pub neighbor:usize,pub reversing:usize,
     pub incidence:u8,pub flip_count:usize,pub phase:u8,pub build:Option<MeshTopologyInspection<'a>>,
 }
@@ -31,7 +31,7 @@ impl MeshModelingJob{
             Work::Merge(work)=>MeshModelingInspection::Merge(MeshSnapshotInspection{snapshot:work.snapshot()}),
             Work::Subdivide(work)=>MeshModelingInspection::Subdivide(MeshTessellationInspection{snapshot:&work.snapshot,tessellation:work.tessellation.as_ref(),tessellation_retirement:work.tessellation_retirement.as_ref().map(|_|())}),
             Work::LoopCut(work)=>MeshModelingInspection::LoopCut(MeshSnapshotInspection{snapshot:&work.snapshot}),
-            Work::Orient(work)=>MeshModelingInspection::Orient(MeshOrientationInspection{snapshot:&work.snapshot,edges:&work.edges,keys:&work.keys,adjacency:&work.adjacency,oriented:&work.oriented,flipped:&work.flipped,stack:&work.stack,active:work.active,face:work.face,corner:work.corner,cursor:work.cursor,neighbor:work.neighbor,reversing:work.reversing,incidence:work.incidence,flip_count:work.flip_count,phase:work.phase,build:work.build.as_ref().map(Build::inspection)}),
+            Work::Orient(work)=>MeshModelingInspection::Orient(MeshOrientationInspection{snapshot:&work.snapshot,edges:&work.edges,keys:&work.keys,adjacency:&work.adjacency,component:&work.component,flipped:&work.flipped,stack:&work.stack,active:work.active,face:work.face,corner:work.corner,cursor:work.cursor,neighbor:work.neighbor,reversing:work.reversing,incidence:work.incidence,flip_count:work.flip_count,phase:work.phase,build:work.build.as_ref().map(Build::inspection)}),
             Work::FillHoles(work)=>MeshModelingInspection::FillHoles(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Inflate(work)=>MeshModelingInspection::Inflate(MeshSnapshotInspection{snapshot:&work.snapshot}),
             Work::Import(_)=>MeshModelingInspection::Import(()),

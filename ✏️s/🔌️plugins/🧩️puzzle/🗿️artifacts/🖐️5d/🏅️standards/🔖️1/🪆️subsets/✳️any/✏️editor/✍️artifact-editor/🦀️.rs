@@ -406,7 +406,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let windows = semio_plugin::TreeWindows::for_body(view_state, body_key);
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope, labels, None),
-            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), None),
+            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.original_tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), None),
             artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
@@ -439,7 +439,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let suggestions = menu_target.and_then(|target| owner.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
         let node = match body_key {
             board2d::BODY_KEY => board2d::render(&envelope, labels, suggestions.as_ref()),
-            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), suggestions.as_ref()),
+            world3d::BODY_KEY => world3d::render(&envelope, labels, doc.original_tool_run(), &crate::editor::puzzle5d::precompute::puzzle5d_mesh_lane(doc.snapshot, &envelope.document), suggestions.as_ref()),
             artifact_panel::BODY_KEY => artifact_panel::render(&envelope, labels, &windows),
             catalogue::BODY_KEY => catalogue::render(&envelope, labels, &windows),
             inspection::BODY_KEY => inspection::render(&envelope, labels, &windows),
@@ -460,7 +460,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&projection, runtime, &active_utility);
-        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.tool_run()))])
+        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.original_tool_run()))])
     }
 
     fn window_engagements_with_request_context(
@@ -476,7 +476,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::transient_from_view(transient), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&puzzle5d_editor_projection(&doc.snapshot), runtime, &active_utility);
-        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.tool_run()))])
+        HashMap::from([(window_id.to_string(), edit::puzzle5d_engagement(&envelope, window_kind, labels, doc.original_tool_run()))])
     }
 
     fn window_measures(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -499,7 +499,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let runtime = window_ownership::runtime(cfg.snapshot, &window_ownership::config_from_view(cfg), &window_ownership::Puzzle5dWindowTransient::default(), window_id);
         let active_utility = puzzle5d_scene_active_utility(Some(view_state), Some(window_id));
         let envelope = scene_from_projection(&puzzle5d_editor_projection(&doc.snapshot), runtime, &active_utility);
-        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.tool_run()))])
+        HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, labels, doc.original_tool_run()))])
     }
 
     fn context_menu(

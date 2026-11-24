@@ -34,8 +34,7 @@ where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<RemoveAnnotation> + From<crate::standards::v1_7::subsets::base::schema::mutations::insert_annotation::InsertAnnotation>,
 {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let _ = base;
-        MutationOutcome::new(diff::diff_remove_annotation(self.index, self.at))
+        diff::outcome_over(base, diff::diff_remove_annotation(self.index, self.at))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

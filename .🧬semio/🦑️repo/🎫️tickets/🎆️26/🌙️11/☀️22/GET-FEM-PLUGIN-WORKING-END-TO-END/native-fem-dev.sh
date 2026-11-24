@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Native (repo-free) FEM 2D / 3D dev route. Usage: native-fem-dev.sh <step>
-#   wasm      cargo build of the semio:fem component (wasm32-wasip2, prototype profile)
+#   wasm      cargo build of the semio:fem component (wasm32-wasip2, prototype-component profile)
 #   serve2d   vite on 6086 (FEM 2D)        serve3d   vite on 6087 (FEM 3D)
 #   check     curl readiness of both servers
 # Each step writes its log to $T/🗑️generated/nfd-<step>.log. Replicates what the repo targets run (see native-fem-dev.md).
@@ -16,9 +16,9 @@ wasm)
   export TMP='C:\t\wdtmp' TEMP='C:\t\wdtmp' TMPDIR='C:\t\wdtmp' CARGO_INCREMENTAL=0
   export CARGO_TARGET_DIR='C:\t\wd' CARGO_BUILD_BUILD_DIR='C:\t\wdb'
   export CARGO_BUILD_RUSTC=rustc CARGO_BUILD_RUSTC_WRAPPER= RUSTC_WRAPPER= SEMIO_BUILD_MODE=prototype
-  export CARGO_PROFILE_DEV_DEBUG=0
+  export CARGO_UNSTABLE_FEATURE_UNIFICATION=true CARGO_RESOLVER_FEATURE_UNIFICATION=selected
   cargo build --offline -j 3 --manifest-path "$R/🌎️hub/Cargo.toml" --profile prototype --target wasm32-wasip2 \
-    -p semio-hub-fem-component --config "$(cygpath -m "$T/native-fem-profile.toml")" --message-format short \
+    -p semio-hub-fem-component --lib --config "$(cygpath -m "$T/native-fem-profile.toml")" \
     > "$G/nfd-wasm.log" 2>&1
   echo "rc=$?" >> "$G/nfd-wasm.log"
   ;;

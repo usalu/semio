@@ -125,7 +125,7 @@ export function realDiskWritersV1(context:RealDiskContextV1,rows:readonly DiskWr
    case "leaked-images":return{...base,measure:async()=>0,collect:async({signal})=>{if(process.platform==="darwin"&&!dryRun)await sweepWorkspaceSandboxImagesV1(context.workspace,signal);return 0;}};
    case "cas-lru":return{...base,measure:async signal=>(await casUsageV1(root,signal)).bytes,collect:async({signal})=>{
     const partition=measureCasPartitionV1(root);
-    return (await collectCasV1({root,policy:casPartitionPolicyForV1(CAS_POLICY_V1,partition),areas:await casHostAreasV1(context.home),partition,signal,dryRun})).freedBytes;
+    return (await collectCasV1({root,policy:casPartitionPolicyForV1(CAS_POLICY_V1,partition),role:"recovery",areas:await casHostAreasV1(context.home),partition,signal,dryRun})).freedBytes;
    }};
    case "image-slack":return{...base,measure:async()=>process.platform==="darwin"?describeImageSlackV1(measureImagesV1(context.workspace)).bytes:0,describe:async()=>{const detail=describeImageSlackV1(measureImagesV1(context.workspace));return{root:detail.root,command:detail.command};},collect:async({needBytes,signal})=>{
     if(process.platform!=="darwin"||dryRun)return 0;

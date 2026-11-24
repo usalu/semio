@@ -5,6 +5,7 @@ use super::kit::*;
 use super::layout::{is_upright, Layout};
 use super::model::{En1999Snapshot, AluminiumMember, AluminiumSection, MemberAction, SupportCondition};
 use super::scene::*;
+use super::scene::projection_kit::handle_kit;
 use super::tracks::{self, Mode};
 use super::{checks, eigen, handles, norm, SceneInput};
 use super::model::{PlateElement, WeldRun};
@@ -121,7 +122,7 @@ pub fn action_grips(owner: &str, collection: &str, actions: &[MemberAction], fra
         let path = |field: &str| format!("{collection}[id={owner}].actions[id={}].{field}", action.id);
         let entity = |tag: &str| EntityRef::new(EntityKind::Load, format!("{owner}{ACTION_MARK}{}:{tag}", action.id), format!("{collection}[id={owner}]"));
         let name = |en: &str, de: &str| loc(&format!("{en} ({})", action.id), &format!("{de} ({})", action.id));
-        let arrow = super::scene::projection_kit::handle_kit::load_arrow;
+        let arrow = handle_kit::load_arrow;
         if action.n_k.abs() > 1e-9 {
             out.push(arrow(&entity("n"), "magnitude", mul(&frame.x, if action.n_k > 0.0 { -1.0 } else { 1.0 }), &end, path("nK"), action.n_k, FORCE_PER_METRE, "N", name("Axial force N_k", "Normalkraft N_k")));
         }
@@ -135,8 +136,9 @@ pub fn action_grips(owner: &str, collection: &str, actions: &[MemberAction], fra
         if action.source == semio_s_artifact_norm_en1999_model::ActionSource::Udl && line.abs() > 1e-9 {
             let at = along(&mid, &frame.z, 0.15);
             let mut grip = arrow(&entity("udl"), "magnitude", mul(&frame.z, -1.0), &at, path("qKLine"), line, FORCE_PER_METRE, "N/m", name("Line load q_k", "Streckenlast q_k"));
-            let per_metre = FORCE_PER_METRE / length.max(1e-9);
-            grip.writes[0].map = Affine { base: action.q_k_line, k: line.signum() * per_metre };
+            let (per_metre, rest) = (FORCE_PER_METRE / length.max(1e-9), handle_kit::rest_of(&grip.kind, &grip.anchor).unwrap_or(0.0));
+            let k = line.signum() * per_metre;
+            grip.writes[0].map = Affine { base: action.q_k_line - k * rest, k };
             grip.writes[0].quantise = Some(Quantise::Round { step: per_metre / 200.0 });
             out.push(grip);
         }

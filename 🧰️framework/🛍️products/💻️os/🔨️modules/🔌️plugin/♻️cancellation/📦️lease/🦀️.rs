@@ -129,7 +129,7 @@ impl ToolCancellationLeaseRetirement {
   })();Exit::settle(effect,result)
  }
 }
-impl Drop for ToolCancellationLeaseRetirement{fn drop(&mut self){assert!(self.terminal_is_empty(),"original cancellation lease retirement retains all refused owners");}}
+impl Drop for ToolCancellationLeaseRetirement{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original cancellation lease retirement retains all refused owners");}}
 #[doc(hidden)]
 pub fn original_lease_cursor_admit(original:&mut Option<ToolCancellationLease>,grant:RetainedCloneGrant)->Result<(Option<Box<ToolCancellationLeaseRetirement>>,RetainedCloneProgress),ValueError>{
  let empty=RetainedCloneProgress::default();if original.is_none(){return Ok((None,empty));}let layout=std::alloc::Layout::new::<ToolCancellationLeaseRetirement>();let demand=RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:layout.size(),depth:1,..Default::default()};if grant.maximum_items==0||!plugin_grant_funds(demand,grant){return Ok((None,empty));}

@@ -45,9 +45,44 @@ fn natural_file_route_profile_checks_refuse_decrypted_security_state() {
     }
 }
 
+/// 🛤️ Names how the original PDF bytes reach the mounted editor: whole media, or the sealed paged natural source the browser file chooser delivers.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PdfIntake { Media, NaturalSource }
+
+/// 📏️ Host turns a large document may need to open, re-export and settle: the 48-page vector, Type1 and sampled-image documents measure at most 1,249 under the host's per-turn fuel, so this is eight times below the 32,768-turn fixture ceiling.
+const LARGE_DOCUMENT_TURN_LIMIT: usize = 4_096;
+/// 📏️ Host turns the paged decoder alone may need for the 9 MiB original image: 4,610 measured, one 4,096-unit step each.
+const LARGE_IMAGE_DECODE_TURN_LIMIT: usize = 8_192;
+/// ⛽️ The per-turn fuel the browser guest observes after its fixed turn entry: one 1 MiB host turn minus its admission spend.
+const BROWSER_TURN_FUEL: u64 = (1 << 20) - 3_685;
+
+/// 🌐️ Opens a PDF exactly as the browser does: a sealed paged natural source, one fresh browser turn of fuel per host turn and the shipped interactive component grants (512 KiB copy, 1 MiB release), so no step may need a contiguous allocation above the grant.
 async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope) -> semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>> {
+    open_registered_pdf_through(input, page_count, scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await
+}
+
+async fn open_registered_pdf_through(input: Vec<u8>, page_count: usize, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, intake: PdfIntake, fuel: u64) -> semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>> {
+    open_registered_pdf_with(input, page_count, scope, intake, fuel, true).await
+}
+
+/// 🌐️ [`open_registered_pdf_through`] where `warm` says whether the app's head projection is refreshed before the open starts: the browser opens into a freshly created app whose surface has not rendered yet, so its reserved media cache is born cold inside the open turns.
+async fn open_registered_pdf_with(input: Vec<u8>, page_count: usize, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, intake: PdfIntake, fuel: u64, warm: bool) -> semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>> {
+    try_open_registered_pdf_with(input, page_count, scope, intake, fuel, warm, LARGE_DOCUMENT_TURN_LIMIT).await.unwrap_or_else(|reason| panic!("{reason}")).0
+}
+
+/// 📊️ What one open cost the host: the turns that handed the source to the app, the turns the typed operation then needed to settle, and the wall time of both.
+#[derive(Clone, Copy, Debug)]
+struct OpenCost { intake_turns: usize, settle_turns: usize, wall: std::time::Duration }
+
+impl OpenCost {
+    fn turns(&self) -> usize { self.intake_turns + self.settle_turns }
+}
+
+/// 🌐️ [`open_registered_pdf_with`] that reports a refusal, a stall or more than `turn_limit` settlement turns as `Err` and the measured [`OpenCost`] as `Ok`, so a scaling law can state its bound and a probe can print where a document stops opening.
+async fn try_open_registered_pdf_with(input: Vec<u8>, page_count: usize, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, intake: PdfIntake, fuel: u64, warm: bool, turn_limit: usize) -> Result<(semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>>, OpenCost), String> {
     use semio_plugin::{artifact_app_laws as laws, EditorApp, PluginApp};
     use semio_plugin::app::{MediaArtifact, MediaArtifactDescriptor, MediaWireFormat};
+    let started = std::time::Instant::now();
     let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
     let meta = laws::meta("local");
     let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().unwrap();
@@ -55,6 +90,7 @@ async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semi
         async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
         semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
     ).await);
+    let natural_bytes = (intake == PdfIntake::NaturalSource).then(|| input.clone());
     let artifact = MediaArtifact {
         descriptor: MediaArtifactDescriptor {
             edge_id: None, port_id: Some(semio_plugin::NATURAL_FILE_PORT.into()),
@@ -64,19 +100,28 @@ async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semi
         data: input,
     };
     let cx = scope.cx();
-    let fuel = laws::OriginalFixtureCaller::turn_fuel();
-    let grant = cx.retained_grant();
+    let grant = if intake == PdfIntake::NaturalSource { policy.preparation } else { cx.retained_grant() };
     laws::ensure_fixture_cancellation_issuer(&mut app, cx).expect("mounted PDF instance is born");
-    app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected");
+    if warm { app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected"); }
     let mut artifact = Some(artifact);
+    let mut natural = natural_bytes.map(|bytes| semio_plugin::NaturalFilePagedSource::retain(semio_framework_value::paged::PagedBytes::try_from_slice(&bytes).expect("paged natural source")));
+    let mut started_operation = None;
     let mut consumed = false;
     let mut idle = 0;
+    let mut intake_turns = 0;
     for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
         laws::fixture_renew_turn(cx, fuel, grant).expect("mounted PDF import turn is funded");
+        intake_turns += 1;
         let before = (cx.original_work_units_spent(), cx.retained_progress());
-        if PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
-            .await.expect("mounted PDF consumes original bytes").is_some()
-        {
+        let accepted = match intake {
+            PdfIntake::Media => PluginApp::consume_media(&mut app, semio_plugin::NATURAL_FILE_PORT, &mut artifact, cx)
+                .await.expect("mounted PDF consumes original bytes").is_some(),
+            PdfIntake::NaturalSource => {
+                app.dispatch_ctx().advance_original_reserved_natural_source(&mut natural, &meta, &mut started_operation, cx).await.expect("mounted PDF routes its paged natural source");
+                started_operation.is_some()
+            }
+        };
+        if accepted {
             consumed = true;
             break;
         }
@@ -85,15 +130,320 @@ async fn open_registered_pdf(input: Vec<u8>, page_count: usize, scope: &mut semi
         idle = if before == after { idle + 1 } else { 0 };
         if idle >= laws::OriginalFixtureCaller::maximum_idle_turns() { break }
     }
-    assert!(consumed, "mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic());
-    let receipt = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
-        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
-    ).await).unwrap();
-    assert_eq!(receipt.completions, 1, "the mounted PDF import settles once");
-    assert!(matches!(receipt.ui_scope, Some(semio_plugin::kernel::UiDirtyScope::Full)));
-    assert!(!receipt.effects.iter().any(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })));
-    assert_eq!(app.snapshot().expect("the mounted PDF is ready").pages.len(), page_count);
-    app
+    if !consumed { return Err(format!("mounted PDF media intake stalled after {idle} idle turns: {:?}, {}", cx.retained_grant(), app.typed_operation_diagnostic())); }
+    let settled = semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation_within(
+        &mut app, meta.instance_id, policy, &mut identity, scope.cx(), turn_limit
+    ).await);
+    let (receipt, settle_turns) = settled.map_err(|failure| format!("the mounted PDF import did not settle within {turn_limit} host turns after {intake_turns} intake turns: {failure:?}"))?;
+    if receipt.completions != 1 { return Err(format!("the mounted PDF import settled {} times", receipt.completions)); }
+    if !receipt.ui_scopes.iter().any(|scope| matches!(scope, semio_plugin::kernel::UiDirtyScope::Full)) {
+        return Err(format!("the mounted PDF import dirties the whole UI before any later partial refresh, got {:?} with effects {:?}", receipt.ui_scopes, receipt.effects));
+    }
+    if receipt.effects.iter().any(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })) { return Err("the mounted PDF import loads a document by reference".into()); }
+    let pages = app.snapshot().expect("the mounted PDF is ready").pages.len();
+    if pages != page_count { return Err(format!("the mounted PDF opened {pages} pages, not {page_count}")); }
+    Ok((app, OpenCost { intake_turns, settle_turns, wall: started.elapsed() }))
+}
+
+/// 📚️ A flat generated document of `pages` vector pages, two objects per page, as the large-document laws open it.
+fn scaling_document(pages: usize) -> Vec<u8> {
+    large_pdf(&serde_json::json!({ "pageCount": pages, "segmentCount": 4 }))
+}
+
+/// 📏️ Settlement turns per page the open may need under the browser grants: 5.3 measured at 120 pages and 5.6 at 600, so linear growth with a margin and no fixed per-document ceiling.
+const OPEN_TURNS_PER_PAGE: usize = 8;
+
+/// 📊️ Opens `pages` pages under the browser grants and asserts the settlement turns stay proportional to the document.
+async fn open_cost_scales_with(pages: usize) {
+    use semio_plugin::artifact_app_laws as laws;
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let (mut app, cost) = try_open_registered_pdf_with(scaling_document(pages), pages, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL, true, 256 + OPEN_TURNS_PER_PAGE * pages).await.unwrap_or_else(|reason| panic!("{reason}"));
+    assert!(cost.settle_turns <= 256 + OPEN_TURNS_PER_PAGE * pages, "{pages} pages settled in {} turns", cost.settle_turns);
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn open_turns_are_proportional_to_the_page_count_at_120_pages() { open_cost_scales_with(120).await }
+
+#[semio_framework_async_macros::async_test]
+async fn open_turns_are_proportional_to_the_page_count_at_600_pages() { open_cost_scales_with(600).await }
+
+/// 🌐️ The browser file chooser hands the guest a sealed paged natural source; opening it under the browser's one-MiB turn fuel completes in bounded turns, so no decoder quote can exceed what a turn can fund.
+#[semio_framework_async_macros::async_test]
+async fn natural_source_route_opens_a_pdf_under_the_browser_turn_fuel() {
+    use semio_plugin::artifact_app_laws as laws;
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    assert_eq!(app.snapshot().expect("the paged PDF is ready").pages.len(), 2);
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// ⛽️ The fuel one shard turn grants in the browser (`DEFAULT_SHARD_BUDGET.fuel` of the actor shard runtime): fifty times the 1 MiB turn the first paged-natural regression ran under.
+const SHARD_TURN_FUEL: u64 = 50_000_000;
+/// 📏️ The most original work one host turn may spend while opening or exporting a two-page PDF: a turn that spends (or sizes its probe against) its whole fuel holds the actor lane for the wall bound instead of one bounded step.
+const SHARD_TURN_WORK_BOUND: u128 = 1 << 20;
+/// 🔢️ Host turns the two-page open, and the snapshot export, may need under the shard fuel (68 measured for the open under 1 MiB fuel).
+const SHARD_TURN_LIMIT: usize = 512;
+/// 🔢️ Turns a lifecycle or drain loop of the shard-driven law may spend before the law calls it stuck.
+const SHARD_STALL_TURNS: usize = 4_096;
+/// 🔢️ Host turns `AppCommand::MediaIn` of a small PDF may need to reach its mount under the shard budget.
+const SHARD_MOUNT_TURN_LIMIT: usize = 64;
+/// 🌐️ Opens `two-pages.pdf` into a freshly created app under the browser shard's real turn fuel, inside an armed host lifetime: the open settles in a bounded number of turns and no turn spends more than [`SHARD_TURN_WORK_BOUND`] work units (a probe must not open, nor spend, the whole 50,000,000 units of a turn). `warm` refreshes the head projection first, as the native fixtures always did; the browser never does.
+async fn shard_fuel_open(intake: PdfIntake, warm: bool) {
+    use semio_plugin::artifact_app_laws as laws;
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let fuel = laws::arm_host_turn_fuel(SHARD_TURN_FUEL);
+    let lifetime = laws::arm_host_lifetime(scope.cx());
+    let mut app = open_registered_pdf_with(input.to_vec(), 2, &mut scope, intake, SHARD_TURN_FUEL, warm).await;
+    fuel.settle(scope.cx());
+    drop(lifetime);
+    assert!(fuel.turns() <= SHARD_TURN_LIMIT, "the shard-fuel open needed {} host turns", fuel.turns());
+    assert!(fuel.peak_turn_work() <= SHARD_TURN_WORK_BOUND, "one shard-fuel open turn spent {} work units", fuel.peak_turn_work());
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shard_fuel_open_through_the_paged_natural_source_with_a_warm_head() { shard_fuel_open(PdfIntake::NaturalSource, true).await }
+
+#[semio_framework_async_macros::async_test]
+async fn shard_fuel_open_through_the_paged_natural_source_with_a_cold_head() { shard_fuel_open(PdfIntake::NaturalSource, false).await }
+
+#[semio_framework_async_macros::async_test]
+async fn shard_fuel_open_through_the_media_route_with_a_warm_head() { shard_fuel_open(PdfIntake::Media, true).await }
+
+#[semio_framework_async_macros::async_test]
+async fn shard_fuel_open_through_the_media_route_with_a_cold_head() { shard_fuel_open(PdfIntake::Media, false).await }
+
+type ShardApp = semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>>;
+
+/// 🧾️ What one reactor turn of the shard-driven open reported.
+#[derive(Debug)]
+struct ShardTurn { ingress: String, status: String, spent: u128, fuel_used: u64, retained: semio_framework_value::RetainedCloneProgress }
+
+/// 🔄️ One reactor turn exactly as a shard grants it: the original caller's context renewed with the shard's fuel (armed through `arm_host_turn_fuel`) and grant, the fixture's retained input, one optional lifecycle event and one optional command page.
+async fn shard_turn(runtime: &semio_plugin::plugin_runtime::PluginRuntime<ShardApp>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, event: &mut Option<semio_plugin::kernel::Event>, page: &mut Option<(semio_plugin::kernel::CommandPageCursor, semio_plugin::kernel::FixedCommandPage)>) -> Option<(semio_plugin::kernel::TurnResult, ShardTurn)> {
+    use semio_plugin::{artifact_app_laws as laws, kernel::Budget};
+    let grant = scope.cx().original_turn_ceiling().0;
+    laws::fixture_renew_turn(scope.cx(), SHARD_TURN_FUEL, grant).ok()?;
+    let (before, retained_before) = (scope.cx().original_work_units_spent(), scope.cx().retained_progress());
+    let input = semio_plugin::kernel::RetainedTurnInput { operation: scope.cx().operation().0, generation: scope.cx().generation().0, epoch: 1, work: semio_plugin::kernel::OriginalActorTurnWork { clock_binding: 1, absolute_deadline_us: u64::MAX, fuel: SHARD_TURN_FUEL }, grant: scope.cx().retained_grant() };
+    let budget = Budget::from_retained(input, 64, 64, 1 << 20, 8);
+    let result = semio_plugin::reactor_turn_laws::poll_kernel(runtime, event, page, None, budget, &mut laws::fixture_identity(), scope.cx()).await.unwrap_or_else(|failure| panic!("shard reactor turn: {failure:?}"));
+    let after = scope.cx().retained_progress();
+    let retained = semio_framework_value::RetainedCloneProgress { copied_items: after.copied_items.saturating_sub(retained_before.copied_items), copied_bytes: after.copied_bytes.saturating_sub(retained_before.copied_bytes), retained_capacity_bytes: after.retained_capacity_bytes.saturating_sub(retained_before.retained_capacity_bytes), released_bytes: after.released_bytes.saturating_sub(retained_before.released_bytes) };
+    let turn = ShardTurn { ingress: format!("{:?}", result.command_ingress).chars().take(24).collect(), status: format!("{:?}", result.status), spent: scope.cx().original_work_units_spent().saturating_sub(before), fuel_used: result.fuel_used, retained };
+    Some((result, turn))
+}
+
+/// 🚪️ Opens one instance of the PDF editor through the real lifecycle (bundle, `InstanceOpen`, `Captured`, acknowledgement) like the shell's `createApp`.
+async fn shard_open_instance(runtime: &semio_plugin::plugin_runtime::PluginRuntime<ShardApp>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, instance: u32, app_id: &str) -> semio_plugin::kernel::ActorInstanceLifetime {
+    use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, ActorInstanceOpenPurpose, ActorInstanceOpenRequest, AppInstanceId, Event};
+    let mut event = Some(Event::InstanceOpen { purpose: ActorInstanceOpenPurpose::Ordinary, request: ActorInstanceOpenRequest { activation_generation: 41, instance_id: instance, request_sequence: 8 }, app_id: AppInstanceId(app_id.into()), actor: semio_os_kernel::LOCAL_ACTOR_ID.into(), config: Vec::new(), assets: Vec::new(), capabilities: Vec::new(), quotas: Default::default() });
+    let mut captured = None;
+    for _ in 0..SHARD_STALL_TURNS {
+        let (result, _) = shard_turn(runtime, scope, &mut event, &mut None).await.expect("the open turn is funded");
+        if let Some(receipt) = result.lifecycle_receipt { captured = Some(receipt); break }
+    }
+    let receipt = captured.expect("the PDF instance publishes its Captured receipt");
+    let Receipt::Captured { lifetime, .. } = receipt else { panic!("open must publish Captured, got {receipt:?}") };
+    let mut ack = Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt }));
+    shard_turn(runtime, scope, &mut ack, &mut None).await.expect("the acknowledgement turn is funded");
+    lifetime
+}
+
+/// 🧹️ Closes the instance through the lifecycle: Accepted, acknowledgement, Retired, acknowledgements until the owner is gone.
+async fn shard_close_instance(runtime: &semio_plugin::plugin_runtime::PluginRuntime<ShardApp>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, lifetime: semio_plugin::kernel::ActorInstanceLifetime) {
+    use semio_plugin::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
+    let mut close = Some(Event::InstanceClose(ActorInstanceCloseRequest { lifetime, request_sequence: 9 }));
+    let (first, _) = shard_turn(runtime, scope, &mut close, &mut None).await.expect("the close turn is funded");
+    let accepted = first.lifecycle_receipt.expect("the close is accepted");
+    let mut ack = Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: accepted }));
+    shard_turn(runtime, scope, &mut ack, &mut None).await.expect("the close acknowledgement turn is funded");
+    let mut retired = None;
+    let mut retire_turns = 0usize;
+    for _ in 0..16_384 {
+        let (turn, _) = shard_turn(runtime, scope, &mut None, &mut None).await.expect("the retirement turn is funded");
+        if retire_turns % 256 == 0 { eprintln!("[DEBUG] shard close turn {retire_turns}"); }
+        retire_turns += 1;
+        if let Some(receipt @ Receipt::Retired { .. }) = turn.lifecycle_receipt { retired = Some(receipt); break }
+    }
+    let retired = retired.expect("the instance retires");
+    for _ in 0..8 {
+        let mut ack = Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: retired }));
+        shard_turn(runtime, scope, &mut ack, &mut None).await.expect("the retirement acknowledgement turn is funded");
+        if runtime.guest_lifetimes.borrow().get(lifetime.instance_id).is_none() { break }
+    }
+}
+
+/// 📂️ What one shard-driven `MediaIn` open reported.
+struct ShardOpen { mounted_at: Option<usize>, completed: bool, fault: Option<String>, log: Vec<ShardTurn>, report: String }
+
+/// 📂️ Sends `AppCommand::MediaIn` for `bytes` to a freshly created instance exactly as `openNaturalFile` does (fresh instance through the lifecycle, pages one per turn, then continuation turns without input) and returns the turn log. The guest owns the command up to its mount, where it spawns the reserved natural-import job for the host to step (`Effect::SpawnJob`); `keep_polling` goes on without a job driver after that, the way a spinning command would.
+async fn shard_media_in_open(bytes: &[u8], turn_limit: usize, interactive_grant: bool, keep_polling: bool) -> ShardOpen {
+    use semio_plugin::{app::{MediaArtifactDescriptor, MediaWireFormat}, kernel::{CommandBatch, CommandBatchDriver, CommandEnvelope, CommandEnvelopeSet, CommandIngressStatus, Effect}};
+    use semio_plugin::{artifact_app_laws as laws, PluginApp as _};
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let _arena = laws::FixtureUiArena::admit();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let _fuel = laws::arm_host_turn_fuel(SHARD_TURN_FUEL);
+    let _grant = interactive_grant.then(|| laws::arm_host_turn_grant(policy.preparation));
+    let definition = create_pdf17_editor();
+    let app_id = definition.id.clone();
+    let plugin = semio_plugin::plugin_app_close_prelude::PluginBuilder::<_, ShardApp>::new("stdio").label("Stdio").version("0.0.1").package_id("semio:stdio")
+        .document_app::<semio_plugin::EditorApp<Pdf17Editor>>(semio_plugin::App { definition, examples: Vec::new() }).try_build().expect("the PDF editor plugin assembles");
+    let runtime = semio_plugin::plugin_runtime::PluginRuntime::<ShardApp>::new(policy).expect("plugin runtime");
+    semio_plugin::plugin_runtime::install_plugin_bundle(&runtime, plugin);
+    let instance = 4_022;
+    let lifetime = shard_open_instance(&runtime, &mut scope, instance, &app_id).await;
+    let command_lifetime = laws::arm_host_lifetime(scope.cx());
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().unwrap();
+    let descriptor = MediaArtifactDescriptor { edge_id: None, port_id: Some(semio_plugin::NATURAL_FILE_PORT.into()), kind_id: Some(codec.format_kind.into()), media_type: None, blob_hash: None, wire: MediaWireFormat::Binary { format_kind: codec.format_kind.into() } };
+    let seq = 512;
+    let command = semio_os_kernel::AppCommand::MediaIn { seq, port: semio_plugin::NATURAL_FILE_PORT.into(), descriptor: semio_os_kernel::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)), data: bytes.to_vec() };
+    let encoded = semio_os_kernel::encode_app_command(&command).await.expect("the MediaIn command encodes");
+    let mut envelopes = CommandEnvelopeSet::try_new().expect("fixed command batch authority");
+    envelopes.try_push(CommandEnvelope { instance, seq, command: encoded }).unwrap_or_else(|(fault, _)| panic!("admit MediaIn: {fault:?}"));
+    let batch = CommandBatch::try_new(seq, envelopes).unwrap_or_else(|(fault, _)| panic!("admit MediaIn batch: {fault:?}"));
+    let mut driver = CommandBatchDriver::new(seq, batch);
+    let mut carried = driver.next_page().expect("the host owner produces its first page");
+    let mut open = ShardOpen { mounted_at: None, completed: false, fault: None, log: Vec::new(), report: String::new() };
+    let started = std::time::Instant::now();
+    while open.log.len() < turn_limit && started.elapsed() < std::time::Duration::from_secs(45) {
+        let Some((result, turn)) = shard_turn(&runtime, &mut scope, &mut None, &mut carried).await else { break };
+        eprintln!("[DEBUG] shard turn {} at {:?}: {} / {} spent={} retained={:?}", open.log.len() + 1, started.elapsed(), turn.ingress, turn.status, turn.spent, turn.retained);
+        open.log.push(turn);
+        if open.mounted_at.is_none() && result.effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { .. })) {
+            open.mounted_at = Some(open.log.len());
+            if !keep_polling { break }
+        }
+        match result.command_ingress {
+            CommandIngressStatus::CommandComplete(_) => { open.completed = true; break },
+            CommandIngressStatus::Fault { fault, .. } => { open.fault = Some(String::from_utf8_lossy(&fault).into_owned()); break },
+            ref accepted @ (CommandIngressStatus::PageAccepted(_) | CommandIngressStatus::Backpressure(_)) => {
+                driver.observe(accepted, semio_plugin::kernel::COMMAND_PAGE_MAXIMUM_BYTES).expect("the host owner accepts the status its own page produced");
+                carried = driver.next_page().ok().flatten();
+            }
+            _ => {}
+        }
+    }
+    eprintln!("[DEBUG] shard command loop ended after {} turns, closing", open.log.len());
+    drop(command_lifetime);
+    open.report = runtime.instances.borrow().get(instance).and_then(|cell| cell.host_instance().map(|guard| guard.app.typed_operation_diagnostic())).unwrap_or_default();
+    shard_close_instance(&runtime, &mut scope, lifetime).await;
+    eprintln!("[DEBUG] shard instance closed");
+    open
+}
+
+/// 📂️ The census a stalled shard open prints: how many turns ended in which ingress and turn status.
+fn shard_census(open: &ShardOpen) -> String {
+    let mut census = std::collections::BTreeMap::<String, usize>::new();
+    for turn in &open.log { *census.entry(format!("{} / {}", turn.ingress, turn.status)).or_default() += 1; }
+    let idle = open.log.iter().filter(|turn| turn.spent == 0 && turn.fuel_used == 0 && turn.retained == semio_framework_value::RetainedCloneProgress::default()).count();
+    format!("{} turns ({idle} idle), census {census:?}, last {:?}, app: {}", open.log.len(), open.log.iter().rev().take(3).collect::<Vec<_>>(), open.report)
+}
+
+/// 📂️ LAW: `AppCommand::MediaIn` of a small PDF to a freshly created instance, driven turn by turn through the real `PluginRuntime` under the shard budget, reaches its mount (the reserved import job is spawned for the host) within [`SHARD_MOUNT_TURN_LIMIT`] turns. Every descriptor, typed-receiving, payload and metadata move is a quote-exact native action; run one per turn, the custody needed thousands of host turns and the shell's backoff (25 to 250 ms per quiet turn) made the open look hung.
+async fn shard_media_in_law(interactive_grant: bool) {
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let open = shard_media_in_open(input, SHARD_MOUNT_TURN_LIMIT * 4, interactive_grant, false).await;
+    assert!(open.fault.is_none(), "MediaIn faulted: {:?}", open.fault);
+    let mounted = open.mounted_at.unwrap_or_else(|| panic!("MediaIn did not reach its mount: {}", shard_census(&open)));
+    assert!(mounted <= SHARD_MOUNT_TURN_LIMIT, "MediaIn needed {mounted} turns to reach its mount (limit {SHARD_MOUNT_TURN_LIMIT}): {}", shard_census(&open));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn media_in_of_a_small_pdf_reaches_its_mount_through_the_real_runtime_under_the_shard_budget() { shard_media_in_law(false).await }
+
+#[semio_framework_async_macros::async_test]
+async fn media_in_of_a_small_pdf_reaches_its_mount_through_the_real_runtime_under_the_interactive_grant() { shard_media_in_law(true).await }
+
+/// 🛑️ LAW: a retained command that keeps answering turns without consuming work or moving retained stock is faulted by the reactor with the named `plugin.command-stalled` fault once the idle limit is spent, instead of spinning until the shell's 300 s wall. Without a host stepping the spawned import job the mounted `MediaIn` has nothing to do, so its turns are quiet.
+#[semio_framework_async_macros::async_test]
+async fn a_quiet_retained_command_is_faulted_as_stalled_by_the_reactor() {
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    semio_plugin::reactor_turn_laws::set_command_idle_turn_limit(48);
+    let open = shard_media_in_open(input, SHARD_MOUNT_TURN_LIMIT + 256, false, true).await;
+    semio_plugin::reactor_turn_laws::set_command_idle_turn_limit(semio_plugin::reactor_turn_laws::COMMAND_IDLE_TURN_LIMIT);
+    let mounted = open.mounted_at.unwrap_or_else(|| panic!("MediaIn did not reach its mount: {}", shard_census(&open)));
+    let fault = open.fault.clone().unwrap_or_else(|| panic!("a quiet command was never faulted ({} turns after the mount): {}", open.log.len() - mounted, shard_census(&open)));
+    assert!(fault.contains(semio_plugin::reactor_turn_laws::COMMAND_STALLED_FAULT_CODE), "the stalled fault is named: {fault}");
+    assert!(open.log.len() - mounted <= 48 + 8, "the fault came {} turns after the mount", open.log.len() - mounted);
+}
+
+/// 🪶️ A freshly born PDF editor app owns its stores, registries and queues as page tables only, so its whole live heap stays inside the bounded footprint the language-neutral law names before any document opens.
+#[semio_framework_async_macros::async_test]
+async fn a_freshly_born_pdf_app_and_its_stores_hold_only_a_small_bounded_heap_footprint() {
+    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪶️fresh-app-footprint/🔣️.json")).unwrap();
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let before = semio_framework_trace::retained_heap_bytes_on_this_thread();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    let born = semio_framework_trace::retained_heap_bytes_on_this_thread() - before;
+    assert!(born > 0 && (born as u64) <= law["maximumBornBytes"].as_u64().unwrap(), "a fresh app births page tables, not slot bodies: {born} bytes");
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// 💾️ Saves the edited document through the registered native Save handle and downloads its segmented output pages.
+async fn save_natural_bytes(app: &mut semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, instance_id: u32, format_kind: &str, media_type: &str, upkeep: bool) -> Vec<u8> {
+    save_natural_bytes_under(app, scope, instance_id, format_kind, media_type, upkeep, None).await
+}
+
+/// 💾️ Runs one registered Save to its downloaded bytes; with `browser` every submission and poll turn is issued the browser's fresh fuel and the shipped interactive grants instead of the fixture's lifetime stock.
+async fn save_natural_bytes_under(app: &mut semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>>, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, instance_id: u32, format_kind: &str, media_type: &str, upkeep: bool, browser: Option<(u64, semio_framework_value::RetainedCloneGrant)>) -> Vec<u8> {
+    use semio_plugin::{artifact_app_laws as laws, PluginApp};
+    let revision = app.document_base_revision().expect("edited document revision");
+    let document = app.document_identity().expect("edited document identity");
+    app.bind_instance_id(instance_id).await;
+    let mut submitted = None;
+    let mut save_turns = 0usize;
+    let (save_fuel, save_grant) = browser.unwrap_or_else(|| (laws::OriginalFixtureCaller::turn_fuel(), scope.cx().retained_grant()));
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        laws::fixture_renew_turn(scope.cx(), save_fuel, save_grant).expect("PDF Save submission turn is funded");
+        save_turns += 1;
+        if app.submit_media_export_checked(semio_plugin::NATURAL_FILE_PORT, &document, revision, None, &mut submitted, scope.cx()).await.expect("checked PDF Save submission") { break }
+        if upkeep { app.maintenance_step(scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).expect("PDF upkeep is funded between Save turns"); }
+    }
+    let handle = submitted.unwrap_or_else(|| panic!("registered PDF Save handle after {save_turns} turns: {}", app.typed_operation_diagnostic()));
+    assert_eq!(handle.parent_document_id.as_str(), document.as_str());
+    let mut completed = None;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        if browser.is_some() { laws::fixture_renew_turn(scope.cx(), save_fuel, save_grant).expect("PDF Save poll turn is funded"); }
+        match laws::poll_fixture_media_export(app, &handle, scope.cx()).await.expect("registered PDF Save poll") {
+            semio_plugin::ArtifactMediaExportPoll::Running { .. } => {},
+            semio_plugin::ArtifactMediaExportPoll::Complete(result) => { completed = Some(result); break },
+            other => panic!("registered PDF Save did not produce its segmented output: {other:?}"),
+        }
+    }
+    let result = completed.expect("registered PDF Save completes");
+    assert_eq!(result.schema, format_kind);
+    assert_eq!(result.mime_type, media_type);
+    let status = laws::retain_fixture_media_export_result(app, &handle, result, scope.cx()).await.expect("PDF Save publishes download status");
+    assert_eq!(status.port, semio_plugin::NATURAL_FILE_PORT);
+    let mut bytes = Vec::new();
+    let mut terminal = false;
+    type Output = semio_plugin::ArtifactOutputChunks;
+    for _ in 0..=(Output::MAXIMUM_TOTAL_BYTES / Output::CHUNK_BYTES) {
+        if browser.is_some() { laws::fixture_renew_turn(scope.cx(), save_fuel, save_grant).expect("PDF Save download turn is funded"); }
+        if let Some(chunk) = laws::take_fixture_media_export_chunk(app, &handle, &mut terminal, scope.cx()).await.expect("PDF Save download page") {
+            assert!(!chunk.is_empty() && chunk.len() <= Output::CHUNK_BYTES);
+            bytes.extend_from_slice(&chunk);
+        }
+        if terminal { break }
+    }
+    assert!(terminal, "PDF Save downloads a terminal page sequence");
+    assert_eq!(bytes.len() as u64, status.total_bytes);
+    assert_eq!(app.document_base_revision().unwrap(), revision);
+    assert_eq!(app.document_identity().as_deref(), Some(document.as_str()));
+    bytes
 }
 
 #[semio_framework_async_macros::async_test]
@@ -110,7 +460,7 @@ async fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_o
     let meta = laws::meta("local");
     let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
     let mut scope = laws::OriginalFixtureScope::admit();
-    let mut app = open_registered_pdf(input.to_vec(), 2, &mut scope).await;
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
     let original = app.snapshot().unwrap().clone();
     let action = &fixture["action"];
     let args = semio_framework_value::DslValue::object([
@@ -124,44 +474,13 @@ async fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_o
         &mut app, meta.instance_id, policy, &mut identity, scope.cx()
     ).await).unwrap();
     let snapshot = app.snapshot().unwrap();
-    let index = action["page"].as_u64().unwrap() as usize;
+    let index = action["page"].as_u64().unwrap() as usize - 1;
     let rotation = action["x"].as_u64().unwrap() as u16;
     assert_eq!(snapshot.pages[0], original.pages[0], "an unedited page remains unchanged");
-    let revision = app.document_base_revision().expect("edited document revision");
-    let document = app.document_identity().expect("edited document identity");
-    app.bind_instance_id(meta.instance_id).await;
-    let mut submitted = None;
-    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
-        if app.submit_media_export_checked(semio_plugin::NATURAL_FILE_PORT, &document, revision, None, &mut submitted, scope.cx()).await.expect("checked PDF Save submission") { break }
-        app.maintenance_step(scope.cx(), policy.close).expect("PDF Save admission maintenance");
-    }
-    let handle = submitted.expect("registered PDF Save handle");
-    assert_eq!(handle.parent_document_id.as_str(), document.as_str());
-    let mut completed = None;
-    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
-        match laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("registered PDF Save poll") {
-            semio_plugin::ArtifactMediaExportPoll::Running { .. } => {},
-            semio_plugin::ArtifactMediaExportPoll::Complete(result) => { completed = Some(result); break },
-            other => panic!("registered PDF Save did not produce its segmented output: {other:?}"),
-        }
-    }
-    let result = completed.expect("registered PDF Save completes");
-    assert_eq!(result.schema, codec.format_kind);
-    assert_eq!(result.mime_type, codec.media_type);
-    let status = laws::retain_fixture_media_export_result(&mut app, &handle, result, scope.cx()).await.expect("PDF Save publishes download status");
-    assert_eq!(status.port, semio_plugin::NATURAL_FILE_PORT);
-    let mut bytes = Vec::new();
-    let mut terminal = false;
-    type Output = semio_plugin::ArtifactOutputChunks;
-    for _ in 0..=(Output::MAXIMUM_TOTAL_BYTES / Output::CHUNK_BYTES) {
-        if let Some(chunk) = laws::take_fixture_media_export_chunk(&mut app, &handle, &mut terminal, scope.cx()).await.expect("PDF Save download page") {
-            assert!(!chunk.is_empty() && chunk.len() <= Output::CHUNK_BYTES);
-            bytes.extend_from_slice(&chunk);
-        }
-        if terminal { break }
-    }
-    assert!(terminal, "PDF Save downloads a terminal page sequence");
-    assert_eq!(bytes.len() as u64, status.total_bytes);
+    let bytes = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+    if let Some(path) = std::env::var_os("SEMIO_PDF_SAVE_ROTATED_OUTPUT") { std::fs::write(path, &bytes).unwrap(); }
+    let revision = app.document_base_revision().unwrap();
+    let document = app.document_identity().unwrap();
     assert_eq!(app.document_base_revision().unwrap(), revision);
     assert_eq!(app.document_identity().as_deref(), Some(document.as_str()));
     let reference_spec = semio_repo_test_host::parse_json(&fixture["mutation"].to_string()).unwrap();
@@ -171,7 +490,7 @@ async fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_o
     let observed: serde_json::Value = serde_json::from_str(&observed.to_string()).unwrap();
     assert_eq!(observed["pageCount"], fixture["expected"]["pageCount"]);
     assert_eq!(observed["pages"][index]["rotate"], fixture["expected"]["rotation"]);
-    let mut reopened_app = open_registered_pdf(bytes, 2, &mut scope).await;
+    let mut reopened_app = open_registered_pdf_through(bytes, 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
     let reopened = reopened_app.snapshot().unwrap();
     assert_eq!(reopened.pages[index].rotate, i32::from(rotation));
     assert_eq!(reopened.pages[0].text(), original.pages[0].text());
@@ -181,6 +500,271 @@ async fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_o
     laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
 }
 
+
+/// 🛡️ Upkeep between two Save turns never closes the live media export preparation; only a retained refusal or the closing app owns that close.
+#[semio_framework_async_macros::async_test]
+async fn maintenance_between_save_turns_keeps_the_live_media_export() {
+    use semio_plugin::artifact_app_laws as laws;
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    let bytes = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, true).await;
+    assert!(bytes.starts_with(b"%PDF-"));
+    assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_page_count(&bytes).unwrap(), 2);
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// 📂️ Opens an existing PDF, edits its title and inserts text on page one, saves it natively and reopens it with both pages intact; lopdf reads the same pages, title and text operators.
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_edits_title_and_inserts_text_then_saves_both_pages() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
+    use semio_plugin::artifact_app_laws as laws;
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    let original = app.snapshot().unwrap().clone();
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    let number = |value: f64| semio_framework_value::DslValue::float(value);
+    let edits = [
+        ("set-info-field", semio_framework_value::DslValue::object([("object".into(), text("title")), ("field".into(), text("text")), ("value".into(), text("Edited Title"))])),
+        ("insert-text", semio_framework_value::DslValue::object([("page".into(), number(1.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), text("Hello"))])),
+    ];
+    for (action, args) in edits {
+        semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+            &mut app, action, Some(args.clone()), &meta, &mut identity, scope.cx(), policy.close
+        ).await).unwrap_or_else(|fault| panic!("{action} dispatch refused: {fault:?}"));
+        semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+            &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+        ).await).unwrap_or_else(|fault| panic!("{action} settlement refused: {fault:?}"));
+    }
+    let bytes = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+    if let Some(path) = std::env::var_os("SEMIO_PDF_SAVE_IMPORTED_OUTPUT") { std::fs::write(path, &bytes).unwrap(); }
+    assert_eq!(oracle::reference_page_count(&bytes).unwrap(), 2);
+    let operators = oracle::reference_page_operator_names(&bytes).unwrap();
+    assert!(operators[0].iter().any(|operator| operator == "Tj"), "lopdf reads the inserted text on page one: {operators:?}");
+    assert!(operators[1].is_empty(), "page two keeps its empty content: {operators:?}");
+    assert!(oracle::project_pdf_1_7(&bytes).unwrap().to_string().contains("Edited Title"));
+    let mut reopened_app = open_registered_pdf_through(bytes, 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    let reopened = reopened_app.snapshot().unwrap();
+    assert_eq!(reopened.info.title.as_deref(), Some("Edited Title"));
+    assert_eq!(reopened.info.author, original.info.author);
+    assert!(crate::editor::page::objects(&reopened).iter().any(|object| object.text == "Hello"));
+    assert_eq!(reopened.pages[1], original.pages[1]);
+    assert_eq!(reopened.fonts, original.fonts);
+    laws::close_registered_fixture_app(&mut reopened_app, policy, scope.cx()).expect("reopened editor closes");
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+type PdfApp = semio_plugin::VcsArtifactApp<semio_plugin::EditorApp<Pdf17Editor>>;
+type PdfEdit = (&'static str, semio_framework_value::DslValue);
+
+/// ✏️ The title edit the PDF shell dispatches for the Info panel.
+fn title_edit(value: &str) -> PdfEdit {
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    ("set-info-field", semio_framework_value::DslValue::object([("object".into(), text("title")), ("field".into(), text("text")), ("value".into(), text(value))]))
+}
+
+/// ✏️ The insert-text edit of a one-based page at the usual body position.
+fn insert_text_edit(page: f64, value: &str) -> PdfEdit {
+    let number = |value: f64| semio_framework_value::DslValue::float(value);
+    ("insert-text", semio_framework_value::DslValue::object([("page".into(), number(page)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), semio_framework_value::DslValue::String(value.into()))]))
+}
+
+/// ✏️ Dispatches each edit through the registered app and settles it before the next one.
+async fn edit_open_pdf(app: &mut PdfApp, scope: &mut semio_plugin::artifact_app_laws::OriginalFixtureScope, edits: Vec<PdfEdit>) {
+    use semio_plugin::artifact_app_laws as laws;
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    for (action, args) in edits {
+        semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+            app, action, Some(args.clone()), &meta, &mut identity, scope.cx(), policy.close
+        ).await).unwrap_or_else(|fault| panic!("{action} dispatch refused: {fault:?}"));
+        semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+            app, meta.instance_id, policy, &mut identity, scope.cx()
+        ).await).unwrap_or_else(|fault| panic!("{action} settlement refused: {fault:?}"));
+    }
+}
+
+/// 📎️ The saved file starts with every byte of its base and adds a bounded section.
+fn assert_appended(base: &[u8], saved: &[u8], limit: usize) {
+    assert!(saved.starts_with(base), "the saved file must keep every byte of its base");
+    assert!(saved.len() > base.len(), "the edit must append a section");
+    assert!(saved.len() - base.len() < limit, "the appended section took {} bytes", saved.len() - base.len());
+}
+
+/// 🗃️ The file the local custody holds for an open document, whole.
+fn custody_file(app: &mut PdfApp) -> Option<Vec<u8>> {
+    use crate::standards::v1_7::subsets::base::io::import::original_custody as custody;
+    use semio_plugin::PluginApp;
+    use semio_framework_value::ByteReadSource;
+    let digest = custody::objects_digest(&app.snapshot().unwrap().objects);
+    let held = custody::find(&digest, &app.document_identity().unwrap())?;
+    let mut bytes = vec![0u8; held.file.byte_len()];
+    assert_eq!(held.file.read_bytes(0, &mut bytes), bytes.len());
+    Some(bytes)
+}
+
+/// 💾️ The registered Save of an opened PDF appends to the retained original (exact prefix; lopdf reads the edit), a second Save stacks on the first, and editing the title back restores the retained Info.
+#[semio_framework_async_macros::async_test]
+async fn natural_file_route_save_appends_to_the_opened_file_and_stacks_the_second_save() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
+    use semio_plugin::artifact_app_laws as laws;
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    let original = app.snapshot().unwrap().clone();
+    assert_eq!(custody_file(&mut app).as_deref(), Some(&input[..]), "opening retains the original file bytes");
+    let dump = |name: &str, bytes: &[u8]| if let Some(directory) = std::env::var_os("SEMIO_PDF_INCREMENTAL_DIR") { std::fs::write(std::path::Path::new(&directory).join(name), bytes).unwrap(); };
+
+    edit_open_pdf(&mut app, &mut scope, vec![title_edit("Edited Title"), insert_text_edit(1.0, "Hello")]).await;
+    let first = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+    dump("app-two-pages-first.pdf", &first);
+    assert_appended(input, &first, 16 * 1024);
+    assert_eq!(oracle::reference_page_count(&first).unwrap(), 2);
+    let operators = oracle::reference_page_operator_names(&first).unwrap();
+    assert!(operators[0].iter().any(|operator| operator == "Tj"), "lopdf reads the inserted text on page one: {operators:?}");
+    assert!(operators[1].is_empty(), "page two keeps its empty content: {operators:?}");
+    assert!(oracle::project_pdf_1_7(&first).unwrap().to_string().contains("Edited Title"));
+    assert_eq!(custody_file(&mut app).as_deref(), Some(first.as_slice()), "the saved file is the next Save's base");
+
+    edit_open_pdf(&mut app, &mut scope, vec![title_edit("Second Title"), insert_text_edit(2.0, "World")]).await;
+    let second = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+    dump("app-two-pages-second.pdf", &second);
+    assert_appended(&first, &second, 16 * 1024);
+    assert!(second.starts_with(input));
+    assert_eq!(oracle::reference_page_count(&second).unwrap(), 2);
+    let operators = oracle::reference_page_operator_names(&second).unwrap();
+    assert!(operators[0].iter().any(|operator| operator == "Tj") && operators[1].iter().any(|operator| operator == "Tj"), "both pages show their text: {operators:?}");
+    assert!(oracle::project_pdf_1_7(&second).unwrap().to_string().contains("Second Title"));
+    assert_eq!(custody_file(&mut app).as_deref(), Some(second.as_slice()));
+
+    if let Some(title) = original.info.title.clone() {
+        edit_open_pdf(&mut app, &mut scope, vec![title_edit(&title)]).await;
+        let third = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+        assert_appended(&second, &third, 16 * 1024);
+        let projection = oracle::project_pdf_1_7(&third).unwrap().to_string();
+        assert!(projection.contains(&title) && !projection.contains("Second Title"), "the retained Info is restored: {projection}");
+    }
+
+    let mut reopened_app = open_registered_pdf_through(second, 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    let reopened = reopened_app.snapshot().unwrap();
+    assert_eq!(reopened.info.title.as_deref(), Some("Second Title"));
+    let texts: Vec<_> = crate::editor::page::objects(&reopened).into_iter().map(|object| object.text).collect();
+    assert!(texts.iter().any(|text| text == "Hello") && texts.iter().any(|text| text == "World"), "{texts:?}");
+    laws::close_registered_fixture_app(&mut reopened_app, policy, scope.cx()).expect("reopened editor closes");
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// 🌐️ The same append-then-stack Save on the generated 120 page document, every open, edit and Save turn under the browser's fuel and interactive grants.
+#[semio_framework_async_macros::async_test]
+async fn natural_source_route_save_appends_to_a_120_page_document_under_the_browser_grants() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
+    use semio_plugin::artifact_app_laws as laws;
+    let spec = serde_json::json!({ "pageCount": 120, "segmentCount": 4, "labelPrefix": "Page", "font": { "name": "helv", "face": "Helvetica", "encoding": "WinAnsiEncoding" } });
+    let input = large_pdf(&spec);
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let browser = Some((BROWSER_TURN_FUEL, policy.preparation));
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.clone(), 120, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    assert_eq!(custody_file(&mut app).as_deref(), Some(input.as_slice()), "opening retains the original file bytes");
+    let dump = |name: &str, bytes: &[u8]| if let Some(directory) = std::env::var_os("SEMIO_PDF_INCREMENTAL_DIR") { std::fs::write(std::path::Path::new(&directory).join(name), bytes).unwrap(); };
+
+    edit_open_pdf(&mut app, &mut scope, vec![insert_text_edit(1.0, "Hello")]).await;
+    let first = save_natural_bytes_under(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false, browser).await;
+    dump("app-large-first.pdf", &first);
+    assert_appended(&input, &first, 16 * 1024);
+    assert_eq!(oracle::reference_page_count(&first).unwrap(), 120);
+    let operators = oracle::reference_page_operator_names(&first).unwrap();
+    assert!(operators[0].iter().any(|operator| operator == "Tj") && operators[119].iter().filter(|operator| *operator == "Tj").count() == 1, "only page one gained text");
+
+    edit_open_pdf(&mut app, &mut scope, vec![insert_text_edit(120.0, "World")]).await;
+    let second = save_natural_bytes_under(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false, browser).await;
+    dump("app-large-second.pdf", &second);
+    assert_appended(&first, &second, 16 * 1024);
+    assert_eq!(oracle::reference_page_count(&second).unwrap(), 120);
+    let operators = oracle::reference_page_operator_names(&second).unwrap();
+    assert_eq!(operators[119].iter().filter(|operator| *operator == "Tj").count(), 2, "page 120 gained its text");
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// 🛑️ Cancelling a Save mid-way publishes nothing and leaves the custody base untouched; the next Save is the complete one.
+#[semio_framework_async_macros::async_test]
+async fn cancelling_an_opened_pdf_save_midway_publishes_nothing_and_keeps_the_base() {
+    use semio_plugin::{artifact_app_laws as laws, PluginApp};
+    let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = open_registered_pdf_through(input.to_vec(), 2, &mut scope, PdfIntake::NaturalSource, BROWSER_TURN_FUEL).await;
+    edit_open_pdf(&mut app, &mut scope, vec![title_edit("Cancelled"), insert_text_edit(1.0, "Hello")]).await;
+    let revision = app.document_base_revision().unwrap();
+    let document = app.document_identity().unwrap();
+    app.bind_instance_id(meta.instance_id).await;
+    let (fuel, grant) = (laws::OriginalFixtureCaller::turn_fuel(), scope.cx().retained_grant());
+    let mut submitted = None;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        laws::fixture_renew_turn(scope.cx(), fuel, grant).expect("PDF Save submission turn is funded");
+        if app.submit_media_export_checked(semio_plugin::NATURAL_FILE_PORT, &document, revision, None, &mut submitted, scope.cx()).await.expect("checked PDF Save submission") { break }
+    }
+    let handle = submitted.expect("registered PDF Save handle");
+    for _ in 0..2 {
+        laws::fixture_renew_turn(scope.cx(), fuel, grant).expect("PDF Save poll turn is funded");
+        assert!(matches!(laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await.expect("registered PDF Save poll"), semio_plugin::ArtifactMediaExportPoll::Running { .. }), "the Save must still be running when it is cancelled");
+    }
+    laws::fixture_renew_turn(scope.cx(), fuel, grant).expect("PDF Save cancel turn is funded");
+    PluginApp::cancel_media_export(&mut app, &handle).await.expect("registered PDF Save cancels");
+    let mut published = false;
+    for _ in 0..laws::OriginalFixtureCaller::maximum_turns() {
+        laws::fixture_renew_turn(scope.cx(), fuel, grant).expect("PDF Save poll turn is funded");
+        match laws::poll_fixture_media_export(&mut app, &handle, scope.cx()).await {
+            Ok(semio_plugin::ArtifactMediaExportPoll::Running { .. }) => {}
+            Ok(semio_plugin::ArtifactMediaExportPoll::Complete(_)) => { published = true; break }
+            _ => break,
+        }
+    }
+    assert!(!published, "a cancelled Save publishes no file");
+    assert_eq!(custody_file(&mut app).as_deref(), Some(&input[..]), "a cancelled Save leaves the retained original untouched");
+    let saved = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, true).await;
+    assert_appended(input, &saved, 16 * 1024);
+    assert_eq!(custody_file(&mut app).as_deref(), Some(saved.as_slice()));
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
+
+/// 🆕️ A document that was never opened from a file has no retained original: its Save is the compact writer's and nothing is rebased.
+#[semio_framework_async_macros::async_test]
+async fn a_new_pdf_document_still_saves_compactly() {
+    use semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base as oracle;
+    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    let codec = <Pdf17Editor as ArtifactEditor>::natural_file_codec().expect("PDF editor declares paired natural IO");
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    laws::ensure_fixture_cancellation_issuer(&mut app, scope.cx()).expect("mounted PDF instance is born");
+    app.render_ctx().refresh_cache().await.expect("mounted PDF head is projected");
+    edit_open_pdf(&mut app, &mut scope, vec![title_edit("Brand New")]).await;
+    let saved = save_natural_bytes(&mut app, &mut scope, meta.instance_id, &*codec.format_kind, &*codec.media_type, false).await;
+    assert!(saved.starts_with(b"%PDF-"));
+    assert_eq!(oracle::reference_page_count(&saved).unwrap(), 1);
+    assert!(oracle::project_pdf_1_7(&saved).unwrap().to_string().contains("Brand New"));
+    assert_ne!(custody_file(&mut app).as_deref(), Some(saved.as_slice()), "a compact Save is not rebased");
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("registered PDF editor closes");
+}
 
 fn large_pdf(spec: &serde_json::Value) -> Vec<u8> {
     use std::io::Write;
@@ -418,7 +1002,7 @@ async fn registered_pdf_page_edit_publishes_and_undoes_redoes() {
     let loaded = app.snapshot().unwrap().clone();
     let meta = artifact_app_laws::meta("local");
     let insert = semio_framework_value::DslValue::object([
-        ("page".into(), semio_framework_value::DslValue::float(0.0)),
+        ("page".into(), semio_framework_value::DslValue::float(1.0)),
         ("x".into(), semio_framework_value::DslValue::float(12.0)),
         ("y".into(), semio_framework_value::DslValue::float(24.0)),
         ("width".into(), semio_framework_value::DslValue::float(30.0)),
@@ -683,8 +1267,8 @@ async fn registered_pdf_font_change_preserves_encoded_text_and_the_next_line() {
     let first = before[0].id.as_str();
     let original_same_line = app.snapshot().unwrap().pages[0].content[before[1].end].clone();
     for (action, args) in [
-        ("set-font", json!({"page": 0, "object": first, "text": case["targetFont"]})),
-        ("set-font-size", json!({"page": 0, "object": first, "field": "size", "value": size["after"]})),
+        ("set-font", json!({"page": 1, "object": first, "text": case["targetFont"]})),
+        ("set-font-size", json!({"page": 1, "object": first, "field": "size", "value": size["after"]})),
     ] {
         semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
             &mut app, action, Some(DslValue::from(args.clone())), &meta, &mut identity, scope.cx(), policy.close
@@ -760,7 +1344,7 @@ async fn registered_pdf_png_picker_publishes_an_atomic_revision_guarded_image_ed
     ).await).unwrap();
     let loaded = app.snapshot().unwrap().clone();
     let request = DslValue::object([
-        ("page".into(), DslValue::float(0.0)),
+        ("page".into(), DslValue::float(1.0)),
         ("x".into(), DslValue::float(matrix[4])),
         ("y".into(), DslValue::float(matrix[5])),
         ("width".into(), DslValue::float(matrix[0])),
@@ -918,7 +1502,7 @@ fn controlled_pdf_terminal_publication_requires_both_owned_headers() {
             scope.turn(stock, |cx| {
                 let demand = owner.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
                 semio_plugin::__job::close_original_effect_step(cx, demand, |effect| {
-                    let result = owner.close_step(effect).map(|step| RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into);
+                    let result = owner.close_chained(effect).map(|step| RetainedCloneStep::Progress(step.progress().unwrap_or_default())).map_err(Into::into);
                     RetirementPollExit::settle(effect, result)
                 })?;
                 Ok(())
@@ -1001,42 +1585,38 @@ fn large_original_image_pdf(law: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
 }
 
 /// 🏞️ Opens one PDF through the production paged natural-file decoder under a 16 MiB capacity grant and retires it on the bounded close path.
-fn paged_pdf_snapshot(input: &[u8]) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture) {
-    let contract = semio_plugin::ToolExecutionContract::resumable(input.len(), 16_384, 1, 32 << 20, 7_500, 1, 1);
-    let (snapshot, scope, _) = paged_pdf_snapshot_under(input, contract, 4_000_000);
-    (snapshot, scope)
+fn paged_pdf_snapshot(input: &[u8]) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture, usize) {
+    paged_pdf_snapshot_under(input, semio_plugin::app::NATURAL_SOURCE_TOOL_CONTRACT, LARGE_IMAGE_DECODE_TURN_LIMIT)
 }
 
-/// 🔁️ Drives the production paged decoder under one execution contract, failing when it needs more than `turn_limit` continuations, and returns how many it used.
-fn paged_pdf_snapshot_under(input: &[u8], contract: semio_plugin::ToolExecutionContract, turn_limit: usize) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture, usize) {
+/// 📥️ Admits the production paged decoder of `input` on a hosted fixture: every turn is issued the host's fresh fuel, so a large document is bounded by per-turn fuel and not by a one-time stock.
+fn admit_paged_decoder(input: &[u8], contract: semio_plugin::ToolExecutionContract) -> (semio_plugin::artifact_app_laws::OriginalWorkFixture, Box<dyn semio_plugin::NaturalFileDecodeCursor<PdfSnapshot>>, semio_framework_value::RetainedCloneGrant) {
     use crate::standards::v1_7::subsets::base::io::import::admit_pdf_paged_natural_decode;
-    use semio_framework_value::{paged::PagedBytes, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
+    use semio_framework_value::{paged::PagedBytes, RetainedCloneGrant};
     use semio_plugin::artifact_app_laws::OriginalWorkFixture;
-    use semio_plugin::{NaturalFileDecodeOwner, NaturalFileDecodeStep, NaturalFilePagedSource, ToolExecutionContract};
-    use std::mem::size_of_val;
+    use semio_plugin::{NaturalFileDecodeOwner, NaturalFilePagedSource};
 
-    let stock = OriginalWorkFixture::stock();
-    let granted = RetainedCloneGrant { maximum_capacity_bytes: 16 << 20, ..stock };
-    let mut scope = OriginalWorkFixture::new();
+    let granted = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation;
+    let mut scope = OriginalWorkFixture::hosted(semio_plugin::artifact_app_laws::HostLifetimeStock::FUEL);
     let mut claimed = None;
     let mut source = Some(NaturalFilePagedSource::retain(PagedBytes::try_from_slice(input).unwrap()));
     assert!(scope.turn(granted, |cx| admit_pdf_paged_natural_decode(&mut source, contract, &mut claimed, cx)).unwrap());
     let Some(NaturalFileDecodeOwner::Controlled(decoder)) = claimed else { panic!("the large PDF must use the controlled decoder") };
+    (scope, decoder, granted)
+}
+
+/// ♻️ Retires a paged decoder, finished or cancelled, through the bounded close path of its caller and returns how many host turns the close took.
+fn close_paged_decoder(scope: &mut semio_plugin::artifact_app_laws::OriginalWorkFixture, decoder: Box<dyn semio_plugin::NaturalFileDecodeCursor<PdfSnapshot>>, granted: semio_framework_value::RetainedCloneGrant) -> usize {
+    use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, RetirementPollExit};
+    use std::mem::size_of_val;
+
     let mut decoder = Some(decoder);
-    let mut complete = None;
-    for turn in 1..=turn_limit {
-        let owner = decoder.as_mut().unwrap();
-        if let NaturalFileDecodeStep::Complete { snapshot, progress } = scope.turn(granted, |cx| Ok(owner.advance(cx).unwrap())).unwrap() {
-            complete = Some((snapshot, progress, turn));
-            break;
-        }
-    }
-    let (snapshot, progress, turns) = complete.unwrap_or_else(|| panic!("the paged PDF decoder did not publish within {turn_limit} continuations"));
-    assert_eq!(progress.consumed_input_bytes, input.len());
     let owner = decoder.as_mut().unwrap();
     owner.begin_close();
+    let mut turns = 0;
     for _ in 0..4_000_000 {
         if owner.terminal_is_empty() { break; }
+        turns += 1;
         scope.turn(granted, |cx| {
             let demand = owner.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
             semio_plugin::__job::close_original_effect_step(cx, demand, |effect| {
@@ -1055,6 +1635,24 @@ fn paged_pdf_snapshot_under(input: &[u8], contract: semio_plugin::ToolExecutionC
         })?;
         Ok(())
     }).unwrap();
+    turns
+}
+
+/// 🔁️ Drives the production paged decoder under one execution contract, failing when it needs more than `turn_limit` continuations, and returns how many it used.
+fn paged_pdf_snapshot_under(input: &[u8], contract: semio_plugin::ToolExecutionContract, turn_limit: usize) -> (PdfSnapshot, semio_plugin::artifact_app_laws::OriginalWorkFixture, usize) {
+    use semio_plugin::NaturalFileDecodeStep;
+
+    let (mut scope, mut decoder, granted) = admit_paged_decoder(input, contract);
+    let mut complete = None;
+    for turn in 1..=turn_limit {
+        if let NaturalFileDecodeStep::Complete { snapshot, progress } = scope.turn(granted, |cx| Ok(decoder.advance(cx).unwrap())).unwrap() {
+            complete = Some((snapshot, progress, turn));
+            break;
+        }
+    }
+    let (snapshot, progress, turns) = complete.unwrap_or_else(|| panic!("the paged PDF decoder did not publish within {turn_limit} continuations"));
+    assert_eq!(progress.consumed_input_bytes, input.len());
+    close_paged_decoder(&mut scope, decoder, granted);
     (snapshot, scope, turns)
 }
 
@@ -1066,7 +1664,6 @@ fn paged_natural_decode_of_the_browser_contract_terminates_with_every_page() {
 
     let input = fixture_bytes!("../../../../../../🧪️tests/🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
     let (opened, mut scope, turns) = paged_pdf_snapshot_under(input, NATURAL_SOURCE_TOOL_CONTRACT, 1_000);
-    eprintln!("[DEBUG] browser contract continuations {turns}");
     assert!(turns <= 128, "browser contract used {turns} continuations");
     let projected: serde_json::Value = serde_json::from_str(&semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7(input).expect("lopdf reads the fixture").to_string()).unwrap();
     assert_eq!(opened.pages.len(), 2);
@@ -1087,25 +1684,52 @@ fn paged_natural_decode_round_trips_a_large_original_image_exactly() {
     assert_eq!((input.len() as u64, fnv.as_str()), (law["sourceBytes"].as_u64().unwrap(), law["sourceFnv1a64"].as_str().unwrap()));
     assert_eq!(image.len() as u64, law["imageBytes"].as_u64().unwrap());
     let largest = |snapshot: &PdfSnapshot| snapshot.objects.iter().filter_map(|object| match &object.value {
-        PdfObject::Stream { data, .. } => Some(data.clone()),
+        PdfObject::Stream { data, .. } => Some(data.to_vec_owner()),
         _ => None,
     }).max_by_key(Vec::len).unwrap();
 
-    let (opened, scope) = paged_pdf_snapshot(&input);
+    let (opened, scope, open_turns) = paged_pdf_snapshot(&input);
+    assert!(open_turns <= 4_700, "the 9 MiB image opened in {open_turns} host turns under the browser grants");
     assert_eq!(opened, decode_pdf(&input).unwrap());
     assert_eq!(opened.pages.len() as u64, law["pageCount"].as_u64().unwrap());
     assert!(largest(&opened) == image, "the paged open retains every decoded image sample");
     let saved = encode_pdf(&opened).unwrap();
     if let Some(path) = std::env::var_os("SEMIO_LARGE_ORIGINAL_IMAGE_SAVED") { std::fs::write(path, &saved).unwrap(); }
-    let (reopened, reopened_scope) = paged_pdf_snapshot(&saved);
+    let (reopened, reopened_scope, reopen_turns) = paged_pdf_snapshot(&saved);
+    assert!(reopen_turns <= 4_700, "the saved 9 MiB image reopened in {reopen_turns} host turns");
     assert!(largest(&reopened) == image, "the saved PDF reopens with exactly the original image samples");
     assert_eq!(reopened.pages, opened.pages);
-    let stock = OriginalWorkFixture::stock();
+    let stock = semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close;
     let (mut scope, mut reopened_scope) = (scope, reopened_scope);
     scope.retire_owned(opened, stock);
     scope.finish();
     reopened_scope.retire_owned(reopened, stock);
     reopened_scope.finish();
+}
+
+/// 🛑️ A large paged open that is cancelled mid-operation stops consuming work at its next step, reports no further progress, and retires every byte it owns through the bounded close path.
+#[test]
+fn paged_natural_decode_of_a_large_original_image_honours_cancellation_mid_operation() {
+    use semio_plugin::NaturalFileDecodeStep;
+
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🏞️large-original-image/🔣️.json")).unwrap();
+    let (input, _) = large_original_image_pdf(&law);
+    let (mut scope, mut decoder, granted) = admit_paged_decoder(&input, semio_plugin::app::NATURAL_SOURCE_TOOL_CONTRACT);
+    let mut reported = 0;
+    for _ in 0..16 {
+        match scope.turn(granted, |cx| Ok(decoder.advance(cx).unwrap())).unwrap() {
+            NaturalFileDecodeStep::Progress(progress) => reported = progress.completed_work_units,
+            NaturalFileDecodeStep::Yield => {}
+            NaturalFileDecodeStep::Complete { .. } => panic!("a 9 MiB image cannot open within 16 host turns"),
+        }
+    }
+    assert!(reported > 0 && reported < input.len() as u64, "the open is mid-operation, {reported} of {} units", input.len());
+    semio_framework_async::poll::resolve_ready(scope.cancel().cancel());
+    let after = scope.turn(granted, |cx| Ok(decoder.advance(cx).unwrap())).unwrap();
+    assert!(matches!(after, NaturalFileDecodeStep::Yield), "a cancelled decoder consumes no further work");
+    let turns = close_paged_decoder(&mut scope, decoder, granted);
+    assert!(turns < LARGE_DOCUMENT_TURN_LIMIT * 8, "the cancelled open retired in {turns} host turns");
+    scope.finish();
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1140,18 +1764,18 @@ async fn registered_pdf_page_and_authoring_actions_undo_and_redo_step_by_step() 
     }
     let loaded = app.snapshot().unwrap().clone();
     let mut states = vec![loaded];
-    states.push(step!("insert-page", [("page", number(1.0)), ("width", number(50.0)), ("height", number(60.0))]));
+    states.push(step!("insert-page", [("page", number(2.0)), ("width", number(50.0)), ("height", number(60.0))]));
     assert_eq!(states[1].pages.len(), 3);
-    states.push(step!("move-page", [("page", number(0.0)), ("x", number(2.0))]));
+    states.push(step!("move-page", [("page", number(1.0)), ("x", number(3.0))]));
     assert_eq!(states[2].acro_form.as_ref().unwrap().fields[0].widgets, vec![[2, 0]]);
-    states.push(step!("create-annotation", [("page", number(2.0)), ("object", text("highlight")), ("x", number(10.0)), ("y", number(10.0)), ("width", number(80.0)), ("height", number(12.0))]));
+    states.push(step!("create-annotation", [("page", number(3.0)), ("object", text("highlight")), ("x", number(10.0)), ("y", number(10.0)), ("width", number(80.0)), ("height", number(12.0))]));
     assert_eq!(states[3].pages[2].annotations.len(), 2);
     assert!(states[3].pages[2].annotations[1].appearance.is_some() && !states[3].forms.is_empty());
     states.push(step!("fill-form-field", [("object", text("name")), ("text", text("Ada"))]));
     assert!(states[4].pages[2].annotations[0].appearance.is_some());
-    states.push(step!("replace-page", [("page", number(0.0)), ("width", number(33.0)), ("height", number(44.0))]));
+    states.push(step!("replace-page", [("page", number(1.0)), ("width", number(33.0)), ("height", number(44.0))]));
     assert_eq!(states[5].pages[0].width(), 33.0);
-    states.push(step!("remove-page", [("page", number(1.0))]));
+    states.push(step!("remove-page", [("page", number(2.0))]));
     assert_eq!(states[6].pages.len(), 2);
     for index in (0..states.len() - 1).rev() {
         semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
@@ -1162,6 +1786,34 @@ async fn registered_pdf_page_and_authoring_actions_undo_and_redo_step_by_step() 
         assert_eq!(app.snapshot().unwrap(), states[index], "redo to state {index}");
     }
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+}
+
+/// 🪟️ The shell notes every window activation as a reserved `noteShellCommand` job; a typed edit after it still settles (browser: the text never appeared).
+#[semio_framework_async_macros::async_test]
+async fn typed_edit_after_a_reserved_shell_note_settles_through_the_registered_typed_operation() {
+    use semio_plugin::{artifact_app_laws as laws, EditorApp};
+    let meta = laws::meta("local");
+    let policy = semio_s_artifact_stdio_contract::testing::mounted_policy();
+    let mut scope = laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(
+        async { semio_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } },
+        semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), policy, &mut identity
+    ).await);
+    let text = |value: &str| semio_framework_value::DslValue::String(value.into());
+    let number = |value: f64| semio_framework_value::DslValue::float(value);
+    semio_plugin::with_authoring_identity!(|identity| laws::settle_reserved_action_as(
+        &mut app, "noteShellCommand", Some(semio_framework_value::DslValue::object([("commandId".into(), text("command.activateWindow"))])), &meta, meta.instance_id, policy, &mut identity, scope.cx()
+    ).await);
+    let args = semio_framework_value::DslValue::object([("page".into(), number(1.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), text("Hello"))]);
+    semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(
+        &mut app, "insert-text", Some(args), &meta, &mut identity, scope.cx(), policy.close
+    ).await).unwrap_or_else(|fault| panic!("insert-text dispatch refused: {fault:?}"));
+    semio_plugin::with_authoring_identity!(|identity| laws::settle_registered_typed_operation(
+        &mut app, meta.instance_id, policy, &mut identity, scope.cx()
+    ).await).unwrap_or_else(|fault| panic!("insert-text settlement refused: {fault:?}"));
+    let snapshot = app.snapshot().expect("the blank PDF is ready");
+    assert!(crate::editor::page::objects(&snapshot).iter().any(|object| object.text == "Hello"));
+    laws::close_registered_fixture_app(&mut app, policy, scope.cx()).expect("blank editor closes");
 }
 
 /// 🧯️ The browser's first edits of a blank PDF 1.7 document settle through the registered typed operation path.
@@ -1179,7 +1831,7 @@ async fn blank_document_first_edits_settle_through_the_registered_typed_operatio
     let number = |value: f64| semio_framework_value::DslValue::float(value);
     let edits = [
         ("set-info-field", semio_framework_value::DslValue::object([("object".into(), text("title")), ("field".into(), text("text")), ("value".into(), text("Quarterly report"))])),
-        ("insert-text", semio_framework_value::DslValue::object([("page".into(), number(0.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), text("Hello"))])),
+        ("insert-text", semio_framework_value::DslValue::object([("page".into(), number(1.0)), ("x".into(), number(72.0)), ("y".into(), number(700.0)), ("height".into(), number(12.0)), ("text".into(), text("Hello"))])),
     ];
     for (action, args) in edits {
         semio_plugin::with_authoring_identity!(|identity| laws::dispatch_fixture_action(

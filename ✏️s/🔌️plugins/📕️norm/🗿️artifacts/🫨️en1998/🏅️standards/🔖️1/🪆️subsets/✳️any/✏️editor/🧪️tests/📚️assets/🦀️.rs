@@ -176,3 +176,27 @@ fn the_demo_session_asset_is_this_artifacts_command_script_with_both_titles() {
         assert!(!crate::demo_session::label().resolve(Terminology::Native, locale).trim().is_empty());
     }
 }
+
+#[test]
+fn zz_temp_regen_assets_when_env_set() {
+    if std::env::var("REGEN_EN1998_ASSETS").is_err() {
+        return;
+    }
+    for (id, path) in assets_ending("dsl.semio") {
+        let text = std::fs::read_to_string(&path).expect("read");
+        let printed = encode_en1998_dsl(&decode(&id, &text));
+        if printed != text {
+            eprintln!("[DEBUG] regenerated {id}");
+            std::fs::write(&path, printed).expect("write");
+        }
+    }
+    for (id, path) in assets_ending("pack.semio") {
+        let bytes = std::fs::read(&path).expect("read");
+        let text = dsl_assets().into_iter().find(|(dsl, _)| *dsl == id).expect("the dsl of the pack").1;
+        let printed = encode_en1998_pack(&decode(&id, &text));
+        if printed != bytes {
+            eprintln!("[DEBUG] regenerated pack {id}");
+            std::fs::write(&path, printed).expect("write");
+        }
+    }
+}

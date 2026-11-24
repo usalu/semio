@@ -370,12 +370,13 @@ export function useCheckpointOnCloseV1(key: string | null, onClose: () => void):
   useEffect(() => (key === null ? undefined : onClose), [key]);
 }
 
-/** ⚓️ The document a sync attach addresses: a hub target's own document, else the program's own document identity — the
+/** ⚓️ The document a sync attach addresses: a target's own document (a hub document, or the one a remembered folder
+ * reconnects), else the program's own document identity — the
  * id its store stamps on every envelope it publishes (`ReadDocumentIdentity`), so the actor admits the program's edits as
  * that document's instead of refusing each batch `local.backbone-scope-mismatch` (e2e R2-4). `null`: the program holds no
  * document, and there is nothing to attach. */
 export function syncAttachDocumentIdV1(target: { readonly kind: "folder" | "file" | "remote"; readonly documentId?: string | null }, identity: { readonly parent_document_id: string | null } | null): string | null {
-  const own = target.kind === "remote" ? (target.documentId ?? null) : null;
+  const own = target.documentId ?? null;
   const documentId = own ?? identity?.parent_document_id ?? null;
   return documentId === "" ? null : documentId;
 }

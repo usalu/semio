@@ -75,11 +75,19 @@ export function youngestRowMillisecondsV1(rows:readonly unknown[]):number{
  return youngest;
 }
 
+/** 🛡️ Whether a failure is the refusal of a heavy question whose child the host warden cancelled (`graph.heavy-question-cancelled`, itself or as the cause of another failure): the question is asked again, bounded by the declared rounds.
+ * @see ../../📥️inference/🧭️script-inputs/🪆️heavy-questions/🟨️.mjs */
+export function heavyQuestionCancelledV1(error:unknown):boolean{
+ for(let value=error,depth=0;value!==null&&typeof value==="object"&&depth<4;value=(value as {cause?:unknown}).cause,depth++)if((value as {key?:unknown}).key==="build.graph.heavy-question-cancelled")return true;
+ return false;
+}
+
 /** 🧮️ The decision table of one failed observation of an owner, shared by every path that infers owners (closure walk, farm child, late references): a foreign failure is another layer's, a failure on rows that held and are not young is stable at once, otherwise the owner is observed again until the declared rounds are used up, and then the failure is `unsettled` when the rows kept moving and `stable` when they only were young.
  * @see ./🧪️tests/🐍️oracle/🐍️.py */
 export type OwnerDecisionV1="foreign"|"retry"|"stable"|"unsettled";
-export function ownerFailureDecisionV1(input:{readonly foreign:boolean;readonly moved:boolean;readonly young:boolean;readonly round:number}):OwnerDecisionV1{
+export function ownerFailureDecisionV1(input:{readonly foreign:boolean;readonly moved:boolean;readonly young:boolean;readonly round:number;readonly cancelled?:boolean}):OwnerDecisionV1{
  if(input.foreign)return "foreign";
+ if(input.cancelled===true&&input.round<ownerIsolationPolicyV1.retryRounds)return "retry";
  if(!input.moved&&!input.young)return "stable";
  if(input.round>=ownerIsolationPolicyV1.retryRounds)return input.moved?"unsettled":"stable";
  return "retry";
@@ -92,9 +100,9 @@ export function ownerPauseMillisecondsV1(round:number,youngest:number,racyMillis
 }
 
 /** 🧭️ Judges one failed observation of an owner from the rows it consumed up to the failure: whether they moved (`hold`), whether one was written within the racy window before the attempt began, and the decision of the table with the pause that goes with a retry. */
-export async function ownerRetryPlanV1(input:{readonly rows:readonly unknown[];readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly foreign:boolean;readonly started:number;readonly round:number;readonly racyMilliseconds?:number;readonly now?:()=>number}):Promise<{readonly decision:OwnerDecisionV1;readonly milliseconds:number}>{
+export async function ownerRetryPlanV1(input:{readonly rows:readonly unknown[];readonly hold:(rows:readonly unknown[])=>Promise<boolean>;readonly foreign:boolean;readonly started:number;readonly round:number;readonly racyMilliseconds?:number;readonly now?:()=>number;readonly error?:unknown}):Promise<{readonly decision:OwnerDecisionV1;readonly milliseconds:number}>{
  if(input.foreign)return {decision:"foreign",milliseconds:0};
- const racy=input.racyMilliseconds??OBSERVATION_LIMITS_V1.racyMilliseconds,now=(input.now??Date.now)(),moved=!await input.hold(input.rows),youngest=youngestRowMillisecondsV1(input.rows),young=youngest>=input.started-racy,decision=ownerFailureDecisionV1({foreign:false,moved,young,round:input.round});
+ const racy=input.racyMilliseconds??OBSERVATION_LIMITS_V1.racyMilliseconds,now=(input.now??Date.now)(),moved=!await input.hold(input.rows),youngest=youngestRowMillisecondsV1(input.rows),young=youngest>=input.started-racy,decision=ownerFailureDecisionV1({foreign:false,moved,young,round:input.round,cancelled:heavyQuestionCancelledV1(input.error)});
  return {decision,milliseconds:decision==="retry"?ownerPauseMillisecondsV1(input.round,youngest,racy,now):0};
 }
 
@@ -129,7 +137,7 @@ export async function observeOwnerWithRetryV1<T>(input:{
   try{return await input.attempt(observed=>{rows=observed;});}
   catch(error){
    if(isForeignFailureV1(error,input.aborted?.()===true)||input.foreign?.(error)===true)throw error;
-   const plan=await ownerRetryPlanV1({rows,hold:input.hold,foreign:false,started,round,racyMilliseconds:racy,now});
+   const plan=await ownerRetryPlanV1({rows,hold:input.hold,foreign:false,started,round,racyMilliseconds:racy,now,error});
    if(plan.decision==="stable")throw ownerFailureV1(input.owner,error,round,true,rows);
    if(plan.decision==="unsettled")throw ownerFailureV1(input.owner,error,round,false,rows);
    const milliseconds=plan.milliseconds;

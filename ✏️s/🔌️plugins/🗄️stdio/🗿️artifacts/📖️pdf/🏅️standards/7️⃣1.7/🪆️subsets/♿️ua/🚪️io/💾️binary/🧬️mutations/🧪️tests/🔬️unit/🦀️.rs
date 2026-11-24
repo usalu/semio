@@ -1,14 +1,14 @@
-use crate::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation;
-#[allow(unused_imports)]
+use crate::standards::v1_7::subsets::ua::schema::mutations::{PdfUaMutation, SetLang};
 use protocol::OpBinary;
-use crate::standards::v1_7::subsets::ua::schema::mutations::SetLang;
-use crate::standards::v1_7::subsets::ua::io::binary::mutations::*;
 
 #[test]
-fn framed_payload_round_trips_and_rejects_a_mismatched_tag() {
+fn pack_document_round_trips_and_refuses_damaged_bytes() {
     let mutation = PdfUaMutation::SetLang(SetLang { lang: "de-DE".to_string(), entry_index: None });
-    let mut bytes = mutation.encode_op().unwrap();
+    let bytes = mutation.encode_op().unwrap();
     assert_eq!(PdfUaMutation::decode_op(&bytes).unwrap(), mutation);
-    bytes[1] = crate::standards::v1_7::subsets::ua::io::binary::mutations::set_mark_info::TAG;
-    assert!(PdfUaMutation::decode_op(&bytes).is_err());
+    assert_eq!(PdfUaMutation::decode_op(&bytes).unwrap().encode_op().unwrap(), bytes);
+    let mut damaged = bytes.clone();
+    damaged[0] ^= 0xff;
+    assert!(PdfUaMutation::decode_op(&damaged).is_err());
+    assert!(PdfUaMutation::decode_op(&bytes[..bytes.len() - 1]).is_err());
 }

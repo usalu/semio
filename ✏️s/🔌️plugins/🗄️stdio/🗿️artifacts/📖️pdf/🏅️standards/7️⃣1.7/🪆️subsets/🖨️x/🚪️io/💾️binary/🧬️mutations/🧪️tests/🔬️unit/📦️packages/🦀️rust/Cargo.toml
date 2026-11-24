@@ -52,8 +52,8 @@ semio-s-artifact-stdio-deflate = { workspace = true }
 semio-s-artifact-stdio-pdf-mut-base-2 = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-4 = { path = "../../../../../../../../🧱️base/🚪️io/📝️text/🧬️mutations/🔧️set-object-value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-5 = { path = "../../../../../../../../🧱️base/🔨️modules/🖋️content/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-mut-family-6 = { path = "../../../../../../../../📐️e/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-mut-family-7 = { path = "../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-6 = { path = "../../../../../../../../📐️e/🚪️io/📝️text/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-7 = { path = "../../../../../../../../♿️ua/🚪️io/📝️text/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../../../../../🧱️base/🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../../../../../📝️text/🧬️mutations/🚀️insert-launch-action/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-vt = { path = "../../../../../../../../🧾️vt/🚪️io/📦️packages/🦀️rust" }
@@ -75,8 +75,8 @@ semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-s-artifact-stdio-pdf-mut-base-2 = { path = "../../../../../../../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-mut-family-4 = { path = "../../../../../../../../🧱️base/🚪️io/📝️text/🧬️mutations/🔧️set-object-value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-mut-family-5 = { path = "../../../../../../../../🧱️base/🔨️modules/🖋️content/📦️packages/🦀️rust", features = ["testkit"] }
-semio-s-artifact-stdio-pdf-mut-family-6 = { path = "../../../../../../../../📐️e/🚪️io/💾️binary/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust", features = ["testkit"] }
-semio-s-artifact-stdio-pdf-mut-family-7 = { path = "../../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-mut-family-6 = { path = "../../../../../../../../📐️e/🚪️io/📝️text/🧬️mutations/🏳️set-output-intent/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-pdf-mut-family-7 = { path = "../../../../../../../../♿️ua/🚪️io/📝️text/🧬️mutations/🗑️remove-mark-info/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../../../../../../🧱️base/🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../../../../../📝️text/🧬️mutations/🚀️insert-launch-action/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-stdio-pdf-mut-vt = { path = "../../../../../../../../🧾️vt/🚪️io/📦️packages/🦀️rust", features = ["testkit"] }

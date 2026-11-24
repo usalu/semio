@@ -1143,3 +1143,12 @@ if __name__ == "__main__":
     for s, k in SCALES.items():
         print(f"[DEBUG] 1:{s} body {len(k.body)} thermal {len(k.th)} structure {len(k.st)} 2D {len(k.e)}/{len(k.f)}/{len(k.p)}")
     print(f"[DEBUG] dims {ASSET['dimensions']}")
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch SO, the last step: ops/used-football-goal.json of the umbrella ticket of 2026-11-22
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/SO")
+    from lib import repair_file as _repair_file
+    _repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-football-goal")

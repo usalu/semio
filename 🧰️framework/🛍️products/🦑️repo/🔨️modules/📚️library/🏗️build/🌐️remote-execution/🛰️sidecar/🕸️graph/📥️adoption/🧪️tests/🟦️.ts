@@ -6,7 +6,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {readyPlatformV1} from "../../../🚦️ready/🟦️.ts";
 import type {GenerationHeadCandidateV1} from "../../../../../🕸️graph/🕰️generations/🌐️remote-exchange/🟦️.ts";
-import {createHeadAdoptionReadyProbeV1,createHeadAdoptionTurnV1,headAdoptionPolicyV1,readyForHeadAdoptionV1} from "../🟦️.ts";
+import {createHeadAdoptionLiveProbeV1,createHeadAdoptionTurnV1,headAdoptionPolicyV1,liveForHeadAdoptionV1} from "../🟦️.ts";
 import fixture from "./🔣️.json";
 
 const candidate:GenerationHeadCandidateV1={origin:"g1-producer",scope:"all",generation:5,manifest:"b".repeat(64),identity:"c".repeat(64),implementation:"d".repeat(64),platform:"darwin-arm64"};
@@ -42,19 +42,19 @@ test("overlapping dispatch is coalesced and the current attempt yields to foregr
  await first;
 });
 
-test("the fleet readiness gate requires the local origin's complete and fresh record",async()=>{
+test("the adoption liveness gate requires the local origin's valid and fresh record and never that it is Ready",async()=>{
  const store=mkdtempSync(join(tmpdir(),"graph-adopt-ready-")),origin="g1-origin",now=900000,directory=join(store,"v1","origins",origin);
  try{
-  expect(await readyForHeadAdoptionV1(store,origin,signal,()=>now)).toBe(false);
+  expect(await liveForHeadAdoptionV1(store,origin,signal,()=>now)).toBe(false);
   mkdirSync(directory,{recursive:true});
   const file=join(directory,"ready.json"),ready={version:1,origin,host:"host",platform:readyPlatformV1(),pid:1,state:"ready",digest:"a".repeat(64),ready:true,stage:null,stageIndex:0,stageCount:4,attempts:0,exit:null,refusal:null,reason:null,peakMegabytes:null,tail:[],nextAttemptMs:null,readyMs:1,startedMs:1};
   using sqlite=new Database(":memory:");
-  const oracle=sqlite.query("SELECT (?1=?2 AND ?3='ready' AND ?4 AND ?5 IS NULL AND ?6 BETWEEN 0 AND 600000 AND NOT ?7) AS admit");
+  const oracle=sqlite.query("SELECT (?1=?2 AND ?3 BETWEEN 0 AND 600000 AND NOT ?4) AS admit");
   for(const row of fixture.readiness){
    const value={...ready,...row.change,updatedMs:now-row.offset};
    writeFileSync(file,JSON.stringify(value));
-   expect(oracle.get(value.origin,origin,value.state,Number(value.ready),value.stage,row.offset,Number(Object.hasOwn(row.change,"unexpected"))),row.id).toEqual({admit:row.admit});
-   expect(await readyForHeadAdoptionV1(store,origin,signal,()=>now),row.id).toBe(Boolean(row.admit));
+   expect(oracle.get(value.origin,origin,row.offset,Number(Object.hasOwn(row.change,"unexpected"))),row.id).toEqual({admit:row.admit});
+   expect(await liveForHeadAdoptionV1(store,origin,signal,()=>now),row.id).toBe(Boolean(row.admit));
   }
  }finally{rmSync(store,{recursive:true,force:true});}
 });
@@ -77,7 +77,7 @@ test("a stalled Ready read yields on deadline or turn cancellation and keeps its
   let starts=0,settle!:(value:Uint8Array)=>void;
   const firstRead=new Promise<Uint8Array>(resolve=>{settle=resolve;});
   const firstTurn=new AbortController();
-  const probe=createHeadAdoptionReadyProbeV1({maximumWaitMilliseconds:50,read:async()=>++starts===1?firstRead:bytes});
+  const probe=createHeadAdoptionLiveProbeV1({maximumWaitMilliseconds:50,read:async()=>++starts===1?firstRead:bytes});
   const pending=probe(store,origin,firstTurn.signal,()=>now);
   await sleep(1);
   expect(starts,row.id).toBe(1);
@@ -92,6 +92,6 @@ test("a stalled Ready read yields on deadline or turn cancellation and keeps its
   expect(oracle.get(0),row.id).toEqual({starts:row.startsAfterSettlement});
   expect(starts,row.id).toBe(row.startsAfterSettlement);
  }
- const oversized=createHeadAdoptionReadyProbeV1({read:async()=>Buffer.alloc(headAdoptionPolicyV1.maximumReadyBytes+1)});
+ const oversized=createHeadAdoptionLiveProbeV1({read:async()=>Buffer.alloc(headAdoptionPolicyV1.maximumReadyBytes+1)});
  expect(await oversized(store,origin,signal,()=>now)).toBe(false);
 });

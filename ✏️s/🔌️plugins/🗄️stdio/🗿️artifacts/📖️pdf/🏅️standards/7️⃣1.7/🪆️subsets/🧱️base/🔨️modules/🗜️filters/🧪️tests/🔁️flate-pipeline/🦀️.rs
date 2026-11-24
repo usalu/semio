@@ -54,7 +54,7 @@ fn admitted_stream_planning_keeps_typed_flate_and_predictor_declarations() {
         let status = receipt.status.unwrap();
         if status == StreamDataStatus::Complete {
             let output = cursor.take_output().unwrap();
-            assert_eq!(output.bytes, vec![10, 30, 50, 20, 40, 60]);
+            assert_eq!(output.bytes.to_vec_owner(), vec![10, 30, 50, 20, 40, 60]);
             assert_eq!(output.filters, [expected]);
             let grant = StreamDataGrant { work: 1, allocation_bytes: 0, release_bytes: usize::MAX };
             while cursor.close_step(grant).status.unwrap() != StreamDataStatus::Closed {}
@@ -90,7 +90,7 @@ fn admitted_stream_supports_lzw_widths_and_typed_predictor_declarations() {
         let status = receipt.status.unwrap();
         if status == StreamDataStatus::Complete {
             let output = cursor.take_output().unwrap();
-            assert_eq!(output.bytes, expected);
+            assert_eq!(output.bytes.to_vec_owner(), expected);
             assert_eq!(output.filters, pipeline);
             complete = true;
             break;
@@ -168,9 +168,9 @@ fn admitted_filter_chain_preserves_order_parameters_and_intermediate_custody() {
         } else {
             assert_eq!(finished, Some(StreamDataStatus::Complete));
             let output = cursor.take_bytes().unwrap();
-            assert_eq!(output, expected);
+            assert_eq!(output.to_vec_owner(), expected);
             assert!(cursor.take_output().is_none());
-            output.capacity()
+            output.retained_bytes().allocated_bytes()
         };
         cursor.begin_close();
         let mut closed = false;

@@ -97,7 +97,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
         COLD_PAIR_DOCUMENT_LOAD.with(|slot| slot.borrow().as_ref().is_some_and(|pending| pending.cursor.lifetime.instance_id == instance))
             || RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow().iter().any(|load| load.instance == instance))
     };
-    let pending_effects_runnable = semio_plugin_runtime_ops::ops_typed_operations::plugin_drive_pending_effects(runtime, &mut effects, document_ingress_pending, cx)?;
+    let pending_effects_runnable = semio_plugin_runtime_ops::ops_typed_operations::plugin_drive_pending_effects(runtime, &mut |instance, effect| push_admitted_effect(&mut effects, instance, effect), document_ingress_pending, cx)?;
     let reconcile_work = drive_turn_reconcile(&mut effects, cx)?;
     let executors = drive_turn_executors(&mut effects);
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64, identity, cx);

@@ -261,13 +261,13 @@ impl VerifiedMemberHistoryInput {
 
 impl Drop for MemberHistoryVerification {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "history verification input requires transfer or bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "history verification input requires transfer or bounded retirement");
     }
 }
 
 impl Drop for VerifiedMemberHistoryInput {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "verified history input requires adoption or bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "verified history input requires adoption or bounded retirement");
     }
 }
 

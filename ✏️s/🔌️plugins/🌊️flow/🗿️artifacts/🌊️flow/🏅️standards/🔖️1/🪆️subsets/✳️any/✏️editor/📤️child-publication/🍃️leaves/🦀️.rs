@@ -76,7 +76,7 @@ impl FlowLeafWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.fields.is_none()&&self.admission.terminal_is_empty()&&self.node.is_none()&&self.json.is_none()&&self.text.is_none()&&self.ordering.terminal_is_empty()&&self.retirement.is_empty()&&self.source.is_none()&&self.origin.is_none()}
 }
-impl Drop for FlowLeafWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow leaves require terminal core-plan and native-output custody");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowLeafWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original Flow leaves require terminal core-plan and native-output custody");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 
 #[cfg(test)]
 #[path="🧪️laws.rs"]

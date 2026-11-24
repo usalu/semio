@@ -86,6 +86,14 @@ impl FlowEvalSession {
         Ok((count,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
+    /// ▶️ Lifts a finished cancellation so a live run owes and dispatches its hops again; `false` while the cancellation still drains.
+    pub fn resume_preview_evaluation(&mut self)->bool{
+        if !self.state.preview_cancelled{return true}
+        if !self.preview_cancellation_terminal_is_empty(){return false}
+        self.state.preview_cancelled=false;
+        true
+    }
+
     pub fn next_preview_cancellation_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if self.state.preview_cancellation_cursor.is_none(){return Ok(Default::default())}
         match self.state.preview_cancellation_phase{

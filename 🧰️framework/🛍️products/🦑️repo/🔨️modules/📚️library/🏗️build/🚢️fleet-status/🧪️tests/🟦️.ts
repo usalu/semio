@@ -7,8 +7,9 @@ import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {fleetDurationV1,fleetTextV1,formatFleetReportV1,summarizeFleetV1,validateFleetFactsV1,validateFleetReportV1,type FleetFactsV1,type FleetLanguageV1,type FleetReportV1 as FleetReport} from "../🟦️.ts";
-import {collectFleetFactsV1,readFleetBazelV1,readFleetGenerationV1,readFleetSealedV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
+import {collectFleetFactsV1,readFleetBazelV1,readFleetGenerationV1,readFleetSealedV1,workerMemoryOfV1,type FleetReadersV1} from "../📥️readers/🟦️.ts";
 import {fleetArgumentsV1,runFleetCliV1} from "../⌨️command/🟦️.ts";
+import {requireHostWardenV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🟦️.ts";
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
 
 const oracle=join(import.meta.dir,"🐍️.py"),ajv=new Ajv({strict:false,allowUnionTypes:true}),definitions=schema.definitions,messages=definitions.Messages.const as Record<string,Record<FleetLanguageV1,string>>;
@@ -321,4 +322,94 @@ test("the offload reader counts compile slots as local and light slots as runnin
   expect([cas.highWatermarkBytes,cas.lowWatermarkBytes]).toEqual([Math.floor(cas.effectiveCapBytes*0.9),Math.floor(cas.effectiveCapBytes*0.75)]);
   expect(validateFleetFactsV1({version:1,atMs:now,workspace:root,cas,sources:[{id:"cas",ok:true,milliseconds:1}]})).toEqual([]);
  }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+const NOW=1_793_000_000_000;
+const alarmOf=(action:"suspend"|"cancel",text:{en:string;de:string})=>({version:1,atMs:NOW-4000,observed:false,level:"danger",action,reason:"danger",id:"p1",pid:4242,kind:"cargo",owner:"agent-7",megabytes:3100,host:{availableMegabytes:600,guardMegabytes:2048,dangerMegabytes:1024,swapOutMegabytesPerSecond:30,pressure:"critical"},text});
+const stateOf=(over:Record<string,unknown>={},host:Record<string,unknown>={})=>({version:1,atMs:NOW-5000,pid:77,mode:"enforce",code:"c0de",host:{totalMegabytes:16384,availableMegabytes:7000,swapUsedMegabytes:100,swapOutMegabytesPerSecond:0,compressedMegabytes:900,pressure:"normal",...host},level:"calm",hold:false,guardMegabytes:2048,dangerMegabytes:1024,resumeMegabytes:3072,subjects:{count:2,megabytes:2500,byKind:{cargo:{count:2,megabytes:2500}}},suspended:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:50},lastAlarms:[],overhead:{tickMillisecondsP50:2,tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41},...over});
+const memoryOf=(origin:string,value:unknown,at=NOW)=>workerMemoryOfV1(origin,value as never,at);
+const workerRow=(origin:string,liveness:"ready"|"working"|"offline"="ready")=>({origin,platform:"macos",liveness,recorded:"running",stage:"tools",stageIndex:1,stageCount:5,attempts:1,recordAgeSeconds:3,heartbeatAgeSeconds:2,refusal:null});
+const memoryFacts=(origins:Record<string,unknown>,local:unknown=null):FleetFactsV1=>({version:1,atMs:NOW,workspace:"/w",sources:[],workers:{offlineSeconds:600,rows:Object.keys(origins).map(origin=>workerRow(origin))},memory:{local:local as never,origins:origins as never}});
+const ids=(facts:FleetFactsV1,language:FleetLanguageV1="en")=>summarizeFleetV1(facts,language).findings.map(row=>`${row.id}:${row.severity}:${row.subject}`);
+
+test("worker memory: a calm record is shown per worker and raises no finding, the absent record, a missing file and a stale record raise worker-warden-absent",()=>{
+ const facts=memoryFacts({calm:memoryOf("calm",stateOf()),none:null,off:memoryOf("off",{version:1,atMs:NOW-1000,absent:true}),old:memoryOf("old",stateOf({atMs:NOW-61_000}))});
+ expect(validateFleetFactsV1(facts)).toEqual([]);
+ const report=summarizeFleetV1(facts,"en");
+ expect(validateFleetReportV1(report)).toEqual([]);
+ expect(ids(facts)).toEqual(["worker-warden-absent:warn:none","worker-warden-absent:warn:off","worker-warden-absent:warn:old"]);
+ const rows=report.workers!.rows as any[],calm=rows.find(row=>row.origin==="calm").memory;
+ expect([calm.absent,calm.ageSeconds,calm.mode,calm.level,calm.availableMegabytes,calm.totalMegabytes,calm.swapUsedMegabytes,calm.swapOutMegabytesPerSecond,calm.compressedMegabytes,calm.pressure,calm.subjects,calm.subjectMegabytes,calm.suspended,calm.counters,calm.lastAlarm,calm.overhead]).toEqual([false,5,"enforce","calm",7000,16384,100,0,900,"normal",2,2500,0,{suspended:0,resumed:0,cancelled:0},null,{tickMillisecondsP95:4.5,cpuBasisPoints:60,residentMegabytes:41}]);
+ expect(rows.find(row=>row.origin==="none").memory).toBeNull();
+ expect(report.findings.find(row=>row.subject==="none")!.text).toBe("worker none lives but its warden is not visible: no memory record");
+ expect(report.findings.find(row=>row.subject==="off")!.text).toContain("its warden writes no state");
+ expect(report.findings.find(row=>row.subject==="old")!.text).toContain("last record 61 s old");
+ expect(ids({...facts,workers:{offlineSeconds:600,rows:[workerRow("none","offline")]}})).toEqual(["worker-offline:warn:none"]);
+ expect(ids({...facts,memory:undefined})).toEqual([]);
+ const lines=formatFleetReportV1("en",report);
+ expect(lines).toContain("  calm macos: ready, stage tools (1/5), attempt 1, record 3 s, machine 2 s; memory free 7000 MB, swap 100 MB, compressed 900 MB, calm (enforce), interventions s/r/c 0/0/0");
+ expect(lines).toContain("  none macos: ready, stage tools (1/5), attempt 1, record 3 s, machine 2 s; memory -");
+ expect(lines.some(line=>line.includes("memory no warden record"))).toBe(true);
+ expect(lines.some(line=>line.includes("memory last record 61 s old"))).toBe(true);
+});
+
+test("worker memory: guard warns, danger with a cancel alarm alerts and names the process, owner and action of the last alarm in the chosen language",()=>{
+ const guard=stateOf({level:"guard",lastAlarms:[],counters:{suspended:0,resumed:0,cancelled:0,ticks:9}},{availableMegabytes:1500,pressure:"warn"});
+ const danger=stateOf({level:"danger",counters:{suspended:2,resumed:1,cancelled:1,ticks:90},lastAlarms:[alarmOf("suspend",{en:"old en",de:"old de"}),alarmOf("cancel",{en:"cancelled cargo pid 4242 of agent-7 (3100 MB)",de:"cargo PID 4242 von agent-7 abgebrochen (3100 MB)"})]},{availableMegabytes:600,pressure:"critical",swapUsedMegabytes:null});
+ const facts=memoryFacts({g:memoryOf("g",guard),d:memoryOf("d",danger)});
+ expect(ids(facts)).toEqual(["worker-memory-tight:alert:d","worker-warden-intervened:alert:d","worker-memory-tight:warn:g"]);
+ const en=summarizeFleetV1(facts,"en").findings,de=summarizeFleetV1(facts,"de").findings;
+ expect(en.find(row=>row.id==="worker-memory-tight"&&row.subject==="g")!.text).toBe("worker g is at memory level guard: 1500 MB available (guard 2048 MB, danger 1024 MB), swap 100 MB, pressure warn");
+ expect(en.find(row=>row.id==="worker-memory-tight"&&row.subject==="d")!.text).toBe("worker d is at memory level danger: 600 MB available (guard 2048 MB, danger 1024 MB), swap ? MB, pressure critical");
+ expect(en.find(row=>row.id==="worker-warden-intervened")!.text).toBe("worker d: its warden intervened (2 suspended, 1 resumed, 1 cancelled); last: cancelled cargo pid 4242 of agent-7 (3100 MB)");
+ expect(de.find(row=>row.id==="worker-warden-intervened")!.text).toBe("Worker d: sein Wächter hat eingegriffen (2 angehalten, 1 fortgesetzt, 1 abgebrochen); zuletzt: cargo PID 4242 von agent-7 abgebrochen (3100 MB)");
+ expect(de.find(row=>row.id==="worker-memory-tight"&&row.subject==="d")!.text).toBe("Worker d ist auf Speicherstufe Gefahr: 600 MB verfügbar (Wache 2048 MB, Gefahr 1024 MB), Swap ? MB, Druck critical");
+ const suspendedOnly=memoryFacts({s:memoryOf("s",stateOf({counters:{suspended:1,resumed:1,cancelled:0,ticks:3},lastAlarms:[alarmOf("suspend",{en:"suspended x",de:"x angehalten"})]}))});
+ expect(ids(suspendedOnly)).toEqual(["worker-warden-intervened:warn:s"]);
+ expect(formatFleetReportV1("de",summarizeFleetV1(suspendedOnly,"de")).some(line=>line.includes("Speicher frei 7000 MB, Swap 100 MB, komprimiert 900 MB, ruhig (eingreifend), Eingriffe a/f/b 1/1/0"))).toBe(true);
+});
+
+test("worker memory: observe mode, high swap and a heavy warden are findings of their own, and a local warden of an origin without a worker row is judged too",()=>{
+ const observe=stateOf({mode:"observe"},{swapUsedMegabytes:4096}),heavy=stateOf({overhead:{tickMillisecondsP50:3,tickMillisecondsP95:12.4,cpuBasisPoints:501,residentMegabytes:60.6}},{swapUsedMegabytes:4097});
+ const facts=memoryFacts({o:memoryOf("o",observe),h:memoryOf("h",heavy)},memoryOf("coordinator",stateOf({level:"guard"},{availableMegabytes:1800})));
+ expect(ids(facts)).toEqual(["worker-memory-tight:warn:coordinator","worker-swap-high:warn:h","worker-warden-overhead:warn:h","worker-warden-observing:info:o"]);
+ const en=summarizeFleetV1(facts,"en"),de=summarizeFleetV1(facts,"de");
+ expect(en.findings.find(row=>row.id==="worker-swap-high")!.text).toBe("worker h uses 4097 MB of swap, 25% of its 16384 MB memory");
+ expect(de.findings.find(row=>row.id==="worker-warden-overhead")!.text).toBe("Worker h: sein Wächter braucht 5 % eines Kerns (Takt p95 12 ms, 61 MB resident)");
+ expect(de.findings.find(row=>row.id==="worker-warden-observing")!.text).toBe("Worker o: sein Wächter beobachtet nur (Stufe ruhig); er entscheidet, handelt aber nicht");
+ expect(en.memory.warden.origin).toBe("coordinator");
+ expect(formatFleetReportV1("en",en).some(line=>line.startsWith("Warden coordinator: guard (enforce), free 1800 MB, swap 100 MB (out 0 MB/s), compressed 900 MB, pressure normal"))).toBe(true);
+ expect(formatFleetReportV1("de",de).some(line=>line.startsWith("Wächter coordinator: Wache (eingreifend), frei 1800 MB"))).toBe(true);
+ expect(validateFleetReportV1(en)).toEqual([]);expect(validateFleetReportV1(de)).toEqual([]);
+});
+
+test("the memory reader lists the origins of the store, reads memory.json bounded and tolerant and never throws on a missing, half-written, invalid or oversized file",async()=>{
+ const root=mkdtempSync(join(tmpdir(),"fleet-memory-")),store=join(root,"store"),origins=join(store,"v1","origins"),{readFleetMemoryV1}=await import("../📥️readers/🟦️.ts");
+ try{
+  requireHostWardenV1("State",stateOf());requireHostWardenV1("Mirror",{version:1,atMs:NOW,absent:true});
+  for(const name of ["fresh","absent","invalid","half","big","missing","observing"])mkdirSync(join(origins,name),{recursive:true});
+  const full=JSON.stringify(stateOf({level:"guard"},{availableMegabytes:1500}));
+  writeFileSync(join(origins,"fresh","memory.json"),full);
+  writeFileSync(join(origins,"absent","memory.json"),JSON.stringify({version:1,atMs:NOW-9000,absent:true}));
+  writeFileSync(join(origins,"invalid","memory.json"),JSON.stringify({...stateOf(),extra:1}));
+  writeFileSync(join(origins,"half","memory.json"),full.slice(0,full.length>>1));
+  writeFileSync(join(origins,"big","memory.json"),JSON.stringify(stateOf({code:"x".repeat(300_000)})));
+  writeFileSync(join(origins,"observing","memory.json"),JSON.stringify(stateOf({mode:"observe"})));
+  writeFileSync(join(origins,"stray.json"),"{}");
+  const result=await readFleetMemoryV1({root,environment:{SEMIO_FLEET_STORE_ROOT:store,SEMIO_FLEET_ORIGIN:"nobody"} as NodeJS.ProcessEnv,language:"en",now:()=>NOW}),memory=result.memory!;
+  expect(Object.keys(memory.origins)).toEqual(["absent","big","fresh","half","invalid","missing","observing"]);
+  expect(memory.origins.fresh).toMatchObject({origin:"fresh",absent:false,level:"guard",availableMegabytes:1500,ageSeconds:5});
+  expect(memory.origins.absent).toMatchObject({absent:true,ageSeconds:9,level:null,counters:null});
+  for(const name of ["invalid","half","big","missing"])expect(memory.origins[name],name).toBeNull();
+  expect(memory.origins.observing!.mode).toBe("observe");
+  expect(validateFleetFactsV1({version:1,atMs:NOW,workspace:root,memory,sources:[{id:"memory",ok:true,milliseconds:1}]})).toEqual([]);
+  const none=await readFleetMemoryV1({root,environment:{SEMIO_FLEET_STORE_ROOT:join(root,"nope")} as NodeJS.ProcessEnv,language:"en",now:()=>NOW});
+  expect(none.memory!.origins).toEqual({});
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the newest alarm of a state is the last alarm, whatever the order of the list",()=>{
+ const state=stateOf({counters:{suspended:1,resumed:0,cancelled:1,ticks:3},lastAlarms:[alarmOf("cancel",{en:"newest",de:"neu"}),{...alarmOf("suspend",{en:"older",de:"älter"}),atMs:NOW-9000}]});
+ expect(memoryOf("x",state)!.lastAlarm).toMatchObject({action:"cancel",text:{en:"newest",de:"neu"},kind:"cargo",pid:4242,owner:"agent-7",megabytes:3100});
+ expect(memoryOf("x",null)).toBeNull();
 });

@@ -332,7 +332,10 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
                 DisplayMode::Static => format!("{}: {}{}", labels.case_caption.as_str(), display.source_id.as_deref().and_then(|identity| semio_s_fem_analyses_model::borrow_result_source_identity(identity).ok()).map(|source| source.id).or_else(|| doc.load_cases.first().map(|case| case.id.as_str())).unwrap_or("∅"), playback_caption(&cfg.animation, labels)),
             };
             if !fields.current_revision() { caption.push_str(" · "); caption.push_str(progress_caption(live_stage, labels)); }
-            with_caption(results_scene(doc, cfg, interaction, Some(&values), scale, (!display.mode.uses_mode_shape()).then_some(&stresses), locale)?, caption)
+            eprintln!("[DEBUG] fem3d results fields caption={caption:?} values={} current={}", values.len(), fields.current_revision());
+            let built = results_scene(doc, cfg, interaction, Some(&values), scale, (!display.mode.uses_mode_shape()).then_some(&stresses), locale).and_then(|scene| with_caption(scene, caption));
+            if let Err(error) = &built { eprintln!("[DEBUG] fem3d results fields render error {error:?}"); }
+            built
         });
     }
     let key = results_cache_key(operation);

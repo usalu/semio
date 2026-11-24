@@ -89,16 +89,6 @@
 
 
 
-    #[derive(semio_framework_value::FactoryPayloadRetirement)]
-    struct PublicationPresenceRetirementFactory;
-
-    impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceRetirementFactory {
-        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<PublicationPresence>() }
-        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<PublicationPresence>)> {
-            semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
-        }
-    }
-
     /// 🚫️ The UNPROVED twin: `contract_registry`'s `BatchOnlyPendingRewrite` declarations against an
     /// app that owns no tool factory at all, for the laws whose whole subject is the refusal.
     /// 🚫️ A `TestApp` that registers no owned factory at all, on `contract_registry` — every verb
@@ -162,7 +152,7 @@
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close() {
-        test_retained_document_cancellation::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
+        test_retained_document_cancellation::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>(store::cold_mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
     }
 
     #[test]

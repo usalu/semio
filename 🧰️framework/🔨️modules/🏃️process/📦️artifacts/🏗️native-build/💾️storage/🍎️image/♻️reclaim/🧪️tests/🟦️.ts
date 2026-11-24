@@ -16,7 +16,7 @@ import{nativeImageAttachArgumentsV1,nativeImageAttachProgramV1}from"../../👤�
 import{nativeImageContainerFreeBytesSyncV1,nativeImageContainerFreeBytesV1,nativeImageEffectiveAvailableBytesV1,nativeImageRealAvailableBytesV1}from"../../⚖️availability/🟦️.ts";
 import{nativeImageHdiutilCommandV1,nativeImageHdiutilProgramV1}from"../../🛠️hdiutil/🟦️.ts";
 import{nativeImageVolumeLatchedV1,nativeImageRefreshDueV1,nativeImageRefreshProbeDueV1,nativeImageRefreshMechanismV1}from"../../⚖️availability/🟦️.ts";
-import{createNativeImageLinuxReclaimPortV1,createNativeImageReclaimPortV1,createNativeImageWindowsReclaimPortV1,createNativeImageDarwinReclaimPortV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,refreshNativeImageV1,type NativeImageReclaimPortV1}from"../🟦️.ts";
+import{createNativeImageLinuxReclaimPortV1,createNativeImageReclaimPortV1,createNativeImageWindowsReclaimPortV1,createNativeImageDarwinReclaimPortV1,guardDetachedNativeImageMountV1,nativeImageReclaimDueV1,nativeImageReclaimMechanismV1,reclaimNativeImageV1,refreshNativeImageV1,type NativeImageReclaimPortV1}from"../🟦️.ts";
 const protocol=imageSchema.definitions.ImageProtocol.const,MiB=1048576;
 const env={PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"};
 const run=(program:string,args:readonly string[])=>{const row=spawnSync(program,[...args],{encoding:"utf8",env});if(row.status!==0)throw Error(program+" "+args.join(" ")+": "+row.stderr);return row.stdout;};
@@ -119,7 +119,7 @@ test("Darwin reclaim uses the supplied cleanup runner after a partial attach fai
  });
  try{
   expect(await reclaimNativeImageV1(port,{check:()=>{}}).catch(error=>error)).toBe(primary);
-  expect(calls).toEqual(["work info","work image","cleanup info -plist","cleanup detach /dev/owned"]);
+  expect(calls).toEqual(["work info","work image","work info","work image","cleanup info -plist","cleanup detach /dev/owned"]);
   expect(lstatSync(scratch!,{throwIfNoEntry:false})).toBeUndefined();
   expect(readFileSync(image,"utf8")).toBe("owned image");
  }finally{
@@ -401,4 +401,15 @@ test("a failed attach and a cancellation after the detach both give the image ba
  const cancelled:string[]=[];let checks=0;
  await expect(refreshNativeImageV1(refreshPort(cancelled),{check:()=>{if(++checks===3)throw Error("cancelled");}})).rejects.toThrow("cancelled");
  expect(cancelled).toEqual(["attached","detach /dev/disk1","attached(cleanup)","attach(cleanup)","dispose"]);
+});
+
+test("a detached image leaves a read-only mount point so a writer fails loudly, and a mounted, absent or foreign directory is left alone",()=>{
+ const base=realpathSync(mkdtempSync(join(testScratchRootV1(),"semio-guard-"))),plain=join(base,"m");
+ try{
+  mkdirSync(plain);guardDetachedNativeImageMountV1(plain);
+  expect(lstatSync(plain).mode&0o777).toBe(0o555);
+  expect(()=>writeFileSync(join(plain,"cargo"),"x")).toThrow();
+  guardDetachedNativeImageMountV1(undefined);guardDetachedNativeImageMountV1(join(base,"absent"));
+  const file=join(base,"file");writeFileSync(file,"x");guardDetachedNativeImageMountV1(file);expect(lstatSync(file).mode&0o777).toBe(0o644);
+ }finally{rmSync(base,{recursive:true,force:true});}
 });

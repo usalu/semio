@@ -845,3 +845,7 @@ writeFileSync(join(HERE, "🔣️.json"), JSON.stringify(doc, null, 1) + "\n");
 for (const s of ["50", "100", "200"] as const) debug(`1:${s}`, "body", (vols as any)[s].body.length, "thermal", (vols as any)[s].thermal.length, "structure", (vols as any)[s].structure.length, "shapes", Object.fromEntries(Object.entries((reps as any)[s].geometry).map(([k, v]: any) => [k, v.length])));
 debug("mass", q(massKg, 3), "written", join(HERE, "🔣️.json"));
 //#endregion
+
+//#region 🩹️ The silhouette repair of batch SO, the last step: ops/used-viola.json of the umbrella ticket of 2026-11-22
+(await import("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/SO/repair.ts")).repairFile(join(HERE, "🔣️.json"), "used-viola");
+//#endregion

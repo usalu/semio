@@ -1828,7 +1828,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -1901,7 +1901,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -1917,19 +1917,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -1953,19 +1953,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -1989,19 +1989,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -2025,11 +2025,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -2257,7 +2257,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -2273,19 +2273,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -2309,19 +2309,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -2345,19 +2345,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -2381,11 +2381,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -2521,19 +2521,35 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.12782
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.364805,
+         -0.152773
+        ],
+        [
+         1.380313,
+         -0.163437
+        ],
+        [
+         1.393164,
+         -0.173633
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.353969
         ],
         [
          1.325,
-         -0.06
+         -0.353969
         ]
        ],
        "closed": true,
@@ -5838,7 +5854,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -5906,7 +5922,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -6994,7 +7010,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -7062,7 +7078,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -7079,19 +7095,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -7115,19 +7131,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -7564,19 +7580,35 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.12782
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.364805,
+         -0.152773
+        ],
+        [
+         1.380313,
+         -0.163437
+        ],
+        [
+         1.393164,
+         -0.173633
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.353969
         ],
         [
          1.325,
-         -0.06
+         -0.353969
         ]
        ],
        "closed": true,
@@ -9129,11 +9161,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -9165,11 +9197,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -10464,19 +10496,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -10500,19 +10532,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -10773,7 +10805,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -10809,7 +10841,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -10825,19 +10857,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -10861,19 +10893,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -10984,7 +11016,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -11591,7 +11623,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -11627,7 +11659,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -11718,11 +11750,75 @@
          -0.85
         ],
         [
+         0.2,
+         -0.85
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.85
+        ],
+        [
          0.4,
          -0.85
         ],
         [
          0.4,
+         0.85
+        ],
+        [
+         0.2,
+         0.85
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.14,
+         0.8175
+        ],
+        [
+         0.14,
+         0.7825
+        ],
+        [
+         0.26,
+         0.7825
+        ],
+        [
+         0.26,
+         0.8175
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.2,
          0.85
         ],
         [
@@ -11898,11 +11994,75 @@
          -0.85
         ],
         [
+         0.2,
+         -0.85
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.85
+        ],
+        [
          0.4,
          -0.85
         ],
         [
          0.4,
+         0.85
+        ],
+        [
+         0.2,
+         0.85
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.14,
+         0.8175
+        ],
+        [
+         0.14,
+         0.7825
+        ],
+        [
+         0.26,
+         0.7825
+        ],
+        [
+         0.26,
+         0.8175
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.2,
          0.85
         ],
         [
@@ -12411,7 +12571,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -12479,7 +12639,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -12743,7 +12903,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -16446,19 +16606,35 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.12782
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.364805,
+         -0.152773
+        ],
+        [
+         1.380313,
+         -0.163437
+        ],
+        [
+         1.393164,
+         -0.173633
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.353969
         ],
         [
          1.325,
-         -0.06
+         -0.353969
         ]
        ],
        "closed": true,
@@ -16524,19 +16700,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16560,19 +16736,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16596,19 +16772,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16632,19 +16808,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16668,19 +16844,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16704,19 +16880,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -16740,11 +16916,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -16776,11 +16952,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -16807,8 +16983,8 @@
       "de": "Gelagert: die Seitenansicht blickt auf das Klaviaturende des auf seiner Rast auf dem Brett stehenden Flügels (7 x 30 mm): Vorsatzleiste, 52 Tastenfronten mit ihren Fugen, Obertasten, Backen, die geschlossene Tastenklappe, Namensbrett und Pultleiste, Deckelkante und Vorderdeckel, dazu die Lyra am Klaviaturboden, die neben dem Brett liegenden Beine und die über die Oberkante laufenden Gurte; die Vorderansicht zeigt die aufgestellte Unterseite des Gehäuses, 34 x 30 mm: Rast, Klaviaturboden, Resonanzboden mit sieben Rippen, drei Balken, den Klotz des hinteren Beins, Lyra und Beine; die Draufsicht zeigt die Diskantkante mit den Gurtläufen darüber. Gespielt ergeben dieselben Formen die Klaviaturansicht, die Ansicht der Biegung und den wahren Grundriss des Flügels mit dem Deckel auf dem Stab."
      },
      "retained": {
-      "en": "Every part of the 1:50 body at its true size and place, drawn as the solid of its own prism so that all poses project right: rim, cheeks, keys, action, plate with its openings, strings, soundboard, ribs, beams, lid, flap, hinges, props, fallboard, desk, legs with ferrules and castors, lyre with pedals and braces, skid with slots and battens, straps with ratchets, the worn patches, the chipped flap corner and the dealer's sticker.",
-      "de": "Jedes Teil des Körpers 1:50 in wahrer Größe und Lage, als Körper seines eigenen Prismas gezeichnet, damit jede Pose richtig projiziert: Rast, Backen, Tasten, Mechanik, Platte mit ihren Öffnungen, Saiten, Resonanzboden, Rippen, Balken, Deckel, Vorderdeckel, Scharniere, Stäbe, Tastenklappe, Pult, Beine mit Schuhen und Rollen, Lyra mit Pedalen und Streben, Brett mit Schlitzen und Leisten, Gurte mit Ratschen, die abgegriffenen Stellen, die abgeplatzte Vorderdeckelecke und der Händleraufkleber."
+      "en": "Every part of the 1:50 body at its true size and place, drawn as the solid of its own prism so that all poses project right: rim, cheeks, keys, action, plate with its openings, strings, soundboard, ribs, beams, lid, flap, hinges, props, fallboard, desk, legs with ferrules and castors, lyre with pedals and braces, skid with its open hand slots and battens, straps with ratchets, the worn patches, the chipped flap corner and the dealer's sticker.",
+      "de": "Jedes Teil des Körpers 1:50 in wahrer Größe und Lage, als Körper seines eigenen Prismas gezeichnet, damit jede Pose richtig projiziert: Rast, Backen, Tasten, Mechanik, Platte mit ihren Öffnungen, Saiten, Resonanzboden, Rippen, Balken, Deckel, Vorderdeckel, Scharniere, Stäbe, Tastenklappe, Pult, Beine mit Schuhen und Rollen, Lyra mit Pedalen und Streben, Brett mit offenen Griffschlitzen und Leisten, Gurte mit Ratschen, die abgegriffenen Stellen, die abgeplatzte Vorderdeckelecke und der Händleraufkleber."
      },
      "merged": {
       "en": "The 230 strings are one string layer; tuning pins, dampers, hammers and the action parts are one action block; the long and bass bridges lie hidden under the plate and are not drawn.",
@@ -16819,8 +16995,8 @@
       "de": "Verdeckte Teile werden in jeder Ansicht von den näheren verdeckt; Schrauben, Anhängestifte, Filzstreifen und die Lackrisse selbst liegen unter dem Druckprofil."
      },
      "thinElements": {
-      "en": "Straps (3 mm) and the lyre braces are slender solids drawn at their true width; the key joints are 0.13 mm texture strokes in the elevation and a 0.47 mm hatch in the plan.",
-      "de": "Gurte (3 mm) und Lyrastreben sind schlanke Körper in wahrer Breite; die Tastenfugen sind 0,13-mm-Texturstriche in der Ansicht und eine 0,47-mm-Schraffur im Grundriss."
+      "en": "The straps are declared sheets of 2.5 mm webbing drawn in their true outline, the lyre braces slender solids drawn at their true width; the key joints are 0.13 mm texture strokes in the elevation and a 0.47 mm hatch in the plan.",
+      "de": "Die Gurte sind erklärte Platten aus 2,5-mm-Gurtband in wahrem Umriss, die Lyrastreben schlanke Körper in wahrer Breite; die Tastenfugen sind 0,13-mm-Texturstriche in der Ansicht und eine 0,47-mm-Schraffur im Grundriss."
      },
      "hatching": {
       "en": "Stipple of crazed lacquer on rim and lid, lines along the strings in the plate openings, key joints on the keys, stipple of the carpet on the skid.",
@@ -17102,7 +17278,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -17175,7 +17351,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -17191,19 +17367,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17227,19 +17403,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17263,19 +17439,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17299,11 +17475,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -17443,7 +17619,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -17459,19 +17635,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17495,19 +17671,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17531,19 +17707,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -17567,11 +17743,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -17691,19 +17867,27 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128161
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.380313,
+         -0.163437
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.354252
         ],
         [
          1.325,
-         -0.06
+         -0.354252
         ]
        ],
        "closed": true,
@@ -19719,7 +19903,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -19755,7 +19939,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -20523,7 +20707,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -20559,7 +20743,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -20576,19 +20760,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -20612,19 +20796,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -20817,19 +21001,27 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128161
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.380313,
+         -0.163437
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.354252
         ],
         [
          1.325,
-         -0.06
+         -0.354252
         ]
        ],
        "closed": true,
@@ -21726,11 +21918,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -21762,11 +21954,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -22681,19 +22873,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -22717,19 +22909,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -22917,7 +23109,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -22953,7 +23145,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -22969,19 +23161,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -23005,19 +23197,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -23096,7 +23288,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -23575,7 +23767,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -23611,7 +23803,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -23810,11 +24002,75 @@
          -0.85
         ],
         [
+         0.2,
+         -0.85
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.8175
+        ],
+        [
+         0.14,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.7825
+        ],
+        [
+         0.26,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.8175
+        ],
+        [
+         0.2,
+         -0.85
+        ],
+        [
          0.4,
          -0.85
         ],
         [
          0.4,
+         0.85
+        ],
+        [
+         0.2,
+         0.85
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.14,
+         0.8175
+        ],
+        [
+         0.14,
+         0.7825
+        ],
+        [
+         0.26,
+         0.7825
+        ],
+        [
+         0.26,
+         0.8175
+        ],
+        [
+         0.2,
+         0.8175
+        ],
+        [
+         0.2,
          0.85
         ],
         [
@@ -24170,7 +24426,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -24206,7 +24462,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -24378,7 +24634,7 @@
        "solid": {
         "kind": "extruded",
         "sweep": "u",
-        "z0": 0.0,
+        "z0": -0.0005,
         "z1": 0.065
        }
       },
@@ -26681,19 +26937,27 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128161
+        ],
+        [
+         1.345,
+         -0.14
+        ],
+        [
+         1.380313,
+         -0.163437
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.354252
         ],
         [
          1.325,
-         -0.06
+         -0.354252
         ]
        ],
        "closed": true,
@@ -26755,19 +27019,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26791,19 +27055,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26827,19 +27091,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26863,19 +27127,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26899,19 +27163,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26935,19 +27199,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -26971,11 +27235,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -27007,11 +27271,11 @@
        "points": [
         [
          0.1,
-         0.0015
+         0.00125
         ],
         [
          0.2,
-         0.0015
+         0.00125
         ],
         [
          0.2,
@@ -27050,8 +27314,8 @@
       "de": "Rippen, Scharniere, Schloss, Fleck der Vorsatzleiste, Aufkleber, Kratzer und die Ecke des Vorderdeckels liegen unter 15 mm."
      },
      "thinElements": {
-      "en": "Straps and braces stay slender at their true width; the 12 mm pedals are drawn 15 mm.",
-      "de": "Gurte und Streben bleiben schlank in wahrer Breite; die 12-mm-Pedale sind 15 mm gezeichnet."
+      "en": "The straps are declared sheets of 2.5 mm webbing in their true outline and the braces stay slender at their true width; the 12 mm pedals are drawn 15 mm.",
+      "de": "Die Gurte sind erklärte Platten aus 2,5-mm-Gurtband in wahrem Umriss, die Streben bleiben schlank in wahrer Breite; die 12-mm-Pedale sind 15 mm gezeichnet."
      },
      "hatching": {
       "en": "Coarser crazing stipple on rim and lid, string lines in the plate openings, key joints and black-key row as hatches.",
@@ -27265,7 +27529,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -27281,19 +27545,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27317,19 +27581,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27353,19 +27617,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27461,7 +27725,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -27477,19 +27741,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27513,19 +27777,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27549,19 +27813,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -27637,19 +27901,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -29249,19 +29517,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -29285,19 +29553,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -29421,19 +29689,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -30483,19 +30755,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -30519,19 +30791,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -30719,7 +30991,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -30755,7 +31027,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -30771,19 +31043,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -30807,19 +31079,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -31117,7 +31389,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -31153,7 +31425,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -32806,19 +33078,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -32879,19 +33155,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -32915,19 +33191,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -32951,19 +33227,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -32987,19 +33263,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33023,19 +33299,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33059,19 +33335,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33245,7 +33521,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -33261,19 +33537,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33297,19 +33573,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33333,19 +33609,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33389,7 +33665,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -33405,19 +33681,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33441,19 +33717,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33477,19 +33753,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -33565,19 +33841,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -34889,19 +35169,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -34925,19 +35205,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -35061,19 +35341,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -36035,19 +36319,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -36071,19 +36355,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -36199,7 +36483,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -36235,7 +36519,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -36251,19 +36535,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -36287,19 +36571,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -36489,7 +36773,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -36525,7 +36809,7 @@
         "kind": "extruded",
         "sweep": "v",
         "z0": 0.0,
-        "z1": 0.003
+        "z1": 0.0025
        }
       },
       {
@@ -37838,19 +38122,23 @@
        "points": [
         [
          1.325,
-         -0.26
+         -0.128333
+        ],
+        [
+         1.345,
+         -0.14
         ],
         [
          1.405,
-         -0.26
+         -0.185
         ],
         [
          1.405,
-         -0.06
+         -0.355417
         ],
         [
          1.325,
-         -0.06
+         -0.355417
         ]
        ],
        "closed": true,
@@ -37911,19 +38199,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -37947,19 +38235,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -37983,19 +38271,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -38019,19 +38307,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         -0.0015
+         -0.00125
         ],
         [
          1.505467,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -38055,19 +38343,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -38091,19 +38379,19 @@
        "points": [
         [
          0.0,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         -0.0015
+         -0.00125
         ],
         [
          0.325,
-         0.0015
+         0.00125
         ],
         [
          0.0,
-         0.0015
+         0.00125
         ]
        ],
        "closed": true,
@@ -38134,8 +38422,8 @@
       "de": "Kurzer Stab, Tastenklappe, Pult, Rollen, Ratschen und die kleinen Gebrauchsspuren liegen unter 75 mm oder im Gehäuse."
      },
      "thinElements": {
-      "en": "The lid is a 24 mm sheet, the straps and the long prop are slender bars drawn at their true width with the 0.2 mm pen.",
-      "de": "Der Deckel ist eine 24-mm-Platte, Gurte und langer Stab sind schlanke Stäbe in wahrer Breite mit dem 0,2-mm-Stift."
+      "en": "The lid is a 24 mm sheet, the straps are declared sheets of 2.5 mm webbing and the long prop is a slender bar drawn at its true width with the 0.2 mm pen.",
+      "de": "Der Deckel ist eine 24-mm-Platte, die Gurte sind erklärte Platten aus 2,5-mm-Gurtband und der lange Stab ist ein schlanker Stab in wahrer Breite mit dem 0,2-mm-Stift."
      },
      "hatching": {
       "en": "No hatching.",
@@ -43477,19 +43765,35 @@
       "tone": 0.6,
       "profile": [
        [
-        -0.06,
+        -0.12782,
         1.325
        ],
        [
-        -0.06,
+        -0.14,
+        1.345
+       ],
+       [
+        -0.152773,
+        1.364805
+       ],
+       [
+        -0.163437,
+        1.380313
+       ],
+       [
+        -0.173633,
+        1.393164
+       ],
+       [
+        -0.185,
         1.405
        ],
        [
-        -0.26,
+        -0.353969,
         1.405
        ],
        [
-        -0.26,
+        -0.353969,
         1.325
        ]
       ],
@@ -44244,8 +44548,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-b-under",
@@ -44274,8 +44578,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-a-up",
@@ -44287,25 +44591,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-top",
@@ -44317,25 +44621,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-down",
@@ -44347,25 +44651,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-ratchet",
@@ -44406,25 +44710,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-top",
@@ -44436,25 +44740,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-down",
@@ -44466,25 +44770,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-ratchet",
@@ -44573,7 +44877,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -44802,7 +45106,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -45031,7 +45335,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -48517,19 +48821,27 @@
       "tone": 0.6,
       "profile": [
        [
-        -0.06,
+        -0.128161,
         1.325
        ],
        [
-        -0.06,
+        -0.14,
+        1.345
+       ],
+       [
+        -0.163437,
+        1.380313
+       ],
+       [
+        -0.185,
         1.405
        ],
        [
-        -0.26,
+        -0.354252,
         1.405
        ],
        [
-        -0.26,
+        -0.354252,
         1.325
        ]
       ],
@@ -49117,8 +49429,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-b-under",
@@ -49147,8 +49459,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-a-up",
@@ -49160,25 +49472,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-top",
@@ -49190,25 +49502,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-down",
@@ -49220,25 +49532,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-ratchet",
@@ -49279,25 +49591,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-top",
@@ -49309,25 +49621,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-down",
@@ -49339,25 +49651,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-ratchet",
@@ -49414,7 +49726,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -49558,7 +49870,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -49702,7 +50014,7 @@
        ]
       ],
       "plane": "yz",
-      "from": 0.0,
+      "from": -0.0005,
       "to": 0.065
      },
      {
@@ -51944,19 +52256,23 @@
       "tone": 0.6,
       "profile": [
        [
-        -0.06,
+        -0.128333,
         1.325
        ],
        [
-        -0.06,
+        -0.14,
+        1.345
+       ],
+       [
+        -0.185,
         1.405
        ],
        [
-        -0.26,
+        -0.355417,
         1.405
        ],
        [
-        -0.26,
+        -0.355417,
         1.325
        ]
       ],
@@ -52348,8 +52664,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-b-under",
@@ -52378,8 +52694,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-a-up",
@@ -52391,25 +52707,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-top",
@@ -52421,25 +52737,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-down",
@@ -52451,25 +52767,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-up",
@@ -52481,25 +52797,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-top",
@@ -52511,25 +52827,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-down",
@@ -52541,25 +52857,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "leg-bass-shaft",
@@ -54495,19 +54811,23 @@
       "tone": 0.6,
       "profile": [
        [
-        -0.06,
+        -0.128333,
         1.325
        ],
        [
-        -0.06,
+        -0.14,
+        1.345
+       ],
+       [
+        -0.185,
         1.405
        ],
        [
-        -0.26,
+        -0.355417,
         1.405
        ],
        [
-        -0.26,
+        -0.355417,
         1.325
        ]
       ],
@@ -54708,8 +55028,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-b-under",
@@ -54738,8 +55058,8 @@
       ],
       "plane": "zx",
       "from": 0.0,
-      "to": 0.003,
-      "slender": true
+      "to": 0.0025,
+      "sheet": true
      },
      {
       "id": "strap-a-up",
@@ -54751,25 +55071,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-top",
@@ -54781,25 +55101,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-a-down",
@@ -54811,25 +55131,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-up",
@@ -54841,25 +55161,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-top",
@@ -54871,25 +55191,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        -0.0015
+        -0.00125
        ],
        [
         0.325,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "strap-b-down",
@@ -54901,25 +55221,25 @@
       "profile": [
        [
         0.0,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        -0.0015
+        -0.00125
        ],
        [
         1.505467,
-        0.0015
+        0.00125
        ],
        [
         0.0,
-        0.0015
+        0.00125
        ]
       ],
       "plane": "xy",
       "from": -0.025,
       "to": 0.025,
-      "slender": true
+      "sheet": true
      },
      {
       "id": "leg-bass-shaft",
@@ -55820,8 +56140,8 @@
     ],
     "decisions": [
      {
-      "en": "Body: for 75 mm the rim is 75 mm thick, the keyboard end, front body, keybed and three 75 mm beams are the masses of the case, the lid and flap keep their 24 mm sheet, plate, strings and soundboard are declared sheets inside, the keys a texture layer, the legs one tapered shaft to the floor 96 to 77 mm, the lyre one 75 mm frame with a pedal block, the long prop a slender rod, the short prop, fallboard and desk are left out (under the feature, inside the case or merged into the front body), the skid one 55 mm board; straps stay slender at their true section.",
-      "de": "Körper: für 75 mm ist die Rast 75 mm stark, Klaviaturende, Frontkörper, Klaviaturboden und drei 75-mm-Balken sind die Massen des Gehäuses, Deckel und Vorderdeckel behalten ihre 24-mm-Platte, Platte, Saiten und Resonanzboden sind erklärte Platten im Inneren, die Tasten eine Texturlage, die Beine je ein verjüngter Schaft bis zum Boden von 96 auf 77 mm, die Lyra ein 75-mm-Rahmen mit Pedalblock, der lange Stab ein schlanker Stab, kurzer Stab, Tastenklappe und Pult entfallen (unter dem Merkmal, im Gehäuse oder im Frontkörper aufgegangen), das Brett eine 55-mm-Platte; die Gurte bleiben schlank in wahrem Querschnitt."
+      "en": "Body: for 75 mm the rim is 75 mm thick, the keyboard end, front body, keybed and three 75 mm beams are the masses of the case, the lid and flap keep their 24 mm sheet, plate, strings and soundboard are declared sheets inside, the keys a texture layer, the legs one tapered shaft to the floor 96 to 77 mm, the lyre one 75 mm frame with a pedal block, the long prop a slender rod, the short prop, fallboard and desk are left out (under the feature, inside the case or merged into the front body), the skid one 55 mm board; the straps are declared sheets of 2.5 mm webbing.",
+      "de": "Körper: für 75 mm ist die Rast 75 mm stark, Klaviaturende, Frontkörper, Klaviaturboden und drei 75-mm-Balken sind die Massen des Gehäuses, Deckel und Vorderdeckel behalten ihre 24-mm-Platte, Platte, Saiten und Resonanzboden sind erklärte Platten im Inneren, die Tasten eine Texturlage, die Beine je ein verjüngter Schaft bis zum Boden von 96 auf 77 mm, die Lyra ein 75-mm-Rahmen mit Pedalblock, der lange Stab ein schlanker Stab, kurzer Stab, Tastenklappe und Pult entfallen (unter dem Merkmal, im Gehäuse oder im Frontkörper aufgegangen), das Brett eine 55-mm-Platte; die Gurte sind erklärte Platten aus 2,5-mm-Gurtband."
      },
      {
       "en": "Thermal: regions by reference; only the sum of the areas is compared.",

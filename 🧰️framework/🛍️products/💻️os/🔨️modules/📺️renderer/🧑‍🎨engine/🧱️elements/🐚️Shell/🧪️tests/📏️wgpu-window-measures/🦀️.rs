@@ -16,6 +16,7 @@ fn tree_parity_fixture() -> Value {
 
 #[test]
 fn window_options_publish_compact_tree_rows_and_checkbox_controls() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = tree_parity_fixture();
     let window = law["windowId"].as_str().unwrap();
     let measures: Vec<WindowMeasure> = serde_json::from_value(law["measures"].clone()).expect("neutral measure contract");
@@ -31,6 +32,7 @@ fn window_options_publish_compact_tree_rows_and_checkbox_controls() {
 
 #[test]
 fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let law = tree_parity_fixture();
     let window = law["windowId"].as_str().unwrap();
     let measures: Vec<WindowMeasure> = serde_json::from_value(law["measures"].clone()).unwrap();
@@ -43,7 +45,8 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
     let surface = window_measures_surface_id(window);
     let document = shell.windows.publish_window_measures(window, &surface, &measures).unwrap().unwrap();
     shell.docs.window_measures_documents.insert(window.into(), document);
-    let first = paint_overlay(&mut shell, window, body);
+    let mut caller = semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
+    let first = paint_overlay(&mut caller, &mut shell, window, body);
     assert!(!first.input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(format!("{window}/sun-intensity").as_str())), "a folded measure group publishes no child input");
     let theme = Theme::default();
     let rect = shell.windows.window_measures_rect(window, body, &theme);
@@ -53,7 +56,7 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
         let id = format!("{window}/{control}");
         let hit = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(id.as_str())).expect("the expanded group publishes its control");
         assert!(hit.rect.h <= law["expected"]["maximumRowHeight"].as_f64().unwrap() as f32 + 0.02, "measure controls use the measured React compact row metrics");
-        assert!(hit.rect.x + hit.rect.w * 0.5 < rect.x + rect.w * 0.5, "right-anchored measure values live left of their labels");
+        assert!(hit.rect.x + hit.rect.w * 0.5 > rect.x + rect.w * 0.5, "a tree keeps its inline-end value column whatever flow its overlay is anchored in: {control} hit {:?} in overlay {rect:?}", hit.rect);
     }
     let checkbox_id = format!("{window}/grid-visible");
     let select_id = format!("{window}/grid-mode");
@@ -61,12 +64,14 @@ fn window_options_hug_their_tree_below_the_chip_and_retire_folded_children() {
     let select = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(select_id.as_str())).expect("select hit");
     assert!((checkbox.rect.w - law["expected"]["checkboxWidth"].as_f64().unwrap() as f32).abs() < 0.02, "checkbox hit follows React's tiny-width wrapper");
     assert!((select.rect.w - law["expected"]["controlColumnWidth"].as_f64().unwrap() as f32).abs() < 0.02, "select owns the compact value column");
-    assert!((checkbox.rect.x + checkbox.rect.w - (select.rect.x + select.rect.w)).abs() < 0.02, "RTL checkbox sits at the right edge of the physical-left value column");
+    assert!((checkbox.rect.x - select.rect.x).abs() < 0.02, "the checkbox sits at the inline-start edge of the value column");
     for (id, height) in law["expected"]["rowHeights"].as_object().unwrap() {
         let key = format!("tree.label.{window}/{id}.row");
         let hit = first.input.hits().iter().find(|hit| hit.control_id.as_deref() == Some(key.as_str())).expect("each visible tree row publishes its own hit");
         assert!((hit.rect.h - height.as_f64().unwrap() as f32).abs() < 0.02, "{id}: the accepted row matches React's per-control height");
     }
+    close_overlay(&mut caller, &mut shell, window);
+    caller.finish();
 }
 
 fn outline(records: &[ui_contract::UiNodeRecord], id: ui_contract::UiNodeId) -> Value {
@@ -92,6 +97,7 @@ fn section_measures() -> HashMap<String, Vec<WindowMeasure>> {
 
 #[test]
 fn window_measures_project_into_the_contract_overlay_react_renders() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let measures = section_measures();
     for window in fixture["windows"].as_array().expect("fixture windows") {
@@ -123,27 +129,45 @@ struct PaintedOverlay {
     instances: usize,
 }
 
-fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> PaintedOverlay {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let mut draw = DrawList::default();
+/// 🎨️ Paints the overlay over two frames, as the shell does every frame: the first presents the candidate under the flow the shell stamps before painting, the second restamps it and paints the presented surface the gestures address.
+fn paint_overlay(caller: &mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1, shell: &mut ShellState, window_id: &str, rect: Rect) -> PaintedOverlay {
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
-    let mut input = InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
-    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
-    let mut cursor = ShellChromeChildCursor::default();
-    semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
-        let complete = caller.turn(|cx|ChromeViewCtx::of(&mut shell).paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
-        assert!(!cursor.document.terminal_is_fault(), "the overlay paint faulted in phase {}", cursor.document.phase_name());
-        complete
-    });
-    assert!(complete, "the overlay paint completed within its opportunity ceiling");
-    let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-    PanelsViewCtx::of(&mut shell).publish_retained_hit_registry(&mut input);
-    caller.retire_world(&mut world_resources);
-    caller.finish();
-    PaintedOverlay { input, instances }
+    let mut painted = None;
+    for _ in 0..2 {
+        let mut draw = DrawList::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+        let mut cursor = ShellChromeChildCursor::default();
+        semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
+        let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
+            let complete = caller.turn_funded(1 << 20, |cx|ChromeViewCtx::of(shell).paint_window_measures_step(&mut cursor, &mut draw, &mut None, &mut atlas, &icons, &mut input, &theme, window_id, rect, &mut world_resources, cx));
+            assert!(!cursor.document.terminal_is_fault(), "the overlay paint faulted in phase {}", cursor.document.phase_name());
+            complete
+        });
+        assert!(complete, "the overlay paint completed within its opportunity ceiling");
+        let instances = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        PanelsViewCtx::of(shell).publish_retained_hit_registry(&mut input);
+        caller.retire_world(&mut world_resources);
+        painted = Some(PaintedOverlay { input, instances });
+    }
+    painted.expect("the overlay painted")
+}
+
+/// 🧹️ Closes the overlay's mounted surface on the caller that mounted it, then retires its document.
+fn close_overlay(caller: &mut semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1, shell: &mut ShellState, window_id: &str) {
+    let surface = window_measures_surface_id(window_id);
+    assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&surface));
+    for _ in 0..262_144 {
+        if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface) {
+            break;
+        }
+        assert!(caller.turn_funded(1 << 20, semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one).expect("original fixture caller turn"));
+    }
+    assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface));
+    let mut document = shell.docs.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
+    while !document.close_step() {}
 }
 
 fn key_event(event: &Value) -> semio_ui_wgpu_events::UiEvent {
@@ -156,7 +180,8 @@ fn key_event(event: &Value) -> semio_ui_wgpu_events::UiEvent {
 
 fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
     let mut actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(input);
-    let action = actions.iter_mut().rev().find(|action| action.action == name).unwrap_or_else(|| panic!("the gesture dispatched `{name}`"));
+    let collected: Vec<String> = actions.iter().map(|action| action.action.clone()).collect();
+    let action = actions.iter_mut().rev().find(|action| action.action == name).unwrap_or_else(|| panic!("the gesture dispatched `{name}`, the frame collected {collected:?}"));
     let surface = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str).expect("retained actions carry their surface").to_string();
     scope_action_to_window(action, window_measures_owner(&surface).expect("a measures action names its overlay surface"));
     serde_json::json!({ "controllerId": action.controller_id, "action": action.action, "args": dsl_value_as_json(action.args.as_ref().expect("action args")) })
@@ -164,7 +189,7 @@ fn dispatched(input: &mut InputState<ActionDescriptor>, name: &str) -> Value {
 
 #[test]
 fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::wide(ui_contract::UI_WORKER_RETIREMENT_POLICY, 1);
     let fixture = fixture();
     let measures = section_measures();
     let mut shell = ShellState::new(vec![], "test".into(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
@@ -177,7 +202,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         shell.docs.window_measures_documents.insert(window_id.to_string(), document);
         shell.windows.measures_folded.insert(window_id.to_string(), false);
         let rect = Rect::new(0.0, 0.0, 600.0, 720.0);
-        let mut painted = paint_overlay(&mut shell, window_id, rect);
+        let mut painted = paint_overlay(&mut caller, &mut shell, window_id, rect);
         assert!(painted.instances > 0, "{name}: the overlay painted instances");
         let targets: Vec<&str> = painted.input.hits().iter().filter_map(|hit| hit.control_id.as_deref()).collect();
         for measure in ["puzzle3d-fill-count", "grid-opacity", "projection", "grid-visible", "distribution.header-slider"] {
@@ -187,6 +212,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         if let Some(events) = gesture["events"].as_array() {
             for event in events {
                 let commands = semio_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, key_event(event), &mut painted.input);
+                eprintln!("[DEBUG] {name} event {event} -> {commands:?}");
                 shell.chrome.chrome_build.note_content_focus_commands(&commands);
             }
             assert!(shell.chrome.chrome_build.content_has_focus(&surface), "{name}: keyboard focus lands in the overlay surface");
@@ -199,16 +225,7 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         }
         let expected = &gesture["expectedAction"];
         assert_eq!(dispatched(&mut painted.input, expected["action"].as_str().expect("expected action")), *expected, "{name}");
-        assert!(semio_renderer_wgpu_ui_engine::retained_ui_engine::request_ui_document_close(&surface));
-        for _ in 0..262_144 {
-            if !semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface) {
-                break;
-            }
-            assert!(caller.turn(|cx|semio_renderer_wgpu_ui_engine::retained_ui_engine::close_ui_document_one(cx)).expect("original fixture caller turn"));
-        }
-        assert!(!semio_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending_for(&surface));
-        let mut document = shell.docs.window_measures_documents.remove(window_id).expect("the accepted overlay retains its lease");
-        while !document.close_step() {}
+        close_overlay(&mut caller, &mut shell, window_id);
     }
     caller.finish();
 }

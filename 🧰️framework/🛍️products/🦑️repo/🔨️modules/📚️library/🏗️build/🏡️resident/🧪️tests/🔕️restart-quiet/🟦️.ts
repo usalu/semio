@@ -83,3 +83,16 @@ test("a plan cancelled while the code settles ends at once and starts no worker"
  const began=Date.now(),error=await running.then(()=>undefined,(failure:unknown)=>failure);await h.pool.close();
  expect(String((error as Error)?.message)).toContain("cancelled");expect(Date.now()-began).toBeLessThan(5000);expect(h.starts.length).toBe(1);
 });
+
+test("under edits that never stop, the quiet waited over all restarts of one load sums to the total budget, then only the floor is waited",async()=>{
+ const stamps=new Map<string,number|undefined>([["/w/🏗️build/x.ts",Date.now()]]);
+ const churn=setInterval(()=>stamps.set("/w/🏗️build/x.ts",Date.now()),5);
+ const h=harness([{code:75,tail:drift},{code:75,tail:drift},{code:75,tail:drift},{code:75,tail:drift},{code:"done"}],{milliseconds:10000,maximumMilliseconds:250,totalMaximumMilliseconds:400,floorMilliseconds:20},stamps);
+ try{await h.pool.run({root:"/w"});await h.pool.close();}finally{clearInterval(churn);}
+ expect(h.starts.length).toBe(5);
+ const gaps=h.exitsAt.map((exit,index)=>h.starts[index+1]!-exit);
+ expect(gaps[0]!,"first restart waits the maximum").toBeGreaterThanOrEqual(240);
+ expect(gaps[1]!,"second restart waits what is left of the budget").toBeGreaterThanOrEqual(140);expect(gaps[1]!).toBeLessThan(240);
+ for(const gap of gaps.slice(2))expect(gap,"later restarts wait the floor only").toBeLessThan(150);
+ expect(gaps.reduce((sum,gap)=>sum+gap,0),"far below four full maximum waits").toBeLessThan(800);
+});

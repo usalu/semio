@@ -24,13 +24,13 @@
         "group": "combination",
         "order": 10,
         "options": {
-          "6.10": {
-            "en": "Equation 6.10",
-            "de": "Gleichung 6.10"
+          "eq610": {
+            "en": "Equation 6.10 (EN 1990)",
+            "de": "Gleichung 6.10 (EN 1990)"
           },
-          "6.10ab": {
-            "en": "Equations 6.10a and 6.10b",
-            "de": "Gleichungen 6.10a und 6.10b"
+          "eq610ab": {
+            "en": "Equations 6.10a and 6.10b (EN 1990)",
+            "de": "Gleichungen 6.10a und 6.10b (EN 1990)"
           }
         }
       }

@@ -27,10 +27,18 @@ pub const GUEST_LINEAR_MEMORY_STACK_BYTES: usize = 8_388_608;
 /// evaluation, tessellation and render work that runs AFTER the sequence a law can bound.
 pub const GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT: usize = 60;
 
+/// 🛑️ Share of [`GUEST_LINEAR_MEMORY_MAXIMUM_BYTES`], in percent, past which a guest refuses to start or continue unbounded work with a typed fault instead of allocating into a `rust_oom` abort — `refusalPercent`. Above [`GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT`] on purpose: that one is a diagnostic ceiling, this one is the last point where a refusal can still allocate its own fault.
+pub const GUEST_LINEAR_MEMORY_REFUSAL_PERCENT: usize = 85;
+
 /// 💰️ [`GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT`] of the budget, in bytes — the number a law
 /// compares a measured peak against, so no call site re-derives the percentage.
 pub const fn guest_linear_memory_install_peak_ceiling_bytes() -> usize {
     (GUEST_LINEAR_MEMORY_MAXIMUM_BYTES as u64 * GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT as u64 / 100) as usize
+}
+
+/// 🛑️ [`GUEST_LINEAR_MEMORY_REFUSAL_PERCENT`] of the budget, in bytes.
+pub const fn guest_linear_memory_refusal_ceiling_bytes() -> usize {
+    (GUEST_LINEAR_MEMORY_MAXIMUM_BYTES as u64 * GUEST_LINEAR_MEMORY_REFUSAL_PERCENT as u64 / 100) as usize
 }
 
 /// 🧱️ Largest CONTIGUOUS block a routine, per-command or per-turn guest path may request —
@@ -219,6 +227,11 @@ pub fn guest_linear_memory_bytes() -> Option<usize> {
 pub fn guest_linear_memory_percent(bytes: usize) -> usize {
     (bytes as u64 * 100 / GUEST_LINEAR_MEMORY_MAXIMUM_BYTES.max(1) as u64) as usize
 }
+
+/// 🛑️ Whether the guest's linear memory has grown past [`guest_linear_memory_refusal_ceiling_bytes`] — always `false` off wasm, where [`guest_linear_memory_bytes`] reads nothing.
+pub fn guest_linear_memory_over_refusal_ceiling() -> bool {
+    guest_linear_memory_bytes().is_some_and(|bytes| bytes >= guest_linear_memory_refusal_ceiling_bytes())
+}
 //#endregion 🌐️GuestReading
 
 //#region 🧪️Tests
@@ -227,7 +240,3 @@ pub fn guest_linear_memory_percent(bytes: usize) -> usize {
 mod tests;
 //#endregion 🧪️Tests
 
-static DEBUG_TAGS:[std::sync::atomic::AtomicU64;64]=[const{std::sync::atomic::AtomicU64::new(0)};64];
-static DEBUG_TURNS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);
-pub fn debug_tag(index:usize){DEBUG_TAGS[index].fetch_add(1,std::sync::atomic::Ordering::Relaxed);}
-pub fn debug_turn(){if DEBUG_TURNS.fetch_add(1,std::sync::atomic::Ordering::Relaxed)==3000{let tags:[u64;64]=std::array::from_fn(|i|DEBUG_TAGS[i].load(std::sync::atomic::Ordering::Relaxed));eprintln!("[DEBUG] tags {tags:?}");}}

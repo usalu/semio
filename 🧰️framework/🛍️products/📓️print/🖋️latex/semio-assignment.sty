@@ -17,7 +17,10 @@
 \tl_new:N \l_semio_assignment_faculty_tl
 \tl_new:N \l_semio_assignment_logo_tl
 \tl_new:N \l_semio_assignment_cover_image_tl
+\tl_new:N \l_semio_assignment_cover_content_tl
 \tl_new:N \l_semio_assignment_cover_title_tl
+\tl_new:N \l_semio_assignment_cover_image_fit_tl
+\tl_set:Nn \l_semio_assignment_cover_image_fit_tl { cover }
 \tl_new:N \l_semio_assignment_institution_label_tl
 \tl_new:N \l_semio_assignment_faculty_label_tl
 \keys_define:nn { semio / assignment } {
@@ -31,7 +34,9 @@
   faculty .tl_set:N = \l_semio_assignment_faculty_tl,
   logo .tl_set:N = \l_semio_assignment_logo_tl,
   cover-image .tl_set:N = \l_semio_assignment_cover_image_tl,
+  cover-content .tl_set:N = \l_semio_assignment_cover_content_tl,
   cover-title .tl_set:N = \l_semio_assignment_cover_title_tl,
+  cover-image-fit .choices:nn = { contain, cover, fill, none } { \tl_set:Nx \l_semio_assignment_cover_image_fit_tl { \l_keys_choice_tl } },
 }
 \NewDocumentCommand \SemioAssignmentSetup { m } { \keys_set:nn { semio / assignment } {#1} }
 \cs_new:Npn \semio_assignment_label:n #1 {
@@ -82,9 +87,16 @@
           \tl_if_empty:NF \l_semio_subtitle_tl { \par \tl_use:N \l_semio_subtitle_tl }
         \end{Window}
       }
+      \tl_if_empty:NF \l_semio_assignment_cover_content_tl {
+        \WindowItem[11.4] {
+          \begin{Window}[title={\tl_use:N \l_semio_assignment_cover_title_tl}, anchor=center]
+            \tl_use:N \l_semio_assignment_cover_content_tl
+          \end{Window}
+        }
+      }
       \tl_if_empty:NF \l_semio_assignment_cover_image_tl {
         \WindowItem[11.4] {
-          \begin{Window}[title={\tl_use:N \l_semio_assignment_cover_title_tl}, image-fit=cover, anchor=center]
+          \use:e { \exp_not:N \begin{Window}[title={\exp_not:N \tl_use:N \exp_not:N \l_semio_assignment_cover_title_tl}, image-fit=\tl_use:N \l_semio_assignment_cover_image_fit_tl, anchor=center] }
             \exp_args:NV \SemioImage \l_semio_assignment_cover_image_tl
           \end{Window}
         }
@@ -131,6 +143,7 @@
   \semio_assignment_metadata:nN { duration } \l_semio_assignment_duration_tl
   \semio_assignment_metadata:nN { submission } \l_semio_assignment_submission_tl
   \par \medskip
+  \use:c { semio@column@bleed }
   \noindent \textcolor { semio-chrome-border-normal } { \rule { \linewidth } { \semio@stroke@hairline } }
   \par \medskip
   \group_end:
@@ -176,6 +189,9 @@
         / \int_use:N \l_semio_assignment_columns_int
     }
     \arrayrulecolor { semio-chrome-border-normal }
+    \use:c { semio@frame@open } { \use:c { semio@window@sep@before } } { semio-chrome-border-normal }
+    \use:c { semio@frame@tight }
+    \use:c { semio@column@bleed }
     \noindent
     \begin{tabular}{|>{\centering\arraybackslash}m{\l_semio_assignment_shape_dim}|*{\int_use:N\l_semio_assignment_columns_int}{m{\l_semio_assignment_value_dim}|}}
       \hline
@@ -184,6 +200,8 @@
       \tabularnewline \hline
       #3
     \end{tabular}
+    \par
+    \use:c { semio@frame@close } { 0pt } { semio-chrome-border-normal }
   } {
     \PackageError { semio-assignment } { Positive~value-columns~required } { Select~one~or~more~writable~columns. }
   }
@@ -284,10 +302,14 @@
     { \int_compare_p:n { \l_semio_assignment_parameter_rows_int > 0 } } {
 
     \cs_set_eq:NN \semio_assignment_matrix_top: \hline
-    \bool_if:NT \l_semio_assignment_matrix_active_bool {
+    \bool_if:NTF \l_semio_assignment_matrix_active_bool {
       \exp_args:NV \semio_table_long_open:n \l_semio_assignment_matrix_title_tl
       \cs_set_eq:NN \semio_assignment_matrix_top: \semio_assignment_matrix_chrome:
+    } {
+      \use:c { semio@frame@open } { \use:c { semio@window@sep@before } } { semio-chrome-border-normal }
     }
+    \use:c { semio@frame@tight }
+    \use:c { semio@column@bleed }
     \setlength { \tabcolsep } { \l_semio_assignment_matrix_padding_dim }
     \renewcommand { \arraystretch } { 0 }
     \setlength { \extrarowheight } { 0pt }
@@ -308,6 +330,8 @@
       } {#4}
     \end{tabular}
     \bool_if:NT \l_semio_assignment_matrix_active_bool { \semio_table_long_close: }
+    \par
+    \use:c { semio@frame@close } { 0pt } { semio-chrome-border-normal }
   } {
     \PackageError { semio-assignment } { Positive~matrix~dimensions~required } { Select~one~or~more~type~columns~and~parameter~rows. }
   }

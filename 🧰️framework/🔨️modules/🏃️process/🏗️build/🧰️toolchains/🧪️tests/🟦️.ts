@@ -185,6 +185,27 @@ describe("the provisioned Python interpreter", () => {
   });
 });
 
+describe("the missing Python environment", () => {
+  test("is reported only for a declared lock without a synchronized interpreter and clears once it exists", () => {
+    const workspace = mkdtempSync(join(tmpdir(), "semio-missing-python-"));
+    try {
+      expect(toolchains.pythonEnvironmentMissingV1(workspace)).toBe(false);
+      writeFileSync(join(workspace, "pyproject.toml"), "[project]\nname = \"a\"\n");
+      expect(toolchains.pythonEnvironmentMissingV1(workspace)).toBe(false);
+      writeFileSync(join(workspace, "uv.lock"), "version = 1\n");
+      expect(toolchains.pythonEnvironmentMissingV1(workspace)).toBe(true);
+      const interpreter = toolchains.pythonEnvironmentInterpreterV1(toolchains.pythonEnvironmentOfProjectV1(workspace, "workspace"));
+      mkdirSync(dirname(interpreter), {recursive: true});
+      writeFileSync(interpreter, "");
+      expect(toolchains.pythonEnvironmentMissingV1(workspace)).toBe(false);
+      writeFileSync(join(workspace, "uv.lock"), "version = 2\n");
+      expect(toolchains.pythonEnvironmentMissingV1(workspace)).toBe(true);
+    } finally {
+      rmSync(workspace, {recursive: true, force: true});
+    }
+  });
+});
+
 describe("the toolchain identities", () => {
   test("equal the independent implementation and ignore every variable the policy does not declare", () => {
     for (const [index, row] of fixture.identities.entries()) {

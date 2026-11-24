@@ -124,6 +124,7 @@ DIP = 0.018
 
 
 def mattress_sections(scale, wc, shrink=0.0):
+    """🧵️ The loft sections of one mattress along its length. The cross-section is a superellipse: exponent 60 at 1:50, whose corner stands 5 mm inside the 0.80 x 0.20 m box that the end view draws and lifts off the post it lies on over less than 10 mm (exponent 20 stood 14 mm inside and left a wedge 16.9 mm long between mattress and post that the drawing does not have, exponent 40 one of 15.0 mm: silhouette repair SF of 2026-11-23, `catalog-silhouette` limit 15 mm), exponent 20 at 1:100."""
     depth = DIP if scale in (50, 100) else 0.0
     ends = [(-1.0, 0.072, 0.372), (-0.99, 0.09, 0.39), (-0.975, 0.098, 0.398), (-0.95, 0.1, 0.4)] if scale == 50 else [(-1.0, 0.08, 0.38), (-0.98, 0.097, 0.397), (-0.95, 0.1, 0.4)]
     inner = {50: [-0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8], 100: [-0.7, -0.5, -0.35, -0.2, -0.05, 0.1, 0.25, 0.4]}[scale]
@@ -132,7 +133,7 @@ def mattress_sections(scale, wc, shrink=0.0):
     for u, rx, ry in rows:
         d = dip(u, depth)
         uu = u * (1 - shrink / 1.0) if shrink else u
-        out.append({"at": [R(uu), R(-d / 2), wc], "rx": R(rx - d / 2 - shrink), "ry": R(ry - shrink), "exponent": 20, "rotation": [0.5, 0.5, 0.5, 0.5]})
+        out.append({"at": [R(uu), R(-d / 2), wc], "rx": R(rx - d / 2 - shrink), "ry": R(ry - shrink), "exponent": 60 if scale == 50 else 20, "rotation": [0.5, 0.5, 0.5, 0.5]})
     return out
 
 

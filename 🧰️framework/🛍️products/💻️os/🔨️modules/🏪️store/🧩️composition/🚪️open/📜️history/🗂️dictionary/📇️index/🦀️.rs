@@ -178,7 +178,7 @@ impl semio_framework_value::ErasedSnapshotRetirement for RetainedDictionaryIndex
 
 impl Drop for RetainedDictionaryIndex {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "dictionary range pages require bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "dictionary range pages require bounded retirement");
     }
 }
 

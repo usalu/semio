@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.directory-stamps/1",
+  "title": "Directory fact memo / Verzeichnistatsachen-Gedächtnis",
+  "description": "EN: The fact of a directory listing (the fingerprint of the names that belong to the source tree) depends only on the listing of the directory and on the listings the walk for hollow subdirectories read. A fact is remembered together with the stamp (modification time, change time, inode, size) of every directory it read; it holds again while each of those directories still has its stamp, which costs one stat per directory instead of one listing, so a verification of a tree that did not change is cheap in every pass and every round. DE: Die Tatsache einer Verzeichnisliste (der Fingerabdruck der Namen, die zum Quellbaum gehören) hängt nur von der Liste des Verzeichnisses und von den Listen ab, die der Gang über hohle Unterverzeichnisse gelesen hat. Eine Tatsache wird mit dem Stempel (Änderungszeit, Wechselzeit, Inode, Grösse) jedes gelesenen Verzeichnisses gemerkt; sie gilt wieder, solange jedes dieser Verzeichnisse seinen Stempel trägt, was einen stat pro Verzeichnis kostet statt einer Liste; die Prüfung eines unveränderten Baums ist so in jedem Durchgang und jeder Runde billig.",
+  "$defs": {
+    "limits": {
+      "description": "EN: The finite limit of the memo; a stamp younger than the racy window of the observation limits is never remembered. DE: Die endliche Grenze des Gedächtnisses; ein Stempel, der jünger ist als das Racy-Fenster der Beobachtungsgrenzen, wird nie gemerkt.",
+      "const": {
+        "entries": 200000
+      },
+      "texts": {
+        "en": {
+          "entries": "The most directory facts remembered at once; the oldest leave first."
+        },
+        "de": {
+          "entries": "Die meisten gleichzeitig gemerkten Verzeichnistatsachen; die ältesten gehen zuerst."
+        }
+      }
+    }
+  }
+}

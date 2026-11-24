@@ -1,6 +1,7 @@
 //! 🎯️ LAW: completed chrome hits remain candidates until the matching pixels are accepted.
 
 use super::*;
+use semio_renderer_wgpu_fixtures::shell::PointerFixtureTurns;
 
 #[derive(serde::Deserialize)]
 struct ControlFixture {
@@ -206,8 +207,9 @@ fn retained_button_record(key: &str, binding: &str) -> ui_contract::UiNodeRecord
     .expect("retained presentation button record")
 }
 
-fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect, input: &mut InputState<ActionDescriptor>) {
-    let mut caller=semio_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
+fn paint_retained_button_candidate(turns: &mut PointerFixtureTurns, shell: &mut ShellState, surface: &str, document: &UiDocumentLease, body: Rect, input: &mut InputState<ActionDescriptor>) {
+    let caller = turns.turn();
+    caller.own_surface(surface);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -219,7 +221,7 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut context = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn_funded(1 << 20, |cx|render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", semio_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the retained presentation document faulted in phase {}", cursor.phase_name());
         done
     });
@@ -227,7 +229,6 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
     shell.surfaces.world3d_states = world3d_states;
     shell.input.register_retained_body_hits(surface, body, input);
     caller.retire_world(&mut world_resources);
-    caller.finish();
 }
 
 fn click(shell: &mut ShellState, control: &ControlFixture, input: &mut InputState<ActionDescriptor>, theme: &Theme) {
@@ -252,15 +253,15 @@ fn admitted_bindings(input: &mut InputState<ActionDescriptor>) -> Vec<String> {
         .collect()
 }
 
-fn publish_presented_button(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, key: &str, control: &ControlFixture) -> UiDocumentLease {
+fn publish_presented_button(turns: &mut PointerFixtureTurns, shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, key: &str, control: &ControlFixture) -> UiDocumentLease {
     let document = shell.windows.publish_surface_records(surface, vec![retained_button_record(key, control.binding.as_deref().expect("button binding"))]).expect("retained button document publishes");
-    paint_retained_button_candidate(shell, surface, &document, hit(control).rect, input);
+    paint_retained_button_candidate(turns, shell, surface, &document, hit(control).rect, input);
     document
 }
 
-fn publish_retained_candidate(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, record: ui_contract::UiNodeRecord, body: Rect) -> UiDocumentLease {
+fn publish_retained_candidate(turns: &mut PointerFixtureTurns, shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, surface: &str, record: ui_contract::UiNodeRecord, body: Rect) -> UiDocumentLease {
     let document = shell.windows.publish_surface_records(surface, vec![record]).expect("retained candidate document publishes");
-    paint_retained_button_candidate(shell, surface, &document, body, input);
+    paint_retained_button_candidate(turns, shell, surface, &document, body, input);
     document
 }
 
@@ -346,8 +347,10 @@ fn presentation_acceptance_and_abort_are_generation_bound() {
 
 #[test]
 fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_until_acceptance() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     let presented = &fixture.replacement.presented;
@@ -358,15 +361,15 @@ fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_unt
 
     let mut presented_document = shell.windows.publish_surface_records(presented_surface, vec![retained_button_record("stable-button", presented.binding.as_deref().expect("presented binding"))]).expect("presented retained document publishes");
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    paint_retained_button_candidate(&mut shell, presented_surface, &presented_document, hit(presented).rect, &mut input);
+    paint_retained_button_candidate(&mut turns, &mut shell, presented_surface, &presented_document, hit(presented).rect, &mut input);
     let presented_witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented candidate witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, presented_witness));
 
     let mut moved_document = shell.windows.publish_surface_records(presented_surface, vec![retained_button_record("stable-button", moved.binding.as_deref().expect("moved binding"))]).expect("moved retained document publishes");
     let mut overlap_document = shell.windows.publish_surface_records(overlap_surface, vec![retained_button_record("overlap-button", overlap.binding.as_deref().expect("overlap binding"))]).expect("overlap retained document publishes");
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    paint_retained_button_candidate(&mut shell, presented_surface, &moved_document, hit(moved).rect, &mut input);
-    paint_retained_button_candidate(&mut shell, overlap_surface, &overlap_document, hit(overlap).rect, &mut input);
+    paint_retained_button_candidate(&mut turns, &mut shell, presented_surface, &moved_document, hit(moved).rect, &mut input);
+    paint_retained_button_candidate(&mut turns, &mut shell, overlap_surface, &overlap_document, hit(overlap).rect, &mut input);
     let moved_witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("moved candidate witness");
 
     click(&mut shell, presented, &mut input, &theme);
@@ -378,8 +381,8 @@ fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_unt
     assert!(shell.input.discard_presented_input_candidate(moved_witness));
     while input.retire_hit_step() {}
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    paint_retained_button_candidate(&mut shell, presented_surface, &moved_document, hit(moved).rect, &mut input);
-    paint_retained_button_candidate(&mut shell, overlap_surface, &overlap_document, hit(overlap).rect, &mut input);
+    paint_retained_button_candidate(&mut turns, &mut shell, presented_surface, &moved_document, hit(moved).rect, &mut input);
+    paint_retained_button_candidate(&mut turns, &mut shell, overlap_surface, &overlap_document, hit(overlap).rect, &mut input);
     let rebased_witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("rebased moved candidate witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, rebased_witness));
     click(&mut shell, overlap, &mut input, &theme);
@@ -390,17 +393,20 @@ fn actual_retained_pointer_dispatch_keeps_the_presented_position_and_binding_unt
     while !presented_document.close_step() {}
     while !moved_document.close_step() {}
     while !overlap_document.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn presented_button_release_without_down_does_not_activate() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.replacement.presented;
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut document = publish_presented_button(&mut shell, &mut input, "presented-input.no-down", "no-down", control);
+    let mut document = publish_presented_button(&mut turns, &mut shell, &mut input, "presented-input.no-down", "no-down", control);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("button candidate witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
 
@@ -409,17 +415,20 @@ fn presented_button_release_without_down_does_not_activate() {
 
     assert!(admitted_bindings(&mut input).is_empty(), "a release without an admitted press cannot activate a presented button");
     while !document.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn presented_button_cancelled_press_cannot_activate_on_later_release() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.replacement.presented;
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut document = publish_presented_button(&mut shell, &mut input, "presented-input.cancel", "cancel", control);
+    let mut document = publish_presented_button(&mut turns, &mut shell, &mut input, "presented-input.cancel", "cancel", control);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("button candidate witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
 
@@ -431,19 +440,22 @@ fn presented_button_cancelled_press_cannot_activate_on_later_release() {
 
     assert!(admitted_bindings(&mut input).is_empty(), "cancellation retires the exact presented button press owner");
     while !document.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn presented_button_press_a_release_b_activates_neither() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control_a = &fixture.replacement.presented;
     let control_b = &fixture.replacement.moved;
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut document_a = publish_presented_button(&mut shell, &mut input, "presented-input.press-a", "press-a", control_a);
-    let mut document_b = publish_presented_button(&mut shell, &mut input, "presented-input.release-b", "release-b", control_b);
+    let mut document_a = publish_presented_button(&mut turns, &mut shell, &mut input, "presented-input.press-a", "press-a", control_a);
+    let mut document_b = publish_presented_button(&mut turns, &mut shell, &mut input, "presented-input.release-b", "release-b", control_b);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("button candidate witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
 
@@ -456,26 +468,29 @@ fn presented_button_press_a_release_b_activates_neither() {
     assert!(admitted_bindings(&mut input).is_empty(), "a release over a different presented button cannot borrow the first button's press");
     while !document_a.close_step() {}
     while !document_b.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn pending_select_uses_the_presented_options_and_binding_for_keyboard_input() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.retained_controls.select;
     let surface = "presented-input.select";
     let body = Rect::new(0.0, 0.0, 240.0, 32.0);
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = retained_panel_shell(surface);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut presented = publish_retained_candidate(&mut shell, &mut input, surface, retained_select_record(&control.presented), body);
+    let mut presented = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_select_record(&control.presented), body);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented Select witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
     let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: control.presented.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("presented Select focus"));
 
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_select_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
+    let mut candidate = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_select_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending Select witness");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select opens");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select commits");
@@ -484,26 +499,29 @@ fn pending_select_uses_the_presented_options_and_binding_for_keyboard_input() {
     assert!(shell.input.discard_presented_input_candidate(pending));
     while !presented.close_step() {}
     while !candidate.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn pending_number_stepper_uses_the_presented_value_step_and_binding() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.retained_controls.number_stepper;
     let surface = "presented-input.number-stepper";
     let body = Rect::new(0.0, 0.0, 240.0, 32.0);
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = retained_panel_shell(surface);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut presented = publish_retained_candidate(&mut shell, &mut input, surface, retained_number_stepper_record(&control.presented), body);
+    let mut presented = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_number_stepper_record(&control.presented), body);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented NumberStepper witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
     let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: control.presented.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("presented NumberStepper focus"));
 
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_number_stepper_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
+    let mut candidate = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_number_stepper_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending NumberStepper witness");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::ArrowUp, &PointerModifiers::default(), &mut input)).expect("presented NumberStepper increments");
     let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
@@ -511,26 +529,29 @@ fn pending_number_stepper_uses_the_presented_value_step_and_binding() {
     assert!(shell.input.discard_presented_input_candidate(pending));
     while !presented.close_step() {}
     while !candidate.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn pending_candidate_cannot_replace_presented_keyboard_focus_or_tab_authority() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.retained_controls.keyboard;
     let surface = "presented-input.keyboard";
     let body = Rect::new(0.0, 0.0, 240.0, 32.0);
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = retained_panel_shell(surface);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut presented = publish_retained_candidate(&mut shell, &mut input, surface, retained_input_record(&control.presented), body);
+    let mut presented = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_input_record(&control.presented), body);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented keyboard witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
     let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: control.presented.key.clone() };
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, &mut input)).expect("presented Input focus"));
 
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_input_record(&control.candidate), body);
+    let mut candidate = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_input_record(&control.candidate), body);
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending keyboard witness");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Char("x".into()), &PointerModifiers::default(), &mut input)).expect("presented Input text");
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("presented Input commit");
@@ -539,25 +560,28 @@ fn pending_candidate_cannot_replace_presented_keyboard_focus_or_tab_authority() 
     assert!(shell.input.discard_presented_input_candidate(pending));
     while !presented.close_step() {}
     while !candidate.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn pending_candidate_cannot_replace_the_presented_accessibility_projection_or_action() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.retained_controls.accessibility;
     let surface = "presented-input.accessibility";
     let body = Rect::new(0.0, 0.0, 240.0, 32.0);
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = retained_panel_shell(surface);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut presented = publish_retained_candidate(&mut shell, &mut input, surface, retained_accessibility_select_record(&control.presented), body);
+    let mut presented = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_accessibility_select_record(&control.presented), body);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented accessibility witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
     let target = ui_render::AccessibilityTarget { window_id: surface.into(), window_generation: 1, node_id: 1, node_key: control.presented.key.clone() };
 
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_accessibility_select_record(&control.candidate), body);
+    let mut candidate = publish_retained_candidate(&mut turns, &mut shell, &mut input, surface, retained_accessibility_select_record(&control.candidate), body);
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending accessibility witness");
     assert!(semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value(control.presented.value.clone()), &mut input)).expect("presented accessibility Value dispatch"));
     let actions = semio_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
@@ -565,23 +589,26 @@ fn pending_candidate_cannot_replace_the_presented_accessibility_projection_or_ac
     assert!(shell.input.discard_presented_input_candidate(pending));
     while !presented.close_step() {}
     while !candidate.close_step() {}
+    turns.finish();
 }
 
 #[test]
 fn presented_interaction_invalidates_a_candidate_built_from_an_older_input_epoch() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture = fixture();
     let control = &fixture.replacement.presented;
     let surface = "presented-input.stale-interaction";
     let theme = Theme::default();
+    let mut turns = PointerFixtureTurns::default();
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut presented = publish_presented_button(&mut shell, &mut input, surface, "interaction-owner", control);
+    let mut presented = publish_presented_button(&mut turns, &mut shell, &mut input, surface, "interaction-owner", control);
     let witness = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("presented interaction witness");
     assert!(PanelsViewCtx::of(&mut shell).acknowledge_presented_input(&mut input, witness));
 
     semio_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
-    let mut candidate = publish_presented_button(&mut shell, &mut input, surface, "interaction-owner", control);
+    let mut candidate = publish_presented_button(&mut turns, &mut shell, &mut input, surface, "interaction-owner", control);
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending interaction witness");
     let point = center(control);
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button_for(ui_render::PointerId(74), point.0, point.1, true, 0, &mut input, &theme)).expect("presented press mutates interaction state");
@@ -590,4 +617,5 @@ fn presented_interaction_invalidates_a_candidate_built_from_an_older_input_epoch
     PointerCtx::of(&mut shell).handle_pointer_cancel_for(ui_render::PointerId(74), &mut input);
     while !presented.close_step() {}
     while !candidate.close_step() {}
+    turns.finish();
 }

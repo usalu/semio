@@ -1,0 +1,19 @@
+--- a/wasm-build.ts
++++ b/wasm-build.ts
+@@ -13,6 +13,7 @@
+ import { acquireCompilerCapacityLeaseV1, renewableCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";
+ import { readBuildMode,buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
+ import { acquireCargoBuildLeaseV1 } from "../🏗️native-build/🔒️lease/🟦️.ts";
++import { cargoJobsV1 } from "../🏗️native-build/🎰️jobserver/🟦️.ts";
+ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+ import { join, resolve,relative } from "node:path";
+ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+@@ -167,7 +168,7 @@
+     let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,retained:RetainedCargoSourcesV1|undefined,bodyFailed=false;
+     try{
+     const signal=control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"available",maximumParallelism:Math.max(1,Math.min(availableParallelism(),4))},directory:policy.leaseDirectory,control});checkResourceLeaseControl(control);
+-    const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
++    const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(cargoJobsV1(capacity.parallelism,environment));
+     const sources=await port.admit(actual.arguments,{cwd:componentDir,environment,policy,storage:opts.storage,control});
+     retained=await RetainedCargoSourcesV1.admit(sources,{workspace:policy.workspaceRoot,directory:`${cargoOutput}-sources`,storage:opts.storage,control,maxSourceBytes:policy.sourceBoundary.maxSourceBytes});
+     const held=retained,invoke=async(command:string,args:readonly string[],monitor?:AdmittedCargoSourceRosterV1)=>{

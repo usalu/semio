@@ -1,7 +1,10 @@
 //! 📥️ Custody of decoded PDF stream bytes during a retained import.
 
 use crate::{FlateGrant, FlateStatus, PdfFlateCursor, PdfLzwCursor, PdfPredictorCursor};
-use semio_framework_value::{ByteReadSource, ValueError, ValueRefusalKind};
+use semio_framework_value::{paged::PagedBytes, ByteReadSource, ValueError, ValueRefusalKind};
+
+/// 🧩️ Decoded stream octets in separately admitted pages; identical to the snapshot's stream payload type.
+pub type PdfStreamBytes = PagedBytes<{ isize::MAX as usize }>;
 
 #[path = "✂️packet-filters/🦀️.rs"]
 mod packet_filters;
@@ -56,8 +59,7 @@ enum Phase { Decode, Complete, Failed, Cancelled, Closing, Closed }
 pub struct PdfStreamDataCursor {
     decoder: Decoder,
     phase: Phase,
-    output: Vec<u8>,
-    previous: Option<Vec<u8>>,
+    output: PdfStreamBytes,
     staging: [u8; 256],
     staging_start: usize,
     staging_end: usize,
@@ -98,7 +100,7 @@ impl PdfStreamDataCursor {
 
     fn new(decoder: Decoder, maximum_output: usize) -> Self {
         Self {
-            decoder, phase: Phase::Decode, output: Vec::new(), previous: None,
+            decoder, phase: Phase::Decode, output: PdfStreamBytes::default(),
             staging: [0; 256], staging_start: 0, staging_end: 0, input: 0,
             published: 0, source_len: None, maximum_output, decoder_done: false,
         }
@@ -107,17 +109,20 @@ impl PdfStreamDataCursor {
     /// 📊️ Returns consumed input and retained final output. Staged scratch bytes are excluded.
     pub fn progress(&self) -> (usize, usize) { (self.input, self.published) }
 
-    /// ⤵️ Moves validated output once. Finish cursor retirement separately.
-    pub fn take_output(&mut self) -> Option<Vec<u8>> {
+    /// ⤵️ Moves validated paged output once. Finish cursor retirement separately.
+    pub fn take_output(&mut self) -> Option<PdfStreamBytes> {
         if self.phase != Phase::Complete { return None; }
         self.phase = Phase::Closing;
         self.begin_decoder_close();
         Some(std::mem::take(&mut self.output))
     }
 
+    /// 📄️ Whether the next unit only moves one body byte of an uncompressed stream into its retained output.
+    pub fn copies_identity_bytes(&self) -> bool { self.phase == Phase::Decode && matches!(self.decoder, Decoder::Identity) }
+
     /// 🪣️ Quotes the fresh history unit before copying any staged stream bytes.
     pub fn next_reserves_history(&self) -> bool {
-        if self.phase != Phase::Decode || self.previous.is_some() || self.staging_start < self.staging_end || self.decoder_done { return false; }
+        if self.phase != Phase::Decode || self.staging_start < self.staging_end || self.decoder_done { return false; }
         match &self.decoder {
             Decoder::Flate(cursor) => cursor.next_reserves_history(),
             Decoder::Predicted(cursor) => cursor.next_reserves_history(),
@@ -146,48 +151,27 @@ impl PdfStreamDataCursor {
             if *self.source_len.get_or_insert(source.byte_len()) != source.byte_len() {
                 return Err(ValueError::invariant("PDF stream source length changed"));
             }
-            if let Some(backing) = self.previous.as_ref() {
-                if self.output.len() < backing.len() {
-                    let end = backing.len().min(self.output.len().saturating_add(grant.work - receipt.work));
-                    receipt.work += end - self.output.len();
-                    self.output.extend_from_slice(&backing[self.output.len()..end]);
-                    continue;
-                }
-                if !release(grant, receipt, backing.capacity()) {
-                    return Ok(StreamDataStatus::NeedsRelease { bytes: backing.capacity() });
-                }
-                self.previous = None;
-                continue;
-            }
             if self.staging_start < self.staging_end {
-                let available = self.output.capacity() - self.output.len();
-                if available == 0 {
-                    let desired = if matches!(self.decoder, Decoder::Identity) {
-                        source.byte_len()
-                    } else {
-                        self.output.capacity().max(64).saturating_mul(2).min(self.maximum_output)
-                    };
-                    if desired <= self.output.len() {
+                if self.output.cold_free_slots() == 0 {
+                    if self.output.len() >= self.maximum_output {
                         return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "PDF stream data output ceiling exceeded"));
                     }
-                    if desired > grant.allocation_bytes - receipt.allocated_bytes {
-                        return Ok(StreamDataStatus::NeedsAllocation { bytes: desired });
+                    let page = self.output.cold_reservation_bytes()?;
+                    if page > grant.allocation_bytes - receipt.allocated_bytes {
+                        return Ok(StreamDataStatus::NeedsAllocation { bytes: page });
                     }
-                    let mut output = Vec::new();
                     receipt.work += 1;
-                    output.try_reserve_exact(desired).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "PDF stream data output allocation failed"))?;
-                    debug_assert_eq!(output.capacity(), desired);
-                    receipt.allocated_bytes += output.capacity();
-                    let previous = std::mem::replace(&mut self.output, output);
-                    if previous.capacity() != 0 { self.previous = Some(previous); }
+                    let (allocated, released) = self.output.cold_reserve_page(page)?;
+                    receipt.allocated_bytes += allocated;
+                    receipt.released_bytes += released;
                     continue;
                 }
-                let count = available.min(self.staging_end - self.staging_start).min(grant.work - receipt.work);
-                let end = self.staging_start + count;
-                self.output.extend_from_slice(&self.staging[self.staging_start..end]);
-                self.staging_start = end;
-                self.published += count;
-                receipt.work += count;
+                let count = self.staging_end - self.staging_start;
+                let count = count.min(grant.work - receipt.work).min(self.maximum_output - self.output.len());
+                let placed = self.output.cold_push_slice(&self.staging[self.staging_start..self.staging_start + count]);
+                self.staging_start += placed;
+                self.published += placed;
+                receipt.work += placed;
                 continue;
             }
             if self.decoder_done {
@@ -283,13 +267,17 @@ impl PdfStreamDataCursor {
     pub fn close_step(&mut self, grant: StreamDataGrant) -> StreamDataReceipt {
         let mut receipt = StreamDataReceipt { status: Ok(StreamDataStatus::More), work: 0, allocated_bytes: 0, released_bytes: 0 };
         while self.phase == Phase::Closing && receipt.work < grant.work {
-            let capacity = self.previous.as_ref().map_or(self.output.capacity(), Vec::capacity);
-            if capacity != 0 {
-                if !release(grant, &mut receipt, capacity) {
-                    receipt.status = Ok(StreamDataStatus::NeedsRelease { bytes: capacity });
+            if !self.output.retained_bytes().terminal_is_empty() {
+                let step = match self.output.cold_retire_page(grant.release_bytes - receipt.released_bytes) {
+                    Ok(step) => step,
+                    Err(error) => { receipt.status = Err(error); return receipt; }
+                };
+                if let Some(bytes) = step.needs_release {
+                    receipt.status = Ok(StreamDataStatus::NeedsRelease { bytes });
                     return receipt;
                 }
-                if self.previous.is_some() { self.previous = None; } else { self.output = Vec::new(); }
+                receipt.work += step.work;
+                receipt.released_bytes += step.released_bytes;
                 continue;
             }
             let (demand, step) = match &mut self.decoder {
@@ -309,13 +297,6 @@ impl PdfStreamDataCursor {
         if self.phase == Phase::Closed { receipt.status = Ok(StreamDataStatus::Closed); }
         receipt
     }
-}
-
-fn release(grant: StreamDataGrant, receipt: &mut StreamDataReceipt, bytes: usize) -> bool {
-    if bytes > grant.release_bytes - receipt.released_bytes { return false; }
-    receipt.released_bytes += bytes;
-    receipt.work += 1;
-    true
 }
 
 #[cfg(test)]

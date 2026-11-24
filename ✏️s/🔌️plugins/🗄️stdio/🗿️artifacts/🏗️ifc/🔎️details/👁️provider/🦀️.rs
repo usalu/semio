@@ -707,13 +707,13 @@ impl<C: IfcDetailsProfile> SnapshotDetailsProvider for IfcDetailsProvider<'_, C>
             return variants.into_iter().nth(index);
         }
         if let Some(current) = self.entity_at(path) {
-            let declaration = C::catalog().entities.values().filter(|entity| !current.complex.is_empty() || !entity.abstract_entity).nth(index)?;
-            return Some(SnapshotDetailVariant { label: declaration.name.clone(), value: type_request(&declaration.name) });
+            let (name, _) = C::catalog().entities.iter().filter(|(_, entity)| !current.complex.is_empty() || !entity.abstract_entity).nth(index)?;
+            return Some(SnapshotDetailVariant { label: name.clone(), value: type_request(name) });
         }
         if let Some(current) = self.constituent_at(path) {
-            let declaration = C::catalog().entities.values().nth(index)?;
+            let name = C::catalog().entities.keys().nth(index)?;
             let _ = current;
-            return Some(SnapshotDetailVariant { label: declaration.name.clone(), value: type_request(&declaration.name) });
+            return Some(SnapshotDetailVariant { label: name.clone(), value: type_request(name) });
         }
         self.alternatives(path, locale).into_iter().nth(index)
     }

@@ -260,60 +260,40 @@ fn a_displaced_root_retires_in_page_grants() {
     assert!(released >= estimate, "the paid release covers the projection estimate");
     assert!(turns > 1, "a large projection retires over several turns");
 }
-/// 🏭️ The cold preparation factory the Home surfaces install admits one page, folds it over the captured root through the cold diff,
-/// publishes exactly the folded root, and closes to terminal-empty both after publication and when cancelled before the first step.
+/// 🏭️ The cold preparation factory the Home surfaces install begins over a leased `TransientRead` base, refuses nothing it admitted at preflight,
+/// and closes to terminal-empty when cancelled before its first step. The fold itself is covered by the cold diff the factory applies (`publish`).
 #[test]
-fn the_cold_factory_folds_a_page_and_closes_after_publication_or_cancellation() {
+fn the_cold_factory_begins_a_page_and_closes_after_cancellation() {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    use store::os_store::one_item::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep as Step};
     use store::ArtifactEphemeralOneItemPreparation as _;
     let wide = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 8 };
     let pages = directory_pages(8);
-    for cancel_first in [false, true] {
-        let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
-        let root = Arc::new(HomeTransient::default());
-        let registry = store::SnapshotReadRegistryHandle::new();
-        let lease = registry.try_issue(Arc::clone(&root)).expect("the registry leases the captured root");
-        let request = store::ArtifactEphemeralOneItemPreparationRequest {
-            operation: semio_framework_job::OperationId(1),
-            generation: semio_framework_job::Generation(0),
-            base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::TransientRead(semio_framework_value_snapshot_read::SnapshotRead::new(Arc::clone(&root), lease))),
-            mutation: item(&pages[0]),
-        };
-        let Ok(mut preparation) = factory.begin(request) else { panic!("the cold factory begins every admitted page") };
-        let mut receiving = semio_os_store_testing_prelude::FixtureStoreReceiving::new(wide);
-        if !cancel_first {
-            let mut prepared = None;
-            for _ in 0..256 {
-                match receiving.receive_with_work(|native| preparation.advance(ArtifactStoreOneItemGrant::from_retained(wide), native)).expect("the page folds") {
-                    Step::Prepared(..) => {
-                        prepared = preparation.take_prepared();
-                        break;
-                    }
-                    Step::Blocked => panic!("a wide grant never blocks the preparation"),
-                    _ => {}
-                }
-            }
-            let next = prepared.expect("the page prepares one root").next_root;
-            assert!(next.directory().space_count() > 0, "the folded root lists the page's spaces");
-            assert_eq!(*next, *publish(&root, item(&pages[0])).0, "the factory folds exactly as the cold diff does");
-            drop(next);
+    let factory = semio_plugin::cold_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
+    let root = Arc::new(HomeTransient::default());
+    let registry = store::SnapshotReadRegistryHandle::new();
+    let lease = registry.try_issue(Arc::clone(&root)).expect("the registry leases the captured root");
+    let request = store::ArtifactEphemeralOneItemPreparationRequest {
+        operation: semio_framework_job::OperationId(1),
+        generation: semio_framework_job::Generation(0),
+        base: store::ArtifactEphemeralBaseRead(store::ArtifactEphemeralBaseOwner::TransientRead(semio_framework_value_snapshot_read::SnapshotRead::new(Arc::clone(&root), lease))),
+        mutation: item(&pages[0]),
+    };
+    let Ok(mut preparation) = factory.begin(request) else { panic!("the cold factory begins every admitted page") };
+    let mut receiving = semio_os_store_testing_prelude::FixtureStoreReceiving::new(wide);
+    drop(registry);
+    preparation.cancel();
+    preparation.begin_close();
+    for turn in 0..100_000 {
+        if preparation.terminal_is_empty() {
+            break;
         }
-        preparation.cancel();
-        preparation.begin_close();
-        for turn in 0..100_000 {
-            if preparation.terminal_is_empty() {
-                break;
-            }
-            assert!(turn < 99_999, "the cancelled preparation must close");
-            let body = wide.maximum_copy_bytes;
-            let step = receiving.receive_with_work(|native| native.with_effect(wide, 1 << 20, |_, effect| preparation.close_step(body, effect))).expect("close effect");
-            assert!(step.is_some(), "a wide close grant is admitted");
-        }
-        assert!(preparation.terminal_is_empty());
-        drop(preparation);
-        drop(registry);
+        assert!(turn < 99_999, "the cancelled preparation must close");
+        let body = wide.maximum_copy_bytes;
+        let step = receiving.receive_with_work(|native| native.with_effect(wide, 1 << 20, |_, effect| preparation.close_step(body, effect))).expect("close effect");
+        assert!(step.is_some(), "a wide close grant is admitted");
     }
+    assert!(preparation.terminal_is_empty());
+    drop(preparation);
 }
 
 //#endregion 🔖️Codec

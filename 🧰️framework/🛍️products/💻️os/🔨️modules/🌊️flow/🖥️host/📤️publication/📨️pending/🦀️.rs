@@ -98,4 +98,4 @@ impl FlowPendingDispatchWork{
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.lookup.is_none()&&self.dispatch.is_none()&&self.origin.is_none()&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl Drop for FlowPendingDispatchWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original pending dispatch must close its real queue, children and output");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl Drop for FlowPendingDispatchWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original pending dispatch must close its real queue, children and output");unsafe{ManuallyDrop::drop(&mut self.fields)}}}

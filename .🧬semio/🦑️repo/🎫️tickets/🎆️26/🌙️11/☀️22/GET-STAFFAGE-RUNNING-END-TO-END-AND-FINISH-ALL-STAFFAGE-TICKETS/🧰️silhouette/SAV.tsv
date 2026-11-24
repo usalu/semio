@@ -1,0 +1,23 @@
+animals	dairy-cow	1:500 plan Hausdorff: expected 0.2229195479007248 to be less than or equal to 0.15
+animals	domestic-cat	1:50 axis 0: 0.759865789563426 m against 0.77 m: expected 0.010134210436574032 to be less than or equal to 0.0075
+animals	goat	1:500 plan: expected 0.9074311926605505 to be greater than or equal to 0.92
+animals	hedgehog	1:100 front: expected 0.9045461487552818 to be greater than or equal to 0.92
+animals	herring-gull	1:50 plan Hausdorff: expected 0.017286645857424163 to be less than or equal to 0.015
+animals	horse	1:100 elevation Hausdorff: expected 0.054083269131959835 to be less than or equal to 0.03
+animals	labrador-dog	1:500 elevation: expected 0.9187080384685176 to be greater than or equal to 0.92
+animals	mallard-duck	1:200 front: expected 0.9120184392492592 to be greater than or equal to 0.92
+animals	pig	1:100 elevation Hausdorff: expected 0.030233466556119557 to be less than or equal to 0.03
+animals	pigeon	1:200 elevation: expected 0.9093859370028635 to be greater than or equal to 0.92
+animals	red-fox	1:50 axis 0: 1.0892041174235128 m against 1.1 m: expected 0.010795882576487337 to be less than or equal to 0.0075
+animals	red-squirrel	1:100 elevation Hausdorff: expected 0.03577526068101029 to be less than or equal to 0.03
+animals	roe-deer	1:50 plan Hausdorff: expected 0.016770509831248424 to be less than or equal to 0.015
+animals	sheep	1:50 axis 1: 0.8378174753613551 m against 0.823 m: expected 0.014817475361355137 to be less than or equal to 0.0075
+vehicles	cargo-bike	1:200 elevation Hausdorff: expected 0.07115124735378853 to be less than or equal to 0.06
+vehicles	city-bicycle	1:200 elevation Hausdorff: expected 0.06300924460383969 to be less than or equal to 0.06
+vehicles	city-bus	1:500 front Hausdorff: expected 0.29648467764352343 to be less than or equal to 0.15
+vehicles	city-car	1:100 axis 0: 3.9320054188198403 m against 3.9 m: expected 0.032005418819840425 to be less than or equal to 0.015
+vehicles	delivery-van	1:200 elevation Hausdorff: expected 0.075 to be less than or equal to 0.06
+vehicles	electric-kick-scooter	1:200 plan Hausdorff: expected 0.0677708501009312 to be less than or equal to 0.06
+vehicles	motor-scooter	1:500 front: expected 0.9094617773863057 to be greater than or equal to 0.92
+vehicles	tram	1:500 front Hausdorff: expected 0.16978847134007657 to be less than or equal to 0.15
+vehicles	vintage-car-1929	1:100 elevation Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.03

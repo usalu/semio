@@ -47,7 +47,7 @@ mod norm_index {
 }
 
 fn report_of(document: &En1997Snapshot) -> CheckReport {
-    checks::check_project(document)
+    norm::incremental_evaluation::owned::<checks::En1997Units>(document, checks::check_project(document))
 }
 
 fn start() -> En1997Snapshot {
@@ -72,33 +72,45 @@ fn place(document: &mut En1997Snapshot, id: String, x: f64, yaw: f64) {
 }
 
 
-fn edit(document: &mut En1997Snapshot, rng: &mut Rng, counter: &mut usize) {
+/// ✏️ One random edit of the document; returns its description so a failing sequence can be replayed by hand.
+fn edit(document: &mut En1997Snapshot, rng: &mut Rng, counter: &mut usize) -> String {
     match rng.next(7) {
         0 => {
             let i = rng.next(document.footings.len());
             document.footings[i].width = 1.0 + rng.next(30) as f64 / 10.0;
+            format!("footings[{i}].width = {}", document.footings[i].width)
         }
         1 if !document.layers.is_empty() => {
             let i = rng.next(document.layers.len());
             document.layers[i].depth_bottom += 0.5;
+            format!("layers[{i}].depthBottom += 0.5")
         }
         2 => {
             *counter += 1;
             clone_entity(document, format!("added-{counter}"));
+            format!("clone_entity added-{counter}")
         }
         3 if document.footings.len() > 1 => {
-            if let Some(i) = document.footings.iter().position(|f| f.id.starts_with("added-")) {
+            let removed = document.footings.iter().position(|f| f.id.starts_with("added-"));
+            if let Some(i) = removed {
                 document.footings.remove(i);
             }
+            format!("remove first added footing {removed:?}")
         }
-        4 => document.groundwater_level = rng.next(40) as f64 / 10.0,
+        4 => {
+            document.groundwater_level = rng.next(40) as f64 / 10.0;
+            format!("groundwaterLevel = {}", document.groundwater_level)
+        }
         5 => {
             let i = rng.next(document.footings.len());
             document.footings[i].length = 1.0 + rng.next(40) as f64 / 10.0;
+            format!("footings[{i}].length = {}", document.footings[i].length)
         }
         _ => {
             let id = document.footings[rng.next(document.footings.len())].id.clone();
-            place(document, id, rng.next(40) as f64, rng.next(6) as f64 / 4.0);
+            let (x, yaw) = (rng.next(40) as f64, rng.next(6) as f64 / 4.0);
+            place(document, id.clone(), x, yaw);
+            format!("place {id} x = {x} yaw = {yaw}")
         }
     }
 }
@@ -107,12 +119,19 @@ fn edit(document: &mut En1997Snapshot, rng: &mut Rng, counter: &mut usize) {
 fn incremental_equals_full_on_random_edit_sequences() {
     let mut rng = Rng(0x9e37_79b9_7f4a_7c15);
     let (mut projector, mut held, mut document, mut counter) = (SceneProjector::new(Kit::<En1997Kit>::default()), norm_index::Held::default(), start(), 0);
+    let mut log: Vec<String> = Vec::new();
     for step in 0..60 {
-        edit(&mut document, &mut rng, &mut counter);
+        let what = edit(&mut document, &mut rng, &mut counter);
+        log.push(what);
         let report = report_of(&document);
         let want = full(&document, &report);
         let got = incremental(&mut projector, &mut held, &document, &report);
-        assert_eq!(got, want, "incremental equals full at step {step}");
+        if got != want {
+            let hash = |scene: &scene::StructuralScene| scene.entities.iter().map(|e| (e.entity.id.clone(), e.content_hash.clone())).collect::<std::collections::BTreeMap<_, _>>();
+            let (g, w) = (hash(&got), hash(&want));
+            let differing: Vec<&String> = g.keys().filter(|id| g.get(*id) != w.get(*id)).chain(w.keys().filter(|id| !g.contains_key(*id))).collect();
+            panic!("incremental equals full at step {step}: edits {log:?}; fragments with a different hash {differing:?}; layers equal {}, annotations equal {}, legends equal {}", got.layers == want.layers, got.annotations == want.annotations, got.legends == want.legends);
+        }
     }
 }
 

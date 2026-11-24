@@ -744,12 +744,12 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     let collapsed_sections = &mut self.input.collapsed_sections;
                     let open_selects = &mut self.input.open_selects;
                     let widget_maps = &mut self.input.widget_maps_staging;
-                    let engine_host_attached = self.surfaces.engine_host_id_for_window(&window_id).is_some();
+                    let surface_kind = self.docs.window_document_session(&window_id, &self.plugins).and_then(|session| self.dock.window_kind_of(session, &window_id)).map(|kind| &kind.surface_kind);
                     let mut hosts = semio_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: scene_chrome_labels(self.prefs.locale_id == "de"), world3d_states: &mut self.surfaces.world3d_states, world_resources, window_id: window_id.as_str() };
                     let viewport_height_for_widgets = draw.screen_height();
                     let mut ctx = framework_widget_context(draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps), viewport_height_for_widgets);
                     ctx.pick_clip = Some(window_rect);
-                    let document_rect = pane_document_rect(window_rect, self.dock.window_frames.get(&window_id), engine_host_attached);
+                    let document_rect = kind_pane_document_rect(window_rect, self.dock.window_frames.get(&window_id), surface_kind);
                     render_ui_document_step(&mut cursor.document, &document, document_rect, &mut ctx, window_id.as_str(), controller.as_str(), self.chrome.chrome_build.driver.drag, &mut hosts, cx)
                 };
                 self.docs.restore_window_document(&window_id, document);

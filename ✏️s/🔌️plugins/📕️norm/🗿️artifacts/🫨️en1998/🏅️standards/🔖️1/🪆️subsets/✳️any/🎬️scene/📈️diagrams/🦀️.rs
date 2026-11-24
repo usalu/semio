@@ -98,6 +98,12 @@ fn entity_check_diagrams(d: &En1998Snapshot, report: &CheckReport, drawn: &BTree
                 .zip(&points)
                 .map(|(c, at)| Marker { id: format!("check-{}", c.id), at: at.clone(), shape: MarkerShape::Square, tone: utilisation_tone(c.utilization), label: loc(&format!("{}: {:.2}", c.title.en, c.utilization), &format!("{}: {:.2}", c.title.de, c.utilization)), utilisation: Some(c.utilization), bound_check: Some(c.id.clone()), binding: None })
                 .collect();
+            let label = loc("Utilisation", "Ausnutzung");
+            let utilisation = if points.len() >= 2 {
+                Series::Polyline { id: "utilisation".into(), label, points: points.clone(), style: stroke(Tone::Info, 2.0, Dash::Solid) }
+            } else {
+                Series::Scatter { id: "utilisation".into(), label, points: points.iter().map(|at| ScatterPoint { at: at.clone(), tone: Tone::Info, label: None }).collect() }
+            };
             let columns = vec![column("Check (report order)", "Nachweis (Berichtsreihenfolge)", "1", points.iter().map(|p| p.x).collect()), column("Utilisation", "Ausnutzung", "1", points.iter().map(|p| p.y).collect())];
             Some(Diagram2d {
                 id: format!("{collection}-checks:{id}"),
@@ -105,7 +111,7 @@ fn entity_check_diagrams(d: &En1998Snapshot, report: &CheckReport, drawn: &BTree
                 description: loc("Utilisation of every check of the entity in report order; values above the limit 1 do not comply.", "Ausnutzung aller Nachweise des Objekts in Berichtsreihenfolge; Werte über der Grenze 1 sind nicht eingehalten."),
                 axes: vec![axis("Check", "Nachweis", QuantityKind::Dimensionless, "1", Some((0.5, points.len() as f64 + 0.5))), axis("Utilisation", "Ausnutzung", QuantityKind::Dimensionless, "1", None)],
                 series: vec![
-                    Series::Polyline { id: "utilisation".into(), label: loc("Utilisation", "Ausnutzung"), points, style: stroke(Tone::Info, 2.0, Dash::Solid) },
+                    utilisation,
                     Series::Limit { id: "limit".into(), label: loc("Limit 1", "Grenze 1"), axis: AxisRef::Y, value: 1.0, style: stroke(Tone::Error, 1.5, Dash::Dashed) },
                 ],
                 markers,

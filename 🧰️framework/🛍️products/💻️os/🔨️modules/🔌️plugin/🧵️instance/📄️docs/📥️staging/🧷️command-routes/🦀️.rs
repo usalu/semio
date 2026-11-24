@@ -26,6 +26,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         let mut loading = false;
         self.document_archive_loads.each_id(|operation| loading |= self.document_archive_loads.get(operation).is_some_and(ActiveDocumentArchiveLoad::loading));
         let exempt = matches!(tools.declared_action_kind(verb), Some(ActionKind::View | ActionKind::Interaction)) || INTERACTION_ACTION_IDS.contains(&verb) || admitted_by_extension;
-        (loading && !exempt).then(|| Fault::new(FaultOrigin::Framework, FaultCode::new(DOCUMENT_LOADING_CODE), format!("'{verb}' waits: the document is still loading")))
+        (loading && !exempt).then(|| Fault::new(FaultOrigin::Framework, FaultCode::new(DOCUMENT_LOADING_CODE), format!("'{verb}' waits: the document is still loading")).with_retryable(true))
     }
 }

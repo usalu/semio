@@ -109,6 +109,8 @@ function homeSwipeQuery(scale: number): string {
 
 interface HomeProps {
   readonly introductionPage?: string;
+  /** 🪪️ Whether the identity dialog is open above home: what a visitor asked for before signing in runs once it closes with a learner, and is forgotten when it closes without one. */
+  readonly identifying?: boolean;
   readonly session: CourseSession;
   readonly state: CourseState;
   readonly text: CourseText;
@@ -165,8 +167,8 @@ const ICONS: { readonly [page: string]: IconName } ={ [HOME_PAGES.learner]: "use
 
 
 /** 🗃️ A container card, or a topic placeholder with its own full page. */
-function CollectionCard(props: HomeProps & { readonly page: string; readonly revealed?: boolean; readonly onOpen?: () => void; readonly placeholder?: boolean }): ReactElement {
-  const { page, state, locale, text, revealed, onOpen, placeholder } = props;
+function CollectionCard(props: HomeProps & { readonly page: string; readonly revealed?: boolean; readonly onOpen?: () => void; readonly placeholder?: boolean; readonly locked?: boolean }): ReactElement {
+  const { page, state, locale, text, revealed, onOpen, placeholder, locked } = props;
   const id = useId();
   const topic = state.course?.topics?.find((candidate) => candidate.id === page);
   const label = pageLabel(page, state, locale, text) ?? page;
@@ -183,7 +185,7 @@ function CollectionCard(props: HomeProps & { readonly page: string; readonly rev
       revealed={revealed}
       icon={topic === undefined ? <CardIcon icon={ICONS[page] ?? "layout-grid"} /> : <Glyph emoji={topic.emoji} className="text-sm" />}
       title={label}
-      footerRight={onOpen === undefined ? undefined : <CardAction primary onClick={onOpen}>{text("course.home.explore")}</CardAction>}
+      footerRight={onOpen === undefined && !locked ? undefined : <CardAction icon="search" primary disabled={onOpen === undefined} onClick={onOpen}>{text("course.home.explore")}</CardAction>}
     >
       <p className="m-0 text-xs leading-normal text-foreground">
         {text(page === HOME_PAGES.assignments ? "course.assignments.description" : page === HOME_PAGES.clips ? "course.clips.description" : page === HOME_PAGES.quizzes ? "course.home.quizzesDescription" : count > 0 ? "course.home.topicQuizzes" : "course.home.comingSoon", { count })}
@@ -297,14 +299,15 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   const tracks = layout.grid === "desktop" ? HOME_GRID_TRACKS : undefined;
   const cardOf = (pane: LayeredPane, card: LayeredCardState): ReactNode => {
     const shown = { revealed: card.revealed, onOpen: card.open };
-    const onOpen = clientAccess(course, pane.id, props.at) ? card.open : undefined;
+    const locked = !clientAccess(course, pane.id, props.at);
+    const onOpen = locked ? undefined : card.open;
     const quiz = course.quizzes.find((candidate) => candidate.id === pane.id);
     if (quiz !== undefined) return <QuizCardView {...common} {...shown} onOpen={onOpen} quiz={quiz} busy={busy} act={act} challenge={challengeOf(preferences, quiz.id)} />;
     const assignment = course.assignments?.find((candidate) => candidate.id === pane.id);
-    if (assignment !== undefined) return <AssignmentCardView {...shown} onOpen={onOpen} assignment={assignment} locale={locale} text={text} />;
+    if (assignment !== undefined) return <AssignmentCardView {...shown} onOpen={onOpen} locked={locked} assignment={assignment} locale={locale} text={text} />;
     const clip = course.clips?.find((candidate) => candidate.id === pane.id);
     if (clip !== undefined) return <ClipCardView {...shown} onOpen={onOpen} clip={clip} locale={locale} text={text} showPoster={card.mode === "strip" || (activeGrid && shownCard === pane.id)} />;
-    if (pane.id === HOME_PAGES.quizzes || pane.id === HOME_PAGES.assignments || pane.id === HOME_PAGES.clips || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} />;
+    if (pane.id === HOME_PAGES.quizzes || pane.id === HOME_PAGES.assignments || pane.id === HOME_PAGES.clips || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} locked={locked} />;
     switch (pane.id) {
       case HOME_PAGES.learner:
         return <LearnerCard {...common} {...shown} />;
@@ -334,7 +337,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         panes={panes}
         cells={cells}
         renderCard={renderCard}
-        overlayClassName="course-home-grid"
+        overlayClassName="course-home-grid ui-scrollbar-hidden"
         overlayStyle={{ "--course-home-columns": homeTrackTemplate(tracks?.columns, strip.columns), "--course-home-rows": homeTrackTemplate(tracks?.rows, strip.rows, `min(${container === HOME_PAGES.clips ? HOME_CLIP_ROW_HEIGHT_PX : HOME_GRID_ROW_HEIGHT_PX}px, 100%)`) } as CSSProperties}
         mode={layout.mode}
         routing="none"
@@ -392,7 +395,7 @@ function HomePagePicker(props: HomeProps & { readonly at: number }): ReactElemen
         <option value="">{container === undefined ? text("course.home.cards") : pageLabel(container, state, locale, text)}</option>
         {pages.map((page) => <option key={page} value={page} disabled={!clientAccess(course, page, at)}>{pageLabel(page, state, locale, text)}</option>)}
       </select>
-      <button {...CELL} type="submit">{text("course.home.openPage")}</button>
+      <button {...CELL} type="submit" className="inline-flex items-center gap-single"><CardIcon icon="arrow-right" />{text("course.home.openPage")}</button>
     </form>
   );
 }
@@ -408,9 +411,9 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   const refreshLeaderboard = useCallback(() => session.refreshLeaderboard(), [session, state.learner?.id]);
   usePolling(refreshLeaderboard, LEADERBOARD_POLL_MS, true, session.revived);
   useEffect(() => () => pending?.abort(), [pending]);
-  if (state.course === undefined) return null;
+  const wanted = useRef<Parameters<Act>[0] | undefined>(undefined);
   const act: Act = (run) => {
-    if (state.learner === undefined) { session.open({ screen: "identity" }); return; }
+    if (state.learner === undefined) { wanted.current = run; session.open({ screen: "identity" }); return; }
     if (pending !== undefined) return;
     const controller = new AbortController();
     setProblem(undefined);
@@ -420,6 +423,16 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
       .catch((thrown: unknown) => setProblem(thrownProblem(thrown, controller.signal, text)))
       .finally(() => setPending((current) => (current === controller ? undefined : current)));
   };
+  const signedIn = state.learner !== undefined;
+  const resume = useRef(act);
+  resume.current = act;
+  useEffect(() => {
+    if (props.identifying || wanted.current === undefined) return;
+    const run = wanted.current;
+    wanted.current = undefined;
+    if (signedIn) resume.current(run);
+  }, [props.identifying, signedIn]);
+  if (state.course === undefined) return null;
   const selected = state.step.screen === "home" ? state.step.page : undefined;
   const heading = selected === undefined ? text("course.home.title") : pageLabel(selected, state, props.locale, text) ?? text("course.home.title");
   return (
@@ -432,7 +445,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
             <progress aria-label={text("course.home.starting")} className="course-progress" />
             <span>{text("course.home.starting")}</span>
           </SharedBorderRowCell>
-          <BodyButton cell onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
+          <BodyButton icon="x" cell onClick={() => pending.abort()}>{text("course.run.cancel")}</BodyButton>
         </SharedBorderRow>
       )}
       <HomePagePicker {...props} at={at} />

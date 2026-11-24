@@ -18,9 +18,11 @@ def decide(attempts, rounds=RETRY_ROUNDS):
     raise SystemExit("scripted attempts ended before a verdict")
 
 
-def decision(foreign, moved, young, round_, rounds=RETRY_ROUNDS):
+def decision(foreign, moved, young, round_, rounds=RETRY_ROUNDS, cancelled=False):
     if foreign:
         return "foreign"
+    if cancelled and round_ < rounds:
+        return "retry"
     if not moved and not young:
         return "stable"
     if round_ >= rounds:
@@ -40,8 +42,8 @@ if __name__ == "__main__":
     corpus = json.load(sys.stdin)
     rounds = corpus["retryRounds"]
     table = {
-        "%d%d%d%d" % (foreign, moved, young, round_): decision(bool(foreign), bool(moved), bool(young), round_, rounds)
-        for foreign in (0, 1) for moved in (0, 1) for young in (0, 1) for round_ in range(1, rounds + 1)
+        "%d%d%d%d%s" % (foreign, moved, young, round_, "c" if cancelled else ""): decision(bool(foreign), bool(moved), bool(young), round_, rounds, bool(cancelled))
+        for foreign in (0, 1) for moved in (0, 1) for young in (0, 1) for round_ in range(1, rounds + 1) for cancelled in (0, 1)
     }
     print(json.dumps({
         "retry": {case["name"]: decide(case["attempts"], rounds) for case in corpus["cases"]},

@@ -30,7 +30,7 @@ use semio_plugin::world3d_meshes_json_from_kinds_and_urls;
 use semio_plugin::World3dScene;
 use semio_plugin::world3d_selection_json;
 use semio_plugin::SurfaceKind;
-use semio_plugin::ToolRunView;
+use semio_plugin::OriginalToolRunView;
 use semio_plugin::WindowEngagement;
 use semio_plugin::WindowEngagementSlot;
 use semio_plugin::WindowKindDefinition;
@@ -118,7 +118,7 @@ pub fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
 /// interaction snapshot reads — the same domain the board pane writes, so a part picked on the board
 /// lights up here. A part a tool run holds provisionally carries `provisional: true`; a part the open time-travel
 /// draft references carries `highlighted: true`.
-pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dInteractionSnapshot, tool_run: Option<&ToolRunView>) -> String {
+pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dInteractionSnapshot, tool_run: Option<OriginalToolRunView<'_>>) -> String {
     let selected = interaction.selected_part_ids();
     let instances: Vec<Value> = document
         .parts
@@ -136,7 +136,7 @@ pub fn world_instances_json(document: &Puzzle5dDocument, interaction: &Puzzle5dI
                 "hovered": interaction.hovered.iter().any(|id| id == &part.id),
                 "highlighted": interaction.referenced.iter().any(|id| id == &part.id),
                 "disabled": part.part_2d.locked.unwrap_or(false),
-                "provisional": tool_run.is_some_and(|run| run.provisional_entities.contains(&puzzle5d_placement_entity(&part.id))),
+                "provisional": tool_run.is_some_and(|run| run.provisional_entities.contains_key(&puzzle5d_placement_entity(&part.id))),
             })
         })
         .collect();
@@ -404,7 +404,7 @@ pub fn world_target_volumes_json(document: &Puzzle5dDocument) -> String {
 //#endregion 🔖️SceneJson
 
 //#region 🔖️Render
-pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<&ToolRunView>, mesh_lane: &[String], suggestions: Option<&BrushSuggestionsFound>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, tool_run: Option<OriginalToolRunView<'_>>, mesh_lane: &[String], suggestions: Option<&BrushSuggestionsFound>) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene = World3dScene::base(camera3d_json(&envelope.runtime.camera3d), world_meshes_json(mesh_lane), world_instances_json(&envelope.document, &envelope.interaction, tool_run), world_selection_json_ex(envelope));
     scene.vortices_json = Some(world_grips_json(&envelope.document, &envelope.runtime, &envelope.interaction, &envelope.active_utility));
     scene.attractions_json = Some(world_fasteners_json(&envelope.document));

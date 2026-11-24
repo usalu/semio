@@ -17,7 +17,7 @@
         "editFollowPauseMilliseconds": 250,
         "sealStalePaths": 4096,
         "inventoryVolatileRounds": 3,
-        "inventoryRounds": 12
+        "inventoryRounds": 4
       }
     },
     "LimitsDescriptions": {
@@ -35,7 +35,7 @@
           "ownerFactsMemoEntries": "The most owner admission observations one process keeps to answer a repeated attempt without observing the owner again.",
           "sealStalePaths": "The most changed observed rows a sealed read keeps to name the owners that are stale in the next read.",
           "inventoryVolatileRounds": "The consecutive inventory follow-up rounds in which the same owners (or, when no owner read them, the same paths) stay dirty before the inventory seals them as volatile: their paths leave the membership hash, they are named in the progress line and the next read observes them again.",
-          "inventoryRounds": "The most inventory follow-up rounds before every path that still moves is sealed as volatile; twice this many rounds without a stable inventory end the read."
+          "inventoryRounds": "The most inventory follow-up rounds before every path that still moves is sealed as volatile (a round walks the whole tree and takes minutes on a worker, so twelve rounds were an hour); after twice this many rounds the last attempt is lenient: members that vanished meanwhile are named volatile and left out instead of failing it, so a tree that never stops moving still seals and the next read follows the named paths."
         },
         "de": {
           "invocationCheckStride": "Nach wie vielen besuchten Werten ein tiefer Durchlauf seinen Aufruf auf Abbruch prüft.",
@@ -50,7 +50,7 @@
           "ownerFactsMemoEntries": "Wie viele Zulassungsbeobachtungen von Eigentümern ein Prozess behält, um einen wiederholten Versuch ohne neue Beobachtung des Eigentümers zu beantworten.",
           "sealStalePaths": "Wie viele geänderte beobachtete Zeilen ein versiegeltes Lesen behält, um die Eigentümer zu nennen, die im nächsten Lesen veraltet sind.",
           "inventoryVolatileRounds": "Die aufeinanderfolgenden Folgerunden des Dateiverzeichnisses, in denen dieselben Eigentümer (oder, wenn keiner sie las, dieselben Pfade) veraltet bleiben, bevor das Verzeichnis sie als flüchtig versiegelt: ihre Pfade verlassen den Mitgliedschafts-Hash, die Fortschrittszeile nennt sie und das nächste Lesen beobachtet sie neu.",
-          "inventoryRounds": "Die meisten Folgerunden des Dateiverzeichnisses, bevor jeder sich weiter bewegende Pfad als flüchtig versiegelt wird; doppelt so viele Runden ohne stabiles Verzeichnis beenden das Lesen."
+          "inventoryRounds": "Die meisten Folgerunden des Dateiverzeichnisses, bevor jeder sich weiter bewegende Pfad als flüchtig versiegelt wird (eine Runde durchläuft den ganzen Baum und dauert auf einem Arbeiter Minuten, zwölf Runden waren eine Stunde); nach doppelt so vielen Runden ist der letzte Versuch nachsichtig: zwischenzeitlich verschwundene Mitglieder werden als flüchtig benannt und ausgelassen, statt ihn scheitern zu lassen, so dass auch ein Baum, der nie stillsteht, versiegelt und das nächste Lesen den benannten Pfaden folgt."
         }
       }
     },

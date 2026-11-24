@@ -1,0 +1,7 @@
+[
+{"op":"shape","scale":"200","view":"plan","id":"tail","shape":{"kind":"poly","points":[[-0.0752,0.0064],[-0.0752,-0.008],[-0.0632,-0.02],[0.0112,-0.0152],[0.0208,-0.0056],[0.0208,0.0064],[0.0088,0.016],[-0.0608,0.0208]],"closed":true,"id":"tail","bone":"tail-1","role":"body","z":2.8,"filled":true,"tone":0.5,"region":"tail"}},
+{"op":"shape-remove","scale":"200","view":"plan","id":"near-thigh","group":"prism|plan|thigh-hn"},
+{"op":"shape-add","scale":"200","view":"plan","after":"thigh-n","shape":{"kind":"poly","points":[[-0.112,0.032],[-0.112,-0.0328],[-0.076,-0.0712],[0.1352,-0.136],[0.1352,0.1352],[-0.0712,0.0728],[-0.1,0.0536]],"closed":true,"id":"pelvis-sil","bone":"pelvis","role":"body","z":1,"filled":true,"tone":0.72,"region":"coat-upper-legs","material":"short-coat"}},
+{"op":"shape-add","scale":"500","view":"plan","after":"near-leg-hind-upper","shape":{"kind":"poly","points":[[-0.098,-0.061],[-0.08,-0.103],[-0.008,-0.127],[0.076,-0.127],[0.148,-0.097],[0.136,-0.055],[0.046,-0.019],[-0.05,-0.031]],"closed":true,"id":"thigh-hn-sil","bone":"thigh-hn","role":"body","z":1,"filled":true,"tone":0.55,"region":"coat-upper-legs"}},
+{"op":"shape-add","scale":"500","view":"plan","after":"near-leg-hind-upper","shape":{"kind":"poly","points":[[-0.098,0.087],[-0.08,0.045],[0.01,0.021],[0.094,0.033],[0.148,0.069],[0.142,0.105],[0.058,0.129],[-0.032,0.123]],"closed":true,"id":"thigh-hf-sil","bone":"thigh-hf","role":"body","z":1,"filled":true,"tone":0.55,"region":"coat-upper-legs"}}
+]

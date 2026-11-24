@@ -9,12 +9,19 @@ pub fn observed_box_close(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     semio_framework_value_testing_presence_retirement::observed_step(grant, |effect| settled(crate::artifact_retirement_box_close_step(owner, effect.grant().maximum_copy_bytes, effect)))
 }
 
+/// 🪑️ Admits one returned Arc root as its shared controlled lease owner without moving it on refusal.
+pub fn admit_returned_arc<T: semio_framework_value::retirement::RetireOwned + Sync>(root: &mut Option<Arc<T>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::OriginalRetirementFailure> {
+    let mut lease = root.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new);
+    let turn = semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(&mut lease, effect);
+    if let Some(lease) = lease.take() { *root = lease.0; }
+    RetainedWorkOutcome { result: turn.result.map_err(Into::into).map(|admitted| admitted.map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))), work: turn.work }
+}
+
 pub fn admit_returned_string(registry: &crate::SnapshotReadRegistryHandle, expected: &str) -> Option<Box<dyn ErasedSnapshotRetirement>> {
     let (result, heap) = with_effect(CLOSE_GRANT, 1 << 20, &mut None, |effect| semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.try_admit_one_returned::<String, _>(effect, |original, effect| {
         assert_eq!(original.as_deref().map(String::as_str), Some(expected));
         assert_eq!(original.as_ref().map(Arc::strong_count), Some(1));
-        let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(original, effect, false);
-        RetainedWorkOutcome { result: turn.result.map_err(Into::into), work: turn.work }
+        admit_returned_arc(original, effect)
     }).result));
     match result {
         Ok((owner, receipt)) => { assert!(receipt.fits(CLOSE_GRANT)); assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes)); owner }

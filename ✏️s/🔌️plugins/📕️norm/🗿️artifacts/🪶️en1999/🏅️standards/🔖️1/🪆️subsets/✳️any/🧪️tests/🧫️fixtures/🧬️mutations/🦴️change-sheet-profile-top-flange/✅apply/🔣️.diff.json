@@ -3,12 +3,7 @@
   "materials": null,
   "sections": null,
   "members": null,
-  "connections": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "connections": null,
   "fireScenarios": null,
   "fatigueDetails": null,
   "coldFormed": null,
@@ -37,11 +32,6 @@
     ]
   },
   "fireInsulations": null,
-  "transverseStiffeners": {
-    "removed": [],
-    "inserted": [],
-    "moved": [],
-    "modified": []
-  },
+  "transverseStiffeners": null,
   "reliabilityClass": null
 }

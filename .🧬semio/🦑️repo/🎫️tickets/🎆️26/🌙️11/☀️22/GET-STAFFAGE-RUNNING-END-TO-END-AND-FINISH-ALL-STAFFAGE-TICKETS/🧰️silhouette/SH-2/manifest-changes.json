@@ -1,0 +1,21 @@
+{
+  "person-sweeping": {
+    "heightM": 1.665
+  },
+  "person-with-rollator": {
+    "depthM": 0.608
+  },
+  "pregnant-person": {
+    "widthM": 0.527
+  },
+  "seated-office-worker": {
+    "heightM": 1.42
+  },
+  "standing-phone-user": {
+    "depthM": 0.474
+  },
+  "runner-with-blade-prosthesis": {
+    "widthM": 0.864,
+    "heightM": 1.773
+  }
+}

@@ -233,6 +233,8 @@ export function useChromePanelSafeArea({
   const panels = useShellChromePanelBoxes(shellScope?.rootRef.current ?? undefined);
   const [safeArea, setSafeArea] = reactHostPort.useState<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
   const appliedRef = reactHostPort.useRef<ChromePanelSafeArea>(CHROME_PANEL_SAFE_AREA_CLEAR);
+  const [attached, setAttached] = reactHostPort.useState(false);
+  reactHostPort.useEffect(() => setAttached(true), []);
   reactHostPort.useLayoutEffect(() => {
     const host = hostRef.current;
     const affordance = affordanceRef.current;
@@ -265,6 +267,6 @@ export function useChromePanelSafeArea({
       resizeObserver?.disconnect();
       window.removeEventListener("resize", sync);
     };
-  }, [affordanceRef, anchor, enabled, gapPx, hostRef, panels, yieldAxis]);
+  }, [affordanceRef, anchor, attached, enabled, gapPx, hostRef, panels, yieldAxis]);
   return safeArea;
 }

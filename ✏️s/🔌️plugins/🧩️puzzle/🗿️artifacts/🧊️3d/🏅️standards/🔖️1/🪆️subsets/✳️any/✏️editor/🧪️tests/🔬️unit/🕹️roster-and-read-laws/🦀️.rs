@@ -29,8 +29,9 @@ const LOCAL_INTERACTION_READ_FRAMES: usize = 4;
 
 /// 🕹️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave I: plays the HOST half of one local-interaction
 /// read exactly as `plugin_continue_typed_operations` → `advance_typed_operation_output` does —
-/// one `advance_typed_operation_publication` unit, then `publish_local_interaction_query_reply`
-/// into the same fixed frame admission — and stops draining the moment
+/// one `advance_typed_operation_publication` unit under a renewed host turn, the ownership receipt
+/// that unit posts taken back (an untaken `local_interaction_query_receipt` parks every later unit),
+/// then `publish_local_interaction_query_reply` into the same fixed frame admission — and stops draining the moment
 /// `has_runnable_typed_operations` reports quiescence. That quiescence point is the ONLY place a
 /// page acknowledgement can arrive: the shell's `settlePluginTurn(drainOperations=true)` owns the
 /// call until the actor stops reporting more-work, so a query that stays runnable while it waits
@@ -58,9 +59,13 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
         if render {
             drop(render_composite(app).await);
         }
+        let (policy, caller_grant) = (semio_plugin::artifact_app_laws::fixture_mounted_policy(), app.parts().1.retained_grant());
         app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup clock keeps ticking during a read");
         let (raw, cx) = app.parts();
+        semio_plugin::artifact_app_laws::fixture_renew_turn(cx, semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), policy.maintenance).expect("renew the host publication turn");
         raw.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one local interaction publication unit");
+        semio_plugin::artifact_app_laws::retain_original_ownership_receipts(raw, policy, &mut Vec::new()).expect("take the local interaction receipt like the host's exchange output");
+        semio_plugin::artifact_app_laws::fixture_renew_turn(cx, semio_plugin::artifact_app_laws::OriginalFixtureCaller::turn_fuel(), caller_grant).expect("restore the fixture caller grant after publication");
         let mut frames = Vec::new();
         app.publish_local_interaction_query_reply(&mut frames, LOCAL_INTERACTION_READ_FRAMES);
         for frame in &frames {

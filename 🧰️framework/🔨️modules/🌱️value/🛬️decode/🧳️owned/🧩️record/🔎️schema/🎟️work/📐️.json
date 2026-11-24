@@ -14,7 +14,7 @@
       "key": "alpha",
       "kind": "field",
       "field": 0,
-      "turns": 157
+      "turns": 141
     },
     {
       "key": "beta",
@@ -77,7 +77,7 @@
       "key": "alpha",
       "kind": "cut",
       "field": null,
-      "turns": 157
+      "turns": 141
     }
   ],
   "maximumComparedBytesPerTurn": 64,

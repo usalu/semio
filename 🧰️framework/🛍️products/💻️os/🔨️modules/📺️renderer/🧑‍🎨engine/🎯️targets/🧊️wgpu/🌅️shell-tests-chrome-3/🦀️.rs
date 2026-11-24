@@ -6,11 +6,11 @@
 
 use semio_framework::{AppDefinition, ViewModel};
 use semio_renderer_wgpu_dock::{DockNode, DockStackTab, dock_node_to_layout_root};
-use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe};
+use semio_renderer_wgpu_fixtures::shell::{host_test_shell, retained_world_sequence_probe_closing};
 use semio_renderer_wgpu_host_base::resolve_theme;
 use semio_renderer_wgpu_shell_actions::{ActionsCtx, keybinding_unowned_text_v1, resolve_keybinding_target_window_v1, role_switch_target};
 use semio_renderer_wgpu_shell_dock::dock_tab_icon_id_v1;
-use semio_renderer_wgpu_shell_docs::{chord_carries_accelerator_v1, reserved_shell_chords_v1, shell_example_rows};
+use semio_renderer_wgpu_shell_docs::{ShellExampleRow, chord_carries_accelerator_v1, reserved_shell_chords_v1, shell_example_rows, shell_overlay_example_rows};
 use semio_renderer_wgpu_shell_pointer::{is_reserved_shell_chord, pointer_press_belongs_to_shell_chrome, shell_shortcut_for, world3d_cancel_affordance};
 use semio_renderer_wgpu_shell_prefs::ActiveSession;
 use semio_renderer_wgpu_shell_session::{SessionCtx, ShellShortcut, WindowScopeStackV1, dock_seed_active_window_id_v1, mode_layout_stacks_v1, resolve_boot_example_id, session_window_instances};

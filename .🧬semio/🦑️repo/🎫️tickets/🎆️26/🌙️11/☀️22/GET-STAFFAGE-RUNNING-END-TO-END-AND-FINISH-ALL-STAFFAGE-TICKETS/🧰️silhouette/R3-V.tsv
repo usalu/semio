@@ -1,0 +1,7 @@
+vehicles	city-car	1:100 axis 0: 3.9320054188198403 m against 3.9 m: expected 0.032005418819840425 to be less than or equal to 0.015
+vehicles	city-bicycle	1:200 elevation Hausdorff: expected 0.06300924460383969 to be less than or equal to 0.06
+vehicles	city-bus	1:500 front Hausdorff: expected 0.29648467764352343 to be less than or equal to 0.15
+vehicles	motor-scooter	1:500 front: expected 0.9094617773863057 to be greater than or equal to 0.92
+vehicles	tram	1:500 front Hausdorff: expected 0.16978847134007657 to be less than or equal to 0.15
+vehicles	cargo-bike	1:200 elevation Hausdorff: expected 0.07115124735378853 to be less than or equal to 0.06
+vehicles	vintage-car-1929	1:100 elevation Hausdorff: expected 0.060466933112239114 to be less than or equal to 0.03

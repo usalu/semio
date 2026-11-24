@@ -3019,6 +3019,32 @@
               "closed": true
             },
             {
+              "id": "sill-end-beyond",
+              "bone": "sill",
+              "role": "detail",
+              "z": 0.6,
+              "filled": true,
+              "tone": 0.55,
+              "region": "sill",
+              "material": "concrete",
+              "kind": "poly",
+              "points": [
+                [
+                  -0.2225,
+                  0.90486
+                ],
+                [
+                  -0.2225,
+                  0.91667
+                ],
+                [
+                  -0.0875,
+                  0.91667
+                ]
+              ],
+              "closed": true
+            },
+            {
               "id": "lower-facing",
               "bone": "wall",
               "role": "body",

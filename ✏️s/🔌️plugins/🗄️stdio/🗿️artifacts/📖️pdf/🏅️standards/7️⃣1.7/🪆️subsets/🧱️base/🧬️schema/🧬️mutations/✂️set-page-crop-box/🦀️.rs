@@ -33,8 +33,8 @@ impl<Op> protocol::ColdMutationKind<PdfSnapshot, Op> for SetPageCropBox
 where
     Op: protocol::ColdMutation<PdfSnapshot, ReferenceDiff = PdfDiff> + From<SetPageCropBox>,
 {
-    fn diff(&self, _base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::diff_set_page_crop_box(self.index, self.crop_box))
+    fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
+        diff::outcome_over(base, diff::diff_set_page_crop_box(self.index, self.crop_box))
     }
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {

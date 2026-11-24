@@ -26,19 +26,19 @@ fn step_close<T:semio_framework_value::retirement::RetireOwned>(close:&mut Contr
 fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,run:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'_>)->RetainedWorkOutcome<T,NativeSnapshotFailure>)->RetainedWorkOutcome<T,NativeSnapshotFailure>{
  let mut run=Some(run);
  for _ in 0..4096{
-  let _=semio_framework_trace_memory_testing::debug_sizes_take();
-  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.refreshed_turn_with_decoder(super::fixture_grant(),decoder,|cx|{
+  let fixture=super::fixture_grant();
+  let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.refreshed_turn_with_decoder(fixture,decoder,|cx|{
    let Some((outcome,progress))=receiving(cx,|native|{let mut owner=NativeSnapshotDecodeOwner::new(native,grant);let outcome=(run.take().expect("receiving body runs once"))(&mut owner);Ok((outcome,owner.progress()))})?else{return Ok(None)};
-   let issued=cx.receiving_issued_grant().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiver omitted its issued grant"))?;cx.consume_receiving_retained(issued,progress)?;cx.consume_fuel(u64::try_from(outcome.work).unwrap());Ok(Some(outcome))
+   let issued=cx.receiving_issued_grant().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiver omitted its issued grant"))?;cx.consume_receiving_retained(issued,progress)?;Ok(Some(outcome))
   }));
-  let receipt=caller.receipt();{let sizes=semio_framework_trace_memory_testing::debug_sizes_take();let mut histogram=std::collections::BTreeMap::<(bool,usize),usize>::new();for size in &sizes{*histogram.entry((size>>62==1,size&!(1usize<<62))).or_default()+=1}eprintln!("[DEBUG] turn born={born} freed={freed} receipt={receipt:?} events={} histogram={histogram:?}",sizes.len());}assert_eq!((born,freed),(receipt.retained_capacity_bytes,receipt.released_bytes));
+  let receipt=caller.receipt();assert_eq!((born,freed),(receipt.retained_capacity_bytes,receipt.released_bytes));
   if let Some(outcome)=result.unwrap(){return outcome}
  }
  panic!("original receiving scope never opened within its funded turns")
 }
 fn close<T:semio_framework_value::retirement::RetireOwned>(value:T,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
  let mut close=ControlledRetirement::retain(value);
- for index in 0..65536{if close.terminal_is_empty(){return}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn_with_decoder(super::fixture_grant(),decoder,|cx|cx.with_original_retirement(|cx|{let d=close.selected_demand(super::fixture_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|grant|{step_close(&mut close,grant)})?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();assert!(index<65535);}
+ let fixture=super::fixture_grant();for index in 0..65536{if close.terminal_is_empty(){return}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn_with_decoder(fixture,decoder,|cx|cx.with_original_retirement(|cx|{let d=close.selected_demand(fixture.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|grant|{step_close(&mut close,grant)})?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();assert!(index<65535);}
 }
 fn close_decoder(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant){
  for _ in 0..4096{if decoder.terminal_is_empty(){return}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=decoder.retirement_demands(g.maximum_copy_bytes)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}assert!(decoder.terminal_is_empty());
@@ -54,7 +54,7 @@ fn snapshot_primitive_original_loan_precedes_effect_and_preserves_failed_work(){
     meter.admit(native)?;effects.set(effects.get()+1);
     if row["fail"].as_bool().unwrap(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original primitive refusal").into())}Ok(())
    })))?else{return Ok(())};
-   let issued=cx.receiving_issued_grant().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiver omitted its issued grant"))?;cx.consume_receiving_retained(issued,Default::default())?;cx.consume_fuel(u64::try_from(outcome.work).unwrap());captured=Some(outcome);Ok(())
+   let issued=cx.receiving_issued_grant().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiver omitted its issued grant"))?;cx.consume_receiving_retained(issued,Default::default())?;captured=Some(outcome);Ok(())
    })?;Ok(captured)
   }).unwrap();
   let Some(outcome)=outcome else{assert_eq!((row["work"].as_u64().unwrap(),row["effects"].as_u64().unwrap(),row["accepted"].as_bool().unwrap()),(0,0,false));assert_eq!(effects.get(),0);close_decoder(&mut caller,&mut decoder,g);caller.retire(g);continue};
@@ -95,17 +95,17 @@ fn snapshot_cursor_rich_outcome_conserves_original_work_causes_and_custody(){
   if let Some(pointers)=pointers{let failure=outcome.result.as_ref().err().unwrap().receiving_primary().unwrap();assert_eq!([failure.primary.as_ref(),failure.quote_refusal.as_ref(),failure.allocation_refusal.as_ref()].map(|error|error.map(|error|error.message.as_ptr())),pointers);}
   assert_eq!(outcome.result.is_ok(),!row["expected"]["cursorRetained"].as_bool().unwrap());
   close((cursor,original,outcome.result.err()),&mut caller,&mut decoder);
-  for index in 0..65536{if decoder.terminal_is_empty(){break}let d=decoder.retirement_demands(g.maximum_copy_bytes).unwrap();let release_only=d.copy_bytes==0&&d.release_bytes>0;let mut selected=g;if release_only{selected.maximum_copy_bytes=0;}let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(selected,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();if release_only&&freed>0{assert_eq!(p.copied_bytes,0);saw_release_only=true;}assert!(index<65535);}
+  for index in 0..65536{if decoder.terminal_is_empty(){break}let d=decoder.retirement_demands(g.maximum_copy_bytes).unwrap();let release_only=d.release_bytes>0;let mut selected=g;let(result,born,freed)=semio_framework_trace_memory_testing::observe_backing(||caller.turn(selected,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})));let p=caller.receipt();assert_eq!((born,freed),(p.retained_capacity_bytes,p.released_bytes));result.unwrap();if release_only&&freed>0{assert!(p.copied_bytes>0);saw_release_only=true;}assert!(index<65535);}
   assert!(decoder.terminal_is_empty());caller.retire(g);
  }
- assert!(saw_release_only,"original decoder must physically release a terminal child without copy credit");
+ assert!(saw_release_only,"original decoder must physically release a terminal child under its own copy credit");
 }
 
 #[test]
 fn snapshot_encoder_primitive_borrows_the_original_job_work_loan(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("primitive.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){
-  let g=super::fixture_grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(896),Generation(18),g,||Some(1),u64::MAX,1<<20);let mut decoder=OriginalJobDecodeOwner::empty();let effects=Cell::new(0u64);let mut observer=|_|true;let mut encoder=semio_framework_value::NativeEncodeControl::new(0,&mut observer);let fuel_before=caller.fuel_remaining();
+  let g=super::fixture_grant();let mut caller=OriginalJobFixtureCaller::admit(OperationId(896),Generation(18),stock(),||Some(1),u64::MAX,1<<20);let mut decoder=OriginalJobDecodeOwner::empty();let effects=Cell::new(0u64);let mut observer=|_|true;let mut encoder=semio_framework_value::NativeEncodeControl::new(0,&mut observer);let fuel_before=caller.fuel_remaining();
   let outcome=caller.turn_with_decoder(g,&mut decoder,|cx|{
    let mut captured=None;cx.with_original_work_loan(row["fuel"].as_u64().unwrap(),u64::MAX,|cx|{
     let outcome=cx.with_native_encoder_work::<_,ValueError>(&mut encoder,|native|Ok(crate::native_snapshot_turn(|meter|{
@@ -122,7 +122,7 @@ fn snapshot_encoder_primitive_borrows_the_original_job_work_loan(){
 #[test]
 fn original_job_encoder_keeps_the_actual_append_on_observer_refusal(){
  let f:serde_json::Value=serde_json::from_str(include_str!("encoder-append.json")).unwrap();let g=super::fixture_grant();
- let mut caller=OriginalJobFixtureCaller::admit(OperationId(895),Generation(17),g,||Some(1),u64::MAX,1<<20);let mut decoder=OriginalJobDecodeOwner::empty();let text=f["text"].as_str().unwrap();let mut output=Vec::new();let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|event.completed==0;let mut native=semio_framework_value::NativeEncodeControl::new(g.maximum_capacity_bytes,&mut observer);
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(895),Generation(17),stock(),||Some(1),u64::MAX,1<<20);let mut decoder=OriginalJobDecodeOwner::empty();let text=f["text"].as_str().unwrap();let mut output=Vec::new();let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|event.completed==0;let mut native=semio_framework_value::NativeEncodeControl::new(g.maximum_capacity_bytes,&mut observer);
  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||caller.turn_with_decoder(g,&mut decoder,|cx|{
   let mut captured=None;cx.with_original_work_loan(1,u64::MAX,|cx|{
    let outcome=cx.with_native_encoder_work::<_,ValueError>(&mut native,|native|Ok(crate::native_snapshot_turn(|work|work.measured_encode(native,|native|native.append_bytes(&mut output,text.as_bytes())))))?;
@@ -141,7 +141,7 @@ fn original_job_recipient_gets_frame_before_body_refuses(){
   calls.set(calls.get()+1);let submitted=native.construction_submitted().unwrap();assert_eq!(submitted.copied_items,f["copiedItems"].as_u64().unwrap() as usize);assert!(submitted.retained_capacity_bytes>0);
   RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"fixture body refused")),work:0}
  }));
- assert_eq!(outcome.work,u128::from(f["expectedWork"].as_u64().unwrap()));assert_eq!(calls.get(),f["callbackCalls"].as_u64().unwrap());let failure=outcome.result.unwrap_err();assert_eq!(failure.kind().as_str(),f["expectedKind"].as_str().unwrap());assert_eq!(caller.receipt().copied_items,f["copiedItems"].as_u64().unwrap() as usize);
+ assert_eq!(outcome.work,u128::from(f["expectedWork"].as_u64().unwrap()));assert_eq!(calls.get(),f["callbackCalls"].as_u64().unwrap());let failure=outcome.result.unwrap_err();assert_eq!(failure.kind().as_str(),f["expectedKind"].as_str().unwrap());assert_eq!(caller.business_receipt().copied_items,f["copiedItems"].as_u64().unwrap() as usize);
  close(failure,&mut caller,&mut decoder);close_decoder(&mut caller,&mut decoder,g);caller.retire(g);
 }
 
@@ -155,6 +155,6 @@ fn original_job_recipient_gets_actual_body_before_refusal(){
   let submitted=native.construction_submitted()?;assert_eq!(submitted.copied_items,f["copiedItems"].as_u64().unwrap()as usize);assert_eq!(submitted.copied_bytes,bytes+f["textBytes"].as_u64().unwrap()as usize);
   Err(ValueError::literal(ValueRefusalKind::InvalidValue,"fixture body retained after copy").into())
  })));
- assert_eq!(outcome.work,u128::from(f["work"].as_u64().unwrap()));let failure=outcome.result.unwrap_err();assert_eq!(failure.kind().as_str(),f["expectedKind"].as_str().unwrap());assert_eq!(caller.receipt().copied_items,f["copiedItems"].as_u64().unwrap()as usize);
+ assert_eq!(outcome.work,u128::from(f["work"].as_u64().unwrap()));let failure=outcome.result.unwrap_err();assert_eq!(failure.kind().as_str(),f["expectedKind"].as_str().unwrap());assert_eq!(caller.business_receipt().copied_items,f["copiedItems"].as_u64().unwrap()as usize);
  close(failure,&mut caller,&mut decoder);close_decoder(&mut caller,&mut decoder,g);caller.retire(g);
 }

@@ -76,7 +76,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
           mkdirSync(caseDirectory, { recursive: true });
           writeFileSync(join(caseDirectory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
           writeFileSync(join(caseDirectory, "🟨️.js"), hostShimSource());
-          writeFileSync(join(caseDirectory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION}, admitActorInput: async (_wire, budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n, ready: true, disposition: "admitted" }) }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
+          writeFileSync(join(caseDirectory, "fixture_component.js"), `let staged; export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION}, stageActorContextBudget: (budget) => { staged = budget; }, admitActorInput: async (_wire) => ({ input: staged.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n, ready: true, disposition: "admitted" }) }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
           const bridge = await import(pathToFileURL(join(caseDirectory, "🌉️bridge.js")).href);
           const original = stock.admit();
           let api: { readonly originalSource: Pick<InstanceType<typeof OriginalOperationSource>, "close" | "issue">; readonly codec: (request: Record<string, unknown>) => Promise<unknown> } | undefined;
@@ -128,11 +128,13 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         writeFileSync(join(directory, "fixture_component.js"), `
           const shim = await import("./🟨️.js" + new URL(import.meta.url).search);
           const receipt = (budget) => ({ input: budget.input, spent: { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n }, workUnitsSpent: 0n });
+          let staged;
           export const reactor = {
             channelVersion: async () => ${APP_CHANNEL_VERSION},
-            admitActorContext: async (budget) => ({ ...receipt(budget), ready: true }),
-            admitActorInput: async (_wire, budget) => ({ ...receipt(budget), ready: true, disposition: "admitted" }),
-            poll: async (budget) => { shim.log("error", "original-turn.semantic " + ${JSON.stringify(law.expectedDetail)}); throw Object.assign(Error("[object Object] (see error.payload)"), {
+            stageActorContextBudget: (budget) => { staged = budget; },
+            admitActorContext: async () => ({ ...receipt(staged), ready: true }),
+            admitActorInput: async (_wire) => ({ ...receipt(staged), ready: true, disposition: "admitted" }),
+            poll: async () => { const budget = staged; shim.log("error", "original-turn.semantic " + ${JSON.stringify(law.expectedDetail)}); throw Object.assign(Error("[object Object] (see error.payload)"), {
               payload: { ...receipt(budget), failure: { tag: ${JSON.stringify(law.failure)} } },
             }); },
           };

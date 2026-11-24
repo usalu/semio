@@ -6,11 +6,11 @@ use semio_renderer_wgpu_shell_doc_open::{admit_local_catalog_document, retire_lo
 impl<'ctx> ActionsCtx<'ctx> {
     pub(super) async fn start_browser_open(&mut self, action: &ActionDescriptor) -> Result<(), String> {
         let source = self.opening.dropped_files.pop_front();
-        let current = self.docs.action_session(action, &self.plugins).ok_or("Open File has no owning application")?;
+        let current = self.docs.action_session(action, &self.plugins).ok_or("open-file.no-owning-application")?;
         if self.docs.session.as_ref().is_none_or(|session| session.instance_id != current.instance_id || session.plugin_id != current.plugin_id) {
-            return Err("Open File requires the current local editor".into());
+            return Err("open-file.requires-current-editor".into());
         }
-        let label = if self.prefs.locale_id == "de" { "Datei öffnen" } else { "Open File" }.to_owned();
+        let label = shell_chrome_string("document.open.fileLabel", self.prefs.locale_id == "de").to_owned();
                 let catalog = browser_catalog(&self.plugins.plugins).await;
         if !self.opening.start_browser_file_open(label, source.clone(), catalog, current.plugin_id.clone(), current.app.id.clone()) {
             if let Some(file) = source { self.opening.dropped_files.push_front(file); }
@@ -43,7 +43,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         }
         let Some(source_instance) = self.docs.session.as_ref().map(|session| session.instance_id) else {
             release_browser_picked_file(file.token).await;
-            return self.fail_browser_open(opening, "Open File's source editor closed".into());
+            return self.fail_browser_open(opening, "open-file.source-editor-closed".into());
         };
         let resolved = match semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&artifact_ref) {
             Ok(dialect) => self.plugins.resolve_activation_owner_app(&dialect, semio_framework::manifest::AppRole::Editor).await,
@@ -62,10 +62,10 @@ impl<'ctx> ActionsCtx<'ctx> {
     }
 
     pub async fn finish_browser_open(&mut self, imported: BrowserOpenedFile) -> Result<(), String> {
-        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("Open File's source editor closed")?;
+        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("open-file.source-editor-closed")?;
         if !self.plugins.plugins.iter().any(|entry| entry.plugin_id == imported.program.plugin_id
             && entry.package_id == imported.program.package_id && entry.component_sha256 == imported.program.component_sha256)
-        { return Err("Open File's editor package changed".into()); }
+        { return Err("open-file.editor-package-changed".into()); }
         let (folder, admit) = match imported.kept_folder.clone() {
             Some(folder) => (folder, false),
             None => (local_document_folder_uri(self.directory.identity_env.as_ref().and_then(|env| env.data_dir.as_deref()).and_then(std::path::Path::to_str), &imported.document_id).await?, true),
@@ -75,7 +75,7 @@ impl<'ctx> ActionsCtx<'ctx> {
 
     /// 📂 Publishes an instance holding a kept document as the session: attach its folder lane, list it in the local catalog when `admit` (a fresh import; a reopened one is listed already), and roll everything back on any refusal, as React's keep stage does.
     async fn publish_browser_document(&mut self, imported: BrowserOpenedFile, folder: String, admit: bool) -> Result<(), String> {
-        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("Open File's source editor closed")?;
+        let previous = self.docs.session.clone().filter(|session| session.instance_id == imported.source_instance).ok_or("open-file.source-editor-closed")?;
         let previous_uri = self.sync.sync_backbone_uri.clone();
         self.checkpoint_before_detach().await;
         self.detach_sync_backbone_internal().await?;

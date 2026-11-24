@@ -1,0 +1,46 @@
+Feature: Frames share their borders
+  Every bordered element of a page is a closed rectangle, and two neighbours share the edge between them.
+
+  Scenario Outline: A frame that directly follows another shares its edge
+    Given the junction <case> in the shared language-neutral fixture
+    When the second frame opens while the first frame's record is pending
+    Then the glue the first frame left below itself is cancelled
+    And the second frame moves up by exactly one hairline
+    And the shared edge is one hairline, in the accent colour when one of the two frames has one
+
+    Examples:
+      | case               |
+      | heading to heading |
+      | heading to window  |
+      | window to window   |
+      | window to heading  |
+      | list to heading    |
+
+  Scenario: A paragraph or authored space keeps frames apart
+    Given a closed frame in the shared language-neutral fixture
+    When a paragraph begins or vertical space is authored
+    Then the record is released and the next frame keeps its ordinary separation
+
+  Scenario: Heading chips are in-content
+    Given a heading in the shared language-neutral fixture
+    When it is rendered
+    Then only the top edge of its section frame is drawn across the column
+    And its title chip draws its right and bottom edges and its number chip its left and bottom edges
+    And no rule runs below the chip row
+
+  Scenario: The text column is a closed frame
+    Given the page geometry in the shared language-neutral fixture
+    When a page with running bars is shipped
+    Then the navbar rule is the top edge and the footer rule the bottom edge of the text area, each overlapping it by one hairline
+    And two side borders run from the navbar rule to the footer rule
+    And prose is inset from them by the window body padding while frames span the column
+
+  Scenario: A list is split into one cell per point
+    Given a list in the shared language-neutral fixture
+    When it is rendered
+    Then one hairline opens the list, one separates each pair of neighbouring points and one closes it
+
+  Scenario: Neighbouring tiles of a row or column share their border
+    Given a window arrangement in the shared language-neutral fixture
+    When its tiles are placed
+    Then consecutive tiles overlap by exactly one hairline

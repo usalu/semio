@@ -9,13 +9,11 @@ impl CoreInstanceOpening{
  /// 📥️ A typed reply is admitted before replacing any operands or allocating its exact result backing.
  pub fn reply_original_host_step(&mut self,module:&Arc<CoreModule>,results:&[Value],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(module,cx)?;let call=self.host_call.as_ref().ok_or_else(||refused("Core host reply has no original pending import"))?;if cx.original_source_epoch().is_none_or(|epoch|epoch<call.epoch){return Err(refused("Core host reply precedes its actual request").into())}let ty=module.functions.get(call.function as usize).and_then(|function|module.types.get(function.type_index()as usize)).ok_or_else(||refused("Core host reply type is absent"))?;if results.len()!=ty.results.len()||results.iter().zip(&ty.results).any(|(value,ty)|value.value_type()!=*ty){return Err(refused("Core host reply changes its actual declared result types").into())}self.validate_retirement_root(module,cx)?;if cx.original_retirement_active(){if !matches!(module.functions.get(call.function as usize),Some(FunctionDecl::Import{module,name,..})if module=="semio:framework/pure@1.0.0"&&name=="operation-clock-us"){return Err(refused("Core cleanup cannot resume a semantic host import").into())}}else if cx.is_cancelled(){return Ok(false)}let machine=self.core.as_mut().unwrap().machine.as_mut().unwrap();let target=call.start.checked_add(results.len()).ok_or_else(||refused("Core host result count exceeds native storage"))?;let grow=target>machine.values.capacity();let capacity=if grow{bytes_for::<Value>(target)?}else{0};let release=if grow{bytes_for::<Value>(machine.values.capacity())?}else{0};let copy=bytes_for::<Value>(if grow{target}else{results.len()})?.checked_add(size_of::<OriginalHostCall>()+size_of::<usize>()).ok_or_else(||refused("Core host result copy size overflow"))?;
-  #[cfg(any(test, feature = "testkit"))]
+  #[cfg(test)]
   let trace=Slice::begin(cx,Category::HostCall);
   let charged=charge(cx,copy,capacity,release);
-  #[cfg(any(test, feature = "testkit"))]
-  if let Some(trace)=trace{
-   if let Some(frame)=machine.frames.first(){trace.finish(module,frame.function,cx,0,matches!(&charged,Ok(false)));}
-  }
+  #[cfg(test)]
+  if let Some(trace)=trace{trace.finish(cx,0,matches!(&charged,Ok(false)));}
   if !charged?{return Ok(false)}if grow{let mut values=Vec::with_capacity(target);values.extend_from_slice(&machine.values[..call.start]);values.extend_from_slice(results);machine.values=values;}else{machine.values.truncate(call.start);machine.values.extend_from_slice(results);}machine.frames.last_mut().unwrap().pc=call.pc;self.host_call=None;Ok(true)
  }
 }

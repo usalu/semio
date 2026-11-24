@@ -274,3 +274,15 @@ fn returned_arc_lease_quote_equals_receipt_and_a_short_axis_admits_nothing(){
  assert!(active.is_none());caller.finish();
  finish(bank);
 }
+
+/// 🎚️ A probe opens at most [`PROBE_CEILING_CAP`] units whatever the turn holds (the browser shard grants 50,000,000), still starts at the turn's own remaining fuel when that is smaller, and never opens below the floor.
+#[test]
+fn the_probe_ceiling_never_reserves_a_whole_shard_turn() {
+    assert_eq!(probe_ceiling(Some(50_000_000-5)),PROBE_CEILING_CAP);
+    assert_eq!(probe_ceiling(Some(u64::MAX)),PROBE_CEILING_CAP);
+    assert_eq!(probe_ceiling(None),PROBE_CEILING_CAP);
+    assert_eq!(probe_ceiling(Some(1_044_891)),1_044_890);
+    assert_eq!(probe_ceiling(Some(4_096)),4_095);
+    assert_eq!(probe_ceiling(Some(0)),PROBE_CEILING_FLOOR);
+    assert_eq!(probe_ceiling(Some(3)),PROBE_CEILING_FLOOR);
+}

@@ -22,6 +22,8 @@ impl OriginalFixtureCaller{
  pub fn context(&mut self)->StepContext<'_>{assert!(!self.lent,"original fixture context can only be issued once");self.lent=true;self.caller.lend_refreshed_context().with_original_decoder(&mut self.decoder)}
  /// ⛽️ The fuel one host Interactive turn is granted: every fixture turn starts from it, never from what an earlier call left on the long-lived context.
  pub fn turn_fuel()->u64{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().turn_fuel}
+ /// 🎫️ The stock one initiating native event is issued: the host births one per event, so every fixture dispatch is issued this same authored grant afresh instead of drawing on one fixture-lifetime stock.
+ pub fn event_stock()->RetainedCloneGrant{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().grant}
  /// 💤️ Consecutive turns that may settle nothing before a loop fails typed.
  pub fn maximum_idle_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_idle_turns}
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
@@ -47,7 +49,7 @@ impl OriginalFixtureCaller{
   self.caller.settle_lent_fuel(fuel);let mut decoder=std::mem::replace(&mut self.decoder,semio_framework_job::OriginalJobDecodeOwner::empty());let retired=self.retire_decoder(&mut decoder,fuel);self.decoder=decoder;retired?;
   let loan=self.policy.retirement_loan;
   for _ in 0..self.policy.maximum_turns{
-   if self.caller.terminal_is_empty(){let receipt=self.caller.cumulative_receipt();assert!(receipt.fits(self.policy.grant));return Ok(receipt)}
+   if self.caller.terminal_is_empty(){let receipt=self.caller.cumulative_receipt();assert!(receipt.fits(self.caller.stock()),"original fixture caller exceeds the stock of its last initiating event");return Ok(receipt)}
    let step=self.caller.retire_step(loan)?;if step.progress()==Default::default(){std::thread::yield_now()}
   }
   Err(OriginalTurnFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture caller retirement exceeded its supplied turn bound")))

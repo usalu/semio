@@ -124,8 +124,12 @@ where
             }
             let (action, payload) = input.command.view_edit().ok_or_else(|| Fault::from("pdf-view-route-mismatch"))?;
             let value: serde_json::Value = serde_json::from_str(payload).map_err(|_| Fault::from("pdf-view-payload-invalid"))?;
-            let intent = view_intent(action, value["text"].as_str().unwrap_or(""), value["page"].as_u64().unwrap_or(0) as usize).ok_or_else(|| Fault::from("pdf-view-route-mismatch"))?;
             let page_model = (self.lens)(input.snapshot)?;
+            let page = match value["page"].as_u64() {
+                Some(number) if action == "go-to-page" => page::resolve_page(page_model.pages.len(), number)?,
+                _ => 0,
+            };
+            let intent = view_intent(action, value["text"].as_str().unwrap_or(""), page).ok_or_else(|| Fault::from("pdf-view-route-mismatch"))?;
             let current = input.context.map(|context| view_state(context.transient.as_ref())).unwrap_or_default();
             let hits = if matches!(intent, ViewIntent::NextHit | ViewIntent::PreviousHit) {
                 search(&page_model, &current.query, current.match_case, &mut SearchControl { cancelled: &|| false, progress: &mut |_, _| {} }).hits
@@ -190,8 +194,8 @@ where
             }
             let (action, payload) = input.command.view_edit().ok_or_else(|| Fault::from("pdf-presence-route-mismatch"))?;
             let value: serde_json::Value = serde_json::from_str(payload).map_err(|_| Fault::from("pdf-presence-payload-invalid"))?;
-            let intent = presence_intent(action, &value).ok_or_else(|| Fault::from("pdf-presence-route-mismatch"))?;
             let page_model = (self.lens)(input.snapshot)?;
+            let intent = presence_intent(action, &value, page_model.pages.len()).map_err(page::page_fault)?.ok_or_else(|| Fault::from("pdf-presence-route-mismatch"))?;
             let presence = local_presence(input).follow(&page_model, &intent);
             Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit: Emit::default(), ephemeral: EphemeralEmit { presence, ..Default::default() } })
         })();

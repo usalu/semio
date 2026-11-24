@@ -16,7 +16,15 @@
     "work"
   ],
   "properties": {
-    "totalGrant": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
+    "totalGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
     "operation": {
       "type": "integer",
       "minimum": 1
@@ -49,8 +57,8 @@
     },
     "phases": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 9,
+      "maxItems": 9,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -67,8 +75,10 @@
               "root",
               "payload-denied",
               "payload",
-              "source-denied",
-              "source",
+              "source-prepare",
+              "source-backing-denied",
+              "source-backing",
+              "source-publish",
               "borrow"
             ]
           },

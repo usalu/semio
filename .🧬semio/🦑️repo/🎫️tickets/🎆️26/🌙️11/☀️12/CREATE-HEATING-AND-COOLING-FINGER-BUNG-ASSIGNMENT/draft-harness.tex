@@ -1,0 +1,25 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{fontspec}
+\input{model.tex}
+\newcommand{\EnergyDecimal}{{,}}
+\newcommand{\EnergyWordElement}{Element}
+\newcommand{\EnergyWordEnvelope}{Gebäudehülle}
+\newcommand{\EnergyWordFloor}{Nutzfläche}
+\newcommand{\EnergyWordWindowSouthOne}{Fenster Süd 1}
+\newcommand{\EnergyWordWindowSouthTwo}{Fenster Süd 2}
+\newcommand{\EnergyWordWindowEast}{Fenster Ost}
+\newcommand{\EnergyWordCanopy}{Vordach}
+\newcommand{\EnergyWordBalustrade}{Brüstung}
+\newcommand{\EnergyWordPoint}{Punkt}
+\newcommand{\EnergyWordArc}{Bogen}
+\newcommand{\EnergyWordSouth}{Ansicht Süd}
+\newcommand{\EnergyWordEast}{Ansicht Ost}
+\begin{document}
+\EnergyPlan
+\EnergyElements
+\EnergyOutlineTable
+\EnergyElevations
+\clearpage
+\EnergyCsvTemplate
+\end{document}

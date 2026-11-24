@@ -96,14 +96,6 @@ pub mod standards {
                             pub mod set_info_title;
                         }
                     }
-                    #[path = "."]
-                    pub mod binary {
-                        #[path = "."]
-                        pub mod mutations {
-                            #[path = "../../../../../../../♿️ua/🚪️io/💾️binary/🧬️mutations/📰️set-info-title/🦀️.rs"]
-                            pub mod set_info_title;
-                        }
-                    }
                 }
             }
             #[path = "."]

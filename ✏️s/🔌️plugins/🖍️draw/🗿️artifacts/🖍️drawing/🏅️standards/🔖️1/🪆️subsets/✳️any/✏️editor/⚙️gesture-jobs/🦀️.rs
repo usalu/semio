@@ -92,7 +92,7 @@ impl DrawingGestureOperationJob {
                 }
                 self.raw_page_cursor += 1;
                 self.raw_byte_cursor = 0;
-                context.consume_fuel(page.len().max(1) as u64);
+                context.consume_fuel(1);
                 return DrawingJobTurn::Yield;
             }
             let exact = self.decoder.as_ref().is_some_and(DrawingRetainedCommandDecoder::finish);

@@ -1,0 +1,14 @@
+16:42:24 {"children": 48, "running": 9, "slots": 70, "units": 0, "published": 123, "opm": 2.4, "alive": 13, "idle_free": 0}
+g1-m01 pulling 6 0 0 35 178 0.2 pressure 43 a80f08c6
+g1-m02 pulling 3 0 2 2 23 0.4 nothing-fits 43 a80f08c6
+g1-m03 pulling 1 0 0 4 72 0 nothing-fits 43 a80f08c6
+g1-m04 pulling 8 5 7 12 92 0.6 nothing-fits 43 a80f08c6
+g1-m05 idle 0 0 16 0 90 0 starting 43 a80f08c6
+g1-m06 pulling 7 1 10 43 69 0.2 starting 43 a80f08c6
+g1-m07 pulling 6 1 8 1 114 0.2 starting 43 a80f08c6
+g1-m08 pulling 6 0 7 10 84 0.2 starting 43 a80f08c6
+g1-m10 pulling 6 1 9 6 87 0 starting 43 a80f08c6
+g1-m11 idle 0 0 4 2 155 0 starting 43 a80f08c6
+g1-m12 pulling 3 0 2 2 23 0.2 yielding 43 a80f08c6
+g1-m13 idle 0 0 0 4 178 0 nothing-fits 43 a80f08c6
+g1-server pulling 2 1 5 2 13 0.4 starting 43 a80f08c6

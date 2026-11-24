@@ -25,7 +25,7 @@ fn seal_with<M:RetireOwned+Sync+'static+ArtifactCanonicalJsonTree>(edit:Edit<M>,
  while !cursor.is_ready(){
   turns+=1;assert!(turns<10_000_000,"seal did not settle");
   let grant=if paged{generous()}else{exact(cursor.next_demand().unwrap())};
-  let units=cursor.next_work_demand().unwrap()*work_factor;let step=drive(grant,units,|effect|cursor.advance(effect)).result.unwrap_or_else(|_|panic!("seal turn refused"));assert!(step.progress().fits(grant));
+  let quote=cursor.next_work_demand().unwrap();assert_ne!(quote,0,"an unsettled seal turn quotes the work of its own transition");let units=quote*work_factor;let step=drive(grant,units,|effect|cursor.advance(effect)).result.unwrap_or_else(|_|panic!("seal turn refused"));assert!(step.progress().fits(grant));
  }
  let(length,digest)=(cursor.canonical_length(),cursor.digest().unwrap());
  let(edit,_,_)=cursor.take_edit(generous()).unwrap().unwrap();

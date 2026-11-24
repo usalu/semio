@@ -416,6 +416,16 @@ async fn set_active_example_loads_the_registered_demo_document() {
     assert_ne!(loaded, app.snapshot().unwrap(), "the effect is HOST-applied: a mounted app with no host keeps its own snapshot, which is what makes the effect the only guest-side witness");
 }
 
+/// ⚖️ LAW: the canonical empty example id `""` loads the blank rule document, exactly what `resetRule` builds.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_empty_id_loads_the_blank_rule_document() {
+    let mut app = new_app().await;
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: String::new() }, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
+    let receipt = settle(&mut app).await;
+    assert_eq!(receipt.effects.iter().filter(|effect| matches!(effect, semio_plugin::Effect::LoadDocument { .. })).count(), 1, "the empty id produces exactly one LoadDocument effect");
+    assert_eq!(crate::editor::rewriting::commands::set_active_example::set_active_example_document(""), Some(crate::editor::rewriting::document::default_rule_state()), "the empty id resolves to the blank rule");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_ignores_an_unregistered_id() {
     let mut app = new_app().await;

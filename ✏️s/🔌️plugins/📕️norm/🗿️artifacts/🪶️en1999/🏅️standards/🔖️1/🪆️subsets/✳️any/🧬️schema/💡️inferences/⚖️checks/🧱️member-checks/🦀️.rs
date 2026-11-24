@@ -125,8 +125,13 @@ pub fn utilization_check(
 
 pub fn clause(section: &str) -> ClauseId { ClauseId::new("EN 1999-1-1", format!("§{section}"), section) }
 
-/// 🩹 One at-most remedy per non-zero action leaf, each scaled by 0.99/u so that applying all of them clears a failing check of utilization `u`.
-pub fn leaf_remedies(owner_kind: &str, owner_id: &str, actions: &[semio_s_artifact_norm_en1999_model::MemberAction], u: f64, label: &LocalizedCopy, what_en: &str, what_de: &str, lead: &str) -> Vec<Remedy> {
+/// 🧭 Whether the action leaf `leaf` of value `value` feeds one of the governing effects `reads` (`(leaf name, signed effect)`) with the sign of that effect: the line loads feed the shear force and the strong-axis moment, every other leaf feeds its own effect (a read named with a trailing `!` is fed by its own leaf only, for an exhausted resistance that only a dominant discrete load can restore), so lowering a feeding leaf alone lowers the check.
+fn feeds(leaf: &str, value: f64, reads: &[(&str, f64)]) -> bool {
+    reads.iter().any(|(read, effect)| value * effect > 0.0 && (read.strip_suffix('!').unwrap_or(read) == leaf || (matches!(leaf, "gKLine" | "qKLine") && matches!(*read, "vZK" | "mYK"))))
+}
+
+/// 🩹 One at-most remedy per action leaf that feeds a governing effect the check reads (`reads`, the first one leads), each scaled by 0.99/u so that applying all of them clears a failing check of utilization `u`; a leaf that does not drive the check or works against it (opposite sign) is never offered, so every remedy lowers the check on its own.
+pub fn leaf_remedies(owner_kind: &str, owner_id: &str, actions: &[semio_s_artifact_norm_en1999_model::MemberAction], u: f64, label: &LocalizedCopy, what_en: &str, what_de: &str, reads: &[(&str, f64)]) -> Vec<Remedy> {
     let mut out = Vec::new();
     if u <= 1.0 { return out; }
     for a in actions.iter().filter(|a| a.kind != semio_s_artifact_norm_en1999_model::ActionKind::Fire) {
@@ -136,7 +141,7 @@ pub fn leaf_remedies(owner_kind: &str, owner_id: &str, actions: &[semio_s_artifa
             ("torsionK", a.torsion_k, false), ("localLoadK", a.local_load_k, true),
         ];
         for (leaf, cur, is_force) in leaves {
-            if cur.abs() < 1e-18 { continue; }
+            if cur.abs() < 1e-18 || !feeds(leaf, cur, reads) { continue; }
             let to_q = |v: f64| if is_force { q_force(v) } else { q_moment(v) };
             out.push(Remedy::at_most(
                 SubjectRef::new(owner_id, format!("{owner_kind}[id={owner_id}].actions[id={}].{leaf}", a.id), label.clone()),
@@ -146,8 +151,14 @@ pub fn leaf_remedies(owner_kind: &str, owner_id: &str, actions: &[semio_s_artifa
             ));
         }
     }
+    let lead = reads.first().map_or("", |(lead, _)| *lead);
     out.sort_by_key(|r| !r.target.path.ends_with(&format!(".{lead}")));
     out
+}
+
+/// ⚖️ The actions that carry weight under a combination: every permanent action and every other one whose combination factor `weight` is positive; the registry reads of the weights are not cited by the next check.
+pub fn weighted_actions(actions: &[semio_s_artifact_norm_en1999_model::MemberAction], weight: impl Fn(&semio_s_artifact_norm_en1999_model::MemberAction) -> f64) -> Vec<semio_s_artifact_norm_en1999_model::MemberAction> {
+    semio_s_plugin_norm_compliance::record_ndp_reads(|| actions.iter().filter(|a| a.kind == semio_s_artifact_norm_en1999_model::ActionKind::Permanent || weight(a) > 0.0).cloned().collect()).0
 }
 
 /// 🧯 A resistance that never drops below one millionth of the demand, so a zero resistance reports the capped utilization 10⁶ instead of a vanishing one.
@@ -215,8 +226,8 @@ impl Run<'_> {
         }
     }
 
-    fn loads(&self, u: f64, what_en: &str, what_de: &str, lead: &str) -> Vec<Remedy> {
-        leaf_remedies("members", &self.member.id, &self.member.actions, u, &member_label(&self.member.id), what_en, what_de, lead)
+    fn loads(&self, u: f64, what_en: &str, what_de: &str, reads: &[(&str, f64)]) -> Vec<Remedy> {
+        leaf_remedies("members", &self.member.id, &self.member.actions, u, &member_label(&self.member.id), what_en, what_de, reads)
     }
 }
 
@@ -319,7 +330,7 @@ fn member_uls(
     } else {
         (-n, n_c_rd, ("Compression resistance N_c,Rd (A_eff, HAZ)", "Druckwiderstand N_c,Rd (A_eff, WEZ)"))
     };
-    let mut rem = run.loads(n_abs / n_rd.max(1e-18), "Reduce the axial force", "Normalkraft senken", "nK");
+    let mut rem = run.loads(n_abs / n_rd.max(1e-18), "Reduce the axial force", "Normalkraft senken", &[("nK", n)]);
     if n_abs > n_rd {
         rem.push(Remedy::one_of(
             SubjectRef::new(&material.id, format!("materials[id={}].designation", material.id), loc("Alloy", "Legierung")),
@@ -339,12 +350,12 @@ fn member_uls(
     let w_z = if has_haz { eff_o.wz } else if class == SectionClass::Class4 { loc_p.wz } else { gross.wz };
     let m_rd_y = alpha_y * w_y * fo / g1;
     let m_rd_z = alpha_z * w_z * fo / g1;
-    let rem = run.loads(my.abs() / m_rd_y.max(1e-18), "Reduce the strong-axis moment", "Moment um die starke Achse senken", "mYK");
+    let rem = run.loads(my.abs() / m_rd_y.max(1e-18), "Reduce the strong-axis moment", "Moment um die starke Achse senken", &[("mYK", my)]);
     run.emit(&mut out, "en1999.6.2.5.m", "6.2.5", ("Bending resistance M_y,Rd", "Biegewiderstand M_y,Rd"), q_moment(my.abs()), q_moment(m_rd_y),
         (format!("M_y,Ed = {:.2} kNm, α = {alpha_y:.3}, W = {:.0} mm³, class {:?}, M_y,Rd = {:.2} kNm", my / 1e3, w_y * 1e9, class, m_rd_y / 1e3),
          format!("M_y,Ed = {:.2} kNm, α = {alpha_y:.3}, W = {:.0} mm³, Klasse {:?}, M_y,Rd = {:.2} kNm", my / 1e3, w_y * 1e9, class, m_rd_y / 1e3)),
         path_m.clone(), rem);
-    let rem = run.loads(mz.abs() / m_rd_z.max(1e-18), "Reduce the weak-axis moment", "Moment um die schwache Achse senken", "mZK");
+    let rem = run.loads(mz.abs() / m_rd_z.max(1e-18), "Reduce the weak-axis moment", "Moment um die schwache Achse senken", &[("mZK", mz)]);
     run.emit(&mut out, "en1999.6.2.5.mz", "6.2.5", ("Bending resistance M_z,Rd", "Biegewiderstand M_z,Rd"), q_moment(mz.abs()), q_moment(m_rd_z),
         (format!("M_z,Ed = {:.2} kNm, α = {alpha_z:.3}, W = {:.0} mm³, M_z,Rd = {:.2} kNm", mz / 1e3, w_z * 1e9, m_rd_z / 1e3),
          format!("M_z,Ed = {:.2} kNm, α = {alpha_z:.3}, W = {:.0} mm³, M_z,Rd = {:.2} kNm", mz / 1e3, w_z * 1e9, m_rd_z / 1e3)),
@@ -360,18 +371,18 @@ fn member_uls(
     let rho_v = if part_1_1::is_tube(section) || tw <= 0.0 || hw <= 0.0 { 1.0 } else { spacings.iter().map(|a| part_1_1::shear_buckling_rho(hw / tw, fo, hw, *a)).fold(f64::INFINITY, f64::min) };
     let (panels_en, panels_de) = if web_panels.is_empty() { ("web unstiffened over the member length".to_string(), "Steg über die Bauteillänge ungesteift".to_string()) } else { (format!("{} web panels between the transverse stiffeners and the supports, widest a = {:.0} mm", web_panels.len(), a_widest * 1e3), format!("{} Stegfelder zwischen den Quersteifen und den Auflagern, breitestes a = {:.0} mm", web_panels.len(), a_widest * 1e3)) };
     let v_b_rd = rho_v * v_pl_z;
-    let rem = run.loads(vz.abs() / v_pl_z.max(1e-18), "Reduce the shear force V_z", "Querkraft V_z senken", "vZK");
+    let rem = run.loads(vz.abs() / v_pl_z.max(1e-18), "Reduce the shear force V_z", "Querkraft V_z senken", &[("vZK", vz)]);
     run.emit(&mut out, "en1999.6.2.6.v", "6.2.6", ("Shear resistance V_z,Rd", "Querkraftwiderstand V_z,Rd"), q_force(vz.abs()), q_force(v_pl_z),
         (format!("V_z,Ed = {:.1} kN, A_v = {:.1} mm², V_pl,Rd = {:.1} kN", vz / 1e3, haz_o.a_v * 1e6, v_pl_z / 1e3),
          format!("V_z,Ed = {:.1} kN, A_v = {:.1} mm², V_pl,Rd = {:.1} kN", vz / 1e3, haz_o.a_v * 1e6, v_pl_z / 1e3)),
         path_vz.clone(), rem);
-    let rem = run.loads(vy.abs() / v_pl_y.max(1e-18), "Reduce the shear force V_y", "Querkraft V_y senken", "vYK");
+    let rem = run.loads(vy.abs() / v_pl_y.max(1e-18), "Reduce the shear force V_y", "Querkraft V_y senken", &[("vYK", vy)]);
     run.emit(&mut out, "en1999.6.2.6.vy", "6.2.6", ("Shear resistance V_y,Rd (flanges)", "Querkraftwiderstand V_y,Rd (Gurte)"), q_force(vy.abs()), q_force(v_pl_y),
         (format!("V_y,Ed = {:.1} kN, A_v,y = {:.1} mm², V_pl,y,Rd = {:.1} kN", vy / 1e3, haz_o.a_f * 1e6, v_pl_y / 1e3),
          format!("V_y,Ed = {:.1} kN, A_v,y = {:.1} mm², V_pl,y,Rd = {:.1} kN", vy / 1e3, haz_o.a_f * 1e6, v_pl_y / 1e3)),
         path_vy.clone(), rem);
     let hw_tw = if tw > 0.0 { hw / tw } else { 0.0 };
-    let mut rem = run.loads(vz.abs() / v_b_rd.max(1e-18), "Reduce the shear force V_z", "Querkraft V_z senken", "vZK");
+    let mut rem = run.loads(vz.abs() / v_b_rd.max(1e-18), "Reduce the shear force V_z", "Querkraft V_z senken", &[("vZK", vz)]);
     if vz.abs() > v_b_rd && !part_1_1::is_tube(section) && tw > 0.0 && hw > 0.0 {
         let passes = |panels: &[f64]| web_stiffener::spacings(panels).iter().map(|a| part_1_1::shear_buckling_rho(hw / tw, fo, hw, *a)).fold(f64::INFINITY, f64::min) * v_pl_z >= vz.abs();
         if let Some(x) = web_stiffener::minimal_insert(member.length, web_rows, passes) {
@@ -392,13 +403,13 @@ fn member_uls(
     let t_rd = w_t * fo / (3.0f64.sqrt() * g1);
     let tau_t = if w_t > 0.0 { gov.t_ed.abs() / w_t } else { 0.0 };
     let path_t = format!("members[id={}].actions[id={}].torsionK", member.id, gov.action_id);
-    let rem = run.loads(gov.t_ed.abs() / t_rd.max(1e-18), "Reduce the torque", "Torsionsmoment senken", "torsionK");
+    let rem = run.loads(gov.t_ed.abs() / t_rd.max(1e-18), "Reduce the torque", "Torsionsmoment senken", &[("torsionK", gov.t_ed)]);
     run.emit(&mut out, "en1999.6.2.7.t", "6.2.7", ("Torsion resistance T_Rd", "Torsionswiderstand T_Rd"), q_moment(gov.t_ed.abs()), q_moment(floor_limit(gov.t_ed, t_rd)),
         (format!("T_Ed = {:.2} kNm, W_t = {:.0} mm³, τ_t,Ed = {:.1} MPa, T_Rd = {:.2} kNm (St. Venant torsion)", gov.t_ed / 1e3, w_t * 1e9, tau_t / 1e6, t_rd / 1e3),
          format!("T_Ed = {:.2} kNm, W_t = {:.0} mm³, τ_t,Ed = {:.1} MPa, T_Rd = {:.2} kNm (St.-Venantsche Torsion)", gov.t_ed / 1e3, w_t * 1e9, tau_t / 1e6, t_rd / 1e3)),
         path_t.clone(), rem);
     let v_rd_t = v_pl_z.min(v_b_rd) * (1.0 - tau_t * 3.0f64.sqrt() * g1 / fo).max(0.0);
-    let rem = run.loads(vz.abs() / v_rd_t.max(1e-18), "Reduce the shear force or the torque", "Querkraft oder Torsionsmoment senken", "vZK");
+    let rem = run.loads(vz.abs() / v_rd_t.max(1e-18), "Reduce the shear force or the torque", "Querkraft oder Torsionsmoment senken", &if v_rd_t > 0.0 { vec![("vZK", vz), ("torsionK", gov.t_ed)] } else { vec![("torsionK", gov.t_ed)] });
     run.emit(&mut out, "en1999.6.2.7.vt", "6.2.7", ("Shear with torsion V_Rd,T", "Querkraft mit Torsion V_Rd,T"), q_force(vz.abs()), q_force(floor_limit(vz, v_rd_t)),
         (format!("V_Rd,T = V_Rd·(1 − τ_t,Ed·√3·γ_M1/f_o) = {:.1} kN", v_rd_t / 1e3),
          format!("V_Rd,T = V_Rd·(1 − τ_t,Ed·√3·γ_M1/f_o) = {:.1} kN", v_rd_t / 1e3)),
@@ -408,7 +419,7 @@ fn member_uls(
         let (a_patch, f_one) = spacings.iter().map(|a| (*a, part_1_1::patch_load_resistance(hw, tw, section.width, section.flange_thickness, member.bearing_length, *a, fo, g1))).min_by(|x, y| x.1.total_cmp(&y.1)).unwrap_or((0.0, 0.0));
         let f_rd = webs * f_one;
         let path_f = format!("members[id={}].actions[id={}].localLoadK", member.id, gov.action_id);
-        let rem = run.loads(gov.f_loc_ed.abs() / f_rd.max(1e-18), "Reduce the patch load", "Einzellast senken", "localLoadK");
+        let rem = run.loads(gov.f_loc_ed.abs() / f_rd.max(1e-18), "Reduce the patch load", "Einzellast senken", &[("localLoadK", gov.f_loc_ed)]);
         run.emit(&mut out, "en1999.6.7.5.patch", "6.7.5", ("Patch load resistance F_Rd", "Beulwiderstand unter Einzellast F_Rd"), q_force(gov.f_loc_ed.abs()), q_force(floor_limit(gov.f_loc_ed, f_rd)),
             (format!("F_Ed = {:.1} kN, s_s = {:.0} mm, a = {:.0} mm, F_Rd = {:.1} kN", gov.f_loc_ed / 1e3, member.bearing_length * 1e3, a_patch * 1e3, f_rd / 1e3),
              format!("F_Ed = {:.1} kN, s_s = {:.0} mm, a = {:.0} mm, F_Rd = {:.1} kN", gov.f_loc_ed / 1e3, member.bearing_length * 1e3, a_patch * 1e3, f_rd / 1e3)),
@@ -417,7 +428,7 @@ fn member_uls(
     let v_rd_eff = v_pl_z.min(v_b_rd);
     let rho_vm = if v_rd_eff > 0.0 && vz.abs() > 0.5 * v_rd_eff { (2.0 * vz.abs() / v_rd_eff - 1.0).powi(2) } else { 0.0 };
     let m_v_rd = (m_rd_y - rho_vm * haz_o.a_v * haz_o.a_v / (4.0 * tw.max(1e-9)) * fo / g1).max(0.0);
-    let rem = run.loads(my.abs() / m_v_rd.max(1e-18), "Reduce the strong-axis moment", "Moment um die starke Achse senken", "mYK");
+    let rem = run.loads(my.abs() / m_v_rd.max(1e-18), "Reduce the strong-axis moment", "Moment um die starke Achse senken", &if m_v_rd > 0.0 { vec![("mYK", my), ("vZK", if rho_vm > 0.0 { vz } else { 0.0 })] } else { vec![("vZK!", vz)] });
     run.emit(&mut out, "en1999.6.2.8.mv", "6.2.8", ("Bending with shear M_V,Rd", "Biegung mit Querkraft M_V,Rd"), q_moment(my.abs()), q_moment(floor_limit(my, m_v_rd)),
         (format!("ρ_V = {rho_vm:.3} (V_z,Ed/V_Rd = {:.3}), M_V,Rd = {:.2} kNm", vz.abs() / v_rd_eff.max(1e-18), m_v_rd / 1e3),
          format!("ρ_V = {rho_vm:.3} (V_z,Ed/V_Rd = {:.3}), M_V,Rd = {:.2} kNm", vz.abs() / v_rd_eff.max(1e-18), m_v_rd / 1e3)),
@@ -439,7 +450,7 @@ fn member_uls(
          format!("(N/N_Rd)^{psi} + (M_y/M_y,Rd)^{eta_y} + (M_z/M_z,Rd)^{xi_z} = {u:.3} (class {class:?})"),
          format!("(N/N_Rd)^{psi} + (M_y/M_y,Rd)^{eta_y} + (M_z/M_z,Rd)^{xi_z} = {u:.3} (Klasse {class:?})"))
     };
-    let rem = run.loads(u_nm, "Reduce the combined axial force and moments", "Normalkraft und Momente gemeinsam senken", "nK");
+    let rem = run.loads(u_nm, "Reduce the combined axial force and moments", "Normalkraft und Momente gemeinsam senken", &[("nK", n), ("mYK", my), ("mZK", mz)]);
     run.emit(&mut out, "en1999.6.2.9.nm", "6.2.9", ("Combined axial force and bending", "Interaktion Normalkraft und Biegung"), q_dim(u_nm), q_dim(1.0), (nm_en, nm_de), path_n.clone(), rem);
     let udl = member.actions.iter().find(|a| a.id == gov.action_id).is_some_and(|a| a.source == semio_s_artifact_norm_en1999_model::ActionSource::Udl);
     if let Some(last) = out.last_mut() {
@@ -475,16 +486,17 @@ fn member_uls(
         ("en1999.6.3.1.fb", "y", lam_y, n_b_y, i_y, l_cr_y, "bucklingLengthY"),
         ("en1999.6.3.1.fb.z", "z", lam_z, n_b_z, i_z, l_cr_z, "bucklingLengthZ"),
     ] {
-        let mut rem = run.loads(nc / n_rd_b.max(1e-18), &format!("Reduce the compression force (flexural buckling about {axis})"), &format!("Druckkraft senken (Biegeknicken um {axis})"), "nK");
+        let mut rem = run.loads(nc / n_rd_b.max(1e-18), &format!("Reduce the compression force (flexural buckling about {axis})"), &format!("Druckkraft senken (Biegeknicken um {axis})"), &[("nK", n.min(0.0))]);
         if nc > n_rd_b && n_rd_b > 0.0 {
             let lo = solve_length(l_cr, nc, |l| n_b(i, l).1);
-            let cur = if axis == "y" { member.buckling_length_y } else { member.buckling_length_z };
-            let req = lo.min(cur);
-            rem.push(Remedy::at_most(
-                SubjectRef::new(&member.id, format!("members[id={}].{len_field}", member.id), member_label(&member.id)),
-                q_length(cur), q_length(req),
-                loc(&format!("Reduce the buckling length about {axis} to at most {req:.2} m."), &format!("Knicklänge um {axis} auf höchstens {req:.2} m verkürzen.")),
-            ));
+            let req = lo.min(l_cr);
+            if req < l_cr && n_b(i, req).1 > n_rd_b {
+                rem.push(Remedy::at_most(
+                    SubjectRef::new(&member.id, format!("members[id={}].{len_field}", member.id), member_label(&member.id)),
+                    q_length(l_cr), q_length(req),
+                    loc(&format!("Reduce the buckling length about {axis} to at most {req:.2} m."), &format!("Knicklänge um {axis} auf höchstens {req:.2} m verkürzen.")),
+                ));
+            }
         }
         run.emit(&mut out, id, "6.3.1.1", (if axis == "y" { "Flexural buckling N_b,Rd,y" } else { "Flexural buckling N_b,Rd,z" }, if axis == "y" { "Biegeknicken N_b,Rd,y" } else { "Biegeknicken N_b,Rd,z" }),
             q_force(nc), q_force(n_rd_b),
@@ -498,7 +510,7 @@ fn member_uls(
         let lam_w = part_1_1::lambda_bar(l_w, i_w_axis, a_loc, fo);
         let kappa_w = part_1_1::kappa(kappa_0, lam_w);
         let omega_w = omega(kappa_w * part_1_1::chi_from_lambda(lam_w, alpha, lambda_0), l_w);
-        let rem = run.loads(nc / n_w.max(1e-18), "Reduce the compression force (welded member, HAZ)", "Druckkraft senken (geschweißtes Bauteil, WEZ)", "nK");
+        let rem = run.loads(nc / n_w.max(1e-18), "Reduce the compression force (welded member, HAZ)", "Druckkraft senken (geschweißtes Bauteil, WEZ)", &[("nK", n.min(0.0))]);
         run.emit(&mut out, "en1999.6.3.1.haz", "6.3.1.1", ("Welded member buckling, HAZ factors κ, ω_x", "Geschweißtes Bauteil, WEZ-Faktoren κ, ω_x"), q_force(nc), q_force(n_w),
             (format!("governing axis {axis}: κ = {kappa_w:.3} (κ_0 = {kappa_0:.3}), ω_x = {omega_w:.3}, N_b,Rd = {:.1} kN", n_w / 1e3),
              format!("maßgebende Achse {axis}: κ = {kappa_w:.3} (κ_0 = {kappa_0:.3}), ω_x = {omega_w:.3}, N_b,Rd = {:.1} kN", n_w / 1e3)),
@@ -508,7 +520,7 @@ fn member_uls(
     let lam_t = if n_cr_t.is_finite() && n_cr_t > 0.0 { (a_loc * fo / n_cr_t).sqrt() } else { 0.0 };
     let (alpha_t, lambda_0_t) = part_1_1::torsional_curve(class_a);
     let n_b_t = part_1_1::kappa(kappa_0, lam_t) * part_1_1::chi_from_lambda(lam_t, alpha_t, lambda_0_t) * a_loc * fo / g1;
-    let rem = run.loads(nc / n_b_t.max(1e-18), "Reduce the compression force (torsional buckling)", "Druckkraft senken (Drillknicken)", "nK");
+    let rem = run.loads(nc / n_b_t.max(1e-18), "Reduce the compression force (torsional buckling)", "Druckkraft senken (Drillknicken)", &[("nK", n.min(0.0))]);
     run.emit(&mut out, "en1999.6.3.1.tb", "6.3.1.4", ("Torsional buckling N_b,T,Rd", "Drillknicken N_b,T,Rd"), q_force(nc), q_force(n_b_t),
         (format!("N_cr,T = {:.1} kN, λ̄_T = {lam_t:.4}, N_b,T,Rd = {:.1} kN", n_cr_t.min(1.0e12) / 1e3, n_b_t / 1e3),
          format!("N_cr,T = {:.1} kN, λ̄_T = {lam_t:.4}, N_b,T,Rd = {:.1} kN", n_cr_t.min(1.0e12) / 1e3, n_b_t / 1e3)),
@@ -520,17 +532,20 @@ fn member_uls(
     let chi_lt = part_1_1::chi_from_lambda(lam_lt, alpha_lt, lambda_0_lt);
     let omega_lt = omega(chi_lt, l_lt);
     let m_b_rd = omega_lt * chi_lt * m_rd_y;
-    let mut rem = run.loads(my.abs() / m_b_rd.max(1e-18), "Reduce the strong-axis moment (lateral-torsional buckling)", "Moment um die starke Achse senken (Biegedrillknicken)", "mYK");
+    let mut rem = run.loads(my.abs() / m_b_rd.max(1e-18), "Reduce the strong-axis moment (lateral-torsional buckling)", "Moment um die starke Achse senken (Biegedrillknicken)", &[("mYK", my)]);
     if my.abs() > m_b_rd && !member.restrained_ltb {
-        let lo = solve_length(l_lt, my.abs(), |l| {
-            let mc = part_1_1::m_cr_of(section, member.c1, l);
-            part_1_1::chi_from_lambda((m_rd_y * g1 / mc).sqrt(), alpha_lt, lambda_0_lt) * m_rd_y
-        });
-        rem.push(Remedy::at_most(
-            SubjectRef::new(&member.id, format!("members[id={}].ltbLength", member.id), member_label(&member.id)),
-            q_length(member.ltb_length), q_length(lo.min(member.ltb_length)),
-            loc("Reduce the unrestrained length L_LT.", "Gabellagerungslänge L_LT verkürzen."),
-        ));
+        let m_b_at = |l: f64| {
+            let chi = part_1_1::chi_from_lambda((m_rd_y * g1 / part_1_1::m_cr_of(section, member.c1, l)).sqrt(), alpha_lt, lambda_0_lt);
+            omega(chi, l) * chi * m_rd_y
+        };
+        let lo = solve_length(l_lt, my.abs(), m_b_at);
+        if lo < l_lt && m_b_at(lo) > m_b_rd {
+            rem.push(Remedy::at_most(
+                SubjectRef::new(&member.id, format!("members[id={}].ltbLength", member.id), member_label(&member.id)),
+                q_length(l_lt), q_length(lo),
+                loc("Reduce the unrestrained length L_LT.", "Gabellagerungslänge L_LT verkürzen."),
+            ));
+        }
     }
     run.emit(&mut out, "en1999.6.3.2.ltb", "6.3.2", ("Lateral-torsional buckling M_b,Rd", "Biegedrillknicken M_b,Rd"), q_moment(my.abs()), q_moment(m_b_rd),
         (format!("M_cr = {:.2} kNm, λ̄_LT = {lam_lt:.4}, α_LT = {alpha_lt:.2}, λ̄_0,LT = {lambda_0_lt:.2}, χ_LT = {chi_lt:.4}, M_b,Rd = {:.2} kNm", m_cr.min(1.0e12) / 1e3, m_b_rd / 1e3),
@@ -541,7 +556,7 @@ fn member_uls(
     let eq59 = ratio(nc, n_b_y).powf(eta_c) + ratio(my, omega_lt * m_rd_y).powf(gamma_c) + ratio(mz, m_rd_z).powf(xi_c);
     let eq60 = ratio(nc, n_b_z).powf(eta_c) + ratio(my, m_b_rd).powf(gamma_c) + ratio(mz, m_rd_z).powf(xi_c);
     let u_int = eq59.max(eq60);
-    let rem = run.loads(u_int, "Reduce the combined compression and bending demand", "Druck und Biegung gemeinsam senken", "nK");
+    let rem = run.loads(u_int, "Reduce the combined compression and bending demand", "Druck und Biegung gemeinsam senken", &[("nK", n.min(0.0)), ("mYK", my), ("mZK", mz)]);
     run.emit(&mut out, "en1999.6.3.3.int", "6.3.3", ("Member interaction (6.59/6.60)", "Bauteilinteraktion (6.59/6.60)"), q_dim(u_int), q_dim(1.0),
         (format!("Eq. 6.59 = {eq59:.3}, Eq. 6.60 = {eq60:.3} with η_c = {eta_c:.2}, γ_c = {gamma_c:.2}, ξ_c = {xi_c:.2}, ω_x = 1 (no localized transverse weld)"),
          format!("Gl. 6.59 = {eq59:.3}, Gl. 6.60 = {eq60:.3} mit η_c = {eta_c:.2}, γ_c = {gamma_c:.2}, ξ_c = {xi_c:.2}, ω_x = 1 (keine örtliche Querschweißnaht)")),
@@ -574,6 +589,7 @@ fn member_sls(
     let tag_en = format!(" (SLS {}, lead {}); {act_dig}; {sup_dig}", gov.combination, gov.action_id);
     let tag_de = format!(" (GZG {}, führend {}); {act_dig}; {sup_dig}", gov.combination, gov.action_id);
     let label = member_label(&member.id);
+    let carried = weighted_actions(&member.actions, |a| { let psi = part_en1990::psi_row(a.category); match kind { "quasiPermanent" => psi.psi_2, "frequent" => psi.psi_1.max(psi.psi_2), _ => 1.0 } });
     let sigma = gov.n_ed.abs() / p.a.max(1e-18) + gov.m_y_ed.abs() / p.wy.max(1e-18) + gov.m_z_ed.abs() / p.wz.max(1e-18);
     let sigma_lim = params.stress_ratio * fo;
     let mut out = Vec::new();
@@ -582,7 +598,7 @@ fn member_sls(
         let w = if p.iy > 0.0 { k_w * gov.m_y_ed.abs() * member.length.powi(2) / (na_de::E_PA * p.iy) } else { 0.0 };
         let ratio_lim = if member.support == SupportCondition::Cantilever { params.deflection_ratio * 0.5 } else { params.deflection_ratio };
         let w_lim = member.length / ratio_lim;
-        let rem = if w > w_lim { leaf_remedies("members", &member.id, &member.actions, w / w_lim.max(1e-12), &label, "Reduce the loads for the deflection limit", "Lasten für die Durchbiegungsgrenze senken", "mYK") } else { Vec::new() };
+        let rem = if w > w_lim { leaf_remedies("members", &member.id, &carried, w / w_lim.max(1e-12), &label, "Reduce the loads for the deflection limit", "Lasten für die Durchbiegungsgrenze senken", &[("mYK", gov.m_y_ed)]) } else { Vec::new() };
         out.push(utilization_check(
             format!("{}.{}", if kind == "quasiPermanent" { "en1999.7.2.defl-qp" } else { "en1999.7.2.defl" }, member.id), "DIN EN 1999-1-1", clause("7.2"),
             SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, gov.action_id), label.clone()),
@@ -595,7 +611,7 @@ fn member_sls(
         if kind == "quasiPermanent" { return out; }
     }
     let (id, title) = if kind == "characteristic" { ("en1999.7.2.stress", ("SLS stress (characteristic)", "GZG Spannung (charakteristisch)")) } else { ("en1999.7.2.sls-freq", ("SLS stress (frequent)", "GZG Spannung (häufig)")) };
-    let rem = if sigma > sigma_lim { leaf_remedies("members", &member.id, &member.actions, sigma / sigma_lim.max(1.0), &label, "Reduce the loads for the stress limit", "Lasten für die Spannungsgrenze senken", "mYK") } else { Vec::new() };
+    let rem = if sigma > sigma_lim { leaf_remedies("members", &member.id, &carried, sigma / sigma_lim.max(1.0), &label, "Reduce the loads for the stress limit", "Lasten für die Spannungsgrenze senken", &[("nK", gov.n_ed), ("mYK", gov.m_y_ed), ("mZK", gov.m_z_ed)]) } else { Vec::new() };
     let mut stress = utilization_check(
         format!("{id}.{}", member.id), "DIN EN 1999-1-1", clause("7.2"),
         SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, gov.action_id), label),

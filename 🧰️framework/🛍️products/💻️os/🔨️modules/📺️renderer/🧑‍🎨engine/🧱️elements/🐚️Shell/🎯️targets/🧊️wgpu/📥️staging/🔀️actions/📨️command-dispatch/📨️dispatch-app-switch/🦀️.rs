@@ -420,6 +420,7 @@ impl<'ctx> ActionsCtx<'ctx> {
         shell_turn(async move {
             let path = uri.split('?').next().unwrap_or(uri);
             if path.trim_end_matches('/') == "/hub" {
+                self.opening.route_not_found = None;
                 self.directory.hub_workspace_open = true;
                 self.directory.project_verified_hub_authority();
                 if self.directory.hub_workspace.session.phase == HubSessionPhase::SignedIn {

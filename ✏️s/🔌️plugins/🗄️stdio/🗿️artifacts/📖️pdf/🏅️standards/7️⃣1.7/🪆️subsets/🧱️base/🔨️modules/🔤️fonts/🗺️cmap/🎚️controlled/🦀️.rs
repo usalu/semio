@@ -65,7 +65,7 @@ impl PdfDirectToUnicodeCursor {
     pub fn reference_required(&self) -> bool { matches!(self.phase, Phase::Deferred) }
 
     /// ▶️ Advances one source, lexical retirement, or Unicode output turn.
-    pub fn advance(&mut self, source: &[u8], mut grant: CosGrant, cancelled: bool) -> CosReceipt {
+    pub fn advance(&mut self, source: &(impl semio_framework_value::ByteReadSource + ?Sized), mut grant: CosGrant, cancelled: bool) -> CosReceipt {
         if cancelled && matches!(self.phase, Phase::Active | Phase::Complete) { self.phase = Phase::Cancelled; }
         match self.phase {
             Phase::Complete => return report(Ok(CosStatus::Complete { end: self.tokens.position() }), 0),
@@ -91,7 +91,12 @@ impl PdfDirectToUnicodeCursor {
                     self.retiring = Some(PdfCosCursor::retire_parsed_value(value));
                     result
                 }
-                ContentToken::Operator { start, end } => self.keyword(source.get(start..end).unwrap_or_default()),
+                ContentToken::Operator { start, end } => {
+                    let mut spelling = [0u8; 32];
+                    let length = end.saturating_sub(start);
+                    let known = length <= spelling.len() && source.read_bytes(start, &mut spelling[..length]) == length;
+                    self.keyword(if known { &spelling[..length] } else { &[] })
+                }
                 ContentToken::End => {
                     if self.block.is_some() || self.space.is_none() || self.mappings.is_empty() { return self.fail("incomplete ToUnicode CMap"); }
                     self.phase = Phase::Complete;

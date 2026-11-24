@@ -79,7 +79,7 @@ impl MountedState {
         }
         if !self.numerical_done {
             let freshness = self.identity.freshness(0);
-            let operation = semio_framework_job::Operation::new(self.identity.operation, self.identity.base_revision, self.identity.generation, self.identity.job);
+            let operation = semio_framework_job::Operation::new(cx.operation(), self.identity.base_revision, cx.generation(), self.identity.job);
             let Some(snapshot) = self.snapshot.as_ref() else { return Ok(self.fail(b"fem3d.numerical-snapshot-owner".to_vec()))};
             let Some(solver) = self.solver.as_mut() else { return Ok(self.fail(b"fem3d.numerical-solver-owner".to_vec()))};
             let step = self.numerical.as_mut().map(|numerical| numerical.step(snapshot, solver, &mut self.backing, freshness, operation, cx));

@@ -1,4 +1,8 @@
+import {execFile} from "node:child_process";
+import {existsSync} from "node:fs";
 import {basename,dirname,join} from "node:path";
+import {createNativeImageKickPortV1,kickNativeImageV1,nativeImageKickIneffectiveTextV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts";
+import {nativeImageBackingFilenameV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {sleepV1,type ClaimV1} from "../../🔒️lock/🟦️.ts";
 import {cacheLedgerV1,cacheReclaimShareBytesV1} from "../../../../💾️storage/🧾️ledger/🟦️.ts";
@@ -60,6 +64,7 @@ export type RustImageReclaimRequestV1=Readonly<{
  measure?:(root:string,capacityBytes:number)=>VolumeFactsV1;now?:()=>number;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;
  claim?:(directory:string,name:string)=>ClaimV1|undefined;
  collect?:(request:Readonly<{store:string;demandBytes:number;signal:AbortSignal;language:"en"|"de";progress:(stage:string,done:number,total:number)=>void;report:(line:string)=>void}>&RustImageHeldPortsV1)=>Promise<void>;
+ kick?:(request:Readonly<{signal:AbortSignal}>)=>Promise<void>;
 }&RustImageHeldPortsV1>;
 
 type FlightV1={promise:Promise<RustImageReclaimResultV1>;controller:AbortController;refs:number};
@@ -92,6 +97,7 @@ async function runFlight(options:RustImageReclaimRequestV1,signal:AbortSignal):P
   const progress=(stage:string,done:number,total:number)=>{const at=now();if(at-lastProgress<policy.progressMilliseconds)return;lastProgress=at;options.report(text("progress",{stage,done,total}));};
   const demandBytes=autoReclaimDemandBytesV1(before.freeBytes,rule);
   await(options.collect??defaultCollect(options))({store,demandBytes,signal,language,progress,report:options.report,lock:options.lock,leases:options.leases,live:options.live});
+  try{await(options.kick??defaultKick(options))({signal});}catch(error){signal.throwIfAborted();void error;}
   const after=read(),freedBytes=Math.max(0,after.freeBytes-before.freeBytes);
   if(freedBytes>0){cooling.delete(key);options.report(text("done",{freed:gib(freedBytes),free:gib(after.freeBytes)}));}
   else{cooling.set(key,now());options.report(text("nothing",{free:gib(after.freeBytes)}));}
@@ -100,6 +106,25 @@ async function runFlight(options:RustImageReclaimRequestV1,signal:AbortSignal):P
   if(signal.aborted)options.report(text("cancelled",{}));
   throw error;
  }finally{claim?.release();}
+}
+
+/** 👟️ Returns the blocks the collection freed inside the mounted image to the host while builds still run: the host free space, which caps the honest available space, only grows once the image gives its freed blocks back. A root that is not inside a mounted image, a platform without an in-place return (Windows) and any failure leave the collection as it was.
+ * @see ../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/👟️kick/🟦️.ts */
+const warned=new Set<string>();
+function defaultKick(options:RustImageReclaimRequestV1):NonNullable<RustImageReclaimRequestV1["kick"]>{
+ return async request=>{
+  for(let at=options.root,parent=dirname(at);parent!==at;at=parent,parent=dirname(at)){
+   const image=join(parent,nativeImageBackingFilenameV1());
+   if(!existsSync(image)||nativeImageRootV1(parent)!==at)continue;
+   const run=(program:string,args:readonly string[])=>new Promise<string>((resolve,reject)=>execFile(program,[...args],{env:{PATH:"/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",LC_ALL:"C"},maxBuffer:1048576,signal:request.signal},(error,stdout)=>error?reject(error):resolve(stdout)));
+   const port=createNativeImageKickPortV1(process.platform,{image,mountPoint:at,run});
+   if(port!==null){
+    const result=await kickNativeImageV1(port,{check:()=>request.signal.throwIfAborted()});
+    if(!result.effective&&!warned.has(image)){warned.add(image);const values={image,returned:gib(result.canaryReturnedBytes??0)+" GiB",written:gib(result.canaryBytes??0)+" GiB"};options.report(nativeImageKickIneffectiveTextV1(options.language,values));}
+   }
+   return;
+  }
+ };
 }
 
 function defaultCollect(options:RustImageReclaimRequestV1):NonNullable<RustImageReclaimRequestV1["collect"]>{

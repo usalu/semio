@@ -32,7 +32,7 @@ fn an_emptied_dock_paints_the_localized_notice_without_registering_window_hits()
             let mut complete = false;
             for _ in 0..1_024 {
                 let before = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == semio_ui_draw_contract::KIND_GLYPH).count();
-                complete = caller.turn(|cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
+                complete = caller.turn_funded(1 << 20, |cx|PanelsViewCtx::of(&mut shell).render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut resources, cx));
                 let after = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|item| item.params[2] == semio_ui_draw_contract::KIND_GLYPH).count();
                 assert!(after.saturating_sub(before) <= 1, "each grant paints at most one notice glyph");
                 if complete { break; }

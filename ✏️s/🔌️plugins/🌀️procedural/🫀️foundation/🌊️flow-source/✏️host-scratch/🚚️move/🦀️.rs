@@ -124,4 +124,4 @@ impl MoveNodesWork{
  }
  pub(super) fn terminal(&self)->bool{self.closing&&self.retirement.is_empty()&&self.fields.ids.is_none()&&self.fields.lookup.is_none()&&self.fields.entry.is_none()&&self.fields.entry_close.is_none()&&self.fields.pending.is_none()&&self.fields.text.terminal_is_empty()}
 }
-impl Drop for MoveNodesWork{fn drop(&mut self){assert!(self.terminal(),"relative canvas move retains original targets or map owners");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}
+impl Drop for MoveNodesWork{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal()),"relative canvas move retains original targets or map owners");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.fields)}}}}

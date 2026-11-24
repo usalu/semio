@@ -10,6 +10,7 @@
     "work",
     "totalGrant",
     "callPolicy",
+    "interruptedReceiving",
     "cases",
     "expected"
   ],
@@ -122,6 +123,27 @@
         },
         "terminalDropBytes": {
           "const": 0
+        }
+      }
+    },
+    "interruptedReceiving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedBytes",
+        "sameDispatch",
+        "freshDispatchAfterRecovery"
+      ],
+      "properties": {
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sameDispatch": {
+          "const": true
+        },
+        "freshDispatchAfterRecovery": {
+          "const": true
         }
       }
     }

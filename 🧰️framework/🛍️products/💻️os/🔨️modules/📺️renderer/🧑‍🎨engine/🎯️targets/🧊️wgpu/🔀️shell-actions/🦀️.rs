@@ -11,7 +11,7 @@ use semio_renderer_wgpu_shell_directory::{DirectoryState, resolve_identity_env};
 use semio_renderer_wgpu_shell_directory::DirectoryHomeProjection;
 use semio_renderer_wgpu_shell_doc_open::{IMPORT_TRANSFER_CANCEL_ACTION, NAVIGATE_SHELL_URI_ACTION, OpeningState, TASK_MANAGER_CONTROLLER_ID, ShellDocumentOpenAnswer, ShellDocumentOpenPhase, ShellDocumentOpenTarget, ShellDocumentOpening, default_persistence_bindings, icon_import_value, post_agent_credential_install, request_file_open, save_text_file, write_clipboard_text};
 use semio_renderer_wgpu_shell_dock::{FocusDevice, ShellDockState, WindowKindFocus, save_dock_skeleton_to_store, save_dock_ui_to_store};
-use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, SHELL_MERGE_POLICY_OPTIONS, note_shell_command_action, shell_command_for_control};
+use semio_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, SHELL_MERGE_POLICY_OPTIONS, note_shell_command_action, shell_command_for_control, sync_attach_document_id};
 use semio_renderer_wgpu_shell_history::HistoryState;
 use semio_renderer_wgpu_shell_input::ShellInputState;
 use semio_renderer_wgpu_shell_plugins::{DEFAULT_APP_NONE_VALUE, PluginState, ShellExtensionStoreRecord, flatten_panel_tab_leaves};

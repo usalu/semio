@@ -102,7 +102,7 @@
    "heightM": 1.071,
    "widthM": 0.609,
    "depthM": 1.2,
-   "massKg": 71.275
+   "massKg": 71.3
   },
   "materials": [
    {
@@ -392,9 +392,9 @@
       "type": "fixed"
      },
      "mass": {
-      "kg": 37.216,
-      "comX": 0.277223,
-      "comY": 0.42818,
+      "kg": 37.241,
+      "comX": 0.277377,
+      "comY": 0.427993,
       "distribution": "point",
       "source": "authored-estimate",
       "reference": "semio-used-household"
@@ -908,13 +908,13 @@
       "tone": 0.32,
       "size": [
        0.016,
-       0.146,
+       0.148,
        1.196
       ],
       "transform": {
        "translation": [
         0.508,
-        0.075,
+        0.076,
         0.0
        ]
       }
@@ -6417,7 +6417,7 @@
        "x": 0.5,
        "y": 0.002,
        "w": 0.016,
-       "h": 0.146,
+       "h": 0.148,
        "region": "plinth",
        "material": "melamine-chipboard-aged"
       },
@@ -6825,7 +6825,7 @@
        "x": -0.598,
        "y": 0.014,
        "w": 1.196,
-       "h": 0.146,
+       "h": 0.148,
        "region": "plinth",
        "material": "melamine-chipboard-aged"
       },

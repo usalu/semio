@@ -234,10 +234,10 @@ export function linkRefusalV1(path:string,target:string):FleetPathRefusalV1|unde
  return undefined;
 }
 
-const GIT_SHARED_FILES=new Set(["HEAD","packed-refs","shallow"]);
+const GIT_SHARED_FILES=new Set(["HEAD","packed-refs"]);
 const GIT_SHARED_DIRECTORIES=new Set(["refs","objects"]);
 
-/** 🌿 Tells whether a path inside the root `.git` is shared: the allow-list is `HEAD`, `packed-refs`, `shallow`, everything below `refs` and everything below `objects` except temporary objects (`tmp_` prefix in `objects`), `objects/info/alternates` and every name ending `.lock`; the `.git` directory itself is shared, every other path (index, config, logs, hooks, info, in-progress operation files, IDE files) stays on the machine. A path outside the root `.git` is not decided here and answers false. */
+/** 🌿 Tells whether a path inside the root `.git` is shared: the allow-list is `HEAD`, `packed-refs`, everything below `refs` and everything below `objects` except temporary objects (`tmp_` prefix in `objects`), `objects/info/alternates` and every name ending `.lock`; the `.git` directory itself is shared, every other path (index, config, logs, hooks, info, `shallow`, in-progress operation files, IDE files) stays on the machine: a `shallow` states what the own object store lacks, so a copy elsewhere would cut a full history. A path outside the root `.git` is not decided here and answers false. */
 export function gitSharedV1(path:string):boolean{
  const parts=path.split("/");
  if(parts[0]!==".git")return false;

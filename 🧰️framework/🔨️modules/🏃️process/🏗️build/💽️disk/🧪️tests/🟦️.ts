@@ -8,7 +8,7 @@ import{afterAll,expect,test}from"bun:test";
 import corpus from"./🔣️.json"with{type:"json"};
 import{reportBoundaryErrorV1}from"../../🗣️language/📣️progress/🟦️.ts";
 import{renderRepoErrorV1,repoErrorExitCodeV1}from"../../🗣️language/🚨️error/🟦️.ts";
-import{formatDiskBytesV1,refuseDiskFullV1,refuseLowSpaceV1}from"../🟦️.ts";
+import{diskAdmissionNeedBytesV1,diskAdmissionShortfallBytesV1,formatDiskBytesV1,refuseDiskAdmissionV1,refuseDiskFullV1,refuseLowSpaceV1}from"../🟦️.ts";
 
 const directories:string[]=[];
 afterAll(()=>{for(const path of directories)rmSync(path,{recursive:true,force:true});});
@@ -34,6 +34,24 @@ for(const row of corpus.low)test(`low space: ${row.name}`,()=>{
  expect(refusal.code).toBe("refused");
  expect(renderRepoErrorV1(refusal,"en")).toBe(row.en);
  expect(renderRepoErrorV1(refusal,"de")).toBe(row.de);
+});
+
+test("the upfront admission needs and misses exactly what the independent Python oracle computes on every case",()=>{
+ const run=spawnSync("python3",["-I",fileURLToPath(new URL("./🐍️admission.py",import.meta.url)),fileURLToPath(new URL("./🔣️.json",import.meta.url))],{encoding:"utf8"});
+ expect(run.status,run.stderr).toBe(0);
+ const python=JSON.parse(run.stdout) as number[][];
+ corpus.admission.forEach((row,index)=>{
+  const need=diskAdmissionNeedBytesV1(row);
+  expect([need.planBytes,need.creditBytes,need.needBytes,diskAdmissionShortfallBytesV1({...row,partition:"/"})],row.name).toEqual([row.planBytes,row.creditBytes,row.needBytes,row.missingBytes]);
+  expect(python[index],row.name).toEqual([row.planBytes,row.creditBytes,row.needBytes,row.missingBytes]);
+ });
+});
+
+test("a build that cannot fit is refused before it starts, naming the partition and what is missing in both languages",()=>{
+ const row=corpus.admission[corpus.admissionText.case]!,refusal=refuseDiskAdmissionV1({...row,partition:"/System/Volumes/Data"});
+ expect(refusal.code).toBe("refused");
+ expect(renderRepoErrorV1(refusal,"en")).toBe(corpus.admissionText.en);
+ expect(renderRepoErrorV1(refusal,"de")).toBe(corpus.admissionText.de);
 });
 
 test("a failure that is no full disk is not turned into a disk refusal",()=>{

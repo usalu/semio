@@ -12,7 +12,7 @@ import { join, resolve } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { buildThroughBrokerV1, tinyCargoWorkspaceV1 } from "../../🧪️tests/🦀️cargo/🟦️.ts";
-import { appendUnitHistoryV1, compactUnitHistoryV1, admissionFrozenV1, componentFinalPeaksV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
+import { appendUnitHistoryV1, compactUnitHistoryV1, admissionFrozenV1, componentFinalCratePeaksV1, componentFinalPeaksV1, admissionOrderV1, admitWaitersV1, expectedWallMsV1, externArtifactsV1, predictPeakBytesV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, unitArtifactV1, unitKeyV1, unitOutputBytesV1, type UnitObservationV1, type UnitRecordV1 } from "../🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 const ajv = new Ajv({ strict: true, allowUnionTypes: true }).addSchema(schema);
@@ -39,6 +39,13 @@ test("p95 is R-7 and agrees with d3-array; predictions follow headroom, floor, w
   for (const row of fixture.predictions.filter((entry) => entry.component && entry.component.length >= 3 && !entry.peaks.length)) expect(predictPeakBytesV1([], { kloc: 0, component: row.component })).toBe(Math.max(Math.ceil(1.15 * quantile(row.component!, 0.5)!), 268435456));
   for (const row of fixture.componentPools) expect(componentFinalPeaksV1(new Map(Object.entries(row.history).map(([key, peaks]) => [key, peaks.map((peakRssBytes, atMs) => ({ v: 1 as const, key, peakRssBytes, outputBytes: 1, wallMs: 1, cpuMs: 1, remainingMs: 0, atMs }))])), row.profile)).toEqual(row.peaks);
   for (const row of fixture.walls) expect(expectedWallMsV1(row.walls.map((wallMs, atMs) => ({ v: 1, key: "p@k|host|dev|lib", peakRssBytes: 1, outputBytes: 1, wallMs, cpuMs: 1, remainingMs: 0, atMs })))).toBe(row.expected);
+});
+
+test("the peaks that size a final for the fleet are the largest recorded peak of every crate with a non-host cdylib, in megabytes", () => {
+  const MB = 1048576, rows = (key: string, ...megabytes: number[]) => [key, megabytes.map((peak, atMs) => ({ v: 1 as const, key, peakRssBytes: peak * MB, outputBytes: 1, wallMs: 1, cpuMs: 1, remainingMs: 0, atMs }))] as const;
+  const history = new Map([rows("semio-hub-cad-component@semio_hub_cad_component|wasm32-wasip2|release|cdylib", 6550, 6100), rows("semio-os-flow-component@semio_os_flow_component|wasm32-unknown-unknown|release|cdylib", 1857, 1700), rows("semio-hub-cad-component@semio_hub_cad_component|host|release|cdylib", 9999), rows("serde@serde|wasm32-unknown-unknown|release|lib", 900), rows("p@p_bin|host|release|bin", 80)]);
+  expect([...componentFinalCratePeaksV1(history)].sort()).toEqual([["semio_hub_cad_component", 6550], ["semio_os_flow_component", 1857]]);
+  expect(componentFinalCratePeaksV1(new Map()).size).toBe(0);
 });
 
 test("waiters are ordered by remaining path, then predicted peak, then arrival", () => {

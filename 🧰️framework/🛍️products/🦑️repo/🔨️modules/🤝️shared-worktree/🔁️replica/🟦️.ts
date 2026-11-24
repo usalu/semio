@@ -13,7 +13,7 @@ import {appendEventsV1,expiredHorizonV1,repairBlobV1,blobPathV1,copyVerifiedV1,t
 import {compileIgnoreV1,foldNameV1,gitPrivateV1,hashFileV1,linkRefusalV1,refusePathV1,scanSharedV1,sharedV1,type FleetIgnoreV1,type FleetScanEntryV1} from "../🚧️boundary/🟦️.ts";
 import {compactionDefaultsV1,cursorAheadV1,estimateEventsBehindV1,listSnapshotsV1,planRetirementV1,pruneSnapshotsV1,reclaimBlobsV1,reclaimLitterV1,requireCompactionShapeV1,retireSegmentsV1,scanSnapshotV1,snapshotSavesV1,storeReportV1,withCompactionLockV1,writeCompactionRecordV1,type CompactionSettingsV1,type ReclaimResultV1,type SnapshotRefV1,type StoreReportV1} from "../🗜️compaction/🟦️.ts";
 import {bucketsHexV1,digestHexV1,emptyBucketsV1,foldBucketV1,bucketOfV1,foldTermV1,manifestTermV1,createAttesterV1,fleetReportV1,readAttestationV1,readAttestationsV1,readRetirementV1,readRetirementsV1,repairableDriftV1,type AttesterGitV1,type AttesterViewV1,type FleetFallbackV1,type FleetGuardsV1,type FleetReportV1} from "../🩺️attest/🟦️.ts";
-import {sweepGitGarbageV1,repairGitConfigV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStageRetryDelayV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageObjectsForApplyV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
+import {sweepGitGarbageV1,repairGitConfigV1,repairGitShallowV1,applyIndexV1,branchRefV1,gitBrokenV1,linearizeRefV1,gitGuardsV1,gitStageRetryDelayV1,gitStateV1,gitViewDeltaV1,gitViewV1,resolveGitV1,INDEX_BASE_V1,INDEX_PREFIX_V1,indexCertifiedV1,indexRealmV1,indexSignatureV1,normaliseGitConfigV1,publishIndexV1,stageHealthV1,stageObjectsForApplyV1,stageRecordedV1,verifyIndexV1,type GitBrokenV1,type GitViewV1,type IndexHostV1,type StageReasonV1} from "../🌿️git/🟦️.ts";
 import {DirectoryTableV1,HotSetV1,LatencyV1,nextDelayV1,readHintsV1,ensureHintsV1,type HintReadCursorV1,type HintReceiptV1,type LatencyReportV1} from "../🎣️tiers/🟦️.ts";
 import {StateCorruptV1,appendWalV1,bytesOfV1,checkpointPartsV1,decodeRecordsV1,partWidthV1,payloadsV1,readCheckpointV1,readWalV1,writeCheckpointV1,type CheckpointV1,type WalRecordV1} from "./💾️state/🟦️.ts";
 import {clashKeyV1,clashV1,staleRepublishV1,type ContentEventV1} from "./⚖️clash/🟦️.ts";
@@ -115,7 +115,7 @@ export type DriftV1=Drift;
 export type VerifyReportV1=Readonly<{version:1;ok:boolean;checked:number;total:number;truncated:boolean;drift:readonly Drift[];refusedTotal:number;refused:readonly Readonly<{path:string;reason:string}>[]}>;
 
 /** 📊️ The report of `statusV1`, shaped by `Status` of the schema. */
-export type StatusReportV1=Readonly<{access?:AccessRecordV1;version:1;originId:string;groupId:string;storeRoot:string;reachable:boolean;daemon:Readonly<{running:boolean;pid:number|null;busySeconds?:number}>;code?:Readonly<{source:"worktree"|"snapshot"|"store";phase:"boot"|"open"|"run"}>;sync:boolean;files:number;queue:Readonly<{incoming:number;outgoing:number|null}>;lost:number;refused:number|null;refusedPaths:RefusedPathsV1;git:Readonly<{shared:boolean;reason:"shared"|"no-git"|"no-repository"|StageReasonV1;indexTree:string|null}>;origins:readonly Readonly<{origin:string;behindEvents:number;behindBytes:number;lastHlc:string|null;ageSeconds:number|null;rejoinRequired:boolean;retired:boolean}>[];latency:LatencyReportV1|null;retired:Readonly<{by:string;reason:string;wallMs:number}>|null;health:Omit<HealthV1,"version"|"pid">|null;store:StoreReportV1|null}>;
+export type StatusReportV1=Readonly<{access?:AccessRecordV1;version:1;originId:string;groupId:string;storeRoot:string;reachable:boolean;daemon:Readonly<{running:boolean;pid:number|null;busySeconds?:number}>;code?:Readonly<{source:"worktree"|"snapshot"|"store";phase:"boot"|"open"|"run"}>;sync:boolean;files:number;queue:Readonly<{incoming:number;outgoing:number|null}>;lost:number;refused:number|null;refusedPaths:RefusedPathsV1;git:Readonly<{shared:boolean;reason:"shared"|"no-git"|"no-repository"|StageReasonV1;indexTree:string|null}>;origins:readonly Readonly<{origin:string;behindEvents:number;behindBytes:number;lastHlc:string|null;ageSeconds:number|null;rejoinRequired:boolean;retired:boolean}>[];latency:LatencyReportV1|null;retired:Readonly<{by:string;reason:string;wallMs:number}>|null;health:Omit<HealthV1,"version"|"pid">|null;store:StoreReportV1|null;bootstrap?:Readonly<{wallMs:number;archive:string|null;bytes:number;held:Readonly<{files:number;bytes:number}>;retiredBytes:number;refusal:Readonly<{need:string;free:string;reserve:string;wallMs:number}>|null}>}>;
 
 /** 🎞️ A written snapshot. */
 export type SnapshotResultV1=Readonly<{file:string;hlc:string;entries:number;created:boolean}>;
@@ -2374,7 +2374,7 @@ function packsComplete(replica:ReplicaV1):boolean{
 
 const smallSharedBytes=1_048_576;
 
-/** 🩹 Compares the disk with the registers for every shared `.git` path (`HEAD`, `packed-refs`, `shallow`, `refs/**`, `objects/**`) and queues what the fleet holds but the disk lacks or holds differently: a missing file of any of them, a pack file (`objects/pack/**`) of another size, a `HEAD`, `packed-refs`, `shallow` or ref file of another content when the disk still equals what this machine applied (a local change that is not published yet is left alone). Loose objects are checked for existence only: another git may compress the same object differently. Returns how many paths it queued; the next follow materialises them from the store. */
+/** 🩹 Compares the disk with the registers for every shared `.git` path (`HEAD`, `packed-refs`, `refs/**`, `objects/**`) and queues what the fleet holds but the disk lacks or holds differently: a missing file of any of them, a pack file (`objects/pack/**`) of another size, a `HEAD`, `packed-refs` or ref file of another content when the disk still equals what this machine applied (a local change that is not published yet is left alone). Loose objects are checked for existence only: another git may compress the same object differently. Returns how many paths it queued; the next follow materialises them from the store. */
 type GitMetadataRead=<T>(read:()=>Promise<T>)=>Promise<T>;
 export async function healGitV1(replica:ReplicaV1,signal?:AbortSignal,metadata?:GitMetadataRead):Promise<number>{
  let count=0;
@@ -2389,7 +2389,7 @@ export async function healGitV1(replica:ReplicaV1,signal?:AbortSignal,metadata?:
 function gitHealPathV1(replica:ReplicaV1,id:number):string|undefined{
  if(replica.manifest.operationAt(id)!=="put"||replica.queue.hasId(id))return;
  const path=replica.book.name(id);
- if((path===".git/HEAD"||path===".git/packed-refs"||path===".git/shallow"||path.startsWith(".git/refs/")||path.startsWith(objectsPrefix))&&sharedV1(path,false,replica.ignore))return path;
+ if((path===".git/HEAD"||path===".git/packed-refs"||path.startsWith(".git/refs/")||path.startsWith(objectsPrefix))&&sharedV1(path,false,replica.ignore))return path;
 }
 
 /** 🔎️ Repairs one eligible leaf under its current replica turn. */
@@ -2863,7 +2863,7 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
  const guard=storeGuard(),attestStore=storeGuard();
  replica.beat=()=>{guard.beat();};
  const baseDrift=options.driftMilliseconds??120_000,drift={at:settings.now()+baseDrift,wait:baseDrift,attempts:0};
- const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),stageHeal:settings.now()+60_000,broken:null as GitBrokenV1|null};
+ const sound={at:0,healAt:settings.now()+(options.gitHealMilliseconds??600_000),stageHeal:settings.now()+60_000,broken:null as GitBrokenV1|null,shallowAt:0,shallow:false};
  let rescueAt=0,gitHeal:GitHealSweepV1|undefined;
  const armProgressExit=(globalThis as unknown as Record<symbol,unknown>)[Symbol.for("semio.fleet.gitProgressRestart")];
  const progressFile=join(replica.paths.directory,"boot","git-progress-restart.json");
@@ -2902,6 +2902,13 @@ export async function runV1(options:ReplicaOptionsV1,outer:AbortSignal,sink:Repl
   if(reason==="config-unreadable"&&await repairGitConfigV1(settings.worktree,now,signal)){replica.say({event:"repaired",stage:"git",reason:"git-config"});reason=await gitBrokenV1(settings.worktree,signal,healthMetadata);signal.throwIfAborted();}
   if(sound.broken!==null&&sound.broken!==reason){resolved(replica,`git-broken-${sound.broken}`);replica.say({event:"repaired",stage:"git",reason:"git-sound"});}
   sound.broken=reason;
+  if(now>=sound.shallowAt){
+   const shallow=await healthMetadata(()=>lstat(join(settings.worktree,".git","shallow")).then(()=>true,()=>false))&&!await repairGitShallowV1(settings.worktree,now,signal);
+   signal.throwIfAborted();
+   if(shallow){sound.shallowAt=now+(options.gitHealMilliseconds??600_000);noteOnce(replica,"git-broken-history-shallow",{event:"blocked",path:".git/shallow",reason:"git-broken-history-shallow"});}
+   else if(sound.shallow){resolved(replica,"git-broken-history-shallow");replica.say({event:"repaired",stage:"git",reason:"git-shallow"});}
+   sound.shallow=shallow;
+  }
   const unstaged=await healthMetadata(()=>lstat(join(settings.worktree,".git","index")).then(()=>false,()=>true)),stage=await stageHealthV1(settings.worktree);
   signal.throwIfAborted();
   if(reason===null&&!unstaged&&!(stage.reason==="objects-missing"&&now>=sound.stageHeal)){
@@ -3653,10 +3660,18 @@ export async function statusV1(options:ReplicaOptionsV1,deep:boolean=false,signa
  }
  const stage=await gitStateV1(settings.worktree),health=await stageHealthV1(settings.worktree),git:StatusReportV1["git"]=await resolveGitV1()===null?{shared:false,reason:"no-git",indexTree:null}:!stage.present?{shared:false,reason:"no-repository",indexTree:null}:!tables.files.has(INDEX_BASE_V1)?{shared:false,reason:"waiting-for-base",indexTree:stage.indexTree}:health.reason!==null?{shared:false,reason:health.reason,indexTree:stage.indexTree}:{shared:true,reason:"shared",indexTree:stage.indexTree};
  const access=reachable?await readAccessV1(settings.storeRoot,settings.originId):undefined;
- const report:StatusReportV1={...access===undefined?{}:{access},version:1,originId:settings.originId,groupId:settings.groupId,storeRoot:settings.storeRoot,reachable,daemon:{running:held!==undefined&&!held.stale||pulse!==undefined,pid:held!==undefined&&!held.stale&&held.pid>0?held.pid:pulse?.pid??null,...pulse!==undefined&&pulse.lagMs>=5000?{busySeconds:Math.floor(pulse.lagMs/1000)}:{}},...pulse===undefined?{}:{code:{source:pulse.source,phase:pulse.phase}},sync,files:tables.files.size-tables.files.count("delete"),queue:{incoming:tables.queue.size,outgoing},lost:await countFiles(paths.lost),refused:refusedCount?.length??null,refusedPaths:await readRefusedPathsV1(settings.worktree)??NO_REFUSED_PATHS_V1,git,origins,latency:reachable?(await readAttestationV1(settings.storeRoot,settings.originId))?.latency??null:null,retired:own?.retired===true?{by:own.by,reason:own.reason,wallMs:own.wallMs}:null,health:beat===undefined||!(held!==undefined&&!held.stale||pulse!==undefined)?null:{wallMs:beat.wallMs,store:beat.store,storeSinceMs:beat.storeSinceMs,code:beat.code,pending:beat.pending,failures:beat.failures,trust:beat.trust,...beat.sidecars===undefined?{}:{sidecars:beat.sidecars}},store:reachable?await storeReportV1(settings.storeRoot,settings.compaction,settings.now(),signal,deep).catch(()=>null):null};
+ const report:StatusReportV1={...access===undefined?{}:{access},version:1,originId:settings.originId,groupId:settings.groupId,storeRoot:settings.storeRoot,reachable,daemon:{running:held!==undefined&&!held.stale||pulse!==undefined,pid:held!==undefined&&!held.stale&&held.pid>0?held.pid:pulse?.pid??null,...pulse!==undefined&&pulse.lagMs>=5000?{busySeconds:Math.floor(pulse.lagMs/1000)}:{}},...pulse===undefined?{}:{code:{source:pulse.source,phase:pulse.phase}},sync,files:tables.files.size-tables.files.count("delete"),queue:{incoming:tables.queue.size,outgoing},lost:await countFiles(paths.lost),refused:refusedCount?.length??null,refusedPaths:await readRefusedPathsV1(settings.worktree)??NO_REFUSED_PATHS_V1,git,origins,latency:reachable?(await readAttestationV1(settings.storeRoot,settings.originId))?.latency??null:null,retired:own?.retired===true?{by:own.by,reason:own.reason,wallMs:own.wallMs}:null,health:beat===undefined||!(held!==undefined&&!held.stale||pulse!==undefined)?null:{wallMs:beat.wallMs,store:beat.store,storeSinceMs:beat.storeSinceMs,code:beat.code,pending:beat.pending,failures:beat.failures,trust:beat.trust,...beat.sidecars===undefined?{}:{sidecars:beat.sidecars}},store:reachable?await storeReportV1(settings.storeRoot,settings.compaction,settings.now(),signal,deep).catch(()=>null):null,...await readBootstrapRecord(settings.worktree)};
  if(report.store!==null)requireCompactionShapeV1("Store",report.store,"Closed compaction store report required");
  requireReplicaShapeV1("Status",report,"Closed replica status required");
  return report;
+}
+
+/** 🥾️ The record of the bootstrap archive that `.cache/f/bootstrap.json` holds (written by the group server's archive refresh): the archive, the superseded bytes still held for readers, the bytes retired and the last refusal for lack of space; absent on a machine that builds no archive. */
+async function readBootstrapRecord(worktree:string):Promise<Readonly<{bootstrap:NonNullable<StatusReportV1["bootstrap"]>}>|Readonly<Record<string,never>>>{
+ try{
+  const {version,...record}=JSON.parse(await readFile(join(worktree,".cache","f","bootstrap.json"),"utf8")) as {version:number}&NonNullable<StatusReportV1["bootstrap"]>;
+  return version===1?{bootstrap:record}:{};
+ }catch{return {};}
 }
 
 /** 🔬️ Loads the current local state of a worktree (checkpoint, log, cursors, clock, machine) into throw-away tables without taking the lock and without writing anything; `null` when this code can read it, else the reason. The self-check uses it so that a daemon never restarts into code that cannot read the state of its machine. */

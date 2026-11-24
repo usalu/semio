@@ -25,7 +25,11 @@ pub fn resolve_keybinding_target_window_v1(app: &AppDefinition, mounted: &[Windo
 
 /// 🚦️ `⌘⇧G · Add Generation — not available in this mode`, in the reader's language.
 pub fn keybinding_unowned_text_v1(locale: &str, chord: &str, label: &str) -> String {
-    let tail = if locale == "de" { KEYBINDING_UNOWNED_LABEL_DE } else { KEYBINDING_UNOWNED_LABEL_EN };
+    let tail = match locale {
+        "en" => KEYBINDING_UNOWNED_LABEL_EN.to_owned(),
+        "de" => KEYBINDING_UNOWNED_LABEL_DE.to_owned(),
+        _ => format!("{KEYBINDING_UNOWNED_LABEL_EN} | {KEYBINDING_UNOWNED_LABEL_DE}"),
+    };
     format!("{chord} · {label} — {tail}")
 }
 

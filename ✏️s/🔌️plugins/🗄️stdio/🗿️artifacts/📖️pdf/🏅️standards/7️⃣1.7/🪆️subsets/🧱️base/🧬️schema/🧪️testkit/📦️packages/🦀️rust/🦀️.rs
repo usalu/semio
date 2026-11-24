@@ -24,7 +24,7 @@ mod document_contracts {
                 DocumentLiftAction, DocumentLiftCursor, DocumentLiftGrant, DocumentLiftStatus, PageContentBarrier, PageContentEvent},
         },
         schema::{
-            graph_source::{GraphSource, ObjectSource}, snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfOp, PdfTextString},
+            graph_source::{GraphSource, ObjectSource}, snapshot::{stream_bytes, ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject, PdfOp, PdfTextString},
             stream_roles::PdfStreamRoleValue,
         },
     };
@@ -101,7 +101,7 @@ mod document_contracts {
 
         let mut graph = graph;
         let PdfObject::Stream { data, .. } = &mut graph[12].value else { panic!("fixture content stream"); };
-        *data = b"BI /W 1 /H 1 /BPC 8 /CS /G /F /VendorFilter ID x EI\n".to_vec();
+        *data = stream_bytes(b"BI /W 1 /H 1 /BPC 8 /CS /G /F /VendorFilter ID x EI\n");
         let mut source = GraphSource::new(&graph);
         let mut cursor = DocumentLiftCursor::new();
         let grant = DocumentLiftGrant { traversal, semantic: true };
@@ -133,8 +133,8 @@ mod document_contracts {
             dict(vec![("Type", name("Pages")), ("Count", PdfObject::Int(1)), ("MediaBox", rect([0, 0, 100, 90])), ("Kids", PdfObject::Array(vec![link(3)])), ("Resources", link(8))]),
             dict(vec![("Type", name("Page")), ("Parent", link(2)), ("CropBox", rect([5, 2, 98, 89])), ("Rotate", PdfObject::Int(90)), ("Contents", link(4)), ("Annots", PdfObject::Array(Vec::new())), ("AA", dict(Vec::new()))]),
             PdfObject::Array(vec![link(5), link(6)]),
-            PdfObject::Stream { dict: Vec::new(), data: first.as_bytes().to_vec(), filters: Vec::new() },
-            PdfObject::Stream { dict: Vec::new(), data: second.as_bytes().to_vec(), filters: Vec::new() },
+            PdfObject::Stream { dict: Vec::new(), data: stream_bytes(&(first.as_bytes())), filters: Vec::new() },
+            PdfObject::Stream { dict: Vec::new(), data: stream_bytes(&(second.as_bytes())), filters: Vec::new() },
             dict(vec![("Title", PdfObject::Text("Controlled vector".into()))]),
             dict(Vec::new()),
         ];
@@ -199,7 +199,7 @@ mod document_contracts {
         let graph: Vec<_> = objects.iter().enumerate().map(|(index, authored)| {
             let id = reference(index as u32 + 1);
             let value = match id.num {
-                6..=8 => PdfObject::Stream { dict: Vec::new(), data: [a, b, "BT /F1 12 Tf (Inner) Tj ET"][(id.num - 6) as usize].as_bytes().to_vec(), filters: Vec::new() },
+                6..=8 => PdfObject::Stream { dict: Vec::new(), data: stream_bytes(&([a, b, "BT /F1 12 Tf (Inner) Tj ET"][(id.num - 6) as usize].as_bytes())), filters: Vec::new() },
                 _ => parse_indirect_at(format!("{} 0 obj\n{authored}\nendobj\n", id.num).as_bytes(), 0).unwrap().1,
             };
             PdfIndirectObject { id, value }

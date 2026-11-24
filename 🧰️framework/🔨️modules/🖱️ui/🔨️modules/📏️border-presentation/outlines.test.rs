@@ -64,12 +64,12 @@ fn covered(resolved: &[ResolvedSharedBorderSegment], from: [f64; 2], to: [f64; 2
 }
 
 #[test]
-fn box_outline_closure_invariant_holds_for_every_stated_box() {
+fn box_outline_closure_invariant_holds_for_every_box_whose_state_closes_it() {
     let cases: Value = serde_json::from_str(include_str!("outlines.cases.json")).unwrap();
     for case in cases.as_array().unwrap() {
         let (input, _, _) = parse_boxes(case);
         let resolved = box_outline_segments(&input).unwrap();
-        for entry in input.iter().filter(|entry| entry.state != SharedBorderState::Normal) {
+        for entry in input.iter().filter(|entry| border_state_closes(entry.state)) {
             let [left, top, right, bottom] = entry.rect;
             for (from, to) in [([left, top], [right, top]), ([right, top], [right, bottom]), ([left, bottom], [right, bottom]), ([left, top], [left, bottom])] {
                 assert!(covered(&resolved, from, to, entry.state), "{}: box {} perimeter {:?}->{:?}", case["name"], entry.id, from, to);
@@ -79,7 +79,32 @@ fn box_outline_closure_invariant_holds_for_every_stated_box() {
 }
 
 #[test]
-fn box_outline_oracle_row_of_cells_closes_each_hovered_cell() {
+fn box_outline_hover_adds_no_line_to_the_outline_without_the_hover() {
+    let geometry = |boxes: &[BoxOutlineInput]| {
+        let mut lines: BTreeMap<(bool, u64), Vec<(f64, f64)>> = BTreeMap::new();
+        for segment in box_outline_segments(boxes).unwrap().iter().map(|r| r.segment) {
+            let axis = usize::from(segment.from[0] == segment.to[0]);
+            lines.entry((axis == 1, segment.from[1 - axis].to_bits())).or_default().push((segment.from[axis].min(segment.to[axis]), segment.from[axis].max(segment.to[axis])));
+        }
+        lines.into_iter().map(|(line, mut intervals)| {
+            intervals.sort_by(|a, b| a.0.total_cmp(&b.0));
+            let mut merged: Vec<(f64, f64)> = Vec::new();
+            for (from, to) in intervals { match merged.last_mut() { Some(last) if from <= last.1 => last.1 = last.1.max(to), _ => merged.push((from, to)) } }
+            (line, merged.into_iter().map(|(from, to)| (from.to_bits(), to.to_bits())).collect::<Vec<_>>())
+        }).collect::<Vec<_>>()
+    };
+    let cases: Value = serde_json::from_str(include_str!("outlines.cases.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let (input, _, _) = parse_boxes(case);
+        for hovered in input.iter().filter(|entry| entry.state == SharedBorderState::Hover) {
+            let rest: Vec<_> = input.iter().map(|entry| if entry.id == hovered.id { BoxOutlineInput { state: SharedBorderState::Normal, ..*entry } } else { *entry }).collect();
+            assert_eq!(geometry(&input), geometry(&rest), "{}: box {}", case["name"], hovered.id);
+        }
+    }
+}
+
+#[test]
+fn box_outline_oracle_row_of_cells_emphasises_each_hovered_cell() {
     for count in 1..6usize {
         for hovered in 0..count {
             let mut boxes = vec![BoxOutlineInput { id: count, parent: None, owner: count, rect: [0.0, 0.0, 10.0 * count as f64, 10.0], edges: [true; 4], state: SharedBorderState::Normal }];
@@ -103,11 +128,11 @@ fn box_outline_rejects_unknown_parent_and_reports_demand() {
 }
 
 #[test]
-fn borderless_box_draws_nothing_at_rest_and_a_closed_outline_when_stated() {
+fn borderless_box_draws_nothing_at_rest_or_on_hover_and_a_closed_outline_when_focused_or_active() {
     let row = BoxOutlineInput { id: 0, parent: None, owner: 0, rect: [0.0, 0.0, 30.0, 10.0], edges: [false; 4], state: SharedBorderState::Normal };
     let tab = |state| BoxOutlineInput { id: 1, parent: Some(0), owner: 0, rect: [10.0, 0.0, 20.0, 10.0], edges: [false; 4], state };
-    assert_eq!(box_outline_segments(&[row, tab(SharedBorderState::Normal)]).unwrap(), vec![]);
-    for state in [SharedBorderState::Hover, SharedBorderState::Focus, SharedBorderState::Active] {
+    for state in [SharedBorderState::Normal, SharedBorderState::Hover] { assert_eq!(box_outline_segments(&[row, tab(state)]).unwrap(), vec![]); }
+    for state in [SharedBorderState::Focus, SharedBorderState::Active] {
         let resolved = box_outline_segments(&[row, tab(state)]).unwrap();
         assert_eq!(resolved.len(), 4);
         assert!(resolved.iter().all(|r| r.segment.state == state && r.contributors == vec![r.segment.id]));

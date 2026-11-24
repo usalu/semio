@@ -1,0 +1,16 @@
+{
+ "policy": {"maximumThreads": 8, "reserveCores": 1, "extraMegabytesPerThread": 512},
+ "cases": [
+  {"id": "idle-10-cores", "cores": 10, "load": 0, "others": 0, "spare": 9000, "peak": 4000, "threads": 8},
+  {"id": "idle-4-cores", "cores": 4, "load": 0, "others": 0, "spare": 9000, "peak": 4000, "threads": 3},
+  {"id": "one-core", "cores": 1, "load": 0, "others": 0, "spare": 9000, "peak": 4000, "threads": 1},
+  {"id": "load-beats-others", "cores": 10, "load": 6.2, "others": 1, "spare": 9000, "peak": 4000, "threads": 2},
+  {"id": "others-beat-load", "cores": 10, "load": 0.4, "others": 5, "spare": 9000, "peak": 4000, "threads": 4},
+  {"id": "saturated", "cores": 10, "load": 27, "others": 3, "spare": 9000, "peak": 4000, "threads": 1},
+  {"id": "memory-bounds", "cores": 10, "load": 0, "others": 0, "spare": 5100, "peak": 4000, "threads": 3},
+  {"id": "memory-exactly-peak", "cores": 10, "load": 0, "others": 0, "spare": 4000, "peak": 4000, "threads": 1},
+  {"id": "memory-below-peak", "cores": 10, "load": 0, "others": 0, "spare": 100, "peak": 4000, "threads": 1},
+  {"id": "no-declared-peak", "cores": 10, "load": 0, "others": 0, "spare": 1024, "peak": 0, "threads": 3},
+  {"id": "cap-binds", "cores": 64, "load": 0, "others": 0, "spare": 99999, "peak": 100, "threads": 8}
+ ]
+}

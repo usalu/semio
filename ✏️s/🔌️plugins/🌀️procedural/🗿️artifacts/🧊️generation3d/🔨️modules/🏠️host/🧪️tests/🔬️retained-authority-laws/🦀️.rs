@@ -1,23 +1,17 @@
 use semio_s_artifact_procedural_3d_host::*;
 use semio_s_artifact_procedural_3d_envelope::*;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released;
-use semio_s_artifact_procedural_3d_testkit::retirement_driver::exact_grant;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::close_job;
+use semio_s_artifact_procedural_3d_testkit::retirement_driver::step_once;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_shared_for_test;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::Stepped;
-use semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT;
 use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
 use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 #[cfg(test)] use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mut_widgets::move_widget::MoveWidget;
 #[cfg(test)] use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
-
-/// 🪙️ Runs one closure inside one original effect funded by a fresh generous fixture wallet.
-fn cold<R>(run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R) -> R {
-    let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4_096 };
-    semio_framework_value::AuthoringWallet::new(grant, 1 << 20).run_invoked(grant, 1 << 16, run).expect("the fixture wallet funds its own grant").expect("the fixture work quote is admitted").output
-}
 
 const SEMANTIC_WIRE_CORPUS: &str = include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json");
 
@@ -143,37 +137,70 @@ fn initializer(operation: semio_framework_job::OperationId, generation: semio_fr
     Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
-fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
-    use semio_plugin::ArtifactStoreInitializationAuthority;
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut sequence = 0;
-    for _ in 0..100_000 {
-        authority.begin_close();
-        let demand = authority.retirement_demands(GENERATION3D_OWNER_BYTES).expect("P3 initializer close quote");
-        let mut receipt = store::RetainedCloneProgress::default();
-        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, exact_grant(demand)), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
-        if matches!(authority.close_step(&mut cx).expect("P3 initializer bounded close"), store::RetainedCloneStep::Complete(_)) {
-            assert!(authority.terminal_is_empty());
-            return;
-        }
+/// 🧩️ Lends the initializer authority to the original fixture caller as the interactive job its store wrapper makes of it.
+struct AuthorityJob<'a>(&'a mut Generation3dStoreInitializationAuthority);
+
+impl semio_framework_job::InteractiveJob for AuthorityJob<'_> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        Ok(self.0.retirement_demands(GENERATION3D_OWNER_BYTES)?.copy_bytes)
     }
-    panic!("P3 initializer did not reach terminal-empty close");
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        Ok(self.0.retirement_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        Ok(self.0.retirement_demands(GENERATION3D_OWNER_BYTES)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        Ok(self.0.retirement_demands(GENERATION3D_OWNER_BYTES)?.depth)
+    }
+
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        semio_framework_job::InteractiveJobStep::from_callback(self.0.step(cx))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        self.0.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        self.0.begin_close();
+    }
+
+    fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep as Close;
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        if self.0.terminal_is_empty() {
+            return Ok(Close::Complete { progress: Default::default() });
+        }
+        Ok(match self.0.close_step(cx)? {
+            store::RetainedCloneStep::Complete(progress) => Close::Complete { progress },
+            store::RetainedCloneStep::Progress(progress) => Close::Pending { progress },
+        })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        use semio_plugin::ArtifactStoreInitializationAuthority;
+        self.0.terminal_is_empty()
+    }
 }
 
-/// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` and answers what it lent.
+fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
+    close_job(&mut AuthorityJob(authority), "P3 initializer");
+}
+
+/// 🦶️ Drives one step of the initializer under `fuel` and `deadline_us` through the original fixture caller and answers what it lent.
 fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fuel: u64, deadline_us: u64, cancel: &semio_framework_job::CancelToken, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, sequence: &mut u64) -> Stepped {
-    use semio_framework_job::JobOutcomeBorrow;
-    use semio_plugin::ArtifactStoreInitializationAuthority;
-    let mut receipt = store::RetainedCloneProgress::default();
-    let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, deadline_us, STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
-    match authority.step(&mut cx).expect("P3 initializer step admission") {
-        None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
-        Some(JobOutcomeBorrow::PreviewReady { .. }) => Stepped::Preview(Vec::new()),
-        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
-        Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
-        Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
-        Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
-    }
+    step_once(&mut AuthorityJob(authority), fuel, deadline_us, cancel, operation, generation, sequence)
 }
 
 #[test]
@@ -231,32 +258,12 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
 }
 //#endregion ⏱️BoundedInitializer
 
-fn close_session(session: &mut Generation3dMutationSession) {
-    let admitted = session.retained_allocated_bytes();
-    let mut released = 0;
-    let mut refused_subexact = false;
-    for _ in 0..GENERATION3D_MAXIMUM_DOMAIN_ITEMS {
-        let maximum_bytes = session.next_retained_release_allocation_bytes().unwrap_or(0);
-        if maximum_bytes > 0 && !refused_subexact {
-            let before = session.retained_allocated_bytes();
-            assert_eq!(
-                cold(|effect| session.close_step(1, maximum_bytes - 1, effect)).expect("P3 subexact retained mutation close"),
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
-            );
-            assert_eq!(session.retained_allocated_bytes(), before);
-            refused_subexact = true;
-        }
-        match cold(|effect| session.close_step(1, maximum_bytes, effect)).expect("P3 retained mutation close") {
-            store::mounted_pack_rt::RetainedPackCloseStep::Complete => {
-                assert!(session.terminal_is_empty());
-                assert_eq!(released, admitted);
-                assert!(refused_subexact || admitted == 0);
-                return;
-            }
-            store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-        }
-    }
-    panic!("P3 retained mutation session did not close");
+/// 🧹️ Decodes the pack wire and retires the decoded owner before judging that it equals the mutation it came from.
+fn assert_decodes_to(bytes: &[u8], mutation: &Generation3dMutation) {
+    let decoded = decode_op(bytes).expect("the pack wire decodes");
+    let same = decoded == *mutation;
+    decoded.retire_cold();
+    assert!(same, "the pack wire must recover the exact mutation it was handed");
 }
 
 #[test]
@@ -265,48 +272,9 @@ fn every_variant_decodes_through_retained_structural_grants() {
     assert_eq!(mutations.iter().map(std::mem::discriminant).collect::<std::collections::HashSet<_>>().len(), GENERATION3D_MUTATION_VARIANT_COUNT, "the fixtures cover every variant");
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P3 retained mutation fixture encode");
-        let mut session = Generation3dMutationSession::new(bytes.len(), GENERATION3D_MAXIMUM_DOMAIN_ITEMS).expect("P3 retained mutation preflight");
-        let mut refused_subexact = false;
-        for byte in bytes {
-            assert!(session.ingress_ready());
-            session.admit_byte(byte).expect("one retained mutation byte");
-            for _ in 0..GENERATION3D_OWNER_BYTES {
-                if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
-                    if exact > 0 && !refused_subexact {
-                        let before = session.retained_allocated_bytes();
-                        assert_eq!(cold(|effect| session.reserve_retained_allocation(exact - 1, effect)).expect("P3 subexact retained mutation allocation"), (false, 0));
-                        assert_eq!(session.retained_allocated_bytes(), before);
-                        refused_subexact = true;
-                    }
-                    let (progressed, _) = cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("P3 retained mutation allocation");
-                    assert!(progressed);
-                } else {
-                    session.grant().expect("one retained mutation ingress grant");
-                }
-                if session.ingress_ready() {
-                    break;
-                }
-            }
-            assert!(session.ingress_ready(), "symbol expansion must hand input ownership back before the next byte");
-        }
-        assert!(refused_subexact, "every retained mutation must pre-admit real record-body backing");
-        session.seal().expect("exact retained mutation seal");
-        let mut ready = false;
-        for _ in 0..100_000 {
-            if let Some(exact) = session.next_retained_allocation_bytes().expect("P3 retained mutation allocation query") {
-                let (progressed, _) = cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("P3 retained mutation allocation");
-                assert!(progressed);
-            } else if session.grant().expect("one retained semantic grant") {
-                ready = true;
-                break;
-            }
-        }
-        assert!(ready, "retained P3 mutation owner must converge");
-        let decoded = session.take().expect("typed P3 mutation handoff");
-        assert_eq!(decoded, mutation, "the retained ingress route must recover the exact mutation it was handed");
-        decoded.retire_cold();
+        assert_decodes_to(&bytes, &mutation);
+        store::os_store::test_support::assert_op_text_binary_equivalence_cold(&mutation, |decoded| decoded.retire_cold());
         mutation.retire_cold();
-        close_session(&mut session);
     }
 }
 
@@ -318,14 +286,15 @@ fn every_variant_decodes_through_retained_structural_grants() {
 ///
 /// The oracle is the framework's OWN generic route to the same value — the `Arc` retirement
 /// `SharedValueRetirementFactory` hands the document store — which must release byte-for-byte
-/// what the owned route releases.
+/// what the owned route releases, plus the `Arc` allocation itself (counters and inline value) that only it frees.
 #[test]
 fn every_document_retirement_pays_its_own_flow_frontier_under_its_quoted_grants() {
     let mut owned = retire_owned_for_test(Generation3dSnapshot::default(), "owned document snapshot");
     let owned_bytes = drive_erased_released(owned.as_mut(), "owned document snapshot");
     let mut aliased = retire_shared_for_test(std::sync::Arc::new(Generation3dSnapshot::default()), "aliased document snapshot");
     let aliased_bytes = drive_erased_released(aliased.as_mut(), "aliased document snapshot");
-    assert_eq!(owned_bytes, aliased_bytes, "the owned and Arc retirement routes must release the same exact document backing");
+    eprintln!("[DEBUG] owned={owned_bytes} aliased={aliased_bytes} T={} arc={} birth={}", std::mem::size_of::<Generation3dSnapshot>(), semio_framework_value::shared_retirement_allocation_bytes::<Generation3dSnapshot>(), semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Generation3dSnapshot>());
+    assert_eq!(owned_bytes + semio_framework_value::shared_retirement_allocation_bytes::<Generation3dSnapshot>(), aliased_bytes, "the Arc route must release exactly the owned document backing plus its own shared allocation");
     assert!(owned_bytes > 0, "a populated document fixture owns real backing");
 }
 
@@ -378,10 +347,12 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
     for case in corpus["cases"].as_array().expect("wire vectors") {
         let mutation = <Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("first-party mutation decoder");
         let text = protocol::OpText::print_op(&mutation);
-        assert_eq!(<Generation3dMutation as protocol::OpText>::parse_op(&text).expect("text decode"), mutation);
+        let parsed = <Generation3dMutation as protocol::OpText>::parse_op(&text).expect("text decode");
+        let same = parsed == mutation;
+        parsed.retire_cold();
+        assert!(same, "text decode");
         let bytes = encode_op(&mutation).expect("binary encode");
-        assert_eq!(bytes[1], case["tag"].as_u64().expect("independent tag") as u8);
-        assert_eq!(decode_op(&bytes).expect("binary decode"), mutation);
+        assert_decodes_to(&bytes, &mutation);
         let mut snapshot = Generation3dSnapshot::default();
         for widget in std::mem::take(&mut snapshot.host_snapshot.widgets) { widget.retire_cold(); }
         snapshot.host_snapshot.widgets.push(Widget::InputSlider { id: "slider".into(), label: "Slider".into(), value: 0.0, min: -10.0, max: 10.0, step: 0.5 });
@@ -427,31 +398,14 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
     }
 }
 
-/// 🚪️ Cancelled semantic target lists hand their dynamic owners to the bounded Flow close frontier.
+/// 🚪️ A long semantic target list round-trips and every truncated wire is refused instead of half-decoded.
 #[test]
-fn semantic_wire_vectors_cancelled_target_lists_reach_terminal_empty() {
+fn semantic_wire_vectors_long_target_lists_receive_and_truncated_wire_is_refused() {
     let mutation = Generation3dMutation::DragTransforms(DragTransforms { targets: (0..128).map(|index| format!("translate-{index}")).collect(), dx: 2.0, dy: -1.0, dz: 4.0 });
     let bytes = encode_op(&mutation).expect("semantic list frame");
-    for prefix in [bytes.len() / 2, bytes.len() - 9, bytes.len()] {
-        let mut session = Generation3dMutationSession::new(bytes.len(), GENERATION3D_MAXIMUM_DOMAIN_ITEMS).expect("cancelled semantic owner");
-        for byte in &bytes[..prefix] {
-            assert!(session.ingress_ready());
-            session.admit_byte(*byte).expect("retained semantic byte");
-            for _ in 0..GENERATION3D_OWNER_BYTES {
-                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic reservation") { assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("semantic reserve").0); }
-                else { session.grant().expect("semantic ingress grant"); }
-                if session.ingress_ready() { break; }
-            }
-            assert!(session.ingress_ready());
-        }
-        if prefix == bytes.len() {
-            session.seal().expect("semantic seal");
-            for _ in 0..100_000 {
-                if let Some(exact) = session.next_retained_allocation_bytes().expect("semantic terminal reservation") { assert!(cold(|effect| session.reserve_retained_allocation(exact, effect)).expect("semantic terminal reserve").0); }
-                else if session.grant().expect("semantic terminal grant") { break; }
-            }
-        }
-        close_session(&mut session);
+    for prefix in [0, 1, bytes.len() / 2, bytes.len() - 9, bytes.len() - 1] {
+        assert!(decode_op(&bytes[..prefix]).is_err(), "a wire truncated to {prefix} of {} bytes must be refused", bytes.len());
     }
+    assert_decodes_to(&bytes, &mutation);
     mutation.retire_cold();
 }

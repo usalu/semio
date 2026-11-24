@@ -712,8 +712,9 @@ fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_all
     for case in law["cases"].as_array().unwrap(){
         let count=case["occupied"].as_u64().unwrap() as usize;
         let(mut dag,birth)=semio_framework_trace_memory_testing::observe(MutationDag::new);
-        assert!(birth>0);assert!(!dag.backing_is_empty());
-        for i in 0..count { dag.seed_applied(semio_framework_replication_ids::MutationId(format!("source-{i}"))).unwrap(); }
+        assert!(birth>0);assert_eq!(dag.resident_pages(),0);assert!(!dag.backing_is_empty());
+        let(_,_)=semio_framework_trace_memory_testing::observe(||{for i in 0..count { dag.seed_applied(semio_framework_replication_ids::MutationId(format!("source-{i}"))).unwrap(); }});
+        let birth=birth+dag.resident_pages()*std::mem::size_of::<[std::mem::MaybeUninit<String>;64]>();assert_eq!(dag.resident_pages(),count.div_ceil(law["pageSlots"].as_u64().unwrap() as usize));
         let pointers=dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>();
         let(result,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(1,262144));
         if count>0 { assert_eq!(result,(0,0,false));assert_eq!((requested,released),(0,0));assert_eq!(dag.applied.iter().map(|id|id.as_ptr()).collect::<Vec<_>>(),pointers); }
@@ -726,6 +727,22 @@ fn causal_backing_retirement_preserves_exact_slots_and_funds_one_indivisible_all
         }
         assert_eq!(freed,birth);assert_eq!(dag.next_backing_release_byte_demand(),0);let(_,requested,released)=semio_framework_trace_memory_testing::observe_backing(||drop(dag));assert_eq!((requested,released),(0,0));
     }
+}
+
+#[test]
+fn causal_small_dag_holds_one_page_per_used_table_and_releases_exactly_the_allocated_pages(){
+    let(mut dag,birth)=semio_framework_trace_memory_testing::observe(MutationDag::new);
+    assert_eq!(dag.resident_pages(),0);assert!(birth<1<<20,"an empty DAG owns metadata only, not {birth} bytes");
+    let page=std::mem::size_of::<[std::mem::MaybeUninit<String>;64]>();
+    let quote=dag.original_seed_page_demands();assert_eq!(quote.capacity_bytes,page);
+    let(_,born)=semio_framework_trace_memory_testing::observe(||dag.seed_applied(semio_framework_replication_ids::MutationId("a".into())).unwrap());
+    assert_eq!(born,"a".len()+page);assert_eq!(dag.resident_pages(),1);assert_eq!(dag.original_seed_page_demands().capacity_bytes,0);
+    let(_,again)=semio_framework_trace_memory_testing::observe(||dag.seed_applied(semio_framework_replication_ids::MutationId("b".into())).unwrap());
+    assert_eq!(again,"b".len());assert_eq!(dag.resident_pages(),1);
+    while let Some(owner)=dag.take_one_close_owner(){match owner{MutationDagCloseOwner::Identity(id)=>drop(id),MutationDagCloseOwner::Envelope(_)=>panic!("seed-only")}}
+    let mut pages=0;let mut freed=0;
+    while !dag.backing_is_empty(){let demand=dag.next_backing_release_byte_demand();if demand==page{pages+=1}let(step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(1,demand));assert_eq!((requested,released,step.1),(0,demand,demand));freed+=released;}
+    assert_eq!(pages,1,"release demand names exactly the one allocated page");assert_eq!(freed,birth+page);
 }
 
 #[test]

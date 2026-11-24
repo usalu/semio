@@ -159,7 +159,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
 
 impl Drop for JackMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self), "Jack mutation decode reached Drop before publication or bounded retirement");
+        assert!(std::thread::panicking()||(store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self)), "Jack mutation decode reached Drop before publication or bounded retirement");
     }
 }
 

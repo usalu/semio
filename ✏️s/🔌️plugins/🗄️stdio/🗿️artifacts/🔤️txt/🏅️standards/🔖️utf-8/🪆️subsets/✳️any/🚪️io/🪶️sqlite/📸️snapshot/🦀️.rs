@@ -60,7 +60,7 @@ impl ArtifactSqliteSnapshotHost for TxtSnapshot {
             let operation=match payload{
                 store::io_schema::IoPayload::Binary(bytes)=>Self::bind_pack_rows(bytes,slot,native,body,Some(limits.max_rows)),
                 store::io_schema::IoPayload::Text(text)=>Self::bind_text(text,slot,native,body,Some(limits.max_rows)),
-            }.map_err(store::NativeSnapshotFailure::from);
+            }.map_err(|error|settlement.refused(native.owned_bytes(),error)).map_err(store::NativeSnapshotFailure::from);
             let settled=settlement.finish_body(native.owned_bytes());
             *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
             RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}

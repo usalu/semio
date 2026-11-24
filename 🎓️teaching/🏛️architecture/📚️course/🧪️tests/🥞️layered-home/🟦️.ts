@@ -25,6 +25,15 @@ async function displacement(device: Device, id: string): Promise<number> {
 }
 
 /** 🧭️ How far the strip is panned away from its home corner, in percent of its own size: the previous scope's last click leaves the pointer on the explore control in the far corner of the card, so the pan starts there. */
+/** 🔲️ The room of the active grid: its overlay without the bands of the navigation and the footer, beneath which the pages run. */
+function gridBox(learner: Parameters<typeof layer>[0]): Promise<{ x: number; y: number; width: number; height: number }> {
+  return layer(learner, "overlay").evaluate((overlay) => {
+    const [rect, style] = [overlay.getBoundingClientRect(), getComputedStyle(overlay)];
+    const [top, bottom] = [Number.parseFloat(style.paddingTop), Number.parseFloat(style.paddingBottom)];
+    return { x: rect.x, y: rect.y + top, width: rect.width, height: rect.height - top - bottom };
+  });
+}
+
 function panned(strip: Locator): Promise<number> {
   return strip.evaluate((node) => {
     const [, x, y] = /translate(?:3d)?\((-?[\d.]+)%, (-?[\d.]+)%/u.exec(node.style.transform) ?? [];
@@ -45,10 +54,10 @@ test("home, topics and energy preserve the layered glass grid and immediate read
       const [columns, column, row, rows] = [3, index % 3, Math.floor(index / 3), Math.ceil(scope.pages.length / 3)];
       await expect
         .poll(async () => {
-          const [frame, box] = [await boxOf(root), await boxOf(card(learner.page, id).locator("[data-overview-card]"))];
+          const [frame, box] = [await gridBox(learner), await boxOf(card(learner.page, id).locator("[data-overview-card]"))];
           const cell = { left: frame.x + column * frame.width / columns, right: frame.x + (column + 1) * frame.width / columns, top: frame.y + row * frame.height / rows, bottom: frame.y + (row + 1) * frame.height / rows };
           return box.x >= cell.left - 1 && box.x + box.width <= cell.right + 1 && box.y >= cell.top - TAB_PX - 1 && box.y + box.height <= cell.bottom + 1;
-        }, { message: `${id} sits inside its grid cell (the footer may resize the grid while others come and go)` })
+        }, { message: `${id} sits inside its grid cell, a third of the room between the navigation and the footer bands the pages run beneath (the footer may resize the grid while others come and go)` })
         .toBe(true);
       await expect(pane(learner.page, id)).toHaveAttribute("inert", "");
       await expect(pane(learner.page, id)).not.toHaveAttribute("data-opened", "");
@@ -62,9 +71,10 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
   const learner = await device("en");
   await enter(learner, { kind: "anonymous" }, true);
   for (const scope of SCOPES) {
+    await learner.page.emulateMedia({ reducedMotion: "no-preference" });
     await openGrid(learner, scope.id);
     const root = activeOverview(learner.page);
-    const frame = await boxOf(root);
+    const frame = await gridBox(learner);
     const strip = layer(learner, "strip");
     const veil = layer(learner, "veil");
     await learner.page.mouse.move(frame.x + 2, frame.y + 2, { steps: 4 });
@@ -97,7 +107,7 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     await expect(veil).toHaveAttribute("data-veil", "whole");
     await expect(veil).toBeVisible();
     await learner.page.emulateMedia({ reducedMotion: "reduce" });
-    await expect(root).toHaveAttribute("data-pan", "pointer");
+    await expect(root, "a device that asks for reduced motion gets no pan under the pointer").toHaveAttribute("data-pan", "none");
     await card(learner.page, id).getByRole("link").click();
     await expect(pane(learner.page, id)).toHaveAttribute("data-opened", "");
     await expect(pane(learner.page, id)).not.toHaveAttribute("inert", "");

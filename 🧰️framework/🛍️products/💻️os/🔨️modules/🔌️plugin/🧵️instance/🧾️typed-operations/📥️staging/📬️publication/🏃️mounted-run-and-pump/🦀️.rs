@@ -3,7 +3,7 @@
 use super::*;
 use semio_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority, Observer};
 use semio_plugin_retained_command::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
-use semio_plugin_retained_command::typed_operation::MountedIdentityWork;
+use semio_plugin_retained_command::typed_operation::{note_publication_wait,MountedIdentityWork};
 
 fn publication_unit_advanced(
     receipt_pending: bool,
@@ -13,9 +13,39 @@ fn publication_unit_advanced(
     progress != RetainedCloneProgress::default() || (!receipt_pending && checkpoint_advanced)
 }
 
+/// ⏸️ A pump whose last unit stood still only because its turn deadline or fuel had passed was paused, not stalled: only a still-running turn counts a standing unit toward the stall streak. See [`publication_unit_advanced`].
+fn publication_pump_counts_as_attempt(attempted: bool, moved: bool, yielded: bool) -> bool {
+    attempted && (moved || !yielded)
+}
+
+/// 🪙️ A turn whose phase items do not exceed the receiving scope headroom cannot fund one receiving step; the pump hands such a turn back before attempting a unit, so the next turn's fresh grant funds it. See [`publication_pump_counts_as_attempt`].
+fn publication_turn_funds_receiving_step(phase_items: usize, scope_items: usize) -> bool {
+    phase_items > scope_items
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{publication_unit_advanced, RetainedCloneProgress};
+    use super::{publication_pump_counts_as_attempt, publication_turn_funds_receiving_step, publication_unit_advanced, RetainedCloneProgress};
+
+    #[test]
+    fn a_turn_without_items_beyond_the_scope_headroom_ends_unfunded_and_uncounted() {
+        for scope in [0usize, 1, 10] {
+            assert!(!publication_turn_funds_receiving_step(0, scope));
+            assert!(!publication_turn_funds_receiving_step(scope, scope));
+            assert!(publication_turn_funds_receiving_step(scope + 1, scope));
+        }
+        assert!(!publication_pump_counts_as_attempt(true, false, true));
+        assert!(publication_pump_counts_as_attempt(true, true, true));
+    }
+
+    #[test]
+    fn a_standing_unit_past_its_turn_deadline_is_paused_not_counted() {
+        assert!(!publication_pump_counts_as_attempt(true, false, true));
+        assert!(publication_pump_counts_as_attempt(true, false, false));
+        assert!(publication_pump_counts_as_attempt(true, true, true));
+        assert!(!publication_pump_counts_as_attempt(false, false, false));
+        assert!(!publication_pump_counts_as_attempt(false, true, true));
+    }
 
     #[test]
     fn publication_batches_paid_units_at_the_same_checkpoint() {
@@ -129,9 +159,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let started_us=cx.now_us();
         let turn = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation, retained);
         let mut attempted = false;
+        let mut moved = false;
         for _ in 0..TYPED_OPERATION_PUBLICATION_PUMPS {
             if cx.is_cancelled(){if let Some(lease)=mounted.cancellation_lease.as_ref(){lease.cancel();}}
-            if cx.fuel_exhausted()||(cx.should_yield()&&!mounted.page_publication_pending()&&!mounted.result_page_retirement_pending()&&!mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some())){return Ok(attempted)}
+            if cx.fuel_exhausted()||(cx.should_yield()&&!mounted.page_publication_pending()&&!mounted.result_page_retirement_pending()&&!mounted.pending_artifact_publication.as_ref().is_some_and(|owner|owner.accepted_receipt().is_some())){note_publication_wait(mounted.operation.operation.0,"the turn yielded before the publication unit (fuel, deadline exceeded, retained items)",[cx.fuel_remaining(),u64::from(cx.should_yield()),cx.retained_grant().maximum_items as u64]);return Ok(attempted)}
+            if mounted.pending_artifact_publication.is_some()&&mounted.owned_child_group.is_none()&&!publication_turn_funds_receiving_step(cx.retained_grant().maximum_items,if cx.original_receiving_scope_held(){0}else{semio_framework_job::original_receiving_scope_headroom().0}){note_publication_wait(mounted.operation.operation.0,"the turn phase items cannot fund one receiving step (phase items, scope held, fuel)",[cx.retained_grant().maximum_items as u64,u64::from(cx.original_receiving_scope_held()),cx.fuel_remaining()]);return Ok(publication_pump_counts_as_attempt(attempted,moved,true))}
             attempted = true;
             let before=cx.retained_progress();let reserved_before=cx.reserved_return_progress();let fuel=cx.fuel_remaining();
             let acknowledged_page = mounted.result_page_retirement_pending();
@@ -185,9 +217,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let after = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
                 if !publication_unit_advanced(receipt.is_some(), unit, before != after) {
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
-                    return Ok(attempted);
+                    return Ok(publication_pump_counts_as_attempt(attempted,moved,cx.should_yield()));
                 }
             }
+            moved=true;
             if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
             if owned_child_route{let after=semio_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved_before,cx.reserved_return_progress());let delta=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?;*spent=spent.checked_add(delta)?;}
             if semio_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items==0{return Ok(attempted)}

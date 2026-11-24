@@ -11,7 +11,7 @@ use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCcittParameters
 use semio_s_artifact_stdio_pdf_filters as bounded_flate;
 pub use bounded_flate::{
     FlateCloseStep, FlateGrant, FlateStatus, FlateStep, PdfFlateCursor, PdfLzwCursor, PdfPredictorCursor,
-    PdfStreamDataCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus,
+    PdfStreamBytes, PdfStreamDataCursor, StreamDataGrant, StreamDataReceipt, StreamDataStatus,
 };
 
 #[path = "🎚️decoded-stream/🦀️.rs"]
@@ -231,7 +231,7 @@ fn lzw_decode_with_predictor(data: &[u8], early_change: bool, predictor: Option<
     let result = loop {
         match cursor.advance(data, grant, false).status {
             Ok(StreamDataStatus::More) => {}
-            Ok(StreamDataStatus::Complete) => break cursor.take_output().ok_or_else(|| PdfEngineError::Malformed("PDF LZW output is unavailable".into())),
+            Ok(StreamDataStatus::Complete) => break cursor.take_output().map(|bytes| bytes.to_vec_owner()).ok_or_else(|| PdfEngineError::Malformed("PDF LZW output is unavailable".into())),
             Err(error) => break Err(PdfEngineError::Malformed(error.into_message())),
             Ok(_) => break malformed("unexpected PDF LZW decoder status"),
         }
@@ -484,7 +484,7 @@ pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec
             "JPXDecode" => PdfStreamFilter::Jpx,
             "CCITTFaxDecode" | "CCF" => PdfStreamFilter::Ccitt { parameters: ccitt_parameters(parms.as_ref()) },
             "JBIG2Decode" => PdfStreamFilter::Jbig2 { globals: parms.as_ref().and_then(|p| p.dict_get("JBIG2Globals")).and_then(|v| match v {
-                PdfObject::Stream { data, .. } => Some(data.clone()),
+                PdfObject::Stream { data, .. } => Some(data.to_vec_owner()),
                 _ => None,
             }) },
             "Crypt" => PdfStreamFilter::Crypt { name: parms.as_ref().and_then(|p| p.dict_get("Name")).and_then(|v| v.as_name()).map(str::to_string) },
@@ -577,7 +577,7 @@ pub fn encode_stream(data: &[u8], filters: &[PdfStreamFilter]) -> (Vec<u8>, Vec<
                     PdfObject::Dict(dict)
                 }
             }
-            PdfStreamFilter::Jbig2 { globals: Some(globals) } => PdfObject::Dict(vec![PdfDictEntry::new("JBIG2Globals", PdfObject::Stream { dict: Vec::new(), data: globals.clone(), filters: Vec::new() })]),
+            PdfStreamFilter::Jbig2 { globals: Some(globals) } => PdfObject::Dict(vec![PdfDictEntry::new("JBIG2Globals", PdfObject::Stream { dict: Vec::new(), data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(globals), filters: Vec::new() })]),
             PdfStreamFilter::Crypt { name: Some(name) } => PdfObject::Dict(vec![PdfDictEntry::new("Type", PdfObject::name("CryptFilterDecodeParms")), PdfDictEntry::new("Name", PdfObject::name(name))]),
             _ => PdfObject::Null,
         })

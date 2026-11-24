@@ -1543,64 +1543,16 @@
        "h": 0.049
       },
       {
-       "id": "strap-side-l",
+       "id": "strap-end",
        "bone": "lashing",
-       "role": "detail",
+       "role": "body",
        "z": 6,
-       "filled": false,
+       "filled": true,
        "tone": 0.88,
        "region": "lashing-straps",
        "material": "polyester-strapping",
-       "kind": "poly",
-       "points": [
-        [
-         0.47512,
-         0.0995
-        ],
-        [
-         0.5375,
-         0.131193
-        ],
-        [
-         0.5375,
-         0.180555
-        ],
-        [
-         0.5154,
-         0.279
-        ]
-       ],
-       "closed": false
-      },
-      {
-       "id": "strap-side-r",
-       "bone": "lashing",
-       "role": "detail",
-       "z": 6,
-       "filled": false,
-       "tone": 0.88,
-       "region": "lashing-straps",
-       "material": "polyester-strapping",
-       "kind": "poly",
-       "points": [
-        [
-         -0.47512,
-         0.0995
-        ],
-        [
-         -0.5375,
-         0.131193
-        ],
-        [
-         -0.5375,
-         0.180555
-        ],
-        [
-         -0.5154,
-         0.279
-        ]
-       ],
-       "closed": false
+       "kind": "path",
+       "d": "M -0.475239 0.099 L 0.475239 0.099 L 0.538 0.130886 L 0.538 0.180611 L 0.5158 0.2795 L -0.5158 0.2795 L -0.538 0.180611 L -0.538 0.130886 Z M -0.475 0.1 L 0.475 0.1 L 0.537 0.1315 L 0.537 0.1805 L 0.515 0.2785 L -0.515 0.2785 L -0.537 0.1805 L -0.537 0.1315 Z"
       },
       {
        "id": "sling-choke-side-l",
@@ -2632,8 +2584,8 @@
       "de": "Die Blechdicke von 0,75 mm als Fläche (als Profillinie des obersten Blechs gezeichnet), die Bandverschlüsse, die Weißrostflecken der Verzinkung (ein hellerer Ton des obersten Blechs)."
      },
      "thinElements": {
-      "en": "Strap and sling loops in the front view are the centre lines of their two side runs; the bottom run under the valleys and the top run on the battens are hidden in the end view; the top sheet profile is a detail line.",
-      "de": "Band- und Schlingenschlaufen der Vorderansicht sind die Mittellinien ihrer beiden Seitenläufe; der untere Lauf unter den Untergurten und der obere auf den Kanthölzern sind in der Stirnansicht verdeckt; das Profil des obersten Blechs ist eine Detaillinie."
+      "en": "The strap in the front view is its true 1 mm section round bundle and battens; the sling loops are the centre lines of their two side runs, whose bottom run under the valleys and top run on the battens are hidden in the end view; the top sheet profile is a detail line.",
+      "de": "Das Band ist in der Vorderansicht sein wahrer Querschnitt von 1 mm um Paket und Kanthölzer; die Schlingenschlaufen sind die Mittellinien ihrer beiden Seitenläufe, deren unterer Lauf unter den Untergurten und oberer auf den Kanthölzern in der Stirnansicht verdeckt sind; das Profil des obersten Blechs ist eine Detaillinie."
      },
      "hatching": {
       "en": "End grain of bearers and battens cross-hatched 0.5 mm, the long grain of the battens in the front view hatched in lines.",
@@ -3417,64 +3369,16 @@
        "h": 0.049
       },
       {
-       "id": "strap-side-l",
+       "id": "strap-end",
        "bone": "lashing",
-       "role": "detail",
+       "role": "body",
        "z": 6,
-       "filled": false,
+       "filled": true,
        "tone": 0.88,
        "region": "lashing-straps",
        "material": "polyester-strapping",
-       "kind": "poly",
-       "points": [
-        [
-         0.475101,
-         0.0995
-        ],
-        [
-         0.5505,
-         0.131168
-        ],
-        [
-         0.5505,
-         0.180587
-        ],
-        [
-         0.515352,
-         0.279
-        ]
-       ],
-       "closed": false
-      },
-      {
-       "id": "strap-side-r",
-       "bone": "lashing",
-       "role": "detail",
-       "z": 6,
-       "filled": false,
-       "tone": 0.88,
-       "region": "lashing-straps",
-       "material": "polyester-strapping",
-       "kind": "poly",
-       "points": [
-        [
-         -0.475101,
-         0.0995
-        ],
-        [
-         -0.5505,
-         0.131168
-        ],
-        [
-         -0.5505,
-         0.180587
-        ],
-        [
-         -0.515352,
-         0.279
-        ]
-       ],
-       "closed": false
+       "kind": "path",
+       "d": "M -0.475201 0.099 L 0.475201 0.099 L 0.551 0.130835 L 0.551 0.180673 L 0.515705 0.2795 L -0.515705 0.2795 L -0.551 0.180673 L -0.551 0.130835 Z M -0.475 0.1 L 0.475 0.1 L 0.55 0.1315 L 0.55 0.1805 L 0.515 0.2785 L -0.515 0.2785 L -0.55 0.1805 L -0.55 0.1315 Z"
       },
       {
        "id": "sling-choke-side-l",
@@ -4142,8 +4046,8 @@
       "de": "Die 6,5-mm-Schraublöcher (0,065 mm auf Papier) und der Eckschnitt-Strich in der Seitenansicht."
      },
      "thinElements": {
-      "en": "Strap and sling loops as the centre lines of their side runs; the top sheet profile as a detail line.",
-      "de": "Band- und Schlingenschlaufen als Mittellinien ihrer Seitenläufe; das Profil des obersten Blechs als Detaillinie."
+      "en": "The strap as its true section, the sling loops as the centre lines of their side runs; the top sheet profile as a detail line.",
+      "de": "Das Band als wahrer Querschnitt, die Schlingenschlaufen als Mittellinien ihrer Seitenläufe; das Profil des obersten Blechs als Detaillinie."
      },
      "hatching": {
       "en": "No hatches; the timber reads by its tone.",
@@ -6612,87 +6516,87 @@
       "tone": 0.66,
       "profile": [
        [
-        0.034846,
+        0.077596,
         -0.499697
        ],
        [
-        0.00075,
+        0.0435,
         -0.474809
        ],
        [
-        0.00075,
+        0.0435,
         -0.353191
        ],
        [
-        0.035,
+        0.07775,
         -0.328191
        ],
        [
-        0.035,
+        0.07775,
         -0.292809
        ],
        [
-        0.00075,
+        0.0435,
         -0.267809
        ],
        [
-        0.00075,
+        0.0435,
         -0.146191
        ],
        [
-        0.035,
+        0.07775,
         -0.121191
        ],
        [
-        0.035,
+        0.07775,
         -0.085809
        ],
        [
-        0.00075,
+        0.0435,
         -0.060809
        ],
        [
-        0.00075,
+        0.0435,
         0.060809
        ],
        [
-        0.035,
+        0.07775,
         0.085809
        ],
        [
-        0.035,
+        0.07775,
         0.121191
        ],
        [
-        0.00075,
+        0.0435,
         0.146191
        ],
        [
-        0.00075,
+        0.0435,
         0.267809
        ],
        [
-        0.035,
+        0.07775,
         0.292809
        ],
        [
-        0.035,
+        0.07775,
         0.328191
        ],
        [
-        0.00075,
+        0.0435,
         0.353191
        ],
        [
-        0.00075,
+        0.0435,
         0.474809
        ],
        [
-        0.035,
+        0.07775,
         0.499809
        ],
        [
-        0.035,
+        0.07775,
         0.535
        ],
        [
@@ -6782,16 +6686,7 @@
       ],
       "plane": "yz",
       "from": 0.0,
-      "to": 6.0,
-      "sheet": true,
-      "repeat": {
-       "count": 29,
-       "translation": [
-        0,
-        0.0015,
-        0
-       ]
-      }
+      "to": 6.0
      },
      {
       "id": "sheets-1-29-edge-crest",
@@ -6810,26 +6705,17 @@
         -0.5
        ],
        [
-        0.035,
+        0.07775,
         -0.5
        ],
        [
-        0.035,
+        0.07775,
         -0.535
        ]
       ],
       "plane": "yz",
       "from": 0.15,
-      "to": 6.0,
-      "sheet": true,
-      "repeat": {
-       "count": 29,
-       "translation": [
-        0,
-        0.0015,
-        0
-       ]
-      }
+      "to": 6.0
      },
      {
       "id": "sheet-30",
@@ -7691,6 +7577,12 @@
       "part": "member"
      },
      {
+      "id": "st-sheets-1-29-edge-crest",
+      "of": "sheets-1-29-edge-crest",
+      "member": "bundle",
+      "part": "member"
+     },
+     {
       "id": "st-sheet-30",
       "of": "sheet-30",
       "member": "sheet-30",
@@ -7711,8 +7603,8 @@
     ],
     "decisions": [
      {
-      "en": "Body: the bundle as it lies: 29 nested sheets of the true 35/207 profile (0.75 mm, 44 points per section, declared sheets) at a nesting pitch of 1.5 mm as one extrude repeated 29 times, each in two pieces because the right edge crest is trimmed back 150 mm at the eaves end (profile without it over the full 6 m, the edge crest from 0.15 m on); the top sheet 30 on its own bone; four 100 x 100 x 1200 mm bearers; four 100 x 100 x 1030 mm battens on the top sheet; four composite straps (32 x 1 mm) tensioned round battens, stack and the U-shaped polyethylene edge protectors (2 mm); two violet round slings choked round the stack at 1.50 m and 4.50 m, their legs (50 x 16 mm) lying on the top sheet.",
-      "de": "Körper: das Paket, wie es liegt: 29 geschachtelte Bleche im wahren Profil 35/207 (0,75 mm, 44 Punkte je Querschnitt, als Bleche deklariert) mit 1,5 mm Schachtelteilung als ein 29-fach wiederholter Strangkörper, jeder zweiteilig, weil die rechte Randrippe am Traufende 150 mm zurückgeschnitten ist (Profil ohne sie über die vollen 6 m, die Randrippe ab 0,15 m); das oberste Blech 30 auf eigenem Knochen; vier Unterleger 100 x 100 x 1200 mm; vier Kanthölzer 100 x 100 x 1030 mm auf dem obersten Blech; vier Polyesterbänder (32 x 1 mm) um Kanthölzer, Stapel und den U-förmigen Kantenschutz aus Polyethylen (2 mm); zwei violette Rundschlingen bei 1,50 m und 4,50 m um den Stapel geschnürt, ihre Stränge (50 x 16 mm) auf dem obersten Blech liegend."
+      "en": "Body: the bundle as it lies: the 29 nested sheets of the true 35/207 profile are one pack extruded from the envelope of their sections (lower face of sheet 1 to the lower face of the top sheet 30, so no air is left under it either), in two pieces because the right edge crest is trimmed back 150 mm at the eaves end (envelope without it over the full 6 m, the edge crests from 0.15 m on). Ruling of the coordinator of 2026-11-23: the 0.75 mm of air between nested sheets is far below the 7.5 mm smallest feature of 1:50, so a body of 1:50 does not model it (29 separate sheets read IoU 0.914 against the band drawing in the front view, the pack 0.972); the top sheet 30 on its own bone; four 100 x 100 x 1200 mm bearers; four 100 x 100 x 1030 mm battens on the top sheet; four composite straps (32 x 1 mm) tensioned round battens, stack and the U-shaped polyethylene edge protectors (2 mm); two violet round slings choked round the stack at 1.50 m and 4.50 m, their legs (50 x 16 mm) lying on the top sheet.",
+      "de": "Körper: das Paket, wie es liegt: die 29 geschachtelten Bleche im wahren Profil 35/207 sind ein Paket, extrudiert aus der Hülle ihrer Querschnitte (Unterseite Blech 1 bis Unterseite des obersten Blechs 30, sodass auch darunter keine Luft bleibt), zweiteilig, weil die rechte Randrippe am Traufende 150 mm zurückgeschnitten ist (Hülle ohne sie über die vollen 6 m, die Randrippen ab 0,15 m). Entscheid der Koordination vom 23.11.2026: die 0,75 mm Luft zwischen geschachtelten Blechen liegen weit unter der kleinsten Einzelheit von 7,5 mm bei 1:50, ein Körper 1:50 bildet sie also nicht ab (29 einzelne Bleche ergeben in der Vorderansicht IoU 0,914 gegen die Bandzeichnung, das Paket 0,972); das oberste Blech 30 auf eigenem Knochen; vier Unterleger 100 x 100 x 1200 mm; vier Kanthölzer 100 x 100 x 1030 mm auf dem obersten Blech; vier Polyesterbänder (32 x 1 mm) um Kanthölzer, Stapel und den U-förmigen Kantenschutz aus Polyethylen (2 mm); zwei violette Rundschlingen bei 1,50 m und 4,50 m um den Stapel geschnürt, ihre Stränge (50 x 16 mm) auf dem obersten Blech liegend."
      },
      {
       "en": "The 6.5 mm old screw holes are below the 7.5 mm feature and are drawn in plan only; the white-rust patina is the lighter tone of the top sheet.",
@@ -8027,12 +7919,8 @@
       "tone": 0.78,
       "profile": [
        [
-        0.035,
-        -0.535
-       ],
-       [
-        0.035,
-        -0.499809
+        0.034846,
+        -0.499697
        ],
        [
         0.00075,
@@ -8195,16 +8083,42 @@
         -0.475191
        ],
        [
-        0.03425,
-        -0.500191
-       ],
-       [
-        0.03425,
-        -0.535
+        0.034404,
+        -0.500303
        ]
       ],
       "plane": "yz",
       "from": 0.0,
+      "to": 6.0,
+      "sheet": true
+     },
+     {
+      "id": "s100-sheet-30-edge-crest",
+      "kind": "extrude",
+      "bone": "sheet-30",
+      "material": "galvanised-steel-weathered",
+      "role": "body",
+      "tone": 0.78,
+      "profile": [
+       [
+        0.03425,
+        -0.535
+       ],
+       [
+        0.03425,
+        -0.5
+       ],
+       [
+        0.035,
+        -0.5
+       ],
+       [
+        0.035,
+        -0.535
+       ]
+      ],
+      "plane": "yz",
+      "from": 0.15,
       "to": 6.0,
       "sheet": true
      },
@@ -8527,6 +8441,11 @@
       "region": "battens"
      },
      {
+      "id": "th-s100-sheet-30-edge-crest",
+      "of": "s100-sheet-30-edge-crest",
+      "region": "top-sheet"
+     },
+     {
       "id": "th-pack-1-29",
       "of": "pack-1-29",
       "region": "bundle-sheets"
@@ -8619,8 +8538,8 @@
     ],
     "decisions": [
      {
-      "en": "Body: the 29 nested sheets merge into one pack extruded from the envelope of their true profile (lower face of sheet 1 to upper face of sheet 29), still trimmed at the eaves corner; the top sheet keeps its true profile; the edge protectors become 15 mm plates outside the sheet edges and the straps run round them; slings and legs keep their sizes (25 and 16 mm, above the 15 mm feature).",
-      "de": "Körper: die 29 geschachtelten Bleche verschmelzen zu einem Paket, extrudiert aus der Hülle ihres wahren Profils (Unterseite Blech 1 bis Oberseite Blech 29), weiterhin mit dem Traufeckschnitt; das oberste Blech behält sein wahres Profil; der Kantenschutz wird zu 15 mm starken Platten außen an den Kanten, die Bänder laufen darum; Schlingen und Stränge behalten ihre Maße (25 und 16 mm, über der Einzelheit von 15 mm)."
+      "en": "Body: the 29 nested sheets merge into one pack extruded from the envelope of their true profile (lower face of sheet 1 to upper face of sheet 29), still trimmed at the eaves corner; the top sheet keeps its true profile and its own corner trim (two pieces, as at 1:50); the edge protectors become 15 mm plates outside the sheet edges and the straps run round them; slings and legs keep their sizes (25 and 16 mm, above the 15 mm feature).",
+      "de": "Körper: die 29 geschachtelten Bleche verschmelzen zu einem Paket, extrudiert aus der Hülle ihres wahren Profils (Unterseite Blech 1 bis Oberseite Blech 29), weiterhin mit dem Traufeckschnitt; das oberste Blech behält sein wahres Profil und seinen eigenen Traufeckschnitt (zwei Teile wie bei 1:50); der Kantenschutz wird zu 15 mm starken Platten außen an den Kanten, die Bänder laufen darum; Schlingen und Stränge behalten ihre Maße (25 und 16 mm, über der Einzelheit von 15 mm)."
      },
      {
       "en": "Thermal and structure: as at 1:50 on these solids; the pack is the bundle member.",

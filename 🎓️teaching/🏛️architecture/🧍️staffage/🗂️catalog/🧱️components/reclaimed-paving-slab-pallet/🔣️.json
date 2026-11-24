@@ -8356,6 +8356,36 @@
        "hatch": "concrete"
       },
       {
+       "id": "band-rear-end",
+       "bone": "band-rear",
+       "role": "detail",
+       "z": 3.9,
+       "filled": true,
+       "tone": 0.22,
+       "kind": "poly",
+       "points": [
+        [
+         -0.2509,
+         0.444
+        ],
+        [
+         0.2509,
+         0.444
+        ],
+        [
+         0.2509,
+         0.46
+        ],
+        [
+         -0.2509,
+         0.46
+        ]
+       ],
+       "closed": true,
+       "region": "strapping",
+       "material": "pet-strap"
+      },
+      {
        "id": "band-front-end",
        "bone": "band-front",
        "role": "detail",
@@ -9342,6 +9372,10 @@
        "points": [
         [
          0.02455,
+         0.0
+        ],
+        [
+         0.02455,
          -0.25045
         ],
         [
@@ -9355,9 +9389,13 @@
         [
          0.02455,
          0.25045
+        ],
+        [
+         0.02455,
+         0.0
         ]
        ],
-       "closed": true,
+       "closed": false,
        "region": "strapping",
        "material": "pet-strap"
       },
@@ -9372,6 +9410,10 @@
        "points": [
         [
          0.62455,
+         0.0
+        ],
+        [
+         0.62455,
          -0.25045
         ],
         [
@@ -9385,9 +9427,13 @@
         [
          0.62455,
          0.25045
+        ],
+        [
+         0.62455,
+         0.0
         ]
        ],
-       "closed": true,
+       "closed": false,
        "region": "strapping",
        "material": "pet-strap"
       }

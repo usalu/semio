@@ -19,6 +19,8 @@ pub const SEAL_PAGE_BYTES:usize=1024;
 /// 📃️ The free window below which a partly filled page is hashed instead of starving the next canonical turn.
 const SEAL_FLUSH_MARGIN_BYTES:usize=SEAL_PAGE_BYTES/2;
 const SEAL_TURN_BYTES:usize=256;
+/// 🪟️ The widest work window one granted seal turn may chain: sixteen inline pages filled and hashed in place.
+const SEAL_MAXIMUM_WINDOW_BYTES:usize=16*SEAL_PAGE_BYTES;
 
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{CountStart,Count,Header,HashStart,Hash,TakeOwner,SourceClose,Finalize,Ready}
@@ -83,6 +85,12 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
  pub fn begin_close(&mut self){self.closing=true;if let Some(tree)=self.tree.as_mut(){tree.begin_close();}}
  pub fn terminal_is_empty(&self)->bool{!self.hash_pending&&self.source.is_none()&&self.tree.is_none()&&self.original.is_none()&&self.retirement.is_none()&&!self.take_pending}
  pub fn is_ready(&self)->bool{!self.closing&&self.phase==Phase::Ready&&self.original.is_some()}
+ /// 🔭️ Names the exact stalled step: phase and ownership flags, the work quote and the copy demand of its next action.
+ pub fn witness(&self)->[u64;3]{
+  let flags=[self.closing,self.hash_pending,self.tree.is_some(),self.source.is_some(),self.original.is_some(),self.retirement.is_some(),self.take_pending];
+  let bits=flags.iter().enumerate().fold(self.phase as u64,|bits,(index,flag)|bits|u64::from(*flag)<<(8+index));
+  [bits,self.next_work_demand().unwrap_or(u64::MAX),self.next_demand().map_or(u64::MAX,|demand|demand.copy_bytes as u64)]
+ }
  pub fn canonical_length(&self)->u64{self.length}
  pub fn digest(&self)->Option<[u8;32]>{if self.is_ready(){self.digest}else{None}}
  pub fn next_take_demand(&self)->RetirementDemand{if self.is_ready(){copy(size_of::<Option<Box<Edit<M>>>>()+32)}else{Default::default()}}
@@ -91,20 +99,71 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
   if !self.closing&&self.tree.is_none()&&matches!(self.phase,Phase::CountStart|Phase::HashStart){return retained_alias_work_demand(self.tree_reference()?)?.checked_add(1).ok_or_else(||refusal("seal tree construction work overflow"));}
   if self.tree.is_none()&&!self.hash_pending{
    if let Some(source)=self.source.as_ref(){
-    if !self.closing&&self.phase==Phase::TakeOwner{return source.next_take_work_demand(source.next_take_copy_byte_demand()?);}
-    if (self.closing||self.phase==Phase::SourceClose)&&!source.terminal_is_empty(){return source.next_close_work_demand(source.next_close_copy_byte_demand()?);}
+    if !self.closing&&self.phase==Phase::TakeOwner{return source.next_take_work_demand(source.next_take_copy_byte_demand()?).map(|work|work.max(1));}
+    if (self.closing||self.phase==Phase::SourceClose)&&!source.terminal_is_empty(){return source.next_close_work_demand(source.next_close_copy_byte_demand()?).map(|work|work.max(1));}
    }
-   if let Some(owner)=self.retirement.as_ref().filter(|owner|self.closing&&!owner.terminal_is_empty()){return owner.next_computational_work(owner.next_copy_byte_demand()?);}
+   if let Some(owner)=self.retirement.as_ref().filter(|owner|self.closing&&!owner.terminal_is_empty()){return owner.next_computational_work(owner.next_copy_byte_demand()?).map(|work|work.max(1));}
   }
   Ok(if self.terminal_is_empty()||self.is_ready(){0}else if self.hash_pending{(self.page_length-self.hash_offset).min(SEAL_TURN_BYTES).max(1)as u64}else if self.tree.is_some()||!self.closing&&self.phase==Phase::Header{SEAL_TURN_BYTES as u64}else{2})
  }
+ /// 🪟️ The work window a turn granted `grant` may chain: its copy credit, never below one narrow turn nor above sixteen pages.
+ pub fn work_window(grant:RetainedCloneGrant)->usize{grant.maximum_copy_bytes.clamp(SEAL_TURN_BYTES,SEAL_MAXIMUM_WINDOW_BYTES)}
+ fn chains(&self,window:usize)->bool{window>SEAL_TURN_BYTES&&!self.closing&&(self.hash_pending||self.tree.as_ref().is_some_and(|tree|!tree.terminal_is_empty()))}
+ /// ⛽️ Quotes the work of one turn that may chain fill and hash windows up to `window`; a narrow window quotes exactly [`Self::next_work_demand`].
+ pub fn next_work_demand_within(&self,window:usize)->Result<u64,ValueError>{if self.chains(window){Ok(window as u64)}else{self.next_work_demand()}}
  /// 🧮️ Reports the complete most recent call, including failed child work and zero on admission denial.
  pub fn last_turn_work(&self)->u128{self.last_work}
  fn header_byte(&self)->Result<Option<u8>,ValueError>{
   let reference=self.source.as_ref().ok_or_else(||refusal("seal header source is absent"))?.borrow();let id=&reference.get().id;
   Ok(canonical_edit_seal_header_byte(id,self.length,self.header))
  }
- pub fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+ /// 🔁️ Chains canonical tree runs and in-place page hashes inside one effect while the window and the effect's work still fund a whole narrow run; hashed bytes are performed as they are consumed, so the tree never spends work the hash already used, and every byte moved is receipted as copy.
+ fn advance_window(&mut self,window:usize,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,semio_framework_value::RetirementPollExit>{
+  let mut progress=RetainedCloneProgress::default();self.last_work=0;
+  while self.last_work<window as u128{
+   let remaining=effect.remaining_work_units()?;
+   if self.hash_pending{
+    let budget=usize::try_from(remaining.min((window as u128-self.last_work)as u64)).unwrap_or(usize::MAX).min(grant.maximum_copy_bytes.saturating_sub(progress.copied_bytes));
+    let end=(self.hash_offset+budget).min(self.page_length);let length=end-self.hash_offset;
+    if length==0&&end!=self.page_length{break;}
+    if length!=0&&!effect.performed(length as u64)?{break;}
+    self.hash.as_mut().unwrap().update(&self.page[self.hash_offset..end]);self.hash_offset=end;
+    self.hashed=self.hashed.checked_add(length as u64).ok_or_else(||refusal("seal hash length overflow"))?;
+    self.last_work+=length as u128;progress.copied_bytes+=length;
+    if self.hash_offset==self.page_length{self.hash_pending=false;self.page_length=0;self.hash_offset=0;if self.buffered{self.buffered=false;if self.hashed!=self.length{return Err(refusal("seal buffered second pass length changed").into());}}}
+    continue;
+   }
+   if remaining<SEAL_TURN_BYTES as u64||window as u128-self.last_work<SEAL_TURN_BYTES as u128{break;}
+   let Some(tree)=self.tree.as_mut().filter(|tree|!tree.terminal_is_empty()) else{break};
+   let mut produced=0usize;let mut moved=false;
+   for _ in 0..SEAL_TURN_BYTES{
+    if produced>=SEAL_TURN_BYTES||self.hash_pending{break;}
+    if self.phase!=Phase::Count&&self.page_length>=SEAL_PAGE_BYTES{self.hash_pending=true;break;}
+    let start=if self.phase==Phase::Count&&!self.buffered{0}else{self.page_length};
+    let mut left=grant;left.maximum_copy_bytes=grant.maximum_copy_bytes.saturating_sub(progress.copied_bytes);left.maximum_capacity_bytes=grant.maximum_capacity_bytes.saturating_sub(progress.retained_capacity_bytes);left.maximum_release_bytes=grant.maximum_release_bytes.saturating_sub(progress.released_bytes);
+    let turn=tree.advance(&mut self.page[start..],&mut effect.nested(child_grant(left)));
+    self.last_work=self.last_work.saturating_add(u128::from(tree.last_turn_work()));
+    let step=turn?;let step_progress=step.ownership.progress();
+    if step.written_bytes==0&&step_progress==RetainedCloneProgress::default(){break;}
+    moved=true;produced=produced.saturating_add(step.written_bytes);
+    progress.copied_bytes=progress.copied_bytes.saturating_add(step_progress.copied_bytes);
+    progress.retained_capacity_bytes=progress.retained_capacity_bytes.saturating_add(step_progress.retained_capacity_bytes);
+    progress.released_bytes=progress.released_bytes.saturating_add(step_progress.released_bytes);
+    if step.written_bytes!=0{
+     if self.phase==Phase::Count{self.length=self.length.checked_add(step.written_bytes as u64).ok_or_else(||refusal("seal canonical length overflow"))?;if self.buffered{self.page_length+=step.written_bytes;if !tree.terminal_is_empty()&&SEAL_PAGE_BYTES-self.page_length<SEAL_FLUSH_MARGIN_BYTES{self.buffered=false;self.page_length=0;}}}
+     else{self.page_length+=step.written_bytes;if SEAL_PAGE_BYTES-self.page_length<SEAL_FLUSH_MARGIN_BYTES{self.hash_pending=true;}}
+    }
+    if tree.terminal_is_empty()||effect.actual().is_some(){break;}
+   }
+   if !moved||effect.actual().is_some(){break;}
+  }
+  if self.phase!=Phase::Count&&self.page_length!=0&&self.tree.as_ref().is_some_and(|tree|tree.terminal_is_empty()){self.hash_pending=true;}
+  Ok(progress)
+ }
+ /// ⏭️ Advances one narrow turn: at most one canonical run or one page hash of 256 bytes.
+ pub fn advance(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.advance_within(SEAL_TURN_BYTES,effect)}
+ /// 🪟️ Advances one turn that chains fill and hash windows up to `window` work (see [`Self::work_window`]); the byte stream hashed, and so the digest, is the same for every window.
+ pub fn advance_within(&mut self,window:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
   use semio_framework_value::RetirementPollExit;let grant=effect.grant();let base=effect.performed_work();
   let result:Result<RetainedCloneStep,RetirementPollExit>=(||->Result<RetainedCloneStep,RetirementPollExit>{
   self.last_work=0;
@@ -114,7 +173,8 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
   let demand=self.next_demand()?;if !admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
   self.last_work=1;
-  if self.hash_pending{if !self.closing{let end=(self.hash_offset+SEAL_TURN_BYTES).min(self.page_length);let length=end-self.hash_offset;self.last_work=length.max(1)as u128;self.hash.as_mut().unwrap().update(&self.page[self.hash_offset..end]);self.hash_offset=end;self.hashed=self.hashed.checked_add(length as u64).ok_or_else(||refusal("seal hash length overflow"))?;}progress.copied_bytes=demand.copy_bytes;if self.closing||self.hash_offset==self.page_length{self.hash_pending=false;self.page_length=0;self.hash_offset=0;if self.buffered&&!self.closing{self.buffered=false;if self.hashed!=self.length{return Err(refusal("seal buffered second pass length changed").into());}}}}
+  if self.chains(window){let moved=self.advance_window(window,grant,effect)?;progress=if moved==RetainedCloneProgress::default()&&self.last_work==0{moved}else{RetainedCloneProgress{copied_items:1,..moved}};}
+  else if self.hash_pending{if !self.closing{let end=(self.hash_offset+SEAL_TURN_BYTES).min(self.page_length);let length=end-self.hash_offset;self.last_work=length.max(1)as u128;self.hash.as_mut().unwrap().update(&self.page[self.hash_offset..end]);self.hash_offset=end;self.hashed=self.hashed.checked_add(length as u64).ok_or_else(||refusal("seal hash length overflow"))?;}progress.copied_bytes=demand.copy_bytes;if self.closing||self.hash_offset==self.page_length{self.hash_pending=false;self.page_length=0;self.hash_offset=0;if self.buffered&&!self.closing{self.buffered=false;if self.hashed!=self.length{return Err(refusal("seal buffered second pass length changed").into());}}}}
   else if self.tree.is_some(){
    if self.tree.as_ref().unwrap().terminal_is_empty()&&!self.closing&&self.phase!=Phase::Count&&self.page_length!=0{self.hash_pending=true;progress.copied_bytes=demand.copy_bytes;}
    else if self.tree.as_ref().unwrap().terminal_is_empty(){self.tree=None;progress.copied_bytes=demand.copy_bytes;if !self.closing{self.phase=if self.phase==Phase::Count{Phase::Header}else{if self.hashed!=self.length{return Err(refusal("seal canonical second pass length changed").into());}Phase::TakeOwner};}}
@@ -164,7 +224,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
     self.last_work=effect.performed_work()-before;
     match self.take_reply.take(){
      None=>{self.take_pending=true;progress=Default::default();}
-     Some(result)=>{self.take_pending=false;match result?{RetainedCloneStep::Progress(step)=>progress=step,RetainedCloneStep::Complete(step)=>{self.phase=Phase::SourceClose;progress=step;}}}
+     Some(result)=>{self.take_pending=false;match result?{RetainedCloneStep::Progress(step)=>progress=step,RetainedCloneStep::Complete(step)=>{self.phase=Phase::SourceClose;progress=if step==RetainedCloneProgress::default(){RetainedCloneProgress{copied_items:1,..Default::default()}}else{step};self.last_work=self.last_work.max(1);}}}
     }
    },
    Phase::SourceClose=>{let source=self.source.as_mut().ok_or_else(||ValueError::invariant("source absent"))?;if source.terminal_is_empty(){self.source=None;self.phase=Phase::Finalize;progress.copied_bytes=demand.copy_bytes;}else{let turn=RetirementPollExit::settled(source.close_step(effect.grant().maximum_copy_bytes,&mut effect.nested(child_grant(grant))))?;self.last_work=turn.work;progress=turn.result?.progress();}},

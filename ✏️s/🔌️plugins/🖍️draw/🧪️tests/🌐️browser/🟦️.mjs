@@ -24,7 +24,7 @@ assert(!existsSync(folder), "Acceptance requires a fresh document folder; choose
 mkdirSync(folder, { recursive: true });
 const url = new URL(flag("--serve"));
 url.searchParams.set("plugin", "draw");
-const report = { url: url.href, locale: flag("--locale"), steps: [], errors: [] };
+const report = { url: url.href, locale: flag("--locale"), steps: [], errors: [], debug: [] };
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
 const cancellation = new AbortController();
 const cancel = signal => {
@@ -50,6 +50,7 @@ page.on("worker", worker => {
 page.on("pageerror", error => errors.push(String(error)));
 page.on("console", message => {
   const value = message.text();
+  if (value.startsWith("[DEBUG] ")) return void report.debug.push(value);
   if (message.type() === "error" || message.type() === "warning" && value.includes("refused: dispatch-failed")) errors.push(value);
 });
 const engagement = page.locator('[id^="framework.window."][id$=".engagement.toggle"]').first();
@@ -82,9 +83,14 @@ const initialEventLogBytes = async path => {
   throw Error("Attaching the folder did not write its initial event log");
 };
 const click = id => page.locator(`[id="${id}"]`).first().click({ timeout: 15000 });
+const syncPanel = page.locator('[data-slot="panel"][id="framework.panelTab.s-sync-status"]').first();
+const closeSyncPanel = async () => {
+  await page.keyboard.press("Escape");
+  if (await syncPanel.waitFor({ state: "hidden", timeout: 2000 }).then(() => false, () => true)) await click("s-sync-status");
+  await syncPanel.waitFor({ state: "hidden", timeout: 15000 });
+};
 const openFolderCard = async () => {
-  const panel = page.locator('[data-slot="panel"][id="framework.panelTab.s-sync-status"]').first();
-  if (!(await panel.isVisible())) await click("s-sync-status");
+  if (!(await syncPanel.isVisible())) await click("s-sync-status");
   const utility = page.locator('[id="framework.sync.folder"]').first();
   if (!(await utility.isVisible())) await click("ui.utilities.group.sync");
   await utility.click({ timeout: 15000 });
@@ -162,7 +168,7 @@ try {
   };
   const layersPanel = await openPanel("framework.panel.artifact", labels.artifact);
   await layersPanel.getByText(labels.addPath, { exact: true }).first().waitFor({ state: "visible", timeout: 15000 });
-  const layerRow = layersPanel.locator(`[role="treeitem"][id^="panel:framework.panel.artifact/drawing-play-layers."]:not([id^="panel:framework.panel.artifact/drawing-play-layers.add."]):not([id$="/drawing-play-layers.empty"])`).first();
+  const layerRow = layersPanel.locator(`[role="treeitem"][id="panel:framework.panel.artifact/drawing-play-layers.path.${fixture.exampleLayer}"]`);
   await layerRow.click({ timeout: 15000 });
   const inspectionPanel = await openPanel("framework.panel.inspection", labels.inspection);
   await inspectionPanel.locator(`[id*="/drawing-inspector."]`).first().waitFor({ state: "visible", timeout: 15000 });
@@ -187,7 +193,7 @@ try {
   await page.locator('[id="framework.sync.folder.path"]').waitFor({ state: "hidden", timeout: 15000 });
   await openFolderCard();
   await page.getByRole("button", { name: /^(detach|trennen)$/i }).waitFor({ state: "visible", timeout: 15000 });
-  await page.keyboard.press("Escape");
+  await closeSyncPanel();
   await note("attach");
   const eventPath = join(folder, ".semio", "events.semio");
   const beforeEventBytes = await initialEventLogBytes(eventPath);
@@ -223,7 +229,7 @@ try {
   await waitSaved();
   report.persistence = { folder, beforeEventBytes, eventLogBytes: statSync(eventPath).size };
   assert(report.persistence.eventLogBytes - beforeEventBytes >= fixture.persistence.minimumEventGrowthBytes, "Current rectangle/history events must grow the fresh folder log");
-  await page.keyboard.press("Escape");
+  await closeSyncPanel();
   await note("persisted");
   report.export = assertPdfDifference(beforePixels, await exportPdf("drawing.pdf"));
   await note("export");

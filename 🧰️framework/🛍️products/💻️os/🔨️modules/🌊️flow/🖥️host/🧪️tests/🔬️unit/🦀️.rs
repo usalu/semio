@@ -30,3 +30,4 @@ include!("🧲️port-insertion-cluster-and-collapse-laws/🦀️.rs");
 include!("🔁️extension-bridge-and-chain-census-laws/🦀️.rs");
 
 include!("🏁️cold-retirement/🦀️.rs");
+include!("🧭️on-demand-request-laws/🦀️.rs");

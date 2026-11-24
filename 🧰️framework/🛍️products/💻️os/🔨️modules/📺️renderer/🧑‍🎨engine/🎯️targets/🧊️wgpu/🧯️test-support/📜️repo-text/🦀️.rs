@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use crate::module_tree::read_module_tree_source;
+use crate::module_tree::{read_module_tree_source, read_module_tree_source_within};
 
 const ENGINE: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
 
@@ -298,5 +298,5 @@ pub fn interpreter_source() -> &'static str {
 
 /// 🔎️ The whole Shell module tree (the `shell` parent and every Shell crate) as one text, `🧪️tests` mounts excluded.
 pub fn shell_source() -> &'static str {
-    remember("shell".to_owned(), || SHELL_SOURCE_ROOTS.iter().map(|root| read_module_tree_source(&engine_root().join(root)).expect("the shell source tree is readable")).collect())
+    remember("shell".to_owned(), || SHELL_SOURCE_ROOTS.iter().map(|root| read_module_tree_source_within(&engine_root().join(root), &engine_root()).expect("the shell source tree is readable")).collect())
 }

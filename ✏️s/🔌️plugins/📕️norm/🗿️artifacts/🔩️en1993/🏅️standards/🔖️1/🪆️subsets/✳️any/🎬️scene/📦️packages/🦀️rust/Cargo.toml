@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1993-scene-diagrams = { workspace = true }
 semio-s-artifact-norm-en1993-scene-members-projection = { workspace = true }
 semio-s-artifact-norm-en1993-scene-members = { workspace = true }
 semio-s-artifact-norm-en1993-checks = { workspace = true }

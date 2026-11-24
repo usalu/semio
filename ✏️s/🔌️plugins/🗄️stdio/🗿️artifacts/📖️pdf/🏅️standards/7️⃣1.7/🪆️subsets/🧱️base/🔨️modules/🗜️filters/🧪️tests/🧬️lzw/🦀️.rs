@@ -24,11 +24,11 @@ fn verify(mut decoder: PdfStreamDataCursor, raw: &[u8], expected: &[u8]) {
         match receipt.status.unwrap() {
             StreamDataStatus::Complete => {
                 let data = decoder.take_output().unwrap();
-                assert_eq!(data, expected);
+                assert_eq!(data.to_vec_owner(), expected);
                 assert!(!raw.is_empty());
                 assert_eq!(decoder.progress(), (raw.len(), expected.len()));
                 assert!(decoder.take_output().is_none());
-                retained -= data.capacity();
+                retained -= data.retained_bytes().allocated_bytes();
                 for _ in 0..32 {
                     let turn = decoder.close_step(grant);
                     assert!(turn.work <= 1 && turn.released_bytes <= grant.release_bytes);

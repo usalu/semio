@@ -46,12 +46,46 @@ test("a path that changes in every round seals as volatile with bounded owner ch
   expect(state.lines.map(line=>(line as {streak:number}).streak)).toEqual([1,2,3]);
 });
 
-test("a fresh path in every round ends the read after twice the round bound with every dirty owner checked once per round",async()=>{
+test("a fresh path in every round ends a read that cannot be lenient after twice the round bound with every dirty owner checked once per round",async()=>{
   const readers:Record<string,string[]>={};for(let at=0;at<40;at++)readers["p"+at+".txt"]=[names[at]!];
   const {state,ports}=world(readers,round=>["p"+(round-1)+".txt"]);
   await expect(settleInventoryRoundsV1(ports)).rejects.toThrow("moved");
   expect(state.rounds).toBe(2*limits.inventoryRounds);
   expect(state.checks).toBe(OWNERS+2*limits.inventoryRounds-1);
+});
+
+test("a fresh path in every round still seals: after twice the round bound the last attempt is lenient and names what vanished",async()=>{
+  const readers:Record<string,string[]>={};for(let at=0;at<40;at++)readers["p"+at+".txt"]=[names[at]!];
+  const {state,ports}=world(readers,round=>["p"+(round-1)+".txt"]),lenientRounds:number[]=[];
+  const attempt=ports.attempt;
+  const outcome=await settleInventoryRoundsV1({...ports,lenient:true,attempt:async(round,volatile,lenient)=>{
+    if(lenient){lenientRounds.push(round);(volatile as Set<string>).add("late-"+round);state.rounds=round;return "sealed";}
+    return attempt(round,volatile);
+  }});
+  expect(outcome.value).toBe("sealed");
+  expect(lenientRounds).toEqual([2*limits.inventoryRounds+1]);
+  expect(outcome.volatile.paths).toContain("late-"+(2*limits.inventoryRounds+1));
+  expect(outcome.volatile.paths.filter(path=>path.startsWith("p")).length).toBeGreaterThanOrEqual(limits.inventoryRounds);
+  expect(state.checks).toBeLessThanOrEqual(OWNERS+2*limits.inventoryRounds);
+});
+
+test("a tree whose members vanish while it is walked: the lenient attempt of the real walk and hash names them and does not fail",async()=>{
+  const root=await mkdtemp(join(tmpdir(),"inventory-lenient-"));
+  try{
+    await mkdir(join(root,"stable"),{recursive:true});await mkdir(join(root,"flicker"),{recursive:true});
+    await writeFile(join(root,"stable","package.json"),"{}");await writeFile(join(root,"flicker","package.json"),"{}");
+    const files=await workspaceBuildFilesV1(root);
+    await rm(join(root,"flicker"),{recursive:true,force:true});
+    await expect(buildGraphMembershipV1(root,files)).rejects.toMatchObject({code:"BUILD_MEMBERSHIP_CHANGED"});
+    const named=new Set<string>(),digest=await buildGraphMembershipV1(root,files,undefined,new Set(),path=>named.add(path));
+    expect([...named].sort()).toEqual(["flicker","flicker/package.json"]);
+    const walkedNamed=new Set<string>(),walked=await workspaceBuildFilesV1(root,undefined,new Set(),path=>walkedNamed.add(path));
+    expect(walked).not.toContain("flicker/package.json");expect(walkedNamed.size).toBe(0);
+    expect(digest).toBe(await buildGraphMembershipV1(root,walked));
+    await mkdir(join(root,"stable","inner"),{recursive:true});
+    const gone=new Set<string>(),partial=await workspaceBuildFilesV1(root,undefined,new Set(),path=>gone.add(path));
+    expect(partial).toContain("stable/package.json");
+  }finally{await rm(root,{recursive:true,force:true});}
 });
 
 test("a failure that names no path stays fatal and an unreadable change without paths gives up after the repair rounds",async()=>{
@@ -63,6 +97,19 @@ test("a failure that names no path stays fatal and an unreadable change without 
   expect(rounds).toBe(limits.repairRounds);
 });
 
+test("a failure that keeps naming only a tolerated path ends the read at once with a bounded number of owner checks",async()=>{
+  const {state,ports}=world({"gone.txt":["owner-3"]},()=>[]);
+  const refused=Object.assign(Error("owner reads a file that stays gone"),{code:"BUILD_SOURCE_UNPARSEABLE"});
+  await expect(settleInventoryRoundsV1({...ports,attempt:async round=>{state.rounds=round;state.checks++;throw refused;},follow:()=>({membership:false,paths:["gone.txt"]})})).rejects.toBe(refused);
+  expect(state.rounds).toBe(limits.volatileRounds+1);
+  expect(state.checks).toBe(limits.volatileRounds+1);
+  let rounds=0;
+  const outcome=await settleInventoryRoundsV1({...ports,orNothing:true,attempt:async()=>{rounds++;throw Object.assign(Error("moved"),{code:"BUILD_MEMBERSHIP_CHANGED"});},follow:()=>({membership:true,paths:["gone.txt"]})});
+  expect(outcome.value).toBeUndefined();
+  expect(outcome.volatile.paths).toEqual(["gone.txt"]);
+  expect(rounds).toBe(limits.volatileRounds+1);
+});
+
 test("a volatile directory leaves the walk and the membership hash of a real tree",async()=>{
   const root=await mkdtemp(join(tmpdir(),"inventory-volatile-"));
   try{
@@ -72,9 +119,9 @@ test("a volatile directory leaves the walk and the membership hash of a real tre
     expect(files).toContain("gone/package.json");
     await rm(join(root,"gone"),{recursive:true,force:true});
     await expect(buildGraphMembershipV1(root,files)).rejects.toMatchObject({code:"BUILD_MEMBERSHIP_CHANGED",paths:["gone","gone/package.json"]});
-    const kept=await buildGraphMembershipV1(root,files,undefined,new Set(["gone"])),only=await buildGraphMembershipV1(root,["stable/package.json"]);
-    expect(kept).toBe(only);
-    expect(await workspaceBuildFilesV1(root)).not.toContain("gone/package.json");
+    const kept=await buildGraphMembershipV1(root,files,undefined,new Set(["gone"])),walked=await workspaceBuildFilesV1(root);
+    expect(walked).not.toContain("gone/package.json");
+    expect(kept).toBe(await buildGraphMembershipV1(root,walked));
   }finally{await rm(root,{recursive:true,force:true});}
 });
 

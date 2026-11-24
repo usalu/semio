@@ -1,9 +1,4 @@
-module Stdio_pdf_1_7_Mutations;
-
-# Exact logical mutation frame. The direct-owner tag is 0 through 59 and the payload is canonical
-# aggregate JSON.
-public type Document = unit {
-    format: uint8;
-    mutation_tag: uint8;
-    structural_payload: bytes &eod;
+module Pdf17Mutations;
+type Document = unit {
+    payload: bytes &eod;
 };

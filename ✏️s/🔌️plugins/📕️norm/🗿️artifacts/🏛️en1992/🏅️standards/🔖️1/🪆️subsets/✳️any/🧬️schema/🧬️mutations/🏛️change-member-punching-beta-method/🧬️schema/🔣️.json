@@ -43,7 +43,17 @@
         "widget": "select",
         "role": "value",
         "group": "value",
-        "order": 20
+        "order": 20,
+        "options": {
+          "Simplified": {
+            "en": "Simplified (fixed β of 6.4.3(6))",
+            "de": "Vereinfacht (festes β nach 6.4.3(6))"
+          },
+          "UnbalancedMoments": {
+            "en": "From unbalanced moments (6.4.3(3)-(5))",
+            "de": "Aus Stützenmomenten (6.4.3(3)-(5))"
+          }
+        }
       }
     }
   }

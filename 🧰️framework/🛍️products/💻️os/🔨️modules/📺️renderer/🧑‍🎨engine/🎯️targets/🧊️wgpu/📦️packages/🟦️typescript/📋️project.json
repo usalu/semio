@@ -62,6 +62,7 @@
       {
         "env": "BUN_ENV"
       },
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⏳️on-demand-activation/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📤️return/📦️content/📥️input/🟦️.ts",
       "{workspaceRoot}/🧰️framework/📦️packages/🟦️typescript/⏳️async/🪃️continuation/🟦️.ts",
@@ -178,6 +179,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🔄️merge-outcome/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🕸️plugin-graph/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🛂️descriptor-admission/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
@@ -693,6 +695,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🧹clear-default-app/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⏱️runtime-metrics/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⏳️on-demand-activation/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🎥️video-render-program/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/⚡️effect/🛠️spawned-job/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
@@ -713,6 +716,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📖️opening-resolver/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔀️dialect-equality/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🔄️merge-outcome/🟦️.ts",

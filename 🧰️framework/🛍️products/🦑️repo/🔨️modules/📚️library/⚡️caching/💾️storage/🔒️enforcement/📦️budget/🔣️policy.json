@@ -55,7 +55,19 @@
     "rust": {
       "directory": ".cache/b/r",
       "capacityBytes": 103080263680,
-      "maximumLogicalBytes": 103079215104
+      "maximumLogicalBytes": 103079215104,
+      "imageShards": {
+        "enabled": false,
+        "headroomPercent": 100,
+        "hostFreeReservePercent": 66,
+        "roots": [
+          {
+            "prefix": "u/l",
+            "pattern": "^[a-z0-9]{1,12}$",
+            "needBytes": 8589934592
+          }
+        ]
+      }
     },
     "tools": {
       "directory": ".cache/b/t",
@@ -77,6 +89,18 @@
         "darwin": 7491026944,
         "linux": 37808504832,
         "win32": 37808504832
+      },
+      "imageShards": {
+        "enabled": false,
+        "headroomPercent": 50,
+        "hostFreeReservePercent": 80,
+        "roots": [
+          {
+            "prefix": "j",
+            "pattern": "^[0-9a-f]{20}$",
+            "needBytes": 3221225472
+          }
+        ]
       }
     },
     "products": {

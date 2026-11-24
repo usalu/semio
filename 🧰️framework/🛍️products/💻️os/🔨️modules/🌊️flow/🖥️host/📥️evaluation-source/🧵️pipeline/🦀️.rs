@@ -84,7 +84,7 @@ impl<T:FlowPublicationTarget> FlowEvaluationPipeline<T>{
  /// 🪦️ Terminal ownership is unconditional, including cancellation and refusal.
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.evaluation.is_none()&&self.publication.is_none()&&self.failure.terminal_is_empty()&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl<T:FlowPublicationTarget> Drop for FlowEvaluationPipeline<T>{fn drop(&mut self){assert!(self.terminal_is_empty(),"original evaluation pipeline must close every accepted source result, refusal and publication");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
+impl<T:FlowPublicationTarget> Drop for FlowEvaluationPipeline<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.terminal_is_empty()),"original evaluation pipeline must close every accepted source result, refusal and publication");unsafe{ManuallyDrop::drop(&mut self.fields)}}}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

@@ -14,17 +14,20 @@ fn snapshot(case: &Value) -> Snapshot14 {
     Snapshot14 { schema: "stdio.pdf".into(), pages: case["pages"].as_array().unwrap().iter().map(|page| PageDoc { width: page["width"].as_f64().unwrap(), height: page["height"].as_f64().unwrap(), text: page["text"].as_str().unwrap().into() }).collect() }
 }
 
-fn contours(segments: &Value) -> Vec<Vec<(f64, f64)>> {
-    let point = |value: &Value| (value[0].as_f64().unwrap(), value[1].as_f64().unwrap());
+fn contours(segments: &Value, transform: [f64; 6]) -> Vec<Vec<(f64, f64)>> {
+    let map = |value: &Value| {
+        let (x, y) = (value[0].as_f64().unwrap(), value[1].as_f64().unwrap());
+        (transform[0] * x + transform[2] * y + transform[4], transform[1] * x + transform[3] * y + transform[5])
+    };
     let mut found: Vec<Vec<(f64, f64)>> = Vec::new();
     for segment in segments.as_array().into_iter().flatten() {
         match segment["kind"].as_str().unwrap() {
-            "move" => found.push(vec![point(&segment["to"])]),
-            "line" => found.last_mut().unwrap().push(point(&segment["to"])),
+            "move" => found.push(vec![map(&segment["to"])]),
+            "line" => found.last_mut().unwrap().push(map(&segment["to"])),
             "cubic" => {
                 let contour = found.last_mut().unwrap();
                 let start = *contour.last().unwrap();
-                let (a, b, c) = (point(&segment["ctrl1"]), point(&segment["ctrl2"]), point(&segment["to"]));
+                let (a, b, c) = (map(&segment["ctrl1"]), map(&segment["ctrl2"]), map(&segment["to"]));
                 for step in 1..=CURVE_STEPS {
                     let t = step as f64 / CURVE_STEPS as f64;
                     let u = 1.0 - t;
@@ -49,11 +52,20 @@ fn covered(contours: &[Vec<(f64, f64)>], (x, y): (f64, f64)) -> bool {
     inside
 }
 
+fn inverse(matrix: [f64; 6]) -> [f64; 6] {
+    let determinant = matrix[0] * matrix[3] - matrix[1] * matrix[2];
+    let (a, b, c, d) = (matrix[3] / determinant, -matrix[1] / determinant, -matrix[2] / determinant, matrix[0] / determinant);
+    [a, b, c, d, -(a * matrix[4] + c * matrix[5]), -(b * matrix[4] + d * matrix[5])]
+}
+
 fn composite(scene: &[Value], point: (f64, f64)) -> [f64; 3] {
     let mut rgb = [1.0; 3];
     for layer in scene {
         let Some(fill) = layer.get("fill").filter(|fill| fill.is_object() && fill["color"].is_array()) else { continue };
-        if covered(&contours(&layer["segments"]), point) {
+        let transform: [f64; 6] = layer.get("transform").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+        let back = inverse(transform);
+        let local = (back[0] * point.0 + back[2] * point.1 + back[4], back[1] * point.0 + back[3] * point.1 + back[5]);
+        if covered(&contours(&layer["segments"], [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]), local) {
             let alpha = fill["color"][3].as_f64().unwrap_or(1.0) * layer["opacity"].as_f64().unwrap_or(1.0);
             for channel in 0..3 { rgb[channel] = rgb[channel] * (1.0 - alpha) + fill["color"][channel].as_f64().unwrap() * alpha; }
         }
@@ -149,7 +161,7 @@ fn set_text_on_the_selected_object_replaces_the_page_text_and_inverts() {
     let case = fixture()["cases"][0].clone();
     let source = snapshot(&case);
     let id = objects(&lift(&source).unwrap()).into_iter().find(|object| object.kind == page::ObjectKind::Text).unwrap().id;
-    let set = |text: &str| edit_from_action("set-text", Some(&DslValue::Object(vec![("page".into(), DslValue::float(0.0)), ("object".into(), DslValue::String(id.clone())), ("text".into(), DslValue::String(text.into()))]))).unwrap();
+    let set = |text: &str| edit_from_action("set-text", Some(&DslValue::Object(vec![("page".into(), DslValue::float(1.0)), ("object".into(), DslValue::String(id.clone())), ("text".into(), DslValue::String(text.into()))]))).unwrap();
     let emit = emit_page_edit(&source, "set-text", &set("Edited")).unwrap();
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("one mutation") };
     assert!(matches!(mutation, PdfMutation::ReplacePageText(ReplacePageText { index: 0, text }) if text == "Edited"));
@@ -160,7 +172,7 @@ fn set_text_on_the_selected_object_replaces_the_page_text_and_inverts() {
     for inverse in mutation.inverse(&source).unwrap() { restored = apply_diff_cold(inverse.diff(&restored).diff(), &restored).unwrap(); }
     assert_eq!(restored, source);
     assert!(emit_page_edit(&source, "set-text", &set(&source.pages[0].text)).unwrap().artifact_mutations.is_empty());
-    let missing = edit_from_action("set-text", Some(&DslValue::Object(vec![("page".into(), DslValue::float(0.0)), ("object".into(), DslValue::String("p0:nothing".into())), ("text".into(), DslValue::String("x".into()))]))).unwrap();
+    let missing = edit_from_action("set-text", Some(&DslValue::Object(vec![("page".into(), DslValue::float(1.0)), ("object".into(), DslValue::String("p0:nothing".into())), ("text".into(), DslValue::String("x".into()))]))).unwrap();
     assert!(emit_page_edit(&source, "set-text", &missing).is_err());
     assert!(find_object(&lift(&source).unwrap(), &id).is_some());
 }
@@ -169,7 +181,7 @@ fn set_text_on_the_selected_object_replaces_the_page_text_and_inverts() {
 fn page_structure_actions_emit_only_their_own_mutation_kind() {
     let source = snapshot(&fixture()["cases"][1]);
     let emit = |action: &str, entries: &[(&str, f64)]| emit_page_edit(&source, action, &payload(action, entries)).unwrap().artifact_mutations;
-    let resized = emit("set-page-size", &[("page", 1.0), ("width", 8.0), ("height", 9.0)]);
+    let resized = emit("set-page-size", &[("page", 2.0), ("width", 8.0), ("height", 9.0)]);
     assert_eq!(resized.len(), 1);
     assert!(matches!(resized.as_slice(), [PdfMutation::ResizePage(ResizePage { index: 1, width: 8.0, height: 9.0 })]));
     let op = &resized[0];
@@ -183,20 +195,21 @@ fn page_structure_actions_emit_only_their_own_mutation_kind() {
     assert_eq!(restored, source);
     let out = PdfMutation::ResizePage(ResizePage { index: 2, width: 8.0, height: 9.0 });
     assert!(emit_page_edit(&source, "set-page-size", &semio_os_kernel::OpText::print_op(&out)).is_err());
-    assert!(emit_page_edit(&source, "set-page-size", &payload("set-page-size", &[("page", 2.0), ("width", 8.0), ("height", 9.0)])).is_err());
-    assert!(matches!(emit("insert-page", &[("page", 1.0), ("width", 50.0), ("height", 60.0)]).as_slice(), [PdfMutation::InsertPage(InsertPage { index: 1, .. })]));
-    assert!(matches!(emit("remove-page", &[("page", 0.0)]).as_slice(), [PdfMutation::RemovePage(RemovePage { index: 0 })]));
-    assert!(matches!(emit("move-page", &[("page", 0.0), ("x", 1.0)]).as_slice(), [PdfMutation::MovePage(MovePage { from: 0, to: 1 })]));
+    assert!(emit_page_edit(&source, "set-page-size", &payload("set-page-size", &[("page", 3.0), ("width", 8.0), ("height", 9.0)])).is_err());
+    assert!(matches!(emit("insert-page", &[("page", 2.0), ("width", 50.0), ("height", 60.0)]).as_slice(), [PdfMutation::InsertPage(InsertPage { index: 1, .. })]));
+    assert!(matches!(emit("remove-page", &[("page", 1.0)]).as_slice(), [PdfMutation::RemovePage(RemovePage { index: 0 })]));
+    assert!(matches!(emit("move-page", &[("page", 1.0), ("x", 2.0)]).as_slice(), [PdfMutation::MovePage(MovePage { from: 0, to: 1 })]));
     assert!(emit_page_edit(&source, "remove-page", &payload("remove-page", &[("page", 9.0)])).is_err());
-    assert!(emit_page_edit(&source, "insert-image", &payload("set-page-size", &[("page", 0.0), ("width", 5.0), ("height", 5.0)])).is_err());
+    assert!(emit_page_edit(&source, "insert-image", &payload("set-page-size", &[("page", 1.0), ("width", 5.0), ("height", 5.0)])).is_err());
     assert!(edit_from_action("insert-image", Some(&args(&[("page", 0.0)]))).is_err());
     assert!(edit_from_action("set-page-size", None).is_err());
-    assert!(edit_from_action("set-page-size", Some(&args(&[("page", 1.0), ("width", f64::NAN), ("height", 9.0)]))).is_err());
+    assert!(edit_from_action("set-page-size", Some(&args(&[("page", 2.0), ("width", f64::NAN), ("height", 9.0)]))).is_err());
     assert!(emit_page_edit(&source, "set-page-size", "not json").is_err());
 }
 
 #[test]
 fn view_lane_reduces_and_searches_over_the_lifted_pages() {
+    let _ui_arena = semio_plugin::artifact_app_laws::FixtureUiArena::admit();
     let fixture = fixture();
     for case in fixture["cases"].as_array().unwrap() {
         let lifted = lift(&snapshot(case)).unwrap();
@@ -211,8 +224,10 @@ fn view_lane_reduces_and_searches_over_the_lifted_pages() {
     assert_eq!(reduce_view(&lifted, &ViewState::default(), &ViewIntent::GoToPage(1), (800.0, 600.0), &[]).page, 1);
     assert_eq!(page::thumbnails(&lifted, 96.0).len(), 2);
     for locale in [Locale::En, Locale::De] {
-        assert!(page::render_thumbnail_strip(&lifted, "s.stdio.pdf@1.4/*#editor", page::OBJECT_DOMAIN, locale).is_ok());
-        assert!(page::render_view(&lifted, None, &ViewState::default(), (800.0, 600.0), Vec::new()).is_ok());
+        let strip = page::render_thumbnail_strip(&lifted, "s.stdio.pdf@1.4/*#editor", page::OBJECT_DOMAIN, locale).unwrap();
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(strip), |_| ());
+        let view = page::render_view(&lifted, None, &ViewState::default(), (800.0, 600.0), Vec::new(), locale).unwrap();
+        semio_plugin::artifact_app_laws::observe_and_retire_fixture_tree(semio_plugin::built_to_component_tree(view), |_| ());
     }
 }
 

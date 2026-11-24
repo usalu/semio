@@ -59,7 +59,7 @@ struct Task<'a> {
 pub struct DomainWork {
     binding: Option<(usize, usize, usize, usize, usize, usize, usize)>,
     closing: bool,
-    cursor: DomainCursor,
+    cursor: Option<Box<DomainCursor>>,
     mutation: usize,
     part: usize,
     argument: usize,
@@ -80,16 +80,16 @@ pub struct DomainWork {
 }
 impl DomainWork {
     pub fn demands(&self) -> RetirementDemand {
-        RetirementDemand { copy_bytes: 4 * size_of::<Self>() + 4 * 256 + 256 * size_of::<usize>(), depth: 1, ..Default::default() }
+        RetirementDemand { copy_bytes: 4 * size_of::<Self>() + 4 * 256 + 256 * size_of::<usize>(), capacity_bytes: if self.cursor.is_none() { size_of::<DomainCursor>() } else { 0 }, depth: 1, ..Default::default() }
     }
     pub fn begin_close(&mut self) {
         self.closing = true;
     }
     pub fn terminal_is_empty(&self) -> bool {
-        self.binding.is_none()
+        self.binding.is_none() && self.cursor.is_none()
     }
     pub fn close_demands(&self) -> RetirementDemand {
-        RetirementDemand { copy_bytes: size_of::<Option<(usize, usize, usize, usize, usize, usize, usize)>>() + 3 * size_of::<bool>(), depth: 1, ..Default::default() }
+        RetirementDemand { copy_bytes: size_of::<Option<(usize, usize, usize, usize, usize, usize, usize)>>() + 3 * size_of::<bool>(), release_bytes: if self.cursor.is_some() { size_of::<DomainCursor>() } else { 0 }, depth: 1, ..Default::default() }
     }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
         if !self.closing {
@@ -103,7 +103,8 @@ impl DomainWork {
         self.initializing = false;
         self.done = true;
         self.binding = None;
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+        self.cursor = None;
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
     }
     #[cfg(test)]
     fn metadata(&self) -> (Option<(usize, usize, usize, usize, usize, usize, usize)>, [usize; 14]) {
@@ -374,6 +375,8 @@ impl DomainWork {
         if self.active {
             if self
                 .cursor
+                .as_mut()
+                .ok_or_else(|| Fault::from("ifc-domain-cursor"))?
                 .advance(C::catalog(), task.before.unwrap_or(task.after), task.after, &Population { snapshot, inserted, complex: retained_type.as_ref().map(|admission| (admission.position(), complex.as_slice())), primary })
                 .map_err(Fault::from)?
             {
@@ -411,7 +414,11 @@ impl DomainWork {
         let suffix = address.native_address(event).filter(|native| native.position == position && native.part == task.part && native.argument == task.index).and_then(|native| path.get(native.prefix..));
         let mut indices = [0; 128];
         let length = if !self.readonly { if let (Some(before), Some(suffix)) = (task.before, suffix) { domain_edit::route(before, suffix, &mut indices).map_err(Fault::from)? } else { 0 } } else { 0 };
-        self.cursor.start(&task.attribute.type_expr, &indices[..length], operation, task.attribute.optional, task.before.is_none(), self.readonly).map_err(Fault::from)?;
+        if self.cursor.is_none() {
+            cx.consume_retained(RetainedCloneProgress { retained_capacity_bytes: size_of::<DomainCursor>(), ..Default::default() })?;
+            self.cursor = Some(Box::default());
+        }
+        self.cursor.as_mut().ok_or_else(|| Fault::from("ifc-domain-cursor"))?.start(&task.attribute.type_expr, &indices[..length], operation, task.attribute.optional, task.before.is_none(), self.readonly).map_err(Fault::from)?;
         self.active = true;
         Ok(false)
     }

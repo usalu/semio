@@ -1,5 +1,5 @@
 /** 📚️ The example offer, ownership and switching tests. */
-import { SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
+import { EMPTY_EXAMPLE_ID, SET_ACTIVE_EXAMPLE_ACTION_ID, appSwitchesExamples, appOffersRegisteredExamples, buildActiveExampleAction, exampleSelectionAfterInputV1, frameworkOwnsExampleSwitch, navbarExampleIdFromHistoryUpserts, rememberedExampleIdFromDispatchV1 } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🔀️example-switching/🟦️.ts";
 import settlementFixture from "./settlement.json";
 import historyFixture from "./history.json";
 import exampleOfferFixture from "../../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️example-offer/🔣️.json";
@@ -59,13 +59,23 @@ export function registerExampleOffersAndSwitchingTests(): void {
     const remembered = rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "nakagin-capsule-tower" } }, "");
     expect(remembered).toBe("nakagin-capsule-tower");
     expect(rememberedExampleIdFromDispatchV1({ action: "setSpacing", args: { exampleId: "concrete-forest" } }, remembered)).toBe("nakagin-capsule-tower");
-    expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "" } }, remembered)).toBe("nakagin-capsule-tower");
+    expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: EMPTY_EXAMPLE_ID } }, remembered)).toBe(EMPTY_EXAMPLE_ID);
     expect(rememberedExampleIdFromDispatchV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID }, remembered)).toBe("nakagin-capsule-tower");
     const popped = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: false }];
     const live = [{ actionId: SET_ACTIVE_EXAMPLE_ACTION_ID, editId: "example", applied: true }];
     expect(navbarExampleIdFromHistoryUpserts(popped, remembered, "concrete-forest")).toBe("concrete-forest");
     expect(navbarExampleIdFromHistoryUpserts(live, remembered, "concrete-forest")).toBe("nakagin-capsule-tower");
-    expect(navbarExampleIdFromHistoryUpserts(live, "", "concrete-forest")).toBeUndefined();
+    expect(navbarExampleIdFromHistoryUpserts(live, undefined, "concrete-forest")).toBeUndefined();
+    expect(navbarExampleIdFromHistoryUpserts(live, EMPTY_EXAMPLE_ID, "concrete-forest")).toBe(EMPTY_EXAMPLE_ID);
+  });
+  it("keeps the empty document selected through settle, undo and redo, and offers it first-class on every picker", async () => {
+    const empty = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: EMPTY_EXAMPLE_ID } }, { kind: "applied", inputSeq: 5 }, { exampleId: "demo", inputSeq: 4 }, "demo", true);
+    expect(empty).toEqual({ memory: { exampleId: EMPTY_EXAMPLE_ID, inputSeq: 5 }, visibleExampleId: EMPTY_EXAMPLE_ID });
+    const back = exampleSelectionAfterInputV1({ action: SET_ACTIVE_EXAMPLE_ACTION_ID, args: { exampleId: "demo" } }, { kind: "applied", inputSeq: 6 }, empty!.memory, "demo", true);
+    expect(back?.visibleExampleId).toBe("demo");
+    expect(buildActiveExampleAction("c", EMPTY_EXAMPLE_ID).args).toEqual({ exampleId: EMPTY_EXAMPLE_ID });
+    const scope = await Bun.file(new URL("../../../🧱️elements/🏛️ShellHost/🔎️command-bar/🔶️scope/🟦️.tsx", import.meta.url)).text();
+    expect(scope).toMatch(/<NavbarExampleSelect[^>]*\bincludeNoExample\b/s);
   });
   it("keeps the picker unchanged for history from another action", () => {
     expect(navbarExampleIdFromHistoryUpserts([{ actionId: "shell.windowResize", editId: "resize", applied: false }], "nakagin", "forest")).toBeUndefined();

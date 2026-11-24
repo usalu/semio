@@ -1,5 +1,6 @@
 //! 🔁️ Mounted PDF natural-file import over the original admitted source and step budgets.
 
+use super::original_custody::{self, GraphDigest, Stash, DIGEST_STEP_BYTES};
 use super::retained_graph::{admit_box, exact_position, ImportedGraphRetirement, PdfByteGraphEvent, PdfByteGraphReceipt, PdfFilePreparationCursor, PreparedPdfFile};
 use crate::standards::v1_7::subsets::base::modules::lexer::{CosGrant, CosStatus, PdfCosCursor};
 use crate::standards::v1_7::subsets::base::modules::lift::{ControlledDocumentLiftCursor, ControlledLiftBarrier, ControlledLiftEvent, DocumentLiftCursor};
@@ -13,8 +14,9 @@ use store::os_store::snapshot_read::{artifact_retirement_box_close_step, artifac
 
 const COPY_PER_WORK: usize = 128;
 
+
 #[derive(Clone, Copy)]
-enum Phase { AllocateFile, PrepareFile, TransferFile, AllocateLift, Lift, TransferLift, ClosePositions, Publish, Done, Closing }
+enum Phase { AllocateFile, PrepareFile, TransferFile, StashFile, AllocateLift, Lift, TransferLift, ClosePositions, DigestGraph, Publish, Done, Closing }
 
 /// 📥️ Selects the mounted decoder before moving its original source.
 pub fn admit_pdf_natural_decode(
@@ -137,6 +139,8 @@ struct NaturalPdfDecoder {
     blocked: Option<(PdfByteGraphEvent, usize)>,
     stall: u8,
     stall_at: Option<String>,
+    stash: Stash,
+    digest: GraphDigest,
 }
 
 impl NaturalPdfDecoder {
@@ -145,6 +149,7 @@ impl NaturalPdfDecoder {
             phase: Phase::AllocateFile, source: PdfNaturalSource::Contiguous(Vec::new()), preparing: None, file: None, lifting: None,
             snapshot: None, partial_page: None, snapshot_retirement: None, trailer_retirement: None,
             graph_retirement: Default::default(), contract, progress: Default::default(), live_bytes: 0, next_release: 0, deferred: None, blocked: None, stall: 0, stall_at: None,
+            stash: Stash::default(), digest: GraphDigest::default(),
         }
     }
 
@@ -174,8 +179,13 @@ impl NaturalPdfDecoder {
                 self.file = self.preparing.as_mut().expect("PDF file transfer").take();
                 self.preparing = None;
                 self.progress.consumed_input_bytes = self.source.reader().ok_or_else(|| failure("original PDF source was retired before transfer"))?.byte_len();
-                self.phase = Phase::AllocateLift;
+                self.phase = Phase::StashFile;
                 Ok(PdfByteGraphReceipt { released_bytes: bytes, ..turn(Event::More, 1) })
+            }
+            Phase::StashFile => {
+                let source = self.source.reader().ok_or_else(|| failure("original PDF source was retired before custody"))?;
+                if self.stash.advance(source) { self.phase = Phase::AllocateLift; }
+                Ok(turn(Event::More, 1))
             }
             Phase::AllocateLift => {
                 let bytes = size_of::<ControlledDocumentLiftCursor>();
@@ -210,11 +220,17 @@ impl NaturalPdfDecoder {
             Phase::ClosePositions => {
                 let step = self.file.as_mut().expect("PDF original graph").graph.positions.close_step(grant);
                 let event = step.status.map_err(XrefStreamError::Structure).map(|status| match status {
-                    XrefIndexStatus::Closed => { self.phase = Phase::Publish; Event::More }
+                    XrefIndexStatus::Closed => { self.phase = Phase::DigestGraph; Event::More }
                     XrefIndexStatus::NeedsRelease { bytes } => Event::NeedsRelease { bytes },
                     _ => Event::More,
                 });
                 Ok(PdfByteGraphReceipt { event, work: step.work, allocated_bytes: step.allocated_bytes, released_bytes: step.released_bytes })
+            }
+            Phase::DigestGraph => {
+                let objects = &self.file.as_ref().expect("PDF graph digest").graph.objects;
+                self.digest.advance(objects.len(), |index| objects.get(index), DIGEST_STEP_BYTES);
+                if self.digest.done(objects.len()) { self.phase = Phase::Publish; }
+                Ok(turn(Event::More, 1))
             }
             Phase::Publish => Ok(turn(Event::Complete, 1)),
             _ => Err(failure("PDF natural file decoder no longer advanceable")),
@@ -228,6 +244,9 @@ impl NaturalPdfDecoder {
         }
         let file = self.file.take().expect("PDF original data is owned through publication");
         let mut snapshot = self.snapshot.take().expect("PDF typed data is owned through publication");
+        let digest = take(&mut self.digest).finish(file.graph.objects.len());
+        let stash = take(&mut self.stash).finish();
+        if !file.graph.objects.is_empty() { original_custody::retain(stash, digest); }
         snapshot.objects = file.graph.objects;
         snapshot.trailer = file.trailer;
         self.phase = Phase::Done;
@@ -241,6 +260,15 @@ impl NaturalPdfDecoder {
             Phase::Publish => size_of::<PreparedPdfFile>() + size_of::<PdfSnapshot>(),
             _ => COPY_PER_WORK,
         }.max(COPY_PER_WORK)
+    }
+
+    fn copies_identity_bytes(&self) -> bool {
+        matches!(self.phase, Phase::PrepareFile) && self.preparing.as_ref().is_some_and(|owner| owner.copying_identity_bytes())
+    }
+
+    fn identity_units(&self, remaining_work: u64, fuel: u64, copy: usize) -> usize {
+        let units = usize::try_from(remaining_work.min(fuel)).unwrap_or(usize::MAX);
+        units.min(copy / 2).max(1)
     }
 
     fn reserves_empty_output(&self) -> bool {
@@ -344,11 +372,13 @@ impl NaturalFileDecodeCursor<PdfSnapshot> for NaturalPdfDecoder {
             admitted = true;
             let grant = context.retained_grant();
             let inline_body = self.lifting.as_ref().map_or(0, |owner| owner.next_inline_body_bytes());
-            let copy_body = self.copy_body().max(inline_body);
+            let identity = self.copies_identity_bytes();
+            let copy_body = if identity { 1 } else { self.copy_body().max(inline_body) };
             if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy_body { break; }
             let empty_output = self.reserves_empty_output();
-            let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body };
-            let grant = CosGrant { work: 1, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
+            let work = if identity { self.identity_units(max_work - (self.progress.completed_work_units - start), context.fuel_remaining(), grant.maximum_copy_bytes) } else { 1 };
+            let allocation_boundary = if empty_output { grant.maximum_release_bytes } else { grant.maximum_copy_bytes - copy_body * work };
+            let grant = CosGrant { work, allocation_bytes: grant.maximum_capacity_bytes.min(allocation_boundary), release_bytes: grant.maximum_release_bytes };
             let phase = self.phase;
             let step = self.next(grant)?;
             let idle = step.work == 0 && matches!(step.event, Ok(Event::More)) && std::mem::discriminant(&self.phase) == std::mem::discriminant(&phase);
@@ -482,10 +512,12 @@ fn phase_name(phase: Phase) -> &'static str {
         Phase::AllocateFile => "allocate-file",
         Phase::PrepareFile => "prepare-file",
         Phase::TransferFile => "transfer-file",
+        Phase::StashFile => "stash-file",
         Phase::AllocateLift => "allocate-lift",
         Phase::Lift => "lift",
         Phase::TransferLift => "transfer-lift",
         Phase::ClosePositions => "close-positions",
+        Phase::DigestGraph => "digest-graph",
         Phase::Publish => "publish",
         Phase::Done => "done",
         Phase::Closing => "closing",

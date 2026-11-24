@@ -23,6 +23,8 @@ impl NativeDecodeControl<'_>{
  /// 🔭️ Reads the actual installed Source loan before selecting a private producer context.
  pub fn original_work_source_turn(&self)->Result<Option<semio_framework_value_control_contract::OriginalSourceTurnIdentity>,ValueError>{let loan=self.work.recipient.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native constructor requires its original Work loan"))?;loan.validate_context()?;Ok(loan.source_turn())}
  pub fn has_work_recipient(&self)->bool{self.work.recipient.is_some()}
+ /// 🔭️ The work the original caller can still admit this turn, read without issuing or charging anything.
+ pub fn available_work_hint(&self)->Option<u64>{self.work.recipient.as_ref().and_then(|loan|loan.available_work())}
  pub fn has_pending_work(&self)->bool{self.work.has_live_actions()}
  pub fn prepared_work_admits(&self,amount:u64)->bool{self.work.same_issuer()&&!self.work.quote_pending()&&self.work.reserved()>=amount}
  pub fn pending_work(&self)->u64{self.work.reserved()}

@@ -146,6 +146,16 @@ impl FieldBinding {
     }
 }
 
+impl FieldBinding {
+    /// 🔗️ The check of a write after the first: it may hold its field (`k = 0`), because only the first write is inverted by the value field.
+    fn check_follower(&self, path: &str, out: &mut Vec<Violation>) {
+        non_empty(out, &at(path, "path"), &self.path);
+        non_empty(out, &at(path, "unit"), &self.unit);
+        finite(out, &at(&at(path, "map"), "k"), &[self.map.base, self.map.k]);
+        self.quantise.check(&at(path, "quantise"), out);
+    }
+}
+
 impl SnapRule {
     pub const NONE: Self = Self { grid: None, increment: None, targets: Vec::new(), catalogue: Vec::new(), tolerance: 0.0 };
 
@@ -302,7 +312,14 @@ impl Validate for Handle {
         self.kind.check(&at(path, "kind"), out);
         self.anchor.check(&at(path, "anchor"), out);
         expect(out, &at(path, "writes"), !self.writes.is_empty(), "non-empty");
-        each(&self.writes, path, "writes", out);
+        for (index, write) in self.writes.iter().enumerate() {
+            let at_write = nth(path, "writes", index);
+            if index == 0 {
+                write.check(&at_write, out);
+            } else {
+                write.check_follower(&at_write, out);
+            }
+        }
         self.snap.check(&at(path, "snap"), out);
         self.limits.check(&at(path, "limits"), out);
         self.accessible_name.check(&at(path, "accessibleName"), out);

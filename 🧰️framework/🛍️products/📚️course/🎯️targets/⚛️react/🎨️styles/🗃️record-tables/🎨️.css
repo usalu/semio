@@ -129,3 +129,51 @@
 }
 
 
+
+/* 📊️ A table that stays a table whatever the room: the full leaderboard. Its frame scrolls in both dimensions, at most as
+   tall as the screen leaves below the page's chrome; every column is as wide as its widest cell, the headings stay at
+   the top and the rank and the learner stay at the start while the rest scrolls beneath and beside them. */
+.course-table-scroll {
+  max-inline-size: 100%;
+  max-block-size: max(16rem, 100dvh - 18rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.course-table {
+  inline-size: max-content;
+  min-inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.course-table :is(th, td) {
+  white-space: nowrap;
+  background: var(--color-background);
+}
+
+.course-table > thead > tr > th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+}
+
+.course-table > :is(thead, tbody) > tr > :is(th, td):nth-child(1):not([colspan]) {
+  position: sticky;
+  inset-inline-start: 0;
+  inline-size: 4.5rem;
+  min-inline-size: 4.5rem;
+  max-inline-size: 4.5rem;
+  z-index: 1;
+}
+
+.course-table > :is(thead, tbody) > tr > :is(th, td):nth-child(2) {
+  position: sticky;
+  inset-inline-start: 4.5rem;
+  z-index: 1;
+  border-inline-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.course-table > thead > tr > th:nth-child(-n + 2) {
+  z-index: 3;
+}

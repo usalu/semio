@@ -1,0 +1,5 @@
+[
+{"op": "solid-set", "scale": "50", "id": "bin-mount", "set": {"size": [0.41, 0.005, 0.12], "transform": {"translation": [0.255, 0.0025, 0.0]}}},
+{"op": "shape-set", "scale": "50", "view": "elevation", "id": "bin-mount", "set": {"w": 0.41}},
+{"op": "shape-set", "scale": "50", "view": "front", "id": "bin-mount", "set": {"h": 0.41}}
+]

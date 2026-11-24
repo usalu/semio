@@ -1,0 +1,395 @@
+{
+ "cases": [
+  {
+   "id": "fits",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "fits-exactly-at-the-room",
+   "input": {
+    "predictedBytes": 3865470567,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "short-by-one-byte",
+   "input": {
+    "predictedBytes": 3865470568,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "unknown-availability",
+   "input": {
+    "predictedBytes": 53687091200,
+    "availableBytes": null,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "unknown"
+   }
+  },
+  {
+   "id": "unknown-availability-beats-warden",
+   "input": {
+    "predictedBytes": 53687091200,
+    "availableBytes": null,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "danger",
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "unknown"
+   }
+  },
+  {
+   "id": "warden-guard-holds-a-unit-that-fits",
+   "input": {
+    "predictedBytes": 1073741824,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "guard",
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "warden"
+   }
+  },
+  {
+   "id": "warden-danger-holds-a-unit-that-fits",
+   "input": {
+    "predictedBytes": 1073741824,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "danger",
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "warden"
+   }
+  },
+  {
+   "id": "warden-calm-fits",
+   "input": {
+    "predictedBytes": 1073741824,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": "calm",
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "warden-guard-beats-the-wait-bound",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 1000000000,
+    "wardenLevel": "guard",
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "warden"
+   }
+  },
+  {
+   "id": "waited-out-with-nothing-running",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 180000,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "waited-out"
+   }
+  },
+  {
+   "id": "one-millisecond-before-the-wait-bound",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 179999,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "waited-out-refused-while-something-runs",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 1,
+    "waitedMilliseconds": 1000000000,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "unrealized-remainder-takes-the-room",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 2147483648,
+    "runningUnits": 1,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "unrealized-remainder-leaves-exactly-enough",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 1717986919,
+    "runningUnits": 1,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "available-below-the-margin",
+   "input": {
+    "predictedBytes": 1,
+    "availableBytes": 2147483648,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "nothing-available",
+   "input": {
+    "predictedBytes": 1,
+    "availableBytes": 0,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "margin-floors-on-small-totals-fits",
+   "input": {
+    "predictedBytes": 1000,
+    "availableBytes": 1150,
+    "totalBytes": 1000,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "margin-floors-on-small-totals-short",
+   "input": {
+    "predictedBytes": 1001,
+    "availableBytes": 1150,
+    "totalBytes": 1000,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": false
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "cancelled-unit-that-fits-starts",
+   "input": {
+    "predictedBytes": 2147483648,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 0,
+    "wardenLevel": null,
+    "cancelled": true
+   },
+   "expected": {
+    "admit": true,
+    "reason": "fits"
+   }
+  },
+  {
+   "id": "cancelled-unit-single-wait-is-not-enough",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 180000,
+    "wardenLevel": null,
+    "cancelled": true
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "cancelled-unit-double-wait-minus-one",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 359999,
+    "wardenLevel": null,
+    "cancelled": true
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  },
+  {
+   "id": "cancelled-unit-double-wait-with-nothing-running",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 0,
+    "waitedMilliseconds": 360000,
+    "wardenLevel": null,
+    "cancelled": true
+   },
+   "expected": {
+    "admit": true,
+    "reason": "waited-out"
+   }
+  },
+  {
+   "id": "cancelled-unit-double-wait-refused-while-running",
+   "input": {
+    "predictedBytes": 8589934592,
+    "availableBytes": 6442450944,
+    "totalBytes": 17179869184,
+    "runningUnrealizedBytes": 0,
+    "runningUnits": 2,
+    "waitedMilliseconds": 1000000000,
+    "wardenLevel": null,
+    "cancelled": true
+   },
+   "expected": {
+    "admit": false,
+    "reason": "available"
+   }
+  }
+ ]
+}

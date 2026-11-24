@@ -174,6 +174,10 @@ pub trait SceneKit: Default {
     fn layout_stamps(_doc: &KitDoc<'_, Self::Snapshot>) -> BTreeMap<String, String> {
         BTreeMap::new()
     }
+    /// 🌐️ What only the entity's own fragment reads of the whole site (the site bounds a ground layer spans): part of its fragment key, never of the fingerprint dependents read.
+    fn site_stamps(_doc: &KitDoc<'_, Self::Snapshot>) -> BTreeMap<String, String> {
+        BTreeMap::new()
+    }
     /// 🗂️ The entity a top-level scalar field of the snapshot belongs to; `None` files it under the global bucket that every entity fingerprint contains.
     fn scalar_owner(_field: &str) -> Option<&'static str> {
         None
@@ -274,6 +278,11 @@ impl<K: SceneKit> StructuralProjection for Kit<K> {
         let view = doc.view.stamp_text();
         let global = stamp(texts.get("").into_iter().flatten().copied().chain([fnv64([view.as_str()])]));
         entities.iter().map(|e| hex(stamp([global, fnv64([layout.get(&e.id).map_or("", String::as_str)])].into_iter().chain(texts.get(base_id(&e.id)).into_iter().flatten().copied())))).collect()
+    }
+
+    fn site_stamps(&self, doc: &KitDoc<'_, K::Snapshot>, entities: &[EntityRef]) -> Vec<String> {
+        let stamps = K::site_stamps(doc);
+        entities.iter().map(|e| stamps.get(&e.id).cloned().unwrap_or_default()).collect()
     }
 
     fn entity_dependencies(&self, doc: &KitDoc<'_, K::Snapshot>, entity: &EntityRef) -> Vec<String> {

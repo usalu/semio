@@ -30,6 +30,7 @@ pub fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option
         return RuntimeMaintenanceStatus::Ready;
     }
     let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
+    eprintln!("[DEBUG] live cleanup zero progress {stalled} {progress:?}");
     if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
         RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)
     } else {
@@ -81,10 +82,6 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
-        if matches!(pump.pending_status, RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::ZeroProgress)) {
-            let archive = cell.background_instance().map_or_else(|refusal| format!("unavailable {refusal:?}"), |instance| instance.app.document_load_diagnostic(cell.mounted_policy.maintenance));
-            eprintln!("[DEBUG] FEM cleanup semantic failure instance={} stage={} progress={:?} archive-load: {archive}", cell.id, semio_plugin_reactor_app::app_runtime_helpers::LAST_MAINTENANCE_STAGE.load(Ordering::Relaxed), job.progress);
-        }
         #[cfg(test)]
         if matches!(job.progress, Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput { .. })) {
             cell.maintenance_probe_input_waits.fetch_add(1, Ordering::SeqCst);

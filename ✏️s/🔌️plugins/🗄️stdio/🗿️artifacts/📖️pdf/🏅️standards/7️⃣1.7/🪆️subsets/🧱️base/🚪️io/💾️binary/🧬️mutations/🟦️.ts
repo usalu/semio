@@ -1,2 +1,2 @@
-/** 💾️ Pdf representation for `stdio.pdf` (mutations). */
-export type PdfMutationsPdf = Uint8Array;
+/** 💾️ Pack document representation for `stdio.pdf` 1.7 (mutations). */
+export type PdfMutationsPack = Uint8Array;

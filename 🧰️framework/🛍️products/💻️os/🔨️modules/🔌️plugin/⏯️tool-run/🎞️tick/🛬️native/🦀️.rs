@@ -65,14 +65,18 @@ impl OriginalToolRunNativeState{
   match self.phase{
    0=>{if self.cursor.is_none(){let bytes=size_of::<ToolRunTickNativeCursor>();built(cx,&mut self.construction,&mut self.cursor,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),capacity_bytes:bytes,release_bytes:0,depth:1},||Ok((Box::write(Box::new_uninit(),ToolRunTickNativeCursor::empty()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes+size_of::<Option<Box<ToolRunTickNativeCursor>>>(),retained_capacity_bytes:bytes,..Default::default()})))?;return Ok(false)}let d=ToolRunTickNativeCursor::birth_demands();if funds(cx,d){if let Some(p)=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?.admit(source,cx.retained_grant())?{cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=1;}}},
    1=>{
-    if let Some(outcome)=self.outcome.take(){
-     cx.settle_receiving_scope()?;let progress=outcome.retained_progress();
-     if outcome.source_refusal.is_some()||outcome.call.is_err(){self.stepped=None;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original tick receiving scope refused").with_retained_progress(progress).into())}
-     let step=self.stepped.take().ok_or_else(||invalid("original tick receiving lost its step result"))?.map_err(|primary|semio_framework_job::OriginalTurnFailure{effects:primary.progress,primary:semio_framework_job::OriginalTurnPrimary::Receiving(primary),receipt_refusal:None,context_refusal:None,work_refusal:None})?;
-     cx.consume_fuel(step.progress().copied_items as u64);return Ok(false)
+    for _ in 0..cx.retained_grant().maximum_items.max(1){
+     if let Some(outcome)=self.outcome.take(){
+      cx.settle_receiving_scope()?;let progress=outcome.retained_progress();
+      if outcome.source_refusal.is_some()||outcome.call.is_err(){self.stepped=None;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original tick receiving scope refused").with_retained_progress(progress).into())}
+      let step=self.stepped.take().ok_or_else(||invalid("original tick receiving lost its step result"))?.map_err(|primary|semio_framework_job::OriginalTurnFailure{effects:primary.progress,primary:semio_framework_job::OriginalTurnPrimary::Receiving(primary),receipt_refusal:None,context_refusal:None,work_refusal:None})?;
+      let copied=step.progress().copied_items as u64;cx.consume_fuel(copied);
+      if copied==0||cx.should_yield(){break}
+     }
+     if self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?.is_complete(){self.phase=2;break}
+     let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;let stepped=&mut self.stepped;cx.with_native_receiving(&mut self.outcome,|native,_|{*stepped=Some(cursor.advance(source,native));Ok(())})?;
+     if self.outcome.is_none()||cx.should_yield(){break}
     }
-    if self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?.is_complete(){self.phase=2;}
-    else{let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;let stepped=&mut self.stepped;cx.with_native_receiving(&mut self.outcome,|native,_|{*stepped=Some(cursor.advance(source,native));Ok(())})?;}
    },
    2=>{if let Some((tick,p))=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?.take_output(cx.retained_grant()){owned.tick=Some(tick);cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=3;}},
    3=>{

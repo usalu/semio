@@ -1,6 +1,12 @@
 use super::*;
 use scene::Validate;
 
+/// 🏷️ The camelCase token of a section kind, as the third-party oracles read it.
+pub fn section_token(kind: semio_s_artifact_norm_en1999_model::SectionKind) -> String {
+    let name = format!("{kind:?}");
+    name[..1].to_lowercase() + &name[1..]
+}
+
 fn compliant() -> En1999Snapshot {
     En1999Snapshot::compliant_roof_purlin()
 }
@@ -58,7 +64,7 @@ pub(super) fn oracle_extras(document: &En1999Snapshot, all: &[scene::Diagram2d])
         let (a, iy, iz, _, _, it, iw) = checks::part_1_1::section_geometry(section);
         Some(format!(
             "{{\"member\":\"{}{tag}\",\"section\":\"{}\",\"sectionData\":{{\"kind\":\"{}\",\"h\":{},\"b\":{},\"tw\":{},\"tf\":{}}},\"length\":{},\"factor\":{n},\"mode\":[{},{},{}],\"nu\":{},\"nv\":{},\"nt\":{},\"i0Sq\":{},\"y0\":{},\"z0\":{},\"constants\":{{\"a\":{a},\"iy\":{iy},\"iz\":{iz},\"it\":{it},\"iw\":{iw}}}}}",
-            m.id, section.id, section.kind, section.height, section.width, section.web_thickness, section.flange_thickness, m.length, x[0], x[1], x[2], system.nu, system.nv, system.nt, system.i0_sq, system.y0, system.z0
+            m.id, section.id, section_token(section.kind), section.height, section.width, section.web_thickness, section.flange_thickness, m.length, x[0], x[1], x[2], system.nu, system.nv, system.nt, system.i0_sq, system.y0, system.z0
         ))
     };
     let mut tf: Vec<String> = document
@@ -427,8 +433,8 @@ fn a_hole_stagger_offsets_every_second_bolt_line_and_the_plan_draws_the_critical
     }
     let path = diagram.series.iter().find_map(|s| match s { scene::Series::Polyline { id, points, .. } if id == "net-path" => Some(points), _ => None }).expect("critical net path");
     assert_eq!(path.len(), 5, "edge, three holes, edge");
-    let stagger = diagram.markers.iter().find_map(|m| m.binding.as_ref().filter(|b| b.path.ends_with("holeStagger")).map(|b| (m.at.x, b.map))).expect("stagger marker");
-    near(stagger.1.base + stagger.1.k * stagger.0, 0.030, 1e-12, "stagger from the marker");
+    let stagger = diagram.markers.iter().find_map(|m| m.binding.as_ref().filter(|b| b.path.ends_with("holeStagger")).map(|b| (m.at.x, b.map.base, b.map.k))).expect("stagger marker");
+    near(stagger.1 + stagger.2 * stagger.0, 0.030, 1e-12, "stagger from the marker");
 }
 
 #[test]

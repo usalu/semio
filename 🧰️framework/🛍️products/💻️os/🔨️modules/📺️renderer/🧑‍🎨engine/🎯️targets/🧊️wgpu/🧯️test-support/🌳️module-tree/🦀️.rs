@@ -39,7 +39,7 @@ pub fn read_module_tree_files(root: &Path) -> Result<Vec<PathBuf>, String> {
     let mut seen = HashSet::new();
     let start = normalize(root);
     let scope_directory = start.parent().map(Path::to_path_buf).unwrap_or_default();
-    visit(&start, &scope_directory, &mut files, &mut seen, &mut |_, _| {})?;
+    visit(&start, &scope_directory, None, &mut files, &mut seen, &mut |_, _| {})?;
     Ok(files)
 }
 
@@ -50,7 +50,24 @@ pub fn read_module_tree_source(root: &Path) -> Result<String, String> {
     let start = normalize(root);
     let scope_directory = start.parent().map(Path::to_path_buf).unwrap_or_default();
     let mut text = String::new();
-    visit(&start, &scope_directory, &mut files, &mut seen, &mut |_, piece| {
+    visit(&start, &scope_directory, None, &mut files, &mut seen, &mut |_, piece| {
+        text.push_str(piece);
+        if !piece.ends_with('\n') {
+            text.push('\n');
+        }
+    })?;
+    Ok(text)
+}
+
+/// 📖️ The module tree of `root` as one text, reading every mount that stays inside `boundary` (a `🧪️tests` mount stays excluded), for crates that mount a sibling element tree instead of their own directory.
+pub fn read_module_tree_source_within(root: &Path, boundary: &Path) -> Result<String, String> {
+    let mut files = Vec::new();
+    let mut seen = HashSet::new();
+    let start = normalize(root);
+    let scope_directory = start.parent().map(Path::to_path_buf).unwrap_or_default();
+    let boundary = normalize(boundary);
+    let mut text = String::new();
+    visit(&start, &scope_directory, Some(&boundary), &mut files, &mut seen, &mut |_, piece| {
         text.push_str(piece);
         if !piece.ends_with('\n') {
             text.push('\n');
@@ -66,7 +83,7 @@ pub fn slice_module_tree_source(root: &Path, from: &str, to: Option<&str>) -> Re
     let start = normalize(root);
     let scope_directory = start.parent().map(Path::to_path_buf).unwrap_or_default();
     let mut pieces: Vec<String> = Vec::new();
-    visit(&start, &scope_directory, &mut files, &mut seen, &mut |_, piece| pieces.push(piece.to_owned()))?;
+    visit(&start, &scope_directory, None, &mut files, &mut seen, &mut |_, piece| pieces.push(piece.to_owned()))?;
     for piece in pieces {
         let Some(begin) = piece.find(from) else { continue };
         let end = to.and_then(|marker| piece[begin + from.len()..].find(marker).map(|offset| begin + from.len() + offset));
@@ -78,7 +95,7 @@ pub fn slice_module_tree_source(root: &Path, from: &str, to: Option<&str>) -> Re
     Err(format!("Module tree marker missing: {from}"))
 }
 
-fn visit(file: &Path, scope_directory: &Path, files: &mut Vec<PathBuf>, seen: &mut HashSet<PathBuf>, on_text: &mut dyn FnMut(&Path, &str)) -> Result<(), String> {
+fn visit(file: &Path, scope_directory: &Path, boundary: Option<&Path>, files: &mut Vec<PathBuf>, seen: &mut HashSet<PathBuf>, on_text: &mut dyn FnMut(&Path, &str)) -> Result<(), String> {
     if !seen.insert(file.to_path_buf()) {
         return Ok(());
     }
@@ -96,7 +113,7 @@ fn visit(file: &Path, scope_directory: &Path, files: &mut Vec<PathBuf>, seen: &m
         }
         target.push(&child.path);
         let target = normalize(&target);
-        let relative = relative_segments(scope_directory, &target);
+        let relative = relative_segments(boundary.unwrap_or(scope_directory), &target);
         let is_test = relative.iter().any(|segment| segment == TESTS_DIRECTORY);
         if is_test || relative.first().is_some_and(|segment| segment == "..") {
             continue;
@@ -105,7 +122,7 @@ fn visit(file: &Path, scope_directory: &Path, files: &mut Vec<PathBuf>, seen: &m
             return Err(format!("Rust module tree mount missing: {} (declared in {})", target.display(), file.display()));
         }
         let child_scope = if included { scope_directory.to_path_buf() } else { target.parent().map(Path::to_path_buf).unwrap_or_default() };
-        visit(&target, &child_scope, files, seen, on_text)?;
+        visit(&target, &child_scope, boundary, files, seen, on_text)?;
     }
     Ok(())
 }

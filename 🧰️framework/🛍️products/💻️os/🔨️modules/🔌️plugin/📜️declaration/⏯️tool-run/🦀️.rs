@@ -231,6 +231,7 @@ impl PartialEq for ToolRunView {
 /// ⏯️ Fixed live run identity and state borrowed directly from its original ledger entry.
  #[derive(Clone,Copy,Debug,PartialEq,Eq)]
  pub struct ToolRunPollView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState}
+ impl<'a> From<semio_framework_tool_run_presentation::ToolRunView<'a>> for ToolRunPollView<'a>{fn from(view:semio_framework_tool_run_presentation::ToolRunView<'a>)->Self{Self{tool_id:view.tool_id,identity:view.identity,state:view.state}}}
  impl ToolRunView {
  pub fn poll_view(&self)->ToolRunPollView<'_>{ToolRunPollView{tool_id:&self.tool_id,identity:self.identity,state:self.state}}
     /// 🏗️ A view of a run with no provisional entities, no progress yet and no payload.

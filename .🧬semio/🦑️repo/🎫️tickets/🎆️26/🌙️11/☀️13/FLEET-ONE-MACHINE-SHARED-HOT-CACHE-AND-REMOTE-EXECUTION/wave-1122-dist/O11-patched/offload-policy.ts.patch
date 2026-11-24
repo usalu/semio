@@ -1,0 +1,39 @@
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts	2026-11-23 18:06:03
++++ /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/📐️policy/🟦️.ts	2026-11-23 18:47:05
+@@ -67,17 +67,30 @@
+  return Math.min(cap,Math.max(deadline.floorMilliseconds,Math.ceil(predictedMilliseconds*deadline.factor)));
+ }
+ 
+-/** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release are 1.2 to 4.7 GiB, the cold bound of the admission broker 6 GiB), 0 for every other unit (the static part: whether the unit is a linked wasm unit; the size a unit is placed with is `offloadUnitPeakMegabytesV1`). */
++/** 💾️ The megabytes that placement reserves for a unit: the predicted peak of a wasm linked unit (the measured peaks of the release's component finals are 0.4 to 6.5 GiB; this is the cold bound that the family estimate replaces once enough crates were measured), 0 for every other unit (the static part: whether the unit is a linked wasm unit; the size a unit is placed with is `offloadUnitPeakMegabytesV1`). */
+ export const offloadPeakMegabytesV1=(types:readonly string[],target:string|undefined):number=>offloadWasmTargetV1(target)&&types.some(type=>OFFLOAD_POLICY_V1.wasm.crateTypes.includes(type))?OFFLOAD_POLICY_V1.wasm.peakMegabytes:0;
+ 
+-/** 🏋️ The megabytes placement reserves for one unit: the peak measured here for the crate (`learned`) plus the margin of the schema, between its bounds, else the unknown default (`peak.unknownMegabytes`, for a linked wasm unit the larger `wasm.peakMegabytes`), so a worker admits the unit by its own size instead of one constant.
++/** 👪️ The peak a crate of the family is expected to need before it was measured: the `peak.family.quantilePercent` quantile (linear between closest ranks, R-7) of the recorded peaks of the family's crates, one sample per crate; `undefined` while fewer than `peak.family.minimumCrates` crates were measured (the cold bound applies).
+  * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+-export function offloadUnitPeakMegabytesV1(learned:number|undefined,types:readonly string[],target:string|undefined):number{
+- const peak=OFFLOAD_POLICY_V1.peak;
+- if(learned===undefined||!Number.isFinite(learned)||learned<=0)return Math.max(peak.unknownMegabytes,offloadPeakMegabytesV1(types,target));
+- return Math.min(peak.maximumMegabytes,Math.max(peak.minimumMegabytes,Math.ceil(learned*(100+peak.marginPercent)/100)));
++export function offloadFamilyPeakMegabytesV1(samples:readonly number[]):number|undefined{
++ const family=OFFLOAD_POLICY_V1.peak.family,sorted=samples.filter(value=>Number.isFinite(value)&&value>0).sort((left,right)=>left-right);
++ if(sorted.length<family.minimumCrates)return undefined;
++ const position=(sorted.length-1)*family.quantilePercent/100,lower=Math.floor(position);
++ return Math.ceil(lower+1>=sorted.length?sorted[lower]!:sorted[lower]!+(position-lower)*(sorted[lower+1]!-sorted[lower]!));
+ }
+ 
++/** 🏷️ Whether a crate belongs to the family whose peaks estimate a crate that was never measured (its name ends in `peak.family.crateSuffix`). */
++export const offloadFamilyCrateV1=(crate:string):boolean=>crate.endsWith(OFFLOAD_POLICY_V1.peak.family.crateSuffix);
++
++/** 🏋️ The megabytes placement reserves for one unit: the peak measured here for the crate (`learned`) plus the margin of the schema, between its bounds; else for a linked wasm unit the estimate of its family (`family`, see `offloadFamilyPeakMegabytesV1`) plus the same margin, else the unknown default (`peak.unknownMegabytes`, for a linked wasm unit the cold bound `wasm.peakMegabytes`), so a worker admits the unit by its own size instead of one constant.
++ * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
++export function offloadUnitPeakMegabytesV1(learned:number|undefined,types:readonly string[],target:string|undefined,family?:number):number{
++ const peak=OFFLOAD_POLICY_V1.peak,margin=(megabytes:number)=>Math.min(peak.maximumMegabytes,Math.max(peak.minimumMegabytes,Math.ceil(megabytes*(100+peak.marginPercent)/100)));
++ if(learned!==undefined&&Number.isFinite(learned)&&learned>0)return margin(learned);
++ if(family!==undefined&&Number.isFinite(family)&&family>0&&offloadPeakMegabytesV1(types,target)>0)return margin(family);
++ return Math.max(peak.unknownMegabytes,offloadPeakMegabytesV1(types,target));
++}
++
+ /** 🧠️ The peak a crate is known by after one more measurement: a larger one at once (an under-estimate is corrected by the first compile that shows it), a smaller one only halfway, so one lucky run never shrinks it.
+  * @see ../../🧪️tests/🏋️unit-admission/🐍️.py */
+ export const offloadLearnPeakMegabytesV1=(before:number|undefined,measured:number):number=>before===undefined||measured>=before?Math.ceil(measured):Math.ceil((before+measured)/2);

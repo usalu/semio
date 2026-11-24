@@ -1,4 +1,7 @@
 use crate::snapshot::*;
+use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
+use semio_framework_artifact_flow_flow::{CameraJson, Widget, WidgetLayout};
+use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_os_kernel::os_store::test_support;

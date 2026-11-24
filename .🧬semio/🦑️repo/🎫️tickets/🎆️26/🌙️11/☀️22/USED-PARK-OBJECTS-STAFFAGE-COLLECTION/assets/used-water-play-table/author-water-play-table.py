@@ -255,3 +255,12 @@ if __name__ == "__main__":
     out = HERE / "🔣️.json"
     out.write_text(json.dumps(document(), ensure_ascii=False, indent=1) + "\n")
     print("[DEBUG] wrote", out)
+
+
+if __name__ == "__main__":
+    # the silhouette repair of batch SO, the last step: ops/used-water-play-table.json of the umbrella ticket of 2026-11-22
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️11/☀️22/GET-STAFFAGE-RUNNING-END-TO-END-AND-FINISH-ALL-STAFFAGE-TICKETS/🧰️silhouette/SO")
+    from lib import repair_file as _repair_file
+    _repair_file(_Path(__file__).resolve().parent / "🔣️.json", "used-water-play-table")

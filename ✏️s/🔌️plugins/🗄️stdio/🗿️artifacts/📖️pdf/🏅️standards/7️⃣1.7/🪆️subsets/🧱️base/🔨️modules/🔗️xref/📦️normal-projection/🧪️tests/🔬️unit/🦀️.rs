@@ -24,7 +24,7 @@ fn normal_projection_borrows_the_original_body_and_accepts_an_exact_length() {
             NormalProjectionEvent::Complete => {
                 match cursor.take().expect("projected native normal object") {
                     NormalProjection::Value(PdfObject::Stream { dict, data, filters }) => {
-                        assert_eq!(data, b"Test");
+                        assert_eq!(data.to_vec_owner(), b"Test");
                         assert_eq!(filters, [super::PdfStreamFilter::AsciiHex]);
                         assert_eq!(dict.len(), 1);
                         assert_eq!(dict[0].value.as_name(), Some("XObject"));

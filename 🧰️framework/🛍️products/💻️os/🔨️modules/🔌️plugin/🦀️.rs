@@ -240,7 +240,17 @@ pub mod plugin_app_close_prelude {
 }
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use app::artifact_app_laws;
+pub mod artifact_app_laws {
+    //! 🧪️ The facade of the artifact app laws: the fixture and settlement laws and the instance laws, each owned by its own crate.
+    pub use semio_plugin_testing_laws::artifact_app_laws::*;
+    pub use semio_plugin_testing_instance_laws::*;
+}
+/// 🔄️ The reactor's native turn entry and ingress census, for laws that drive a mounted runtime exactly as a shard does.
+#[doc(hidden)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
+pub mod reactor_turn_laws {
+    pub use semio_plugin_reactor_turn::{command_idle_turn_limit, poll_kernel, retained_command_ingress_occupancy, set_command_idle_turn_limit, COMMAND_IDLE_TURN_LIMIT, COMMAND_STALLED_FAULT_CODE};
+}
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub use app::authoring_law;
 pub use app::time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};

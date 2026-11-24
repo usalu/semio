@@ -41,6 +41,14 @@ fn async_actor_poll_awaits_exchange_and_render_work() {
     assert!(!poll.contains("resolve_ready(semio_plugin::plugin_runtime::plugin_render"));
 }
 
+/// 🧷️ Render-time pending effects (an editor's reconcile `SpawnJob`) carry their owning instance into admission, so the job's
+/// completion dirties that instance's windows instead of an unbound job finishing without a repaint.
+#[test]
+fn pending_effects_are_admitted_under_their_owning_instance() {
+    let source = turn_source();
+    assert!(source.contains("plugin_drive_pending_effects(runtime, &mut |instance, effect| push_admitted_effect(&mut effects, instance, effect),"));
+}
+
 /// 🧫️ The shared drain contract both twins read. The TS half lives in
 /// `📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧫️fixtures/command-ingress-drain.json`.
 fn drain_contract() -> serde_json::Value {

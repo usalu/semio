@@ -43,6 +43,32 @@ export async function registerUiintroductionVeilAndElevationTests(vitest: Tests1
       expect(document.documentElement.getAttribute("data-introduction-active")).toBe("true");
     });
 
+    it("raises the stacking context that holds an introduced card with it and veils the other cards of that context, through display: contents wrappers", async () => {
+      const step = (introduce: string) => ({ id: introduce, title: introduce, body: "Body.", introduce, show: [], placement: "bottom" as const, interactions: [], ordered: false, logos: [], demonstrations: [] });
+      const tour = (stepIndex: number) => <UIIntroduction introduction={{ title: "Welcome", steps: [step("card.first"), step("card.second")] }} stepIndex={stepIndex} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />;
+      const { container, rerender, unmount } = render(
+        <div>
+          <div data-testid="overlay" style={{ position: "absolute", zIndex: 31 }}>
+            <div style={{ display: "contents" }}><div id="card.first" /></div>
+            <div style={{ display: "contents" }}><div id="card.second" /></div>
+            <div style={{ display: "contents" }}><div id="card.third" /></div>
+          </div>
+          {tour(0)}
+        </div>,
+      );
+      const overlay = screen.getByTestId("overlay");
+      const card = (id: string): Element => container.querySelector(`[id="${id}"]`)!;
+      await waitFor(() => expect(card("card.first").getAttribute("data-introduction-elevated")).toBe("true"));
+      expect(overlay.getAttribute("data-introduction-elevation-path")).toBe("true");
+      expect(["card.first", "card.second", "card.third"].map((id) => card(id).hasAttribute("data-introduction-veiled"))).toEqual([false, true, true]);
+      expect(container.querySelectorAll("[data-introduction-veiled]")).toHaveLength(2);
+      rerender(<div><div data-testid="overlay" style={{ position: "absolute", zIndex: 31 }}><div style={{ display: "contents" }}><div id="card.first" /></div><div style={{ display: "contents" }}><div id="card.second" /></div><div style={{ display: "contents" }}><div id="card.third" /></div></div>{tour(1)}</div>);
+      await waitFor(() => expect(card("card.second").getAttribute("data-introduction-elevated")).toBe("true"));
+      expect(["card.first", "card.second", "card.third"].map((id) => card(id).hasAttribute("data-introduction-veiled"))).toEqual([true, false, true]);
+      unmount();
+      expect(document.querySelectorAll("[data-introduction-veiled], [data-introduction-elevation-path]")).toHaveLength(0);
+    });
+
     it("clears data-introduction-active when the introduction unmounts so portaled overlays leave the tutorial layer", () => {
       const { unmount } = render(
         <UIIntroduction

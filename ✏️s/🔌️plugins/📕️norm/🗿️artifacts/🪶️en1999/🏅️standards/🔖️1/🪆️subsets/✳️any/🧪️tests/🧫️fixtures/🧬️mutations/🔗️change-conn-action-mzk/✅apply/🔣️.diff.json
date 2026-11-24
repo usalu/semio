@@ -52,7 +52,8 @@
             ]
           },
           "loadEccentricity": null,
-          "holeStagger": null
+          "holeStagger": null,
+          "forceMethod": null
         }
       }
     ]
@@ -70,5 +71,5 @@
   "sheetProfiles": null,
   "fireInsulations": null,
   "transverseStiffeners": null,
-  "reliabilityClass": "RC2"
+  "reliabilityClass": null
 }

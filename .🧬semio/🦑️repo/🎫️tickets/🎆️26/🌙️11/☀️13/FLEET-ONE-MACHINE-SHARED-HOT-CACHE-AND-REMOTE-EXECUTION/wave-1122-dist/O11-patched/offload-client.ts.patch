@@ -1,0 +1,27 @@
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts	2026-11-23 18:06:03
++++ /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌐️remote-execution/🚀️offload/🟦️.ts	2026-11-23 18:47:17
+@@ -13,13 +13,13 @@
+ import {OFFLOAD_POLICY_V1,offloadActionSecondsV1,offloadDeadlineMillisecondsV1,offloadCrateTypesOfV1,offloadLinksNativelyV1,offloadKilledPeakMegabytesV1,offloadPeakMegabytesV1,offloadPinV1,offloadUnitPeakMegabytesV1,offloadTextV1,offloadTextsV1,type OffloadReasonV1} from "./📐️policy/🟦️.ts";
+ import {remoteExecutionOriginV1} from "../🌡️load/🟦️.ts";
+ import {bumpOffloadCountersV1} from "./📊️counters/🟦️.ts";
+-import {readOffloadMemoV1,readUnitCostV1,readUnitPeakV1,writeOffloadMemoV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
++import {readFamilyPeakV1,readOffloadMemoV1,readUnitCostV1,readUnitPeakV1,writeOffloadMemoV1,writeUnitPeakV1} from "./🚦️admission/🟦️.ts";
+ import {releaseImplicitTokenV1} from "./🎟️token/🟦️.ts";
+ import {offloadSdkIdentityV1,rustcVersionTextV1} from "./🧰️toolchain/🟦️.ts";
+ import {COMMAND_POLICY_V1,commandProgramV1,commandTextsV1,commandToolPeakMegabytesV1,commandToolPropertyV1,commandToolSourceV1} from "./🧰️command/📐️policy/🟦️.ts";
+ 
+ export {offloadModeV1,offloadPinV1,offloadSettingV1,OFFLOAD_POLICY_V1} from "./📐️policy/🟦️.ts";
+-export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readUnitCostV1,writeUnitCostV1,readUnitPeakV1,writeUnitPeakV1,offloadFanOutJobsV1,offloadGateV1} from "./🚦️admission/🟦️.ts";
++export {localUnitAdmissionV1,sharedUnitAdmissionV1,slotQueueMillisecondsV1,worthARoundTripV1,readUnitCostV1,writeUnitCostV1,readUnitPeakV1,writeUnitPeakV1,readFamilyPeakV1,offloadFanOutJobsV1,offloadGateV1} from "./🚦️admission/🟦️.ts";
+ export {detectWorkerRustcV1} from "./🧰️toolchain/🟦️.ts";
+ export {COMMAND_POLICY_V1,commandProgramV1,commandToolKeyV1,commandToolPropertyV1} from "./🧰️command/📐️policy/🟦️.ts";
+ 
+@@ -118,7 +118,7 @@
+   const toolchain:OffloadToolchainV1={...toolchainParsed,targets:[]};
+   const sdk=offloadLinksNativelyV1(offloadCrateTypesOfV1(plan.arguments),plan.target)?offloadSdkIdentityV1(environment):undefined;
+   if(sdk===undefined&&offloadLinksNativelyV1(offloadCrateTypesOfV1(plan.arguments),plan.target)&&process.platform==="darwin")return settle(local("not-portable","the SDK of this link is unknown"));
+-  const types=offloadCrateTypesOfV1(plan.arguments),linked=offloadPeakMegabytesV1(types,plan.target)>0,learned=readUnitPeakV1(input.root,input.crate),peak=input.peakMegabytes??offloadUnitPeakMegabytesV1(learned,types,plan.target),platform=offloadPlatformV1(remoteExecutionHostPropertiesV1(),toolchain,plan.target,(workspace===undefined?undefined:remoteExecutionOriginV1(workspace,environment)),peak,{queue,...pin===undefined?{}:{pin},...sdk===undefined?{}:{sdk}}),cancelled=input.signal??new AbortController().signal;
++  const types=offloadCrateTypesOfV1(plan.arguments),linked=offloadPeakMegabytesV1(types,plan.target)>0,learned=readUnitPeakV1(input.root,input.crate),peak=input.peakMegabytes??offloadUnitPeakMegabytesV1(learned,types,plan.target,learned===undefined&&linked?readFamilyPeakV1(input.root):undefined),platform=offloadPlatformV1(remoteExecutionHostPropertiesV1(),toolchain,plan.target,(workspace===undefined?undefined:remoteExecutionOriginV1(workspace,environment)),peak,{queue,...pin===undefined?{}:{pin},...sdk===undefined?{}:{sdk}}),cancelled=input.signal??new AbortController().signal;
+   marks.push(Date.now());
+   const phase=await runBoundedOffloadPhaseV1(signal=>buildOffloadActionV1({plan,content,instance,platform,signal,...input.digest?{digest:input.digest}:{}}),{cancelled,milliseconds:ports?.uploadMilliseconds??policy.timeouts.uploadMilliseconds});
+   if(phase.kind==="timeout")return settle(local("infrastructure","upload"));

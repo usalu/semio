@@ -81,7 +81,6 @@ mod original_host{
      reply.pointer=pointer;reply.length=16;
      let issued=cx.original_clock_binding();
      if issued==Some(binding){let now=cx.now_us().ok_or_else(||refused("original host clock has no actual observation"))?;reply.bytes[..4].copy_from_slice(&1u32.to_le_bytes());reply.bytes[8..].copy_from_slice(&now.to_le_bytes());}
-     else if std::env::var_os("RUST_BACKTRACE").is_some(){eprintln!("[DEBUG] poll Source clock lookup did not match: requested {binding}, issued {issued:?}");}
     },
     Request::Monotonic=>{let value=cx.now_us().and_then(|now|now.checked_mul(1000)).ok_or_else(||refused("original monotonic clock exceeds its unsigned ABI extent"))?;reply.value=Some(Value::I64(value as i64));},
     Request::WallClock(pointer)=>{let now=std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_err(|_|refused("original wall clock precedes its declared epoch"))?;reply.pointer=pointer;reply.length=16;reply.bytes[..8].copy_from_slice(&now.as_secs().to_le_bytes());reply.bytes[8..12].copy_from_slice(&now.subsec_nanos().to_le_bytes());},

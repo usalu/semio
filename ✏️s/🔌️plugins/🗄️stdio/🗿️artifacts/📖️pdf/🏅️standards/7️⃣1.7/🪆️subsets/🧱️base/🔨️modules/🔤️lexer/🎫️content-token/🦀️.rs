@@ -1,5 +1,6 @@
 //! 🎫️ Tokenizes page and form programs under byte grants while lending bare operator spans.
 
+use semio_framework_value::ByteReadSource;
 use super::{is_delim, is_ws, CosGrant, CosLimits, CosStatus, PdfCosCursor, PdfObject};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -47,7 +48,7 @@ impl ContentTokenCursor {
         true
     }
 
-    pub fn advance(&mut self, source: &[u8], mut grant: CosGrant, cancelled: bool) -> ContentTokenReceipt {
+    pub fn advance(&mut self, source: &(impl ByteReadSource + ?Sized), mut grant: CosGrant, cancelled: bool) -> ContentTokenReceipt {
         use ContentTokenEvent as Event;
         if cancelled && !matches!(self.phase, Phase::Closing | Phase::Closed) { self.phase = Phase::Cancelled; }
         let mut result = step(Ok(Event::More), 0);
@@ -67,7 +68,7 @@ impl ContentTokenCursor {
                 }
                 Phase::Operand => {
                     let cursor = self.operand.as_mut().expect("active PDF content operand");
-                    let child = cursor.advance(source, grant, false);
+                    let child = cursor.advance_bytes(|position| source.byte_at(position), grant, false);
                     let status = child.status;
                     result.work += child.work;
                     result.allocated_bytes += child.allocated_bytes;
@@ -97,8 +98,8 @@ impl ContentTokenCursor {
         }
     }
 
-    fn scan(&mut self, source: &[u8]) {
-        let byte = source.get(self.position).copied();
+    fn scan(&mut self, source: &(impl ByteReadSource + ?Sized)) {
+        let byte = source.byte_at(self.position);
         match self.phase {
             Phase::Comment => match byte {
                 Some(byte) => {
@@ -111,10 +112,12 @@ impl ContentTokenCursor {
                 if byte.is_some_and(|byte| !is_ws(byte) && !is_delim(byte)) {
                     self.position += 1;
                 } else {
-                    let word = match &source[start..self.position] {
-                        b"true" => Located::Boolean(true),
-                        b"false" => Located::Boolean(false),
-                        b"null" => Located::Null,
+                    let mut spelling = [0u8; 5];
+                    let length = self.position - start;
+                    let word = match (length <= spelling.len() && source.read_bytes(start, &mut spelling[..length]) == length).then(|| &spelling[..length]) {
+                        Some(b"true") => Located::Boolean(true),
+                        Some(b"false") => Located::Boolean(false),
+                        Some(b"null") => Located::Null,
                         _ => Located::Word(start),
                     };
                     self.phase = Phase::Ready(word);
@@ -167,7 +170,7 @@ impl ContentTokenCursor {
     }
 
     /// 🧰️ Drives one token for the reference content reader through the same lexical path.
-    pub fn next_token(&mut self, source: &[u8]) -> Result<ContentToken, &'static str> {
+    pub fn next_token(&mut self, source: &(impl ByteReadSource + ?Sized)) -> Result<ContentToken, &'static str> {
         let grant = CosGrant { work: 4096, allocation_bytes: usize::MAX, release_bytes: usize::MAX };
         loop {
             match self.advance(source, grant, false).event? {

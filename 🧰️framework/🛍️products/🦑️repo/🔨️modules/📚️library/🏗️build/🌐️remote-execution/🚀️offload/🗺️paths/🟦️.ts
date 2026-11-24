@@ -43,6 +43,18 @@ export function reachedFilesV1(entry:string,read:(path:string)=>string|undefined
  }
  return found;
 }
+/** 🪜️ How many directories above `shipped` a textual path of the reached sources climbs before it descends again (`#[path = "../../../module/lib.rs"]` of a shim climbs out of the module directory and back into it by name); the virtual root keeps that many real directory names so that such a path resolves on the other machine, where rustc reads the text, not the real file system. */
+export function climbAboveV1(entry:string,reached:readonly string[],shipped:string,manifest?:string,read:(path:string)=>string|undefined=path=>{try{return readFileSync(path,"utf8");}catch{return undefined;}}):number{
+ let climb=0;
+ const measure=(base:string,literal:string):void=>{let depth=relative(shipped,base).split(sep).filter(part=>part!=="").length;for(const part of literal.split("/")){if(part===".."){depth--;climb=Math.max(climb,-depth);}else if(part!==""&&part!==".")depth++;}};
+ for(const file of [entry,...reached]){
+  const text=file.endsWith(".rs")?read(file):undefined;
+  if(text===undefined)continue;
+  for(const match of text.matchAll(INCLUDES)){const literal=match[1]??match[2]??match[4]??match[5];if(literal!==undefined)measure(dirname(file),literal);else if(match[6]!==undefined&&manifest!==undefined)measure(manifest,match[6]);}
+  if(manifest!==undefined)for(const match of text.matchAll(BINDINGS))for(const quoted of match[1]!.matchAll(QUOTED))measure(manifest,quoted[1]!);
+ }
+ return climb;
+}
 /** 🔗️ The files that the root source reaches beyond itself (see `reachedFilesV1`); the empty list beyond the bound. */
 export function includedSourcesV1(entry:string,read?:(path:string)=>string|undefined,maximumFiles?:number,manifest?:string):readonly string[]{return reachedFilesV1(entry,read,maximumFiles,manifest)??[];}
 const deniedName=(name:string):boolean=>policy.environment.deniedNames.includes(name)||policy.environment.deniedPrefixes.some(prefix=>name.startsWith(prefix));
@@ -189,7 +201,8 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  const sourceReal=resolve(cwd,pass.source),reached=[sourceReal,...includedSourcesV1(sourceReal,undefined,undefined,manifest)];
  const shipped=reached.reduce((root,path)=>within(root,path)?root:commonAncestor(root,path),manifest),anchored=within(cwd,shipped);
  if(!anchored&&shipped!==manifest&&(depthOf(shipped)<MINIMUM_SHIPPED_DEPTH||reachedFilesV1(sourceReal,undefined,undefined,manifest)===undefined))return decline("unmapped-path","source outside CARGO_MANIFEST_DIR: working directory "+cwd+", manifest "+manifest+", sources up to "+shipped);
- const packageVirtual=anchored?relative(cwd,manifest).split(sep).join("/"):shipped===manifest?virtual.package:virtual.package+"/"+relative(shipped,manifest).split(sep).join("/"),shippedVirtual=anchored?relative(cwd,shipped).split(sep).join("/"):virtual.package,files=new Map<string,string>(),mappings:OffloadMappingV1[]=[];
+ const climb=anchored?0:climbAboveV1(sourceReal,reached.slice(1),shipped,manifest),above=climb>0?shipped.split(/[\\/]/u).filter(part=>part!=="").slice(-climb):[],root=[virtual.package,...above].join("/");
+ const packageVirtual=anchored?relative(cwd,manifest).split(sep).join("/"):shipped===manifest?root:root+"/"+relative(shipped,manifest).split(sep).join("/"),shippedVirtual=anchored?relative(cwd,shipped).split(sep).join("/"):root,files=new Map<string,string>(),mappings:OffloadMappingV1[]=[];
  const ignored=["target",".git","node_modules",".cache",virtual.base];
  const reachedAll=reachedFilesV1(sourceReal,undefined,undefined,manifest),closure=new Map<string,string>();
  if(reachedAll!==undefined&&[sourceReal,...reachedAll].every(path=>within(shipped,path))){
@@ -201,7 +214,7 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
  if(walked===undefined)return decline("inputs-too-large","package "+shipped);
  const place=(path:string,real:string):void=>{files.set(path,real);};
  for(const [path,real] of walked)place(shippedVirtual===""?path:shippedVirtual+"/"+path,real);
- if(!anchored)mappings.push({real:shipped,virtual:virtual.package});
+ if(!anchored)mappings.push({real:shipped,virtual:root});
  const cwdName=nameOf(cwd);
  if(!anchored&&shipped!==manifest&&nameOf(shipped)===shipped)return decline("unmapped-path","no --remap-path-prefix covers the module directory "+shipped+": the compiler would record this machine's paths");
  if(cwdName===cwd)return decline("unmapped-path","no --remap-path-prefix covers the working directory: the compiler would record this machine's paths");
@@ -246,14 +259,14 @@ export function planOffloadV1(input:Readonly<{args:readonly string[];environment
   if(argument.startsWith("-Cincremental="))continue;
   if(argument==="--remap-path-prefix"||argument.startsWith("--remap-path-prefix=")){
    const joinedRemap=argument.includes("="),spec=joinedRemap?argument.slice(argument.indexOf("=")+1):args[++index]??"",from=spec.slice(0,Math.max(0,spec.lastIndexOf("=")));
-   if(isAbsolute(from)&&!SYSTEM.some(prefix=>from.startsWith(prefix))){if(!anchored&&within(shipped,from)){const rest=relative(shipped,from).split(sep).join("/");inside.push(`${virtual.package}${rest===""?"":"/"+rest}=${spec.slice(from.length+1)}`);}continue;}
+   if(isAbsolute(from)&&!SYSTEM.some(prefix=>from.startsWith(prefix))){if(!anchored&&within(shipped,from)){const rest=relative(shipped,from).split(sep).join("/");inside.push(`${root}${rest===""?"":"/"+rest}=${spec.slice(from.length+1)}`);}continue;}
    rewritten.push(...joinedRemap?[argument]:[argument,spec]);continue;
   }
-  if(argument===pass.source){const shown=anchored?relative(cwd,sourceReal).split(sep).join("/"):virtual.package+"/"+relative(shipped,sourceReal).split(sep).join("/");if(isAbsolute(pass.source))sourceName=shown;else rewritten.push(shown);continue;}
+  if(argument===pass.source){const shown=anchored?relative(cwd,sourceReal).split(sep).join("/"):root+"/"+relative(shipped,sourceReal).split(sep).join("/");if(isAbsolute(pass.source))sourceName=shown;else rewritten.push(shown);continue;}
   rewritten.push(argument);
  }
  const names:string[]=[];
- if(!anchored)names.push(`${virtual.package}=${nameOf(shipped)}`,...inside);
+ if(!anchored)names.push(`${root}=${nameOf(shipped)}`,...inside);
  const crateTypes=offloadCrateTypesOfV1(args),dependencyInputs=dependencyClosureV1([...directoryNames.keys()],[...direct.values()].flat(),undefined,(crateTypes.length>0?crateTypes:["bin"]).some(type=>type!=="lib"&&type!=="rlib"));
  if(dependencyInputs===undefined)return decline("inputs-too-large","dependency closure: more than "+policy.limits.maximumClosureFiles+" artifacts");
  for(const [directory,name] of directoryNames){

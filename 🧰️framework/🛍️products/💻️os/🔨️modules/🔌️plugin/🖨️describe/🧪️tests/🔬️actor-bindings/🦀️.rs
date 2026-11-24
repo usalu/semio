@@ -5,4 +5,9 @@
 wasmtime::component::bindgen!({
     world: "actor",
     path: "../../../🧬️schema",
+    exports: {
+        "semio:framework/reactor.stage-actor-context-budget": async | store,
+        "semio:framework/reactor.stage-cold-pair-page": async | store,
+        "semio:framework/jobs.stage-job-budget": async | store,
+    },
 });

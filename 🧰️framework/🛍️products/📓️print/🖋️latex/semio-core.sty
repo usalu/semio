@@ -672,10 +672,141 @@
   \ifnum\lastnodetype=-1 \else\addvspace{\semio@block@sep@skip}\fi
 }
 \newcommand{\semio@block@after}{\ifhmode\par\fi\nobreak}
+% 🧩️ Frame junctions: neighbouring frames (headings, windows, tables, registers)
+% share one border. A frame closes by recording the glue it leaves below itself;
+% a frame that opens while that record is pending cancels the glue and moves up
+% by one hairline, so its top edge lies on the previous frame's bottom edge. A
+% paragraph or authored space in between clears the record and the frame keeps
+% its ordinary separation. The record is state, not \lastskip: the page builder
+% empties the main vertical list between two frames. The shared edge takes the
+% accent colour when one of the two frames has one.
+\def\semio@frame@edge@neutral{semio-chrome-border-normal}
+\newif\ifsemio@frame@pending
+\newif\ifsemio@frame@interlocked
+\gdef\semio@frame@bottom@color{semio-chrome-border-normal}
+\gdef\semio@frame@top@color{semio-chrome-border-normal}
+\gdef\semio@frame@pending@gap{0pt}
+\newcommand{\semio@frame@release}{\global\semio@frame@pendingfalse}
+\AddToHook{para/begin}{\semio@frame@release}
+\AddToHook{cmd/vspace/before}{\semio@frame@release}
+% 🔓️ Arguments: separation from a preceding non-frame, own edge colour.
+\newcommand{\semio@frame@open}[2]{%
+  \ifhmode\par\fi
+  \global\semio@frame@interlockedfalse
+  \xdef\semio@frame@top@color{#2}%
+  \ifsemio@frame@pending
+    \global\semio@frame@interlockedtrue
+    \ifx\semio@frame@bottom@color\semio@frame@edge@neutral\else
+      \global\let\semio@frame@top@color\semio@frame@bottom@color
+    \fi
+    \vskip\dimexpr-\semio@frame@pending@gap-\semio@stroke@hairline\relax
+    \nointerlineskip
+  \else
+    \ifnum\lastnodetype=-1 \else\addvspace{#1}\fi
+  \fi
+  \semio@frame@release
+}
+% 🔒️ Arguments: separation to a following non-frame, bottom edge colour.
+\newcommand{\semio@frame@close}[2]{%
+  \ifhmode\par\fi
+  \vskip\dimexpr#1\relax
+  \semio@frame@record{#1}{#2}%
+}
+% 🧲️ A frame set as a paragraph of its own drops \parskip when it shares the edge above.
+\newcommand{\semio@frame@tight}{\ifsemio@frame@interlocked\parskip\z@\fi}
+% 📝️ Arguments: glue between the frame's bottom edge and whatever follows, bottom edge colour.
+\newcommand{\semio@frame@record}[2]{%
+  \xdef\semio@frame@pending@gap{\the\dimexpr#1\relax}%
+  \xdef\semio@frame@bottom@color{#2}%
+  \global\semio@frame@pendingtrue
+}
 % \noindent must precede the following material in the same paragraph. A
 % grouped \noindent ends before the chip/header row and leaves \parindent in
 % effect (measured: title-chip L inset from the table outer L).
-\newcommand{\semio@noindent@noparskip}{\parskip\z@\noindent}
+\newcommand{\semio@noindent@noparskip}{\parskip\z@\semio@column@bleed\noindent}
+% 📰️ The text column is itself a closed frame (its side borders run from the
+% navbar rule to the footer rule), so prose is inset from them like the body of
+% a window; a frame resets the inset and spans the column edge to edge.
+\newif\ifsemio@column@framed
+\newcommand{\semio@column@inset}{\semio@column@framedfalse\leftskip\semio@window@bodypad\relax\rightskip\semio@window@bodypad\relax\@rightskip\rightskip}
+\newcommand{\semio@column@bleed}{\semio@column@framedtrue\leftskip\z@skip\rightskip\z@skip\@rightskip\z@skip}
+% 📋️ A list is split into one cell per point: a hairline across the column opens
+% the list, separates neighbouring points and closes it, each shared by the two
+% cells it lies between. Inside a window the line runs to the window's border.
+\newif\ifsemio@list@closing
+\newcommand{\semio@list@divider}{%
+  \par
+  \global\semio@list@closingfalse
+  \begingroup
+  \dimen@\prevdepth
+  \ifsemio@column@framed \dimen@ii\semio@window@bodypad\else \dimen@ii\z@\fi
+  \nobreak\vskip\dimexpr\itemsep+\parsep\relax
+  \nointerlineskip
+  \moveleft\dimen@ii\vbox to\z@{\vss\hbox{\textcolor{semio-chrome-border-normal}{\vrule width\dimexpr\hsize+2\dimen@ii\relax height\semio@stroke@hairline}}}%
+  \nointerlineskip
+  \prevdepth\dimen@
+  \endgroup
+}
+\newcommand{\semio@list@install}{%
+  \let\semio@list@item\item
+  \def\item{\semio@list@divider\semio@list@item}%
+}
+% 🪟️ Inside a window the closing line is owed to whatever follows the list: a
+% paragraph draws it, the window's own bottom border replaces it.
+\newcommand{\semio@list@close}{%
+  \ifsemio@column@framed
+    \par\global\semio@list@closingtrue
+    \xdef\semio@list@closing@width{\the\dimexpr\hsize+2\dimexpr\semio@window@bodypad\relax\relax}%
+  \else
+    \semio@list@divider
+  \fi
+  \let\item\semio@list@item
+  \xdef\semio@list@tail{\the\dimexpr\@topsepadd\relax}%
+}
+\newcommand{\semio@list@closing@draw}{%
+  \ifsemio@list@closing
+    \global\semio@list@closingfalse
+    \ifsemio@column@framed
+      \begingroup
+      \dimen@\prevdepth
+      \nointerlineskip
+      \moveleft\semio@window@bodypad\vbox to\z@{\vss\hbox{\textcolor{semio-chrome-border-normal}{\vrule width\semio@list@closing@width\space height\semio@stroke@hairline}}}%
+      \nointerlineskip
+      \prevdepth\dimen@
+      \endgroup
+    \fi
+  \fi
+}
+\AddToHook{para/before}{\semio@list@closing@draw}
+% 📐️ A list of the column keeps the prose inset: its text block moves in by the
+% body padding and narrows by as much, so labels never touch the column border.
+\newcommand{\semio@list@inset}{%
+  \ifsemio@column@framed\else\ifnum\@listdepth=\@ne
+    \advance\@totalleftmargin\semio@window@bodypad\relax
+    \advance\linewidth-\semio@window@bodypad\relax
+    \parshape\@ne\@totalleftmargin\linewidth
+  \fi\fi
+}
+\AddToHook{cmd/list/after}{\semio@list@inset}
+% 🧮️ A display of the column is set inside the prose inset, so its number stays clear of the border.
+\newcommand{\semio@display@inset}{%
+  \ifsemio@column@framed\else
+    \advance\displayindent\semio@window@bodypad\relax
+    \advance\displaywidth-2\dimexpr\semio@window@bodypad\relax
+  \fi
+}
+\AtBeginDocument{\everydisplay\expandafter{\the\everydisplay\semio@display@inset}}
+% 🤝️ The closing line of a list is a frame edge: a frame that follows directly shares it.
+\newcommand{\semio@list@after}{\ifsemio@column@framed\else\semio@frame@record{\semio@list@tail}{\semio@frame@edge@neutral}\fi}
+\AddToHook{env/itemize/after}{\semio@list@after}
+\AddToHook{env/enumerate/after}{\semio@list@after}
+\AddToHook{env/description/after}{\semio@list@after}
+\AddToHook{env/itemize/begin}{\semio@list@install}
+\AddToHook{env/enumerate/begin}{\semio@list@install}
+\AddToHook{env/description/begin}{\semio@list@install}
+\AddToHook{env/itemize/end}{\semio@list@close}
+\AddToHook{env/enumerate/end}{\semio@list@close}
+\AddToHook{env/description/end}{\semio@list@close}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
 \makeatother

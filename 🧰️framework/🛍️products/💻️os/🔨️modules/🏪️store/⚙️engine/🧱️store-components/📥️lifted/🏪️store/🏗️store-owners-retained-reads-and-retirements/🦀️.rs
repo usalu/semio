@@ -95,6 +95,7 @@ where
         *self.replay_preparation_factory = owners.replay_preparation.take();
         *self.one_item_wire_preparation_factory = owners.one_item_wire_preparation.take();
         if let Some(wire) = store_log.operation_wire.as_mut() {
+            wire.source = owners.operation_wire.source;
             wire.original_target = wire.original_target.or(owners.operation_wire.original_target);
             wire.original_receiving = wire.original_receiving.or(owners.operation_wire.original_receiving);
             if wire.original_message_admission.is_none() {

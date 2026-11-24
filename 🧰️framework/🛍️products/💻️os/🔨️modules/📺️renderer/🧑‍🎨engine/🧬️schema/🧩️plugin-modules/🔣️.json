@@ -47,7 +47,34 @@
       "all"
     ],
     "libraryOmittedRegistry": "empty",
-    "unfilteredPrimary": "first-supplied"
+    "unfilteredPrimary": "first-supplied",
+    "dependencyActivations": [
+      "required",
+      "on-demand"
+    ],
+    "defaultDependencyActivation": "required",
+    "onDemandEdgeRequires": "activation-events",
+    "onDemandPhases": [
+      "resolving",
+      "loading",
+      "active",
+      "unavailable",
+      "cancelled"
+    ],
+    "onDemandUnavailableReasons": [
+      "not-installed",
+      "dependency-missing",
+      "load-failed"
+    ],
+    "onDemandMissingOptional": "report-unavailable",
+    "onDemandActivationEventPrefixes": [
+      "on-node-kind:",
+      "on-artifact-kind:",
+      "on-extension-request:",
+      "on-command:",
+      "on-view-visible:",
+      "on-file-type:"
+    ]
   },
   "$defs": {
     "dependency": {
@@ -64,6 +91,13 @@
           "type": "string",
           "maxLength": 128,
           "pattern": "^=[0-9]+\\.[0-9]+\\.[0-9]+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$"
+        },
+        "activation": {
+          "enum": [
+            "required",
+            "on-demand"
+          ],
+          "default": "required"
         }
       }
     },
@@ -88,6 +122,126 @@
           "items": {
             "$ref": "#/$defs/dependency"
           }
+        }
+      }
+    },
+    "onDemandRequestTopic": {
+      "description": "The topic a guest publishes (Effect::PublishEvent) to ask its host to activate a deferred extension. The payload is the UTF-8 JSON of an onDemandRequest.",
+      "const": "os.on-demand.request"
+    },
+    "onDemandRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "nodeKind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "node-kind"
+            },
+            "nodeKind": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f.][^\\u0000-\\u001f\\u007f]*$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "tag"
+          ],
+          "properties": {
+            "kind": {
+              "const": "tag"
+            },
+            "tag": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "event"
+          ],
+          "properties": {
+            "kind": {
+              "const": "event"
+            },
+            "event": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^on-[a-z-]+:[^\\u0000-\\u001f\\u007f]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pluginId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plugin"
+            },
+            "pluginId": {
+              "$ref": "#/items/properties/pluginId"
+            }
+          }
+        }
+      ]
+    },
+    "onDemandStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "phase",
+        "completed",
+        "total"
+      ],
+      "properties": {
+        "pluginId": {
+          "$ref": "#/items/properties/pluginId"
+        },
+        "phase": {
+          "enum": [
+            "resolving",
+            "loading",
+            "active",
+            "unavailable",
+            "cancelled"
+          ]
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reason": {
+          "enum": [
+            "not-installed",
+            "dependency-missing",
+            "load-failed"
+          ]
         }
       }
     }

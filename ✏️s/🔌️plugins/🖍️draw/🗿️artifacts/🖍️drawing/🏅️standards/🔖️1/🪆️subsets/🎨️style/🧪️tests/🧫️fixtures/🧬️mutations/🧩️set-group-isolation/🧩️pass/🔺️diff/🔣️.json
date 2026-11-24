@@ -26,7 +26,10 @@
           "stroke": null,
           "traceParams": null,
           "layer": null,
-          "fontFamily": "anta"
+          "fontFamily": null,
+          "imageKey": null,
+          "imageWidth": null,
+          "imageHeight": null
         }
       }
     ]

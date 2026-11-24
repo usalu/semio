@@ -388,7 +388,7 @@ fn the_fire_resistance_diagram_marks_the_required_duration_and_drags_it() {
     let report = checks::evaluate_structure(&document);
     let all = diagrams(&document, &report, Some("fire-1"));
     let proof = all.iter().find(|d| d.id == "fire-proof:fire-1").expect("proof strength");
-    assert!(proof.series.iter().any(|s| matches!(s, Series::Polyline { id, points, .. } if id == "f-theta" && points.first().is_some_and(|p| p.y > points.last().map_or(0.0, |q| q.y)))));
+    assert!(proof.series.iter().any(|s| matches!(s, scene::Series::Polyline { id, points, .. } if id == "f-theta" && points.first().is_some_and(|p| p.y > points.last().map_or(0.0, |q| q.y)))));
     if let Some(resistance) = all.iter().find(|d| d.id == "fire-resistance:fire-1") {
         let marker = resistance.markers.iter().find(|m| m.id == "required").expect("required duration marker");
         assert_eq!(marker.binding.as_ref().expect("binding").path, "fireScenarios[id=fire-1].durationS");
@@ -425,7 +425,7 @@ fn the_independent_oracle_agrees() {
         let report = checks::evaluate_structure(&document);
         let (scene, _) = scene_of(&document, &[]);
         let diagram_json: Vec<String> = diagrams(&document, &report, None).iter().map(canonical_json).collect();
-        let sections: Vec<String> = document.sections.iter().map(|s| format!("{{\"id\":\"{}\",\"kind\":\"{}\",\"h\":{},\"b\":{},\"tw\":{},\"tf\":{},\"d\":{}}}", s.id, s.kind, s.height, s.width, s.web_thickness, s.flange_thickness, s.outer_diameter)).collect();
+        let sections: Vec<String> = document.sections.iter().map(|s| format!("{{\"id\":\"{}\",\"kind\":\"{}\",\"h\":{},\"b\":{},\"tw\":{},\"tf\":{},\"d\":{}}}", s.id, wave3::section_token(s.kind), s.height, s.width, s.web_thickness, s.flange_thickness, s.outer_diameter)).collect();
         let fatigue: Vec<String> = document.fatigue_details.iter().map(|f| format!("{{\"id\":\"{}\",\"dc\":{},\"m1\":{},\"m2\":{}}}", f.id, checks::part_1_3::detail_category_delta_sigma_c(&f.detail_category).unwrap_or(f.delta_sigma_c) / 1.0e6, f.m1, if f.m2 > 0.0 { f.m2 } else { f.m1 + 2.0 })).collect();
         let fires: Vec<String> = document.fire_scenarios.iter().filter_map(|f| {
             let member = document.members.iter().find(|m| m.id == f.member_id)?;
@@ -604,7 +604,7 @@ fn fatigue_sites_patch_loads_and_ring_stiffeners_are_entities_with_handles_bound
     assert_eq!(scene.validate(), Ok(()), "violations");
     let site = entity(&scene, "site-1");
     assert!(matches!(&site.geometry, scene::Geometry::Solid(_)));
-    assert_eq!(site.binding.as_ref().map(|b| b.check_id.as_str()), Some("en1999.1-3.fat.category.site-1"));
+    assert_eq!(site.utilisation.as_ref().map(|b| b.check_id.as_str()), Some("en1999.1-3.fat.category.site-1"));
     assert!(!site.handles.is_empty());
     assert!(matches!(entity(&scene, "patch-1").geometry, scene::Geometry::Load(scene::LoadGlyph::Point { .. })));
     assert!(matches!(entity(&scene, "patch-1:patch").geometry, scene::Geometry::Solid(_)));
@@ -695,12 +695,12 @@ fn the_transverse_stiffener_plates_carry_their_checks_and_each_grip_writes_one_t
     assert_eq!(scene.validate(), Ok(()), "violations");
     let plate = entity(&scene, "stiffener-1");
     assert!(matches!(&plate.geometry, scene::Geometry::Member(_)));
-    assert!(plate.binding.as_ref().is_some_and(|b| b.check_id.starts_with("en1999.6.7.6.web-")));
+    assert!(plate.utilisation.as_ref().is_some_and(|b| b.check_id.starts_with("en1999.6.7.6.web-")));
     assert!(plate.handles.iter().any(|h| h.ends_with(":position")) && plate.handles.iter().any(|h| h.ends_with(":thickness")));
     assert!(matches!(&entity(&scene, "stiffener-1:mirror").geometry, scene::Geometry::Member(_)), "a double-sided stiffener has a second plate");
     assert!(scene.entities.iter().all(|e| e.entity.id != "stiffener-thin:mirror"), "a single-sided stiffener has one plate");
     assert!(entity(&scene, "stiffener-1:mirror").handles.is_empty());
-    assert_eq!(entity(&scene, "stiffener-thin").binding.as_ref().map(|b| b.status), Some(scene::CheckStatus::Fail), "the thin flat bar colours as failing");
+    assert_eq!(entity(&scene, "stiffener-thin").utilisation.as_ref().map(|b| b.status), Some(scene::CheckStatus::Fail), "the thin flat bar colours as failing");
     assert!(report.checks.iter().any(|c| c.id == "en1999.6.7.6.web-stiffness.stiffener-1") && report.checks.iter().any(|c| c.id == "en1999.6.7.6.web-strength.stiffener-1"));
     let selection = [scene::EntityRef::new(scene::EntityKind::Member, "stiffener-1", "transverseStiffeners[id=stiffener-1]")];
     let all = handles(&document, &[], &selection);
@@ -758,7 +758,7 @@ fn nested_action_rows_get_magnitude_grips_on_their_glyphs() {
         assert_handle_laws(&all);
         let grip = all.iter().find(|h| h.id == format!("{glyph}:magnitude")).expect("magnitude grip");
         assert!(grip.writes[0].path.starts_with("members[id=purlin-1].actions[id=") && grip.writes[0].path.contains("]."), "{}", grip.writes[0].path);
-        assert!(grip.limits.as_ref().is_some_and(|l| l.contains(0.0)));
+        assert!(grip.limits.as_ref().is_some_and(|l| l.contains(super::scene::projection_kit::handle_kit::rest_of(&grip.kind, &grip.anchor).unwrap())));
     }
 }
 

@@ -95,6 +95,7 @@ members = [
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🎟️reservation/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🧳️owned/🏗️record-machine/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust",
@@ -901,6 +902,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🗂️natural-file-and-media-artifacts/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪆️child/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust",
@@ -946,6 +948,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/⚖️declared-verb-verdicts/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-instance-laws/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧰️fixtures/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️source-retention-laws/📦️packages/🦀️rust",
@@ -1440,6 +1443,9 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-value-native-owned]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-native-record-machine]
+    path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/🏗️record-machine/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-native-owned-try-map]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/🛡️try-map/📦️packages/🦀️rust"

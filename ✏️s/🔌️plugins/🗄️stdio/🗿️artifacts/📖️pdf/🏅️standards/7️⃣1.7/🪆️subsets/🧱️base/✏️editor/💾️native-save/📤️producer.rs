@@ -13,7 +13,8 @@ pub const PORT: &str = "artifact:native";
 pub const TOOL: &str = "export-media:artifact:native";
 pub const FORMAT: &str = "s.stdio.pdf@1.7";
 pub const MIME: &str = "application/pdf";
-pub(crate) const REFERENCE_REQUIRED: &str = "the PDF object graph is outside the bounded native Save qualification and no reference writer is registered for Save";
+/// 🚨️ The coded refusal the shell localizes through the PDF fault catalog (`stdio.pdf.save-declined`); the English developer detail never reaches the user.
+pub(crate) const REFERENCE_REQUIRED: &str = "stdio.pdf.save-declined";
 pub(crate) const MEDIA_TYPE: MediaType = MediaType { class: MediaClass::Data, form: MediaForm::Document };
 
 /// 📜️ The graph planner binds the authoritative source and proves coverage, total extent and the ordinary-object bound.

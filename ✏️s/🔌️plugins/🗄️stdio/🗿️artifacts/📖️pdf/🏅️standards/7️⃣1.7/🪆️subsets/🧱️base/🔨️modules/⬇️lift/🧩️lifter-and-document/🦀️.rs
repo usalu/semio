@@ -293,7 +293,7 @@ impl Lifter<'_> {
         page.transition = dict_get(&dict, "Trans").map(|t| self.source.deref(t)).and_then(|t| t.as_dict().map(<[PdfDictEntry]>::to_vec));
         page.duration = dict_f64(&dict, "Dur");
         page.metadata = dict_get(&dict, "Metadata").map(|m| self.source.deref(m)).and_then(|m| match m {
-            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
+            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data.to_vec_owner()).into_owned(); if let Some(value) = dict_get(&dict, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
             _ => None,
         });
         page.additional_actions = dict_get(&dict, "AA").map(|aa| self.source.deref(aa)).and_then(|aa| aa.as_dict().map(<[PdfDictEntry]>::to_vec)).unwrap_or_default();

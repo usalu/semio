@@ -283,7 +283,6 @@ impl<O: WindowConfigOwner> TypedWindowConfigStoreOwner<O> {
         if !self.initialization_pending()&&self.partitions.contains_key(window){return Ok(true);}
         if let Some(owner)=self.initializing.as_mut(){
             if owner.terminal_is_empty(){let d=WindowConfigPartitionBirth::<O>::boxed_release_demands();retired(cx,d,|_|{self.initializing=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;return Ok(false);}
-            if !owner.window_id().is_empty()&&owner.window_id()!=window{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original Window initialization retains another mounted address").into());}
             if let Some((address,store))=owner.step(cx)?{self.initialized_window=Some(address);self.initialized_store=Some(store);}return Ok(false);
         }
         if self.initialized_window.is_some(){let d=SharedUtf8::admission_demand();self.construction.run_unit(cx,d,|grant,actual|{let Some(original)=self.initialized_window.take()else{return Err(ValueError::invariant("initialized_window absent"))};let turn=SharedUtf8::admit(original,grant,actual);match turn.result{Ok((address,receipt))=>{self.initialized_address=Some(address);Ok(((),receipt))},Err((error,original))=>{self.initialized_window=Some(original);Err(error)}}})?;return Ok(false);}

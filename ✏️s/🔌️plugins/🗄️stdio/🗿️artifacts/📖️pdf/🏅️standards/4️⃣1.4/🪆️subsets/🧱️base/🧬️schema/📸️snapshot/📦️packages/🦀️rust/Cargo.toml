@@ -12,7 +12,6 @@ role = "library"
 [package.metadata.semio.carve]
 owned = [
   "standards::v1_4::subsets::base::io::binary::inferences",
-  "standards::v1_4::subsets::base::io::binary::mutations::wire",
   "standards::v1_4::subsets::base::io::binary::snapshot",
   "standards::v1_4::subsets::base::io::binary::snapshot::snapshot_codec",
   "standards::v1_4::subsets::base::io::sqlite::snapshot",

@@ -43,6 +43,10 @@ export function heavyQuestionScaleV1(policy=HEAVY_QUESTION_POLICY_V1,environment
  return Math.min(policy.maximumScale,Math.max(1,localMachineSpeedFactorV1(environment))*Math.max(1,load/cores));
 }
 
+/** 🛡️ The cancel record the host warden wrote for a pid, or null: a child that ended by SIGKILL with such a record was cancelled to protect the machine, not crashed.
+ * @see ../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts `readHostWardenCancelV1` */
+const wardenCancelOfV1=async pid=>(await import("../../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🛡️warden/🔁️loop/🟦️.ts")).readHostWardenCancelV1(pid);
+
 const BEAT=/^\u0001alive(?: (\S+))?(?: (\d+))?$/u;
 const questionOfV1=request=>request.prime?"prime":request.preflight?"preflight":String(request.row?.kind??"derived")+" "+String(request.row?.path??"").slice(0,120);
 const lanes={questions:Promise.resolve(),prime:Promise.resolve()};
@@ -53,7 +57,7 @@ process.once("exit",()=>{for(const child of running)try{child.kill("SIGKILL");}c
 const answerIn=(request,workspaceRoot,signal,policy=HEAVY_QUESTION_POLICY_V1,script=SCRIPT,ports={})=>new Promise((resolve,reject)=>{
  signal?.throwIfAborted();
  const directory=mkdtempSync(join(tmpdir(),"semio-heavy-question-")),output=join(directory,"answer.json");
- const{scale=heavyQuestionScaleV1,cpuOf=processCpuMillisecondsV1}=ports,factor=scale(policy),window=Math.ceil(policy.silenceMilliseconds*factor),look=Math.min(policy.livenessMilliseconds,window>>1),question=questionOfV1(request);
+ const{scale=heavyQuestionScaleV1,cpuOf=processCpuMillisecondsV1,cancelOf=wardenCancelOfV1}=ports,spawnedAt=Date.now(),factor=scale(policy),window=Math.ceil(policy.silenceMilliseconds*factor),look=Math.min(policy.livenessMilliseconds,window>>1),question=questionOfV1(request);
  let silent=false,phase="boot",lag=0,cpuSeen,partial="",tail="",lastLife=Date.now(),lookedAt=lastLife;
  const done=(error,value)=>{signal?.removeEventListener("abort",abort);clearTimeout(timer);clearInterval(watch);running.delete(child);rmSync(directory,{recursive:true,force:true});error?reject(error):resolve(value);};
  const child=spawn(process.execPath,[script,workspaceRoot,output],{stdio:["pipe","ignore","pipe"],windowsHide:true,env:{...process.env,[policy.environment]:String(policy.memoryLimitMegabytes)}});
@@ -74,9 +78,14 @@ const answerIn=(request,workspaceRoot,signal,policy=HEAVY_QUESTION_POLICY_V1,scr
   if(now-lastLife>=window){silent=true;child.kill("SIGKILL");}
  },Math.max(10,Math.min(1000,window>>2)));
  child.once("error",error=>done(error));
- child.once("close",code=>{
+ child.once("close",(code,killed)=>{
   tail+=partial;
   if(signal?.aborted)return done(signal.reason);
+  if(code===null&&killed==="SIGKILL"&&!silent){
+   const pid=child.pid;
+   void Promise.resolve().then(()=>cancelOf(pid)).catch(()=>null).then(record=>done(record!=null&&record.atMs>=spawnedAt?refuseBuildV1("failed","graph.heavy-question-cancelled",{pid:String(pid),kind:record.kind,megabytes:String(record.megabytes),reason:record.reason,question}):failureOfV1(code,tail,output)));
+   return;
+  }
   if(silent)return done(refuseBuildV1("failed","graph.heavy-question-silent",{seconds:String(Math.round((Date.now()-lastLife)/1000)),question,phase,lag:String(Math.round(lag/1000)),detail:tail.trim().split("\n").slice(-2).join(" | ").slice(-300)||"-"}));
   if(code!==0)return done(failureOfV1(code,tail,output));
   try{done(undefined,JSON.parse(readFileSync(output,"utf8")));}catch(error){done(error);}

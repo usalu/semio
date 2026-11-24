@@ -2,7 +2,7 @@ import {availableParallelism,setPriority} from "node:os";
 import {spawn,spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {appendFileSync,chmodSync,closeSync,existsSync,mkdirSync,openSync,readFileSync,renameSync,rmSync,statSync,writeFileSync} from "node:fs";
-import {dirname,join} from "node:path";
+import {dirname,join,resolve} from "node:path";
 import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {sealModulesV1,type SealedModulesV1} from "../🏛️seal/🟦️.ts";
@@ -78,6 +78,7 @@ function ensureNativeWrapperV1(cacheRoot:string,runtime:string,entry:string,plat
 
 /** 🛠️ Writes the stand-in once (atomically, executable) and returns its path. Unless the caller names `script` and `entry` itself, both are the sealed copies of this session ({@link sealedUnitCacheV1}), so neither the stand-in nor the native executable ever runs or embeds a live file that a peer is editing. POSIX: a `/bin/sh` script named by the snapshot digest. Windows: a native executable built from the sealed `🏁️entry.ts`; a build or seal that fails throws, and {@link unitCacheEnvironmentV1} turns that into a bilingual refusal. Build scripts that run `$RUSTC` reach the real compiler; only Cargo's own compiler calls go through the wrapper. */
 export function ensureUnitCacheShimV1(cacheRoot:string,runtime:string=process.execPath,script?:string,platform:NodeJS.Platform=process.platform,build:UnitCacheNativeBuildV1=UNIT_CACHE_NATIVE_BUILD_V1,entry?:string):string{
+ cacheRoot=resolve(cacheRoot);
  const sealed=(platform==="win32"?entry:script)===undefined?sealedUnitCacheV1(cacheRoot,runtime):undefined;
  script??=sealed?.entries[0];entry??=sealed?.entries[1];
  for(const digest of sealed?.removed??[])rmSync(unitCacheShimPathV1(cacheRoot,platform,digest),{force:true});

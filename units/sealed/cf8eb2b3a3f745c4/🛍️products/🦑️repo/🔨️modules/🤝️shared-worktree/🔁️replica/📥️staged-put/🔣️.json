@@ -1,6 +1,0 @@
-{
-  "maximumFiles": 512,
-  "maximumBytes": 16777216,
-  "maximumFileBytes": 1048576,
-  "maximumAgeMilliseconds": 120000
-}

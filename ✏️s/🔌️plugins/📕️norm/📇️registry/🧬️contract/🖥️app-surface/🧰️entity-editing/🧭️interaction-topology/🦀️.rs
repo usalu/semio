@@ -45,5 +45,10 @@ pub fn domain_topology(tree: &DslValue, scene: &StructuralScene, report: &CheckR
 
 /// 🗺️ The topology of an artifact: its one interaction `domain` over the document `tree`, the lowered `scene` and the settled `report`.
 pub fn norm_interaction_topology(domain: &str, tree: &DslValue, scene: &StructuralScene, report: &CheckReport) -> InteractionTopology {
-    InteractionTopology { domains: BTreeMap::from([(domain.to_owned(), domain_topology(tree, scene, report, visible_rows(domain).as_deref()))]) }
+    norm_interaction_topology_filtered(domain, tree, scene, report, visible_rows(domain).as_deref())
+}
+
+/// 🧷️ [`norm_interaction_topology`] with the outliner filter stated by the caller (`None` admits every row) instead of read from the ephemeral per-domain store, so a caller that needs the whole topology does not depend on what a window rendered last.
+pub fn norm_interaction_topology_filtered(domain: &str, tree: &DslValue, scene: &StructuralScene, report: &CheckReport, visible: Option<&[String]>) -> InteractionTopology {
+    InteractionTopology { domains: BTreeMap::from([(domain.to_owned(), domain_topology(tree, scene, report, visible))]) }
 }

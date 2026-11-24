@@ -110,6 +110,8 @@ semio_ui_locale::app_labels! {
         mesh_url: native_en "Mesh Url", native_de "Mesh-URL", reuse_en "Mesh Url", reuse_de "Mesh-URL";
         hidden: native_en "Hidden", native_de "Ausgeblendet", reuse_en "Hidden", reuse_de "Ausgeblendet";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
+        yes: native_en "Yes", native_de "Ja", reuse_en "Yes", reuse_de "Ja";
+        no: native_en "No", native_de "Nein", reuse_en "No", reuse_de "Nein";
         full_id: native_en "Full Id", native_de "Vollständige Id", reuse_en "Full Id", reuse_de "Vollständige Id";
         vortex_kind: native_en "Vortex Kind", native_de "Vortex-Art", reuse_en "Connection point kind", reuse_de "Verbindungspunkt-Art";
         position: native_en "Position", native_de "Position", reuse_en "Position", reuse_de "Position";

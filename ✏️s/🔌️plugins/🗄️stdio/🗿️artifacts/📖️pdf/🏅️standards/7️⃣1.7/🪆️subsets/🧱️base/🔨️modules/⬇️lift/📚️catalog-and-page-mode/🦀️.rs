@@ -163,7 +163,7 @@ impl Lifter<'_> {
             self.snapshot.mark_info = Some(PdfMarkInfo { marked: flag("Marked"), user_properties: flag("UserProperties"), suspects: flag("Suspects") });
         }
         self.snapshot.metadata = dict_get(catalog, "Metadata").map(|m| self.source.deref(m)).and_then(|m| match m {
-            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(catalog, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
+            PdfObject::Stream { data, .. } => { let text = String::from_utf8_lossy(&data.to_vec_owner()).into_owned(); if let Some(value) = dict_get(catalog, "Metadata") { self.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
             _ => None,
         });
         self.snapshot.catalog_extra = extra_entries(catalog, &["Type", "Version", "Pages", "Outlines", "Names", "Dests", "PageLabels", "OutputIntents", "AcroForm", "PageLayout", "PageMode", "ViewerPreferences", "OpenAction", "Lang", "MarkInfo", "Metadata", "OCProperties"]);
@@ -201,7 +201,7 @@ impl Lifter<'_> {
                 Some(PdfObject::Text(text)) => Some(text),
                 Some(PdfObject::Str(bytes)) => Some(decode_text_string(&bytes)),
                 Some(PdfObject::Name(name)) => Some(name),
-                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data).into_owned(); if let Some(value) = dict_get(&dict, key) { lifter.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
+                Some(PdfObject::Stream { data, .. }) => { let text = String::from_utf8_lossy(&data.to_vec_owner()).into_owned(); if let Some(value) = dict_get(&dict, key) { lifter.source.record_role(value, PdfStreamRoleValue::MetadataText { text: text.clone() }); } Some(text) },
                 _ => None,
             }
         };

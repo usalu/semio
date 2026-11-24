@@ -16,7 +16,11 @@
         "headSwapAttempts": 4,
         "maximumOwners": 20000,
         "maximumDocuments": 8,
-        "documents": ["graph", "owners", "admission"]
+        "documents": ["graph", "owners", "admission"],
+        "retentionManifest": "stage.json",
+        "redeclareMaximumMilliseconds": 3000,
+        "lookMaximumMilliseconds": 120000,
+        "readBesideMinimumTotalMegabytes": 24576
       }
     },
     "Head": {
@@ -68,9 +72,25 @@
           "en": "Published the sealed graph of this read to the fleet ({owners} owners).",
           "de": "Versiegelten Graphen dieses Lesens an die Flotte veröffentlicht ({owners} Besitzer)."
         },
+        "not-published": {
+          "en": "The sealed graph of this read was not published to the fleet: {reason}.",
+          "de": "Der versiegelte Graph dieses Lesens wurde nicht an die Flotte veröffentlicht: {reason}."
+        },
         "taken-over": {
           "en": "The machine that was reading stopped answering; reading here with the owner records it published.",
           "de": "Die lesende Maschine antwortet nicht mehr; lese hier mit den von ihr veröffentlichten Besitzerdatensätzen."
+        },
+        "fetching": {
+          "en": "Fetching the sealed graph of the fleet: {documents} documents, {owners} owners.",
+          "de": "Hole den versiegelten Graphen der Flotte: {documents} Dokumente, {owners} Besitzer."
+        },
+        "reading-beside": {
+          "en": "{by} holds the claim of this selection, but this machine has {megabytes} MB and reads it beside the holder instead of waiting for it.",
+          "de": "{by} hält den Anspruch auf diese Auswahl, aber diese Maschine hat {megabytes} MB und liest sie neben dem Halter, statt auf ihn zu warten."
+        },
+        "look-bound": {
+          "en": "The fleet did not deliver the sealed graph within {seconds} s; reading here.",
+          "de": "Die Flotte lieferte den versiegelten Graphen nicht innerhalb von {seconds} s; lese hier."
         }
       }
     }

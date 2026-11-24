@@ -195,9 +195,15 @@ describe("verification", () => {
   });
   test("a managed Python interpreter is found by its series in the interpreter directory of the tools partition", async () => {
     const directory = pythonInterpreterDirectoryV1("/repo/.cache/b/t/m").replaceAll("\\", "/"), python313 = `${directory}/cpython-7.7.2-linux-x86_64-gnu/bin/python3`, other = `${directory}/cpython-7.70.1-linux-x86_64-gnu/bin/python3`;
-    const context = machine({present: [other, python313], list: () => ["cpython-7.70.1-linux-x86_64-gnu", "cpython-7.7.2-linux-x86_64-gnu", "cpython-6.6.1-linux-x86_64-gnu"], outputs: {[python313]: "Python 7.7.2\n"}});
+    const context = machine({present: [other, python313, `${directory}/cpython-7.7.2-linux-x86_64-gnu/.toolchain.json`, `${directory}/cpython-7.70.1-linux-x86_64-gnu/.toolchain.json`], list: () => ["cpython-7.70.1-linux-x86_64-gnu", "cpython-7.7.2-linux-x86_64-gnu", "cpython-6.6.1-linux-x86_64-gnu"], outputs: {[python313]: "Python 7.7.2\n"}});
     expect(await verifyToolV1(toolRowV1("python-main"), context, signal)).toMatchObject({status: "ok", found: "7.7.2", pin: "7.7", location: python313});
     expect((await verifyToolV1(toolRowV1("python-oracle"), context, signal)).status).toBe("missing");
+  });
+  test("a managed Python interpreter without its receipt is not provisioned by the repository and is reported missing", async () => {
+    const directory = pythonInterpreterDirectoryV1("/repo/.cache/b/t/m").replaceAll("\\", "/"), python313 = `${directory}/cpython-7.7.2-linux-x86_64-gnu/bin/python3`, receipt = `${directory}/cpython-7.7.2-linux-x86_64-gnu/.toolchain.json`;
+    const list = () => ["cpython-7.7.2-linux-x86_64-gnu"], outputs = {[python313]: "Python 7.7.2\n"};
+    expect((await verifyToolV1(toolRowV1("python-main"), machine({present: [python313], list, outputs}), signal)).status).toBe("missing");
+    expect((await verifyToolV1(toolRowV1("python-main"), machine({present: [python313, receipt], list, outputs}), signal)).status).toBe("ok");
   });
 
   test("the dotnet SDK is ok when the pin is listed among several and differs when it is not", async () => {

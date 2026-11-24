@@ -132,7 +132,7 @@ use semio_framework_diagnostic::Severity;
                 PdfDictEntry { key: "OutputConditionIdentifier".into(), value: PdfObject::Text(output_condition) },
                 PdfDictEntry { key: "DestOutputProfile".into(), value: PdfObject::Ref(ObjRef { num: 3, gen: 0 }) },
             ]) },
-            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".into(), value: PdfObject::Int(3) }], data: profile.clone(), filters: Vec::new() } },
+            PdfIndirectObject { id: ObjRef { num: 3, gen: 0 }, value: PdfObject::Stream { dict: vec![PdfDictEntry { key: "N".into(), value: PdfObject::Int(3) }], data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&profile), filters: Vec::new() } },
             PdfIndirectObject { id: ObjRef { num: 4, gen: 0 }, value: PdfObject::Dict(vec![PdfDictEntry { key: "Type".into(), value: PdfObject::Name("Pages".into()) }, PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(Vec::new()) }, PdfDictEntry { key: "Count".into(), value: PdfObject::Int(0) }]) },
         ];
         let profile = { use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort}; NativePdfArtifactResources::default().admit("s.stdio.icc",objects[2].value.clone()).expect("seeded native ICC stream") };

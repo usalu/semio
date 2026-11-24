@@ -25,7 +25,7 @@ export interface Scene {
   readonly frame?: Box;
   readonly focus?: string;
   readonly pointer?: { readonly x: number; readonly y: number };
-  readonly options?: { readonly surfaces?: string; readonly keepoutsBesidesDefaults?: string; readonly walls?: string; readonly props?: string };
+  readonly options?: { readonly surfaces?: string; readonly keepoutsBesidesDefaults?: string; readonly walls?: string; readonly open?: string; readonly props?: string };
   readonly nodes: readonly SceneNode[];
   readonly expected: {
     readonly kind: string;
@@ -121,6 +121,7 @@ export function optionsOf(scene: Scene, frame: Element | undefined): SurveyOptio
     ...(scene.options?.surfaces === undefined ? {} : { surfaces: scene.options.surfaces }),
     ...(scene.options?.keepoutsBesidesDefaults === undefined ? {} : { keepouts: `${PET_KEEPOUTS}, ${scene.options.keepoutsBesidesDefaults}` }),
     ...(scene.options?.walls === undefined ? {} : { walls: scene.options.walls }),
+    ...(scene.options?.open === undefined ? {} : { open: scene.options.open }),
     ...(scene.options?.props === undefined ? {} : { props: scene.options.props }),
     ...(scene.pointer === undefined ? {} : { pointer: scene.pointer }),
     frame,

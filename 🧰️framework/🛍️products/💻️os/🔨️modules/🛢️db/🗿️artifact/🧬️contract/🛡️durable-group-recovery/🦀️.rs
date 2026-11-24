@@ -133,7 +133,7 @@ where
     ValueMutation: store::StoreMutationFor<ValueP> + store::os_store::serialization::ArtifactCanonicalJsonTree,
 {
     fn drop(&mut self) {
-        assert!(self.state.is_none(), "committed WAL recovery reached Drop before exact three-Store terminal handoff");
+        assert!(std::thread::panicking()||(self.state.is_none()), "committed WAL recovery reached Drop before exact three-Store terminal handoff");
     }
 }
 

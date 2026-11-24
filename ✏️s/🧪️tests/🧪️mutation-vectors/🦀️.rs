@@ -118,6 +118,13 @@ fn binary_breaches<M: OpBinary + PartialEq + Debug>(bundle: &Path, mutation: &M)
     }
 }
 
+/// 🖨️ When `SEMIO_MUTATION_VECTORS_PRODUCED_DIR` is set, a diff that differs from its committed twin lands there as `<leaf>__<case>.json`, the input of the vector regeneration.
+fn record_produced(bundle: &Path, produced: &str) {
+    let Ok(dir) = std::env::var("SEMIO_MUTATION_VECTORS_PRODUCED_DIR") else { return };
+    let part = |path: Option<&Path>| path.and_then(Path::file_name).map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+    std::fs::write(Path::new(&dir).join(format!("{}__{}.json", part(bundle.parent()), part(Some(bundle)))), produced).unwrap_or_else(|error| panic!("produced diff directory {dir} is writable: {error}"));
+}
+
 /// ⚖️ One bundle's breaches and the outcome classes it shows production dispatch reaching.
 fn vector_breaches<S, M>(bundle: &Path, mutation: &M, reached: &mut BTreeSet<String>) -> Vec<String>
 where
@@ -149,6 +156,7 @@ where
         let (owned, _) = raised.into_parts();
         <M::ReferenceDiff as semio_os_kernel::MutationDiff<S>>::retire_cold(owned);
         if !matches {
+            record_produced(bundle, &semio_framework_pack_json::to_json_string(mutation.diff(&before).diff()));
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
     } else if status != "rejected" {

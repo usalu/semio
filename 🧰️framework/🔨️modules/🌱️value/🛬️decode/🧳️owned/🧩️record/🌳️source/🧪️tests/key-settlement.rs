@@ -1,5 +1,4 @@
 use super::*;
-use crate::record::{settlement_of,Settle};
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 
 #[test]

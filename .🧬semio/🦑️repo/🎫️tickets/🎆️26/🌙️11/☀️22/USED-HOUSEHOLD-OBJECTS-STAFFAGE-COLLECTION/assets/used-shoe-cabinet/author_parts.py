@@ -182,11 +182,13 @@ def wedge_profile():
 
 
 def scale_100():
-    """🔎 1:100 (feature 15 mm): the carcass as one frame with the compartments as holes, the top and kick board as boards, the flap fronts, one wedge per tray, one block per handle."""
+    """🔎 1:100 (feature 15 mm): the carcass as one frame with the compartments as holes, the top and kick board as boards, the flap fronts, one wedge per tray, one block per handle, the remaining wall bracket as an angle of 15 mm legs (it stands 25 mm above the top, more than one smallest feature, and is the top of the declared height; without it the body of 1:100 was 1.465 m against 1.49 m: silhouette repair SF of 2026-11-23)."""
     parts = [blanket_part(100), back_part(100)]
     top = part("top", "carcass", "chipboard-foil", rect(TB, D, TOP[0], TOP[1]), -HW, HW, 0.85, 5, region="carcass", front_z=3)
     kick = part("kick", "carcass", "chipboard-foil", rect(CARCASS_FRONT - T, CARCASS_FRONT, 0.0, PLINTH_H), -INNER, INNER, 0.6, 2, views=(ELEV, FRONT), region="plinth", front_z=1)
     parts += [top, kick]
+    bracket = [[0.0, TOP[1]], [BRACKET_L, TOP[1]], [BRACKET_L, TOP[1] + 0.015], [0.015, TOP[1] + 0.015], [0.015, TOP[1] + BRACKET_H], [0.0, TOP[1] + BRACKET_H]]
+    parts.append(part("bracket", "carcass", "zinc-plated-steel", [[r(a), r(c)] for a, c in bracket], BRACKET_W[0], BRACKET_W[1], 0.3, 9, front_z=9))
     for i in range(3):
         parts.append(flap_front(i))
         parts.append(part(f"flap-{i + 1}-tray", flap_bone(i), "chipboard-foil", wedge_profile(), -CHEEK_W[1], CHEEK_W[1], 0.65, 2, views=(ELEV,), role="detail"))
@@ -209,6 +211,7 @@ def scale_100():
     thermal = [{"id": "th-blanket", "of": "blanket", "region": "blanket"}, {"id": "th-back", "of": "back", "region": "back-panel"}, {"id": "th-frame", "of": "frame", "region": "carcass"}, {"id": "th-top", "of": "top", "region": "carcass"}, {"id": "th-kick", "of": "kick", "region": "plinth"}]
     thermal += [{"id": f"th-flap-{i + 1}", "of": f"flap-{i + 1}-front", "region": "flaps"} for i in range(3)]
     structure = [{"id": "m-frame", "of": "frame", "member": "carcass", "part": "member"}, {"id": "m-top", "of": "top", "member": "carcass", "part": "member"}, {"id": "m-back", "of": "back", "member": "carcass", "part": "member"}]
+    structure.append({"id": "j-bracket", "of": "bracket", "member": "carcass", "part": "joint"})
     for i in range(3):
         b = flap_bone(i)
         structure += [{"id": f"m-flap-{i + 1}-front", "of": f"flap-{i + 1}-front", "member": b, "part": "member"}, {"id": f"m-flap-{i + 1}-tray", "of": f"flap-{i + 1}-tray", "member": b, "part": "member"}, pivot(i, 0.015, 0.016)]

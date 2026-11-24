@@ -446,7 +446,7 @@ impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
 
 impl Drop for SemioFlowSnapshotDecode {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Flow decoder dropped before exact handoff or bounded retirement");
+        assert!(std::thread::panicking()||(self.terminal_is_empty()), "Flow decoder dropped before exact handoff or bounded retirement");
     }
 }
 

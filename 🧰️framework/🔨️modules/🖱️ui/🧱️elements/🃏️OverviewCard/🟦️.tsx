@@ -55,7 +55,7 @@ export interface OverviewCardButtonProps extends OverviewCardBaseProps {
 /** ⚙️ Props of {@link OverviewCard}. */
 export type OverviewCardProps = OverviewCardSectionProps | OverviewCardButtonProps;
 
-const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "frame" } as const;
+const CARD_STACK_DATA = { "data-overview-card-stack": "", "data-shared-border-hover": "" } as const;
 
 /** 💳️ The overview card of semio's landing pages (play, the demonstrator, the quizzes): the design system's
  * {@link WindowChrome} at dialog level, never `active`, with the title in a glass chip on its top row and actions in glass chips on its bottom row, both inside the frame.

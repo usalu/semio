@@ -99,7 +99,7 @@ fn composite_font_without_to_unicode_encodes_through_the_embedded_cmap() {
     let program = truetype::synthesize_truetype(1000, &[('A' as u32, 600, vec![vec![(0, 0), (0, 700), (500, 700)]]), ('B' as u32, 650, Vec::new())]);
     let ttf = TrueTypeFont::parse(&program).unwrap();
     use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
-    let mut resources=NativePdfArtifactResources::default();let reference=resources.admit("s.stdio.font.truetype",crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {dict:Vec::new(),data:program,filters:Vec::new()}).unwrap();
+    let mut resources=NativePdfArtifactResources::default();let reference=resources.admit("s.stdio.font.truetype",crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {dict:Vec::new(),data:crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&program),filters:Vec::new()}).unwrap();
     let font = PdfFont {
         id: "F0".into(),
         kind: PdfFontKind::Type0 { base_font: "Synth".into(), cmap: PdfCMap::identity_h(), descendant: PdfCidFont { true_type: true, base_font: "Synth".into(), system_info: Default::default(), descriptor: PdfFontDescriptor { font_name: "Synth".into(), ..Default::default() }, default_width: 1000.0, widths: vec![PdfCidWidthRun { start_cid: 1, widths: vec![600.0, 650.0] }], default_vertical: None, vertical_metrics: Vec::new(), cid_to_gid: None, program: Some(PdfFontProgram::TrueType { reference:reference.clone() }), extra: Vec::new() } },
@@ -200,7 +200,7 @@ fn verify_embedded_font(fixture: &str, composite: bool) {
     assert!(fixture.next().is_none());
 
     let id = |num| ObjRef { num, gen: 0 };
-    let stream = |dict, data, filters| PdfObject::Stream { dict, data, filters };
+    let stream = |dict, data: Vec<u8>, filters| PdfObject::Stream { dict, data: crate::standards::v1_7::subsets::base::schema::snapshot::stream_bytes(&data), filters };
     let descriptor_id = 6 + u32::from(composite);
     let program_id = descriptor_id + 1;
     let cmap_id = descriptor_id + 2;

@@ -93,5 +93,5 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
 }
 
 #[cfg(any(test,feature="artifact-app-testing"))]
-#[path="../../../../../../🔨️modules/🧵️job/🧪️testing/♻️close/🦀️.rs"]
+#[path="../../../../../../🔨️modules/🧵️job/🧪️tests/♻️close/🦀️.rs"]
 mod close_source;

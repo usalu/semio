@@ -108,7 +108,7 @@ function lastGoodV1(store:string,pointer:string,stale:readonly SealBlockV1[],now
 
 /** 🏛️ Seals the module set the entries can run into `<root>/sealed/<digest>` and answers the sealed copies of the entries: a session that runs them never sees a later edit of the live files. A capture is accepted only when every file parses, the entries named by `checked` load from the staged copy and a second read finds the same bytes, so a half-finished edit is retried after `settleMilliseconds` (up to `attempts`) and never sealed; when no attempt succeeds the last good snapshot of these entries is served (`stale` names what blocked), and without one this throws with the first blocking place. Snapshots are published by one atomic rename; peers sealing the same bytes share one directory. @see ../🧬️schema/🔣️.json */
 export function sealModulesV1(root:string,entries:readonly string[],options:SealOptionsV1={}):SealedModulesV1{
- const store=join(root,policy.directory),live=entries.map(entry=>resolve(entry)),pointer=join(store,policy.pointerPrefix+hash(live.join("\n")).slice(0,policy.digestCharacters)+".json"),nowMs=options.nowMs??Date.now();
+ const store=join(resolve(root),policy.directory),live=entries.map(entry=>resolve(entry)),pointer=join(store,policy.pointerPrefix+hash(live.join("\n")).slice(0,policy.digestCharacters)+".json"),nowMs=options.nowMs??Date.now();
  const attempts=options.attempts??policy.attempts,sleep=options.sleep??sleepSyncV1,parse=options.parse??sealSyntaxRowsV1;
  let blocked:readonly SealBlockV1[]=[];
  mkdirSync(store,{recursive:true});

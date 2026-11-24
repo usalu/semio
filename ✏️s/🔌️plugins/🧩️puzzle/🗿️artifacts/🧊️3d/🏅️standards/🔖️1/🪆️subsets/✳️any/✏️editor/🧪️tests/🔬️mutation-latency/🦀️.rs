@@ -30,18 +30,18 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
     let scene_snapshot = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
     assert!(scene_snapshot.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", scene_snapshot.objects.len());
     let mut residency = semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceResidency::default();
-    assert!(residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]), "the first refresh publishes the whole set");
+    assert!(residency.refresh(&scene_snapshot, None, &[]), "the first refresh publishes the whole set");
     assert_eq!(residency.rebuilt_records() as usize, scene_snapshot.objects.len(), "a cold residency serializes every record exactly once");
     assert!(residency.delta_json().is_none(), "a COLD publication carries no delta lane at all — a consumer with nothing retained must read the full set anyway, and the second copy is pure wire cost");
     let full_bytes = residency.instances_json().len();
 
-    assert!(!residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]), "an unchanged scene_snapshot republishes nothing at all");
+    assert!(!residency.refresh(&scene_snapshot, None, &[]), "an unchanged scene_snapshot republishes nothing at all");
     assert_eq!(residency.rebuilt_records(), 0, "an unchanged scene_snapshot re-serializes no record");
 
     let mut moved = scene_snapshot.clone();
     let victim = moved.objects[7].id.clone();
     moved.objects[7].origin[0] += 1.5;
-    assert!(residency.refresh(&moved, &std::collections::BTreeSet::new(), &[]), "a moved object republishes");
+    assert!(residency.refresh(&moved, None, &[]), "a moved object republishes");
     assert_eq!(residency.rebuilt_records(), 1, "exactly one record was re-serialized");
     assert_eq!(residency.changed_ids(), [victim.clone()], "the delta names exactly the moved id");
     assert!(residency.removed_ids().is_empty(), "a pose edit removes nothing");
@@ -66,23 +66,23 @@ fn a_pose_edit_reserializes_and_names_exactly_the_objects_that_moved() {
 fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode() {
     for scene_snapshot in [CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone(), NAKAGIN_EXAMPLE_SNAPSHOT.clone()] {
         let mut residency = semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceResidency::default();
-        residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]);
+        residency.refresh(&scene_snapshot, None, &[]);
         assert_eq!(residency.instances_json(), world_instances_geometry_json(&scene_snapshot), "a cold residency matches the whole-set encode");
         let mut edited = scene_snapshot.clone();
         if let Some(object) = edited.objects.first_mut() {
             object.origin[2] += 3.25;
             object.hidden = !object.hidden;
         }
-        residency.refresh(&edited, &std::collections::BTreeSet::new(), &[]);
+        residency.refresh(&edited, None, &[]);
         assert_eq!(residency.instances_json(), world_instances_geometry_json(&edited), "an incrementally updated residency matches the whole-set encode");
         let mut shortened = edited.clone();
         shortened.objects.pop();
-        residency.refresh(&shortened, &std::collections::BTreeSet::new(), &[]);
+        residency.refresh(&shortened, None, &[]);
         assert_eq!(residency.instances_json(), world_instances_geometry_json(&shortened), "a removal matches the whole-set encode");
         assert_eq!(residency.removed_ids().len(), 1, "and the removal is named in the delta");
         let mut grown = shortened.clone();
         grown.objects.push(edited.objects.last().expect("an object to re-add").clone());
-        residency.refresh(&grown, &std::collections::BTreeSet::new(), &[]);
+        residency.refresh(&grown, None, &[]);
         assert_eq!(residency.instances_json(), world_instances_geometry_json(&grown), "an addition matches the whole-set encode");
     }
 }
@@ -266,6 +266,8 @@ struct Puzzle3dTurnCensus {
     delete_turns: usize,
     delete_units: u64,
     delete_census: semio_plugin::app::TypedOperationUnitCensus,
+    translate_debug: String,
+    delete_debug: String,
 }
 
 impl Puzzle3dTurnCensus {
@@ -284,8 +286,8 @@ impl std::fmt::Display for Puzzle3dTurnCensus {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             formatter,
-            "label={} objects={} ladder={}/{}turns translate={}turns/{}units [{}] delete={}turns/{}units [{}]",
-            self.label, self.objects, self.translate_ladder_turns(), self.delete_ladder_turns(), self.translate_turns, self.translate_units, self.translate_census, self.delete_turns, self.delete_units, self.delete_census
+            "label={} objects={} ladder={}/{}turns translate={}turns/{}units [{}] delete={}turns/{}units [{}] translate-histogram=({}) delete-histogram=({})",
+            self.label, self.objects, self.translate_ladder_turns(), self.delete_ladder_turns(), self.translate_turns, self.translate_units, self.translate_census, self.delete_turns, self.delete_units, self.delete_census, self.translate_debug, self.delete_debug
         )
     }
 }
@@ -296,11 +298,15 @@ async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurn
     let objects = object_count(app);
     let victim = first_object_id(app);
     select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
+    semio_framework_value::debug_histogram::debug_units_reset();
     let (result, translated) = dispatch_reporting_with_items(app, "translateSelection", Some(&json!({ "ids": [victim.as_str()], "dx": 3.5, "dy": 0.0, "dz": 0.0 })), None, SETTLE_HOST_TURN_ITEMS).await;
+    let translate_debug = semio_framework_value::debug_histogram::debug_units_report();
     result.expect("translate dispatches");
     let victim = first_object_id(app);
     select_id(app, semio_s_artifact_puzzle_3d_editor_snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
+    semio_framework_value::debug_histogram::debug_units_reset();
     let (result, deleted) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
+    let delete_debug = semio_framework_value::debug_histogram::debug_units_report();
     result.expect("delete dispatches");
     Puzzle3dTurnCensus {
         label,
@@ -311,6 +317,8 @@ async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurn
         delete_turns: deleted.turns,
         delete_units: deleted.census.units,
         delete_census: deleted.census,
+        translate_debug,
+        delete_debug,
     }
 }
 

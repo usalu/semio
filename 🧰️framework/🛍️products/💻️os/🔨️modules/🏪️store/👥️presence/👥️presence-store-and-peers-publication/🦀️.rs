@@ -296,7 +296,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
             return Ok(ArtifactStoreOneItemAdvance::Complete);
         }
         if publication.phase == ArtifactStoreOneItemPublicationPhase::Closing {
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+            return Ok(blocked_here());
         }
         if publication.phase == ArtifactStoreOneItemPublicationPhase::AwaitingAck {
             return Ok(ArtifactStoreOneItemAdvance::AwaitingAck(publication.receipt.expect("presence publication awaiting ACK retains its receipt")));
@@ -307,7 +307,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
         }
         if publication.cancel_requested {
             publication.begin_close();
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+            return Ok(blocked_here());
         }
         if self.generation != publication.expected_generation {
             *publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"presence publication became stale before commit"));
@@ -316,7 +316,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
             return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"presence publication became stale before commit"));
         }
         if !grant.permits_one() {
-            return Ok(ArtifactStoreOneItemAdvance::Blocked);
+            return Ok(blocked_here());
         }
         match publication.phase {
             ArtifactStoreOneItemPublicationPhase::Preparing => match publication.advance_preparation(grant, receiving) {
@@ -326,7 +326,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
                     publication.phase = ArtifactStoreOneItemPublicationPhase::PreparingCursor;
                     Ok(ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership))
                 }
-                Ok(ArtifactStoreOneItemPreparationStep::Blocked) => Ok(ArtifactStoreOneItemAdvance::Blocked),
+                Ok(ArtifactStoreOneItemPreparationStep::Blocked) => Ok(blocked_here()),
             },
             ArtifactStoreOneItemPublicationPhase::PreparingCursor => {
                 if publication.preparation.as_ref().and_then(|owner| owner.prepared()).is_none() {
@@ -344,7 +344,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
                 let demand=publication.commit_demand();
-                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(blocked_here());}
                 receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;
                 receiving.charge(demand.capacity_bytes)?;
                 let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"presence publication lost its prepared root"))?;
@@ -464,4 +464,10 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
 impl<P, M> PresenceStore<P, M> {
     /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
     pub fn generation_now(&self) -> u64 { self.generation }
+}
+
+/// 🩺️ Answers `Blocked` and names, once per process, the call site that did; compiled out of tests.
+#[track_caller]
+fn blocked_here() -> ArtifactStoreOneItemAdvance {
+    ArtifactStoreOneItemAdvance::Blocked
 }

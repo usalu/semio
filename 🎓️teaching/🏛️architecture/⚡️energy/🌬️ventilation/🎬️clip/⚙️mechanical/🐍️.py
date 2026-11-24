@@ -39,6 +39,7 @@ from types import SimpleNamespace
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 P_PRIMARY = _manim_module.P_PRIMARY
+reference_chip = _manim_module.reference_chip
 section_material = _manim_module.section_material
 window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
@@ -105,22 +106,6 @@ Q_VR = V_DOT_M3H / 3600.0
 V_M = 2.5
 THETA_I_WINTER, THETA_E_WINTER = 20.0, 0.0
 THETA_I_SUMMER, THETA_E_SUMMER = 26.0, 32.0
-#endregion
-
-
-#region DIN citation
-def _din_ref(text: str):
-    """📖 Standards citation for the beat, pinned to the empty top-right corner.
-
-    Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
-    that never competes with the diagram. The chapter title is wide, so the
-    footnote sits one line lower, level with the beat subtitle.
-    """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
-    ref.set_opacity(0.72)
-    ref.to_corner(UR, buff=0.30).shift(DOWN * 0.6)
-    return ref
 #endregion
 
 
@@ -277,7 +262,7 @@ class Beat1_Grundtypen(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Three basic mechanical types", "Drei mechanische Grundtypen"))
-        din = _din_ref(_references.cite("din-en-16798-3"))
+        din = reference_chip(_references.cite("din-en-16798-3"), lower=0.6)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -458,7 +443,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("Heat recovery in a plate heat exchanger", "Wärmerückgewinnung im Plattenübertrager"))
-        din = _din_ref(_references.cite("din-en-308"))
+        din = reference_chip(_references.cite("din-en-308"), lower=0.6)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -700,7 +685,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         lat_note = window_chip(math_label(
             tr(rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{summer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}",
                rf"\dot{{Q}}_{{\mathrm{{V,lat}}}}:\;\text{{Winter}}\;{label_number(Q_V_LAT_WINTER)}\,\mathrm{{W}}\quad\text{{Sommer}}\;{label_number(Q_V_LAT_SUMMER)}\,\mathrm{{W}}"),
-            size=LABEL_FONT_SIZE, color=P_CYAN), color=P_CYAN).move_to(np.array([-3.0, -1.46, 0.0]))
+            size=LABEL_FONT_SIZE, color=P_CYAN), color=P_CYAN).move_to(np.array([-3.0, -1.27, 0.0]))
         self.play(FadeIn(lat_note), *exchanger(0.8), run_time=0.8)
         hold_for(self, N, "latent", used=0.8, during=exchanger)
 
@@ -740,7 +725,7 @@ class Beat3_Anlagenvergleich(Scene):
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Ventilation systems compared", "Lüftungssysteme im Vergleich"))
-        din = _din_ref(_references.cite("din-1946-6"))
+        din = reference_chip(_references.cite("din-1946-6"), lower=0.6)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "window"))
@@ -947,7 +932,7 @@ class Beat4_Kanalquerschnitt(Scene):
         N = self.NARRATION
 
         subtitle = section_heading(tr("From airflow to duct cross-section", "Vom Luftstrom zum Kanalquerschnitt"))
-        din = _din_ref(_references.cite("vdi-2087"))
+        din = reference_chip(_references.cite("vdi-2087"), lower=0.6)
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(N, "intro"))

@@ -24,7 +24,10 @@ const tree:Readonly<Record<string,string>>={
 const mutations:readonly Readonly<{name:string;apply:(area:string)=>Promise<void>;served:"memo"|"capture";rejects?:boolean}>[]=[
  {name:"unrelated sibling file created in a closure directory",served:"memo",apply:async area=>writeFile(join(area,"sub","notes.txt"),"unrelated")},
  {name:"mtime changed, bytes identical",served:"memo",apply:async area=>utimes(join(area,"sub","b.ts"),new Date(1e12),new Date(1e12))},
- {name:"closure file edited",served:"capture",apply:async area=>writeFile(join(area,"sub","b.ts"),"export const b=2;")},
+ {name:"closure file edited, imports unchanged",served:"memo",apply:async area=>writeFile(join(area,"sub","b.ts"),"export const b=2;")},
+ {name:"closure file gains an import",served:"capture",apply:async area=>{await writeFile(join(area,"sub","c.ts"),"export const c=3;");await writeFile(join(area,"sub","b.ts"),"import{c}from\"./c.ts\";export const b=c;");}},
+ {name:"closure file loses an import",served:"capture",apply:async area=>writeFile(join(area,"sub","b.ts"),"export const b=4;")},
+ {name:"two closure files edited, imports unchanged",served:"memo",apply:async area=>{await writeFile(join(area,"sub","b.ts"),"export const b=5;");await writeFile(join(area,"data.json"),'{"data":false}');}},
  {name:"data directory created beside a code file",served:"capture",apply:async area=>{await mkdir(join(area,"sub","🧬️schema"));await writeFile(join(area,"sub","🧬️schema","policy.json"),'{"policy":1}');}},
  {name:"file added to an existing data directory",served:"capture",apply:async area=>writeFile(join(area,"sub","🧬️schema","more.json"),'{"more":1}')},
  {name:"remembered lenient absence filled",served:"capture",apply:async area=>writeFile(join(area,"optional.js"),"module.exports=1;")},

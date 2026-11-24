@@ -59,6 +59,7 @@ interface StylingLevels {
   veilAlphaExtraSteps: number;
   veilAlpha: number;
   veilBlurPx: number;
+  chipTintPercent: number;
   zStep: number;
 }
 
@@ -111,6 +112,7 @@ export const LEVELS_DEFAULT: StylingLevels = {
   veilAlphaExtraSteps: 1,
   veilAlpha: 0.4,
   veilBlurPx: 8,
+  chipTintPercent: 10,
   zStep: 10,
 };
 
@@ -503,6 +505,7 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
     lines.push(`    pub const VEIL_ALPHA_EXTRA_STEPS: u32 = ${levels.veilAlphaExtraSteps};`);
     lines.push(`    pub const VEIL_ALPHA: f64 = ${rustF64Lit(levels.veilAlpha)};`);
     lines.push(`    pub const VEIL_BLUR_PX: f64 = ${rustF64Lit(levels.veilBlurPx)};`);
+    lines.push(`    pub const CHIP_TINT_PERCENT: f64 = ${rustF64Lit(levels.chipTintPercent)};`);
     lines.push(`    pub const Z_STEP: f64 = ${rustF64Lit(levels.zStep)};`);
     lines.push("}");
     lines.push("");
